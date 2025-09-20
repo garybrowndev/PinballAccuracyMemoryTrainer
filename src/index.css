@@ -1,0 +1,6 @@
+@import "tailwindcss";
+/* optional v4 config-in-CSS example:
+@theme {
+  --breakpoint-md: 768px;
+}
+*/
