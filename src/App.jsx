@@ -127,6 +127,7 @@ export default function App() {
   const [showTruth, setShowTruth] = useLocalStorage("pinball_showTruth_v1", false);
   const [finalPhase, setFinalPhase] = useLocalStorage("pinball_finalPhase_v1", false);
   const [finalRecall, setFinalRecall] = useLocalStorage("pinball_finalRecall_v1", []);
+  const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle
 
   // Derived
   const totalPoints = useMemo(
@@ -159,6 +160,8 @@ export default function App() {
     setFinalPhase(false);
     setFinalRecall(rows.map((r) => r.init));
     setInitialized(true);
+    // Hide mental model by default when a session starts
+    setShowMentalModel(false);
     // pick a random starting shot for random mode
     if (mode === "random") setSelectedIdx(rndInt(0, rows.length - 1));
   }
@@ -424,6 +427,13 @@ export default function App() {
               title="Practice"
               right={
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowMentalModel((v) => !v)}
+                    className="px-3 py-1.5 rounded-xl border text-sm"
+                    title={showMentalModel ? "Hide your mental model" : "Show your mental model"}
+                  >
+                    {showMentalModel ? "Hide Model" : "Show Model"}
+                  </button>
                   <label className="flex items-center gap-2 text-xs text-slate-600">
                     <input
                       type="checkbox"
@@ -437,7 +447,7 @@ export default function App() {
                 </div>
               }
             >
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className={`grid grid-cols-1 ${showMentalModel ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
                 {/* Left: selection and input */}
                 <div className="lg:col-span-1">
                   <div className="flex items-center gap-3 mb-3">
@@ -492,72 +502,74 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Middle: mental model */}
-                <div className="lg:col-span-1">
-                  <h3 className="font-medium mb-2">Your mental model</h3>
-                  <div className="border rounded-2xl overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-slate-50 text-slate-600">
-                          <th className="p-2 text-left">Shot</th>
-                          <th className="p-2 text-right">You</th>
-                          {showTruth && <th className="p-2 text-right">Truth</th>}
-                          <th className="p-2 text-right">Adjust</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((r, i) => (
-                          <tr key={r.id} className="border-t">
-                            <td className="p-2">{r.name}</td>
-                            <td className="p-2 text-right">
-                              <NumberInput
-                                value={mental[i] ?? 0}
-                                onChange={(v) =>
-                                  setMental((m) => {
-                                    const next = [...m];
-                                    next[i] = validatePercent(v) ?? next[i] ?? 0;
-                                    return next;
-                                  })
-                                }
-                              />
-                            </td>
-                            {showTruth && (
-                              <td className="p-2 text-right text-slate-600">{formatPct(hidden[i] ?? 0)}</td>
-                            )}
-                            <td className="p-2 text-right">
-                              <div className="inline-flex gap-1">
-                                <button
-                                  onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)-1); return n; })}
-                                  className="px-2 py-1 rounded-lg border"
-                                >
-                                  −1
-                                </button>
-                                <button
-                                  onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)-5); return n; })}
-                                  className="px-2 py-1 rounded-lg border"
-                                >
-                                  −5
-                                </button>
-                                <button
-                                  onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)+1); return n; })}
-                                  className="px-2 py-1 rounded-lg border"
-                                >
-                                  +1
-                                </button>
-                                <button
-                                  onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)+5); return n; })}
-                                  className="px-2 py-1 rounded-lg border"
-                                >
-                                  +5
-                                </button>
-                              </div>
-                            </td>
+                {/* Middle: mental model (conditionally rendered) */}
+                {showMentalModel && (
+                  <div className="lg:col-span-1">
+                    <h3 className="font-medium mb-2">Your mental model</h3>
+                    <div className="border rounded-2xl overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-slate-50 text-slate-600">
+                            <th className="p-2 text-left">Shot</th>
+                            <th className="p-2 text-right">You</th>
+                            {showTruth && <th className="p-2 text-right">Truth</th>}
+                            <th className="p-2 text-right">Adjust</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {rows.map((r, i) => (
+                            <tr key={r.id} className="border-t">
+                              <td className="p-2">{r.name}</td>
+                              <td className="p-2 text-right">
+                                <NumberInput
+                                  value={mental[i] ?? 0}
+                                  onChange={(v) =>
+                                    setMental((m) => {
+                                      const next = [...m];
+                                      next[i] = validatePercent(v) ?? next[i] ?? 0;
+                                      return next;
+                                    })
+                                  }
+                                />
+                              </td>
+                              {showTruth && (
+                                <td className="p-2 text-right text-slate-600">{formatPct(hidden[i] ?? 0)}</td>
+                              )}
+                              <td className="p-2 text-right">
+                                <div className="inline-flex gap-1">
+                                  <button
+                                    onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)-1); return n; })}
+                                    className="px-2 py-1 rounded-lg border"
+                                  >
+                                    −1
+                                  </button>
+                                  <button
+                                    onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)-5); return n; })}
+                                    className="px-2 py-1 rounded-lg border"
+                                  >
+                                    −5
+                                  </button>
+                                  <button
+                                    onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)+1); return n; })}
+                                    className="px-2 py-1 rounded-lg border"
+                                  >
+                                    +1
+                                  </button>
+                                  <button
+                                    onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)+5); return n; })}
+                                    className="px-2 py-1 rounded-lg border"
+                                  >
+                                    +5
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Right: feedback and stats */}
                 <div className="lg:col-span-1">
