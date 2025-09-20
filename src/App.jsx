@@ -97,6 +97,23 @@ const NumberInput = ({ value, onChange, min = 0, max = 100, step = 1, className 
   />
 );
 
+// Simple chip button
+const Chip = ({ active, children, onClick, className = "" }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={
+      `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none ` +
+      (active
+        ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+        : "bg-white hover:bg-slate-100 text-slate-700 border-slate-300") +
+      (className ? " " + className : "")
+    }
+  >
+    {children}
+  </button>
+);
+
 // ---------- main component ----------
 export default function App() {
   // Setup state
@@ -128,6 +145,11 @@ export default function App() {
   const [finalPhase, setFinalPhase] = useLocalStorage("pinball_finalPhase_v1", false);
   const [finalRecall, setFinalRecall] = useLocalStorage("pinball_finalRecall_v1", []);
   const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle
+
+  // Keep selectedIdx within bounds if rows shrink
+  useEffect(() => {
+    setSelectedIdx((idx) => (idx >= rows.length ? Math.max(0, rows.length - 1) : idx));
+  }, [rows.length, setSelectedIdx]);
 
   // Derived
   const totalPoints = useMemo(
@@ -386,14 +408,10 @@ export default function App() {
                 </div>
                 <div className="flex items-center gap-3">
                   <label className="w-48">Mode</label>
-                  <select
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value)}
-                    className="px-2 py-1 border rounded-xl"
-                  >
-                    <option value="manual">Manual selection</option>
-                    <option value="random">Random</option>
-                  </select>
+                  <div className="flex gap-2 flex-wrap">
+                    <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
+                    <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                  </div>
                 </div>
               </div>
               <div className="mt-4 flex gap-3">
@@ -452,28 +470,22 @@ export default function App() {
                 <div className="lg:col-span-1">
                   <div className="flex items-center gap-3 mb-3">
                     <label className="w-28 text-sm text-slate-600">Mode</label>
-                    <select
-                      value={mode}
-                      onChange={(e) => setMode(e.target.value)}
-                      className="px-2 py-1 border rounded-xl text-sm"
-                    >
-                      <option value="manual">Manual selection</option>
-                      <option value="random">Random</option>
-                    </select>
+                    <div className="flex gap-2 flex-wrap">
+                      <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
+                      <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                    </div>
                   </div>
 
                   {mode === "manual" ? (
-                    <div className="flex items-center gap-3 mb-3">
-                      <label className="w-28 text-sm text-slate-600">Shot</label>
-                      <select
-                        value={selectedIdx}
-                        onChange={(e) => setSelectedIdx(Number(e.target.value))}
-                        className="px-2 py-1 border rounded-xl text-sm w-full"
-                      >
-                        {rows.map((r, i) => (
-                          <option key={r.id} value={i}>{r.name}</option>
-                        ))}
-                      </select>
+                    <div className="mb-3">
+                      <div className="flex items-center gap-3 mb-2">
+                        <label className="w-28 text-sm text-slate-600 mt-1">Shot</label>
+                        <div className="flex gap-2 flex-wrap">
+                          {rows.map((r, i) => (
+                            <Chip key={r.id} active={selectedIdx === i} onClick={() => setSelectedIdx(i)}>{r.name}</Chip>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 mb-3">
