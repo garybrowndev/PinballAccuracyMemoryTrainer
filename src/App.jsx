@@ -11,7 +11,13 @@ const formatPct = (n) => `${Math.round(n)}%`;
 
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
-const newRow = (over = {}) => ({ id: ROW_ID_SEED++, name: "Shot", init: 60, ...over });
+// Shot taxonomy
+const SHOT_TYPES = [
+  'Left Orbit','Right Orbit','Left Ramp','Right Ramp','Center Ramp','Inner Loop','Scoop','Saucer','Left Saucer','Right Saucer','Standup','Drop Target','Drop Bank','Spinner','Bumper','Target Bank','Captive Ball','VUK','Lock','Mini-Loop','Upper Loop'
+];
+const FLIPPERS = ['L','R']; // L=Left flipper shot, R=Right flipper shot
+
+const newRow = (over = {}) => ({ id: ROW_ID_SEED++, type: 'Left Ramp', side: 'L', init: 60, ...over });
 function ensureRowIds(rows) {
   let changed = false;
   const next = rows.map(r => {
@@ -19,6 +25,25 @@ function ensureRowIds(rows) {
     return r;
   });
   return changed ? next : rows;
+}
+
+// Legacy upgrade: rows may have name field; attempt heuristic mapping
+function upgradeLegacyRows(rows) {
+  return rows.map(r => {
+    if (r.type) return r; // already new
+    const name = r.name || '';
+    let side = name.toLowerCase().startsWith('left') ? 'L' : name.toLowerCase().startsWith('right') ? 'R' : 'L';
+    // find a shot type containing a keyword from name
+    const lower = name.toLowerCase();
+    let type = SHOT_TYPES.find(t => lower.includes(t.split(' ')[t.split(' ').length-1].toLowerCase())) || SHOT_TYPES[0];
+    // fallback more direct contains
+    if (!type) type = SHOT_TYPES.find(t => lower.includes(t.toLowerCase().split(' ')[0])) || SHOT_TYPES[0];
+    return { id: r.id || ROW_ID_SEED++, type, side, init: r.init ?? 60 };
+  });
+}
+
+function rowDisplay(r) {
+  return `${r.side === 'L' ? 'L' : 'R'} • ${r.type}`;
 }
 
 // Isotonic regression (non-decreasing). Preserves initial order while minimally adjusting values.
@@ -118,9 +143,9 @@ const Chip = ({ active, children, onClick, className = "" }) => (
 export default function App() {
   // Setup state
   const [rows, setRows] = useLocalStorage("pinball_rows_v1", [
-    { id: ROW_ID_SEED++, name: "Left Orbit", init: 70 },
-    { id: ROW_ID_SEED++, name: "Right Ramp", init: 80 },
-    { id: ROW_ID_SEED++, name: "Center Shot", init: 65 },
+    { id: ROW_ID_SEED++, type: 'Left Ramp', side: 'L', init: 70 },
+    { id: ROW_ID_SEED++, type: 'Right Ramp', side: 'R', init: 80 },
+    { id: ROW_ID_SEED++, type: 'Left Orbit', side: 'L', init: 65 },
   ]);
   const [randRange, setRandRange] = useLocalStorage("pinball_randRange_v1", 15);
   const [perfectTol, setPerfectTol] = useLocalStorage("pinball_tol_v1", 2);
@@ -176,11 +201,11 @@ export default function App() {
 
     setHidden(hiddenInit);
     setInitialOrderAsc(orderAsc);
-    setMental(rows.map((r) => r.init));
+  setMental(rows.map((r) => r.init));
     setAttempts([]);
     setAttemptCount(0);
     setFinalPhase(false);
-    setFinalRecall(rows.map((r) => r.init));
+  setFinalRecall(rows.map((r) => r.init));
     setInitialized(true);
     // Hide mental model by default when a session starts
     setShowMentalModel(false);
@@ -316,7 +341,7 @@ export default function App() {
                   onClick={() =>
                     setRows((r) => [
                       ...ensureRowIds(r),
-                      { id: ROW_ID_SEED++, name: `Shot ${r.length + 1}`, init: 60 },
+                      newRow({ type: 'Left Ramp', side: 'L', init: 60 })
                     ])
                   }
                   className="px-3 py-1.5 text-sm rounded-xl bg-slate-900 text-white"
@@ -329,33 +354,43 @@ export default function App() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500">
-                      <th className="p-2">Name</th>
+                      <th className="p-2">Shot Type</th>
+                      <th className="p-2">Flipper</th>
                       <th className="p-2">Initial %</th>
                       <th className="p-2 w-12"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((r, i) => (
-                      <tr key={r.id} className="border-t">
+                    {upgradeLegacyRows(rows).map((r, i) => (
+                      <tr key={r.id} className="border-t align-top">
                         <td className="p-2">
-                          <input
-                            value={r.name}
-                            onChange={(e) =>
-                              setRows((prev) => {
-                                const next = [...prev];
-                                next[i] = { ...next[i], name: e.target.value };
-                                return next;
-                              })
-                            }
-                            className="w-full px-2 py-1 border rounded-xl"
-                          />
+                          <div className="flex flex-wrap gap-2 max-w-xs">
+                            {SHOT_TYPES.map(t => (
+                              <Chip
+                                key={t}
+                                active={r.type === t}
+                                onClick={() => setRows(prev => { const next=[...upgradeLegacyRows(prev)]; next[i]={...next[i], type:t}; return next; })}
+                              >{t}</Chip>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-2">
+                          <div className="flex gap-2">
+                            {FLIPPERS.map(f => (
+                              <Chip
+                                key={f}
+                                active={r.side === f}
+                                onClick={() => setRows(prev => { const next=[...upgradeLegacyRows(prev)]; next[i]={...next[i], side:f}; return next; })}
+                              >{f === 'L' ? 'Left Flipper' : 'Right Flipper'}</Chip>
+                            ))}
+                          </div>
                         </td>
                         <td className="p-2">
                           <NumberInput
                             value={r.init}
                             onChange={(v) =>
                               setRows((prev) => {
-                                const next = [...prev];
+                                const next = [...upgradeLegacyRows(prev)];
                                 const val = validatePercent(v) ?? next[i].init;
                                 next[i] = { ...next[i], init: val };
                                 return next;
@@ -365,7 +400,7 @@ export default function App() {
                         </td>
                         <td className="p-2 text-right">
                           <button
-                            onClick={() => setRows((prev) => prev.filter((_, k) => k !== i))}
+                            onClick={() => setRows((prev) => upgradeLegacyRows(prev).filter((_, k) => k !== i))}
                             className="text-slate-500 hover:text-red-600"
                             title="Remove"
                           >
@@ -424,9 +459,9 @@ export default function App() {
                 <button
                   onClick={() => {
                     setRows([
-                      { id: ROW_ID_SEED++, name: "Left Orbit", init: 70 },
-                      { id: ROW_ID_SEED++, name: "Right Ramp", init: 80 },
-                      { id: ROW_ID_SEED++, name: "Center Shot", init: 65 },
+                      { id: ROW_ID_SEED++, type: 'Left Ramp', side: 'L', init: 70 },
+                      { id: ROW_ID_SEED++, type: 'Right Ramp', side: 'R', init: 80 },
+                      { id: ROW_ID_SEED++, type: 'Left Orbit', side: 'L', init: 65 },
                     ]);
                   }}
                   className="px-4 py-2 rounded-2xl border"
@@ -482,7 +517,9 @@ export default function App() {
                         <label className="w-28 text-sm text-slate-600 mt-1">Shot</label>
                         <div className="flex gap-2 flex-wrap">
                           {rows.map((r, i) => (
-                            <Chip key={r.id} active={selectedIdx === i} onClick={() => setSelectedIdx(i)}>{r.name}</Chip>
+                            <Chip key={r.id} active={selectedIdx === i} onClick={() => setSelectedIdx(i)}>
+                              {rowDisplay(r)}
+                            </Chip>
                           ))}
                         </div>
                       </div>
@@ -490,7 +527,7 @@ export default function App() {
                   ) : (
                     <div className="flex items-center gap-3 mb-3">
                       <label className="w-28 text-sm text-slate-600">Shot</label>
-                      <div className="px-3 py-1.5 border rounded-xl text-sm flex-1">{rows[selectedIdx]?.name}</div>
+                      <div className="px-3 py-1.5 border rounded-xl text-sm flex-1">{rows[selectedIdx] ? rowDisplay(rows[selectedIdx]) : ''}</div>
                       <button
                         onClick={() => setSelectedIdx(pickRandomIdx())}
                         className="px-3 py-1.5 rounded-xl border text-sm"
@@ -531,7 +568,7 @@ export default function App() {
                         <tbody>
                           {rows.map((r, i) => (
                             <tr key={r.id} className="border-t">
-                              <td className="p-2">{r.name}</td>
+                              <td className="p-2">{rowDisplay(r)}</td>
                               <td className="p-2 text-right">
                                 <NumberInput
                                   value={mental[i] ?? 0}
@@ -593,7 +630,7 @@ export default function App() {
                       <div className="text-sm">
                         <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Last shot</div>
-                          <div className="font-medium">{attempts[0].name}</div>
+                          <div className="font-medium">{rowDisplay(rows[attempts[0].idx] || { side:'L', type:'?' })}</div>
                         </div>
                         <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Result</div>
@@ -651,7 +688,7 @@ export default function App() {
                       {attempts.map((a, i) => (
                         <tr key={a.t + ":" + i} className="border-t">
                           <td className="p-2">{new Date(a.t).toLocaleTimeString()}</td>
-                          <td className="p-2">{a.name}</td>
+                          <td className="p-2">{rowDisplay(rows[a.idx] || { side:'L', type:'?' })}</td>
                           <td className="p-2 text-right">{formatPct(a.input)}</td>
                           <td className="p-2 text-right">{formatPct(a.truth)}</td>
                           <td className="p-2 text-right">{a.delta > 0 ? "+" : ""}{a.delta}</td>
@@ -693,7 +730,7 @@ export default function App() {
                   <tbody>
                     {rows.map((r, i) => (
                       <tr key={r.id} className="border-t">
-                        <td className="p-2">{r.name}</td>
+                        <td className="p-2">{rowDisplay(r)}</td>
                         <td className="p-2 text-right">
                           <NumberInput
                             value={finalRecall[i] ?? 0}
