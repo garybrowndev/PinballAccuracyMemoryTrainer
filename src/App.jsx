@@ -74,6 +74,51 @@ function upgradeLegacyRows(rows) {
 function rowDisplay(r) { return r ? r.type : ''; }
 function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'L' : 'R'} • ${r.type}` : ''; }
 
+// Allowed value computation per side with domain-specific ordering rules:
+// Right flipper column: strictly decreasing top->bottom (earlier row must be > later row). No duplicates allowed anywhere.
+// Left flipper column: ascending (later rows must be >= earlier). Zero may repeat freely until a first non-zero chosen above; once a non-zero appears above, later rows must be strictly greater than that last non-zero above (to preserve increasing difficulty sense). Multiple zeros below a non-zero are not allowed.
+// All values are multiples of 5 between 0..100.
+function computeAllowedValues(rows, side, index) {
+  const STEP_VALUES = Array.from({length:21},(_,k)=>k*5);
+  const vals = side==='L' ? rows.map(r=>r.initL) : rows.map(r=>r.initR);
+  const current = vals[index];
+  if (side === 'R') {
+    // Strictly decreasing top->bottom
+    // Earlier rows (0..index-1) must each be > value at index; Later rows must be < value at index.
+    // Allowed range upper bound = min( earlier values ) - 5 (since must be strictly less than all earlier). If no earlier, upper bound 100.
+    // Lower bound = max( later values ) + 5 (must be strictly greater than all later). If no later, lower bound 0.
+    const earlier = vals.slice(0,index).filter(v=>v!=null);
+    const later = vals.slice(index+1).filter(v=>v!=null);
+    let upper = earlier.length ? Math.min(...earlier) - 5 : 100; // strictly less than smallest earlier chosen
+    let lower = later.length ? Math.max(...later) + 5 : 0;       // strictly greater than largest later chosen
+    upper = Math.min(100, upper);
+    lower = Math.max(0, lower);
+    const allowed = STEP_VALUES.filter(v => v >= lower && v <= upper);
+    // Hide chips >= value selected above: ensured by upper calculation.
+    return allowed;
+  } else {
+    // Left side:
+    // Ascending: later rows >= earlier rows. Zero can repeat any number of times until first non-zero above appears.
+    // Once a non-zero appears above, later rows must be >= that non-zero + 5 (strictly increasing beyond first positive anchor).
+    const earlier = vals.slice(0,index).filter(v=>v!=null);
+    const later = vals.slice(index+1).filter(v=>v!=null);
+    const firstPositiveAbove = earlier.find(v=>v>0);
+    const maxEarlier = earlier.length ? Math.max(...earlier) : 0; // largest earlier value
+    // Lower bound logic:
+    // If no positive above: lower bound = 0 (zeros allowed)
+    // If positive above exists: lower bound = maxEarlier (if maxEarlier===0) else firstPositiveAbove + 5? Need strictly greater than last non-zero above.
+    // We'll track last non-zero above instead.
+    const lastNonZeroAbove = [...earlier].reverse().find(v=>v>0) || 0;
+    let lowerBound;
+    if (lastNonZeroAbove === 0) lowerBound = 0; else lowerBound = lastNonZeroAbove + 5; // strictly greater than previous non-zero
+    // Upper bound: must remain <= min(later values) if later chosen (since non-decreasing). If later values exist, allowed <= min(later).
+    const minLater = later.length ? Math.min(...later) : 100;
+    let allowed = STEP_VALUES.filter(v => v >= lowerBound && v <= minLater);
+    // Special case: allow choosing 0 even if lowerBound>0 only when no non-zero above (already handled). So once non-zero above, zero removed.
+    return allowed;
+  }
+}
+
 // Bounded isotonic regression preserving initial ordering defined by orderAsc.
 // Each point i constrained within base[i] ± 20 and 0..100; values snapped to 5.
 function isotonicWithBounds(current, base, orderAsc) {
@@ -529,15 +574,15 @@ export default function App() {
                         </td>
                         <td className="p-2">
                           <div className="flex flex-wrap gap-1 max-w-[180px]">
-                            {Array.from({length:21},(_,k)=>k*5).map(val => (
-                              <Chip key={val} active={r.initL===val} onClick={()=>setRows(prev=>{const cur=upgradeLegacyRows(prev); if(cur.some((row,j)=> j!==i && row.initL===val)) return cur; const next=[...cur]; next[i]={...next[i], initL:val}; return next;})}>{val}</Chip>
+                            {computeAllowedValues(upgradeLegacyRows(rows), 'L', i).map(val => (
+                              <Chip key={val} active={r.initL===val} onClick={()=>setRows(prev=>{const cur=upgradeLegacyRows(prev); const next=[...cur]; next[i]={...next[i], initL:val}; return next;})}>{val}</Chip>
                             ))}
                           </div>
                         </td>
                         <td className="p-2">
                           <div className="flex flex-wrap gap-1 max-w-[180px]">
-                            {Array.from({length:21},(_,k)=>k*5).map(val => (
-                              <Chip key={val} active={r.initR===val} onClick={()=>setRows(prev=>{const cur=upgradeLegacyRows(prev); if(cur.some((row,j)=> j!==i && row.initR===val)) return cur; const next=[...cur]; next[i]={...next[i], initR:val}; return next;})}>{val}</Chip>
+                            {computeAllowedValues(upgradeLegacyRows(rows), 'R', i).map(val => (
+                              <Chip key={val} active={r.initR===val} onClick={()=>setRows(prev=>{const cur=upgradeLegacyRows(prev); const next=[...cur]; next[i]={...next[i], initR:val}; return next;})}>{val}</Chip>
                             ))}
                           </div>
                         </td>
