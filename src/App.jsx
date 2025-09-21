@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 // ---------- helpers ----------
 const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
+function snap5(v) { return Math.min(100, Math.max(0, Math.round(v / 5) * 5)); }
 const rndInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a; // inclusive
 const formatPct = (n) => `${Math.round(n)}%`;
 
@@ -72,6 +73,93 @@ function upgradeLegacyRows(rows) {
 
 function rowDisplay(r) { return r ? r.type : ''; }
 function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'L' : 'R'} • ${r.type}` : ''; }
+
+// Bounded isotonic regression preserving initial ordering defined by orderAsc.
+// Each point i constrained within base[i] ± 20 and 0..100; values snapped to 5.
+function isotonicWithBounds(current, base, orderAsc) {
+  if (!current.length) return current;
+  const lower = base.map(v => Math.max(0, v - 20));
+  const upper = base.map(v => Math.min(100, v + 20));
+  const inOrderIdx = orderAsc;
+  const values = inOrderIdx.map(i => current[i]);
+  const lowers = inOrderIdx.map(i => lower[i]);
+  const uppers = inOrderIdx.map(i => upper[i]);
+  const blocks = [];
+  for (let i=0;i<values.length;i++) {
+    let sum = values[i];
+    let count = 1;
+    let lb = lowers[i];
+    let ub = uppers[i];
+    let mean = sum / count; if (mean < lb) mean = lb; else if (mean > ub) mean = ub;
+    let val = snap5(mean);
+    blocks.push({sum,count,lb,ub,value:val});
+    while (blocks.length >=2 && blocks[blocks.length-2].value > blocks[blocks.length-1].value) {
+      const b = blocks.pop();
+      const a = blocks.pop();
+      const merged = { sum: a.sum + b.sum, count: a.count + b.count, lb: Math.max(a.lb,b.lb), ub: Math.min(a.ub,b.ub), value:0 };
+      let m = merged.sum / merged.count; if (m < merged.lb) m = merged.lb; else if (m > merged.ub) m = merged.ub;
+      merged.value = snap5(m);
+      blocks.push(merged);
+    }
+  }
+  const adjusted = new Array(values.length);
+  let k=0; for (const bl of blocks) { for (let j=0;j<bl.count;j++) adjusted[k++] = snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value))); }
+  const next = [...current];
+  for (let i=0;i<inOrderIdx.length;i++) next[inOrderIdx[i]] = adjusted[i];
+  return next;
+}
+
+// Ensure strict increasing (no equal adjacent) by minimally bumping later duplicates within bounds
+function strictlyIncrease(values, base, orderAsc) {
+  if (!values.length) return values;
+  // Work in sorted order space
+  const idxs = orderAsc;
+  const arr = idxs.map(i => values[i]);
+  const bases = idxs.map(i => base[i]);
+  // Forward ensure arr[i] < arr[i+1]
+  for (let i=1;i<arr.length;i++) {
+    if (arr[i] <= arr[i-1]) {
+      const b = bases[i];
+      const hi = Math.min(100, b + 20);
+      let candidate = snap5(arr[i-1] + 5);
+      if (candidate > hi) {
+        // Need to raise earlier chain if possible OR reduce previous while keeping ordering relative to its own lower bound
+        // Try pulling previous downward if its base allows
+        let j = i-1;
+        while (j >=0 && candidate > hi) {
+          const bj = bases[j];
+          const loPrev = Math.max(0, bj - 20);
+          const lowered = snap5(arr[j] - 5);
+          if (lowered >= loPrev && (j===0 || lowered > arr[j-1])) { arr[j] = lowered; } else break;
+          candidate = snap5(arr[i-1] + 5);
+          j--;
+        }
+        candidate = Math.min(hi, candidate);
+      }
+      if (candidate <= arr[i-1]) candidate = arr[i-1] + 5;
+      arr[i] = candidate;
+    }
+  }
+  // Map back
+  const out = [...values];
+  for (let k=0;k<idxs.length;k++) out[idxs[k]] = arr[k];
+  // Final clamp per base bounds & snapping & ensure strictness one more pass
+  for (let k=0;k<idxs.length;k++) {
+    const i = idxs[k];
+    const b = base[i];
+    const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
+    out[i] = snap5(Math.min(hi, Math.max(lo, out[i])));
+    if (k>0) {
+      const prevIdx = idxs[k-1];
+      if (out[i] <= out[prevIdx]) {
+        let nv = snap5(out[prevIdx] + 5);
+        if (nv > hi) nv = hi; // may compress but ordering should hold due to earlier adjustments
+        out[i] = nv;
+      }
+    }
+  }
+  return out;
+}
 
 // Isotonic regression (non-decreasing). Preserves initial order while minimally adjusting values.
 function isotonicNonDecreasing(values) {
@@ -184,6 +272,9 @@ export default function App() {
   // Hidden & mental per side
   const [hiddenL, setHiddenL] = useLocalStorage("pinball_hiddenL_v1", []);
   const [hiddenR, setHiddenR] = useLocalStorage("pinball_hiddenR_v1", []);
+  // Base (anchor) values captured at session start to constrain hidden truth drift (±20 max, i.e. 4*5 steps)
+  const [baseL, setBaseL] = useLocalStorage("pinball_baseL_v1", []);
+  const [baseR, setBaseR] = useLocalStorage("pinball_baseR_v1", []);
   const [mentalL, setMentalL] = useLocalStorage("pinball_mentalL_v1", []);
   const [mentalR, setMentalR] = useLocalStorage("pinball_mentalR_v1", []);
   const [orderAscL, setOrderAscL] = useLocalStorage("pinball_initialOrderL_v1", []);
@@ -224,10 +315,23 @@ export default function App() {
     if (!rows.length) return;
     const upgraded = upgradeLegacyRows(rows);
     setRows(upgraded); // persist upgrade
-    const hiddenInitL = upgraded.map(r => clamp(r.initL + rndInt(-randRange, randRange)));
-    const hiddenInitR = upgraded.map(r => clamp(r.initR + rndInt(-randRange, randRange)));
+    // Capture bases
+    const bL = upgraded.map(r=>snap5(r.initL));
+    const bR = upgraded.map(r=>snap5(r.initR));
+    setBaseL(bL); setBaseR(bR);
+    // Determine original ordering by base values
     const ascL = upgraded.map((r,i)=>({i,v:r.initL})).sort((a,b)=>a.v-b.v).map(x=>x.i);
     const ascR = upgraded.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
+    // Candidate random offsets (independent) within allowed band
+    const candL = bL.map(v => {
+      const off = rndInt(-4,4)*5; const lo = Math.max(0, v-20); const hi = Math.min(100, v+20); return snap5(Math.min(hi, Math.max(lo, v+off)));
+    });
+    const candR = bR.map(v => {
+      const off = rndInt(-4,4)*5; const lo = Math.max(0, v-20); const hi = Math.min(100, v+20); return snap5(Math.min(hi, Math.max(lo, v+off)));
+    });
+    // Enforce ordering via bounded isotonic regression
+  const hiddenInitL = strictlyIncrease(isotonicWithBounds(candL, bL, ascL).map(v=>snap5(v)), bL, ascL);
+  const hiddenInitR = strictlyIncrease(isotonicWithBounds(candR, bR, ascR).map(v=>snap5(v)), bR, ascR);
     setHiddenL(hiddenInitL); setHiddenR(hiddenInitR);
     setOrderAscL(ascL); setOrderAscR(ascR);
     setMentalL(upgraded.map(r=>r.initL));
@@ -250,31 +354,37 @@ export default function App() {
     if (attemptCount === 0) return;
     if (driftEvery <= 0) return;
     if (attemptCount % driftEvery !== 0) return;
+    const maxSteps = 4; // hard cap per requirements (4 * 5 = 20)
+    const stepDrift = () => (Math.random() < 0.5 ? -1 : 1) * rndInt(0, Math.min(maxSteps, driftMag)) * 5;
 
     setHiddenL(prev => {
-      if (!prev.length) return prev;
-      const drifted = prev.map(v=>clamp(v + (Math.random()*2 -1)*driftMag + driftBias));
-      const inOrder = orderAscL.map(idx=>drifted[idx]);
-      const adjusted = isotonicNonDecreasing(inOrder).map(v=>clamp(v));
-      const next = [...prev];
-      for (let k=0;k<orderAscL.length;k++) next[orderAscL[k]] = adjusted[k];
-      return next;
+      if (!prev.length || !baseL.length) return prev;
+      const drifted = prev.map((v,i) => {
+        const b = baseL[i];
+        const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
+        const candidate = snap5(v + stepDrift() + driftBias);
+        return Math.min(hi, Math.max(lo, candidate));
+      });
+      const ordered = isotonicWithBounds(drifted, baseL, orderAscL);
+      return strictlyIncrease(ordered, baseL, orderAscL);
     });
     setHiddenR(prev => {
-      if (!prev.length) return prev;
-      const drifted = prev.map(v=>clamp(v + (Math.random()*2 -1)*driftMag + driftBias));
-      const inOrder = orderAscR.map(idx=>drifted[idx]);
-      const adjusted = isotonicNonDecreasing(inOrder).map(v=>clamp(v));
-      const next = [...prev];
-      for (let k=0;k<orderAscR.length;k++) next[orderAscR[k]] = adjusted[k];
-      return next;
+      if (!prev.length || !baseR.length) return prev;
+      const drifted = prev.map((v,i) => {
+        const b = baseR[i];
+        const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
+        const candidate = snap5(v + stepDrift() + driftBias);
+        return Math.min(hi, Math.max(lo, candidate));
+      });
+      const ordered = isotonicWithBounds(drifted, baseR, orderAscR);
+      return strictlyIncrease(ordered, baseR, orderAscR);
     });
-  }, [attemptCount, driftEvery, driftMag, driftBias, orderAscL, orderAscR, initialized]);
+  }, [attemptCount, driftEvery, driftMag, driftBias, orderAscL, orderAscR, initialized, baseL, baseR]);
 
   function validatePercent(numLike) {
     const x = Number(numLike);
     if (!Number.isFinite(x)) return null;
-    return clamp(x);
+    return snap5(x);
   }
 
   function pickRandomIdx() {
@@ -353,6 +463,18 @@ export default function App() {
     return Math.max(0, Math.round(100 - mae));
   }, [finalPhase, rows, hiddenL, hiddenR, finalRecallL, finalRecallR]);
 
+  // One-time snapping of any legacy non-5 values after load
+  useEffect(() => {
+    setRows(prev => upgradeLegacyRows(prev).map(r => ({...r, initL: snap5(r.initL ?? 0), initR: snap5(r.initR ?? 0)})));
+    setMentalL(m => m.map(v=>snap5(v ?? 0)));
+    setMentalR(m => m.map(v=>snap5(v ?? 0)));
+    setHiddenL(h => h.map(v=>snap5(v ?? 0)));
+    setHiddenR(h => h.map(v=>snap5(v ?? 0)));
+    setFinalRecallL(r => r.map(v=>snap5(v ?? 0)));
+    setFinalRecallR(r => r.map(v=>snap5(v ?? 0)));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // (Section & NumberInput hoisted above)
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
@@ -406,16 +528,18 @@ export default function App() {
                           </div>
                         </td>
                         <td className="p-2">
-                          <NumberInput
-                            value={r.initL ?? 0}
-                            onChange={(v) => setRows(prev => { const next=[...upgradeLegacyRows(prev)]; const val=validatePercent(v) ?? next[i].initL; next[i]={...next[i], initL: val}; return next; })}
-                          />
+                          <div className="flex flex-wrap gap-1 max-w-[180px]">
+                            {Array.from({length:21},(_,k)=>k*5).map(val => (
+                              <Chip key={val} active={r.initL===val} onClick={()=>setRows(prev=>{const cur=upgradeLegacyRows(prev); if(cur.some((row,j)=> j!==i && row.initL===val)) return cur; const next=[...cur]; next[i]={...next[i], initL:val}; return next;})}>{val}</Chip>
+                            ))}
+                          </div>
                         </td>
                         <td className="p-2">
-                          <NumberInput
-                            value={r.initR ?? 0}
-                            onChange={(v) => setRows(prev => { const next=[...upgradeLegacyRows(prev)]; const val=validatePercent(v) ?? next[i].initR; next[i]={...next[i], initR: val}; return next; })}
-                          />
+                          <div className="flex flex-wrap gap-1 max-w-[180px]">
+                            {Array.from({length:21},(_,k)=>k*5).map(val => (
+                              <Chip key={val} active={r.initR===val} onClick={()=>setRows(prev=>{const cur=upgradeLegacyRows(prev); if(cur.some((row,j)=> j!==i && row.initR===val)) return cur; const next=[...cur]; next[i]={...next[i], initR:val}; return next;})}>{val}</Chip>
+                            ))}
+                          </div>
                         </td>
                         <td className="p-2 text-right">
                           <button
@@ -583,31 +707,24 @@ export default function App() {
                   <div className="lg:col-span-1">
                     <h3 className="font-medium mb-2">Your mental model</h3>
                     <div className="border rounded-2xl overflow-hidden">
-                      <table className="w-full text-sm">
+                      <table className="w-full text-xs md:text-sm">
                         <thead>
                           <tr className="bg-slate-50 text-slate-600">
                             <th className="p-2 text-left">Shot</th>
-                            <th className="p-2 text-right">You</th>
-                            {showTruth && <th className="p-2 text-right">Truth</th>}
-                            <th className="p-2 text-right">Adjust</th>
+                            <th className="p-2 text-right">ML</th>
+                            {showTruth && <th className="p-2 text-right">HL</th>}
+                            <th className="p-2 text-right">MR</th>
+                            {showTruth && <th className="p-2 text-right">HR</th>}
                           </tr>
                         </thead>
                         <tbody>
                           {rows.map((r, i) => (
                             <tr key={r.id} className="border-t">
-                              <td className="p-2">{r.type}</td>
-                              <td className="p-2 text-right">
-                                <NumberInput value={mentalL[i] ?? 0} onChange={(v)=>setMentalL(m=>{const n=[...m]; n[i]=validatePercent(v) ?? n[i] ?? 0; return n;})} />
-                              </td>
-                              <td className="p-2 text-right">
-                                <NumberInput value={mentalR[i] ?? 0} onChange={(v)=>setMentalR(m=>{const n=[...m]; n[i]=validatePercent(v) ?? n[i] ?? 0; return n;})} />
-                              </td>
-                              {showTruth && (
-                                <>
-                                  <td className="p-2 text-right text-slate-600">{formatPct(hiddenL[i] ?? 0)}</td>
-                                  <td className="p-2 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td>
-                                </>
-                              )}
+                              <td className="p-2 whitespace-nowrap max-w-[110px] truncate" title={r.type}>{r.type}</td>
+                              <td className="p-2 text-right">{formatPct(mentalL[i] ?? 0)}</td>
+                              {showTruth && <td className="p-2 text-right text-slate-600">{formatPct(hiddenL[i] ?? 0)}</td>}
+                              <td className="p-2 text-right">{formatPct(mentalR[i] ?? 0)}</td>
+                              {showTruth && <td className="p-2 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td>}
                             </tr>
                           ))}
                         </tbody>
