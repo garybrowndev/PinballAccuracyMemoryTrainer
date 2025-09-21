@@ -15,9 +15,10 @@ let ROW_ID_SEED = 1;
 const SHOT_TYPES = [
   'Left Orbit','Right Orbit','Left Ramp','Right Ramp','Center Ramp','Inner Loop','Scoop','Saucer','Left Saucer','Right Saucer','Standup','Drop Target','Drop Bank','Spinner','Bumper','Target Bank','Captive Ball','VUK','Lock','Mini-Loop','Upper Loop'
 ];
-const FLIPPERS = ['L','R']; // L=Left flipper shot, R=Right flipper shot
+const FLIPPERS = ['L','R']; // left/right flippers
 
-const newRow = (over = {}) => ({ id: ROW_ID_SEED++, type: 'Left Ramp', side: 'L', init: 60, ...over });
+// New row schema: per shot store both left/right initial percentages (initL, initR)
+const newRow = (over = {}) => ({ id: ROW_ID_SEED++, type: 'Left Ramp', initL: 60, initR: 60, ...over });
 function ensureRowIds(rows) {
   let changed = false;
   const next = rows.map(r => {
@@ -28,23 +29,49 @@ function ensureRowIds(rows) {
 }
 
 // Legacy upgrade: rows may have name field; attempt heuristic mapping
+// Upgrade legacy schemas:
+// 1) Old free-text name -> {type, side, init}
+// 2) Previous schema with per-row side + init -> merge by type into new structure with initL/initR
 function upgradeLegacyRows(rows) {
-  return rows.map(r => {
-    if (r.type) return r; // already new
-    const name = r.name || '';
-    let side = name.toLowerCase().startsWith('left') ? 'L' : name.toLowerCase().startsWith('right') ? 'R' : 'L';
-    // find a shot type containing a keyword from name
-    const lower = name.toLowerCase();
-    let type = SHOT_TYPES.find(t => lower.includes(t.split(' ')[t.split(' ').length-1].toLowerCase())) || SHOT_TYPES[0];
-    // fallback more direct contains
-    if (!type) type = SHOT_TYPES.find(t => lower.includes(t.toLowerCase().split(' ')[0])) || SHOT_TYPES[0];
-    return { id: r.id || ROW_ID_SEED++, type, side, init: r.init ?? 60 };
+  // First, normalize any entries missing type/side.
+  const normalized = rows.map(r => {
+    if (r.initL != null || r.initR != null) return r; // already new or partially new
+    if (r.type && r.side != null && r.init != null) {
+      // side-based legacy row
+      return { id: r.id || ROW_ID_SEED++, type: r.type, side: r.side, init: r.init };
+    }
+    if (!r.type) {
+      const name = r.name || '';
+      let side = name.toLowerCase().startsWith('left') ? 'L' : name.toLowerCase().startsWith('right') ? 'R' : 'L';
+      const lower = name.toLowerCase();
+      let type = SHOT_TYPES.find(t => lower.includes(t.split(' ')[t.split(' ').length-1].toLowerCase())) || SHOT_TYPES[0];
+      if (!type) type = SHOT_TYPES.find(t => lower.includes(t.toLowerCase().split(' ')[0])) || SHOT_TYPES[0];
+      return { id: r.id || ROW_ID_SEED++, type, side, init: r.init ?? 60 };
+    }
+    return r;
   });
+  // Merge side-based rows into per-shot objects
+  const byType = new Map();
+  for (const r of normalized) {
+    if (r.initL != null || r.initR != null) {
+      // already new style
+      byType.set(r.type + ':' + (r.id || ''), r); // treat as distinct
+      continue;
+    }
+    const key = r.type;
+    if (!byType.has(key)) {
+      byType.set(key, { id: r.id || ROW_ID_SEED++, type: r.type, initL: r.side === 'L' ? (r.init ?? 0) : 0, initR: r.side === 'R' ? (r.init ?? 0) : 0 });
+    } else {
+      const existing = byType.get(key);
+      if (r.side === 'L') existing.initL = r.init ?? existing.initL;
+      else existing.initR = r.init ?? existing.initR;
+    }
+  }
+  return Array.from(byType.values());
 }
 
-function rowDisplay(r) {
-  return `${r.side === 'L' ? 'L' : 'R'} • ${r.type}`;
-}
+function rowDisplay(r) { return r ? r.type : ''; }
+function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'L' : 'R'} • ${r.type}` : ''; }
 
 // Isotonic regression (non-decreasing). Preserves initial order while minimally adjusting values.
 function isotonicNonDecreasing(values) {
@@ -143,9 +170,9 @@ const Chip = ({ active, children, onClick, className = "" }) => (
 export default function App() {
   // Setup state
   const [rows, setRows] = useLocalStorage("pinball_rows_v1", [
-    { id: ROW_ID_SEED++, type: 'Left Ramp', side: 'L', init: 70 },
-    { id: ROW_ID_SEED++, type: 'Right Ramp', side: 'R', init: 80 },
-    { id: ROW_ID_SEED++, type: 'Left Orbit', side: 'L', init: 65 },
+    { id: ROW_ID_SEED++, type: 'Left Ramp', initL: 70, initR: 55 },
+    { id: ROW_ID_SEED++, type: 'Right Ramp', initL: 20, initR: 80 },
+    { id: ROW_ID_SEED++, type: 'Left Orbit', initL: 65, initR: 40 },
   ]);
   const [randRange, setRandRange] = useLocalStorage("pinball_randRange_v1", 15);
   const [perfectTol, setPerfectTol] = useLocalStorage("pinball_tol_v1", 2);
@@ -154,26 +181,30 @@ export default function App() {
   const [driftBias, setDriftBias] = useLocalStorage("pinball_driftBias_v1", -0.5);
 
   const [initialized, setInitialized] = useLocalStorage("pinball_initialized_v1", false);
-  const [hidden, setHidden] = useLocalStorage("pinball_hidden_v1", []); // true percentages
-  const [mental, setMental] = useLocalStorage("pinball_mental_v1", []); // player's mental model
-  const [initialOrderAsc, setInitialOrderAsc] = useLocalStorage(
-    "pinball_initialOrder_v1",
-    [] // indices sorted by initial percent ascending
-  );
+  // Hidden & mental per side
+  const [hiddenL, setHiddenL] = useLocalStorage("pinball_hiddenL_v1", []);
+  const [hiddenR, setHiddenR] = useLocalStorage("pinball_hiddenR_v1", []);
+  const [mentalL, setMentalL] = useLocalStorage("pinball_mentalL_v1", []);
+  const [mentalR, setMentalR] = useLocalStorage("pinball_mentalR_v1", []);
+  const [orderAscL, setOrderAscL] = useLocalStorage("pinball_initialOrderL_v1", []);
+  const [orderAscR, setOrderAscR] = useLocalStorage("pinball_initialOrderR_v1", []);
 
   const [mode, setMode] = useLocalStorage("pinball_mode_v1", "random"); // 'manual' | 'random'
   const [selectedIdx, setSelectedIdx] = useLocalStorage("pinball_sel_v1", 0);
   const [guess, setGuess] = useLocalStorage("pinball_guess_v1", "");
+  const [selectedSide, setSelectedSide] = useLocalStorage("pinball_selSide_v1", 'L');
   const [attempts, setAttempts] = useLocalStorage("pinball_attempts_v1", []);
   const [attemptCount, setAttemptCount] = useLocalStorage("pinball_attemptCount_v1", 0);
   const [showTruth, setShowTruth] = useLocalStorage("pinball_showTruth_v1", false);
   const [finalPhase, setFinalPhase] = useLocalStorage("pinball_finalPhase_v1", false);
-  const [finalRecall, setFinalRecall] = useLocalStorage("pinball_finalRecall_v1", []);
+  const [finalRecallL, setFinalRecallL] = useLocalStorage("pinball_finalRecallL_v1", []);
+  const [finalRecallR, setFinalRecallR] = useLocalStorage("pinball_finalRecallR_v1", []);
   const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle
 
   // Keep selectedIdx within bounds if rows shrink
   useEffect(() => {
     setSelectedIdx((idx) => (idx >= rows.length ? Math.max(0, rows.length - 1) : idx));
+    setSelectedSide(s => (s === 'L' || s === 'R') ? s : 'L');
   }, [rows.length, setSelectedIdx]);
 
   // Derived
@@ -191,21 +222,21 @@ export default function App() {
   // Initialize hidden matrix
   function startSession() {
     if (!rows.length) return;
-    const hiddenInit = rows.map((r) => clamp(r.init + rndInt(-randRange, randRange)));
-
-    // Preserve initial logical order by recording ascending order of initial percentages
-    const orderAsc = rows
-      .map((r, i) => ({ i, v: r.init }))
-      .sort((a, b) => a.v - b.v)
-      .map((x) => x.i);
-
-    setHidden(hiddenInit);
-    setInitialOrderAsc(orderAsc);
-  setMental(rows.map((r) => r.init));
+    const upgraded = upgradeLegacyRows(rows);
+    setRows(upgraded); // persist upgrade
+    const hiddenInitL = upgraded.map(r => clamp(r.initL + rndInt(-randRange, randRange)));
+    const hiddenInitR = upgraded.map(r => clamp(r.initR + rndInt(-randRange, randRange)));
+    const ascL = upgraded.map((r,i)=>({i,v:r.initL})).sort((a,b)=>a.v-b.v).map(x=>x.i);
+    const ascR = upgraded.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
+    setHiddenL(hiddenInitL); setHiddenR(hiddenInitR);
+    setOrderAscL(ascL); setOrderAscR(ascR);
+    setMentalL(upgraded.map(r=>r.initL));
+    setMentalR(upgraded.map(r=>r.initR));
     setAttempts([]);
     setAttemptCount(0);
     setFinalPhase(false);
-  setFinalRecall(rows.map((r) => r.init));
+    setFinalRecallL(upgraded.map(r=>r.initL));
+    setFinalRecallR(upgraded.map(r=>r.initR));
     setInitialized(true);
     // Hide mental model by default when a session starts
     setShowMentalModel(false);
@@ -220,21 +251,25 @@ export default function App() {
     if (driftEvery <= 0) return;
     if (attemptCount % driftEvery !== 0) return;
 
-    setHidden((prev) => {
+    setHiddenL(prev => {
       if (!prev.length) return prev;
-      const drifted = prev.map((v) => clamp(v + (Math.random() * 2 - 1) * driftMag + driftBias));
-      // Reorder to satisfy initial monotone order using isotonic regression.
-      // We transform into the initial order space, apply isotonic, then map back by indices.
-      const inOrder = initialOrderAsc.map((idx) => drifted[idx]);
-      const adjusted = isotonicNonDecreasing(inOrder).map((v) => clamp(v));
-      // Map back to original indices
+      const drifted = prev.map(v=>clamp(v + (Math.random()*2 -1)*driftMag + driftBias));
+      const inOrder = orderAscL.map(idx=>drifted[idx]);
+      const adjusted = isotonicNonDecreasing(inOrder).map(v=>clamp(v));
       const next = [...prev];
-      for (let k = 0; k < initialOrderAsc.length; k++) {
-        next[initialOrderAsc[k]] = adjusted[k];
-      }
+      for (let k=0;k<orderAscL.length;k++) next[orderAscL[k]] = adjusted[k];
       return next;
     });
-  }, [attemptCount, driftEvery, driftMag, driftBias, initialOrderAsc, initialized, setHidden]);
+    setHiddenR(prev => {
+      if (!prev.length) return prev;
+      const drifted = prev.map(v=>clamp(v + (Math.random()*2 -1)*driftMag + driftBias));
+      const inOrder = orderAscR.map(idx=>drifted[idx]);
+      const adjusted = isotonicNonDecreasing(inOrder).map(v=>clamp(v));
+      const next = [...prev];
+      for (let k=0;k<orderAscR.length;k++) next[orderAscR[k]] = adjusted[k];
+      return next;
+    });
+  }, [attemptCount, driftEvery, driftMag, driftBias, orderAscL, orderAscR, initialized]);
 
   function validatePercent(numLike) {
     const x = Number(numLike);
@@ -261,7 +296,7 @@ export default function App() {
     const val = validatePercent(guess);
     if (val === null) return;
 
-    const truth = hidden[idx];
+  const truth = (selectedSide === 'L' ? hiddenL[idx] : hiddenR[idx]) ?? 0;
     const delta = Math.round(val - truth);
     const abs = Math.abs(delta);
     let label = "perfect";
@@ -270,30 +305,20 @@ export default function App() {
     const severity = abs <= perfectTol ? "perfect" : abs <= 5 ? "slight" : abs <= 10 ? "moderate" : "severe";
     const points = Math.max(0, Math.round(100 - abs));
 
-    const rec = {
-      t: Date.now(),
-      idx,
-      name: rows[idx].name,
-      input: val,
-      truth,
-      delta,
-      label,
-      severity,
-      points,
-    };
+    const rec = { t: Date.now(), idx, side: selectedSide, input: val, truth, delta, label, severity, points };
 
     setAttempts((a) => [rec, ...a].slice(0, 200));
     setAttemptCount((c) => c + 1);
 
     // Optionally update mental model toward the input guess
-    setMental((m) => {
-      const next = [...m];
-      next[idx] = val;
-      return next;
-    });
+    if (selectedSide === 'L') {
+      setMentalL(m => { const n=[...m]; n[idx]=val; return n; });
+    } else {
+      setMentalR(m => { const n=[...m]; n[idx]=val; return n; });
+    }
 
     // Prepare next random shot if in random mode
-    if (mode === "random") setSelectedIdx(pickRandomIdx());
+  if (mode === "random") setSelectedIdx(pickRandomIdx());
 
     setGuess("");
   }
@@ -304,23 +329,29 @@ export default function App() {
 
   function resetAll() {
     setInitialized(false);
-    setHidden([]);
-    setMental([]);
+    setHiddenL([]); setHiddenR([]);
+    setMentalL([]); setMentalR([]);
     setAttempts([]);
     setAttemptCount(0);
     setFinalPhase(false);
-    setFinalRecall([]);
+    setFinalRecallL([]); setFinalRecallR([]);
     setShowTruth(false);
   }
 
   // Final grading
   const finalScore = useMemo(() => {
-    if (!finalPhase || !rows.length || !hidden.length || !finalRecall.length) return 0;
-    let mae = 0;
-    for (let i = 0; i < rows.length; i++) mae += Math.abs(clamp(finalRecall[i]) - hidden[i]);
-    mae /= rows.length;
+    if (!finalPhase || !rows.length || !hiddenL.length || !hiddenR.length || !finalRecallL.length || !finalRecallR.length) return 0;
+    let total = 0; let count = 0;
+    for (let i=0;i<rows.length;i++) {
+      const tL = hiddenL[i] ?? 0; const tR = hiddenR[i] ?? 0;
+      const gL = clamp(finalRecallL[i] ?? 0); const gR = clamp(finalRecallR[i] ?? 0);
+      total += Math.abs(gL - tL); count++;
+      total += Math.abs(gR - tR); count++;
+    }
+    if (!count) return 0;
+    const mae = total / count;
     return Math.max(0, Math.round(100 - mae));
-  }, [finalPhase, rows, hidden, finalRecall]);
+  }, [finalPhase, rows, hiddenL, hiddenR, finalRecallL, finalRecallR]);
 
   // (Section & NumberInput hoisted above)
   return (
@@ -341,7 +372,7 @@ export default function App() {
                   onClick={() =>
                     setRows((r) => [
                       ...ensureRowIds(r),
-                      newRow({ type: 'Left Ramp', side: 'L', init: 60 })
+                      newRow({ type: 'Left Ramp', initL: 60, initR: 0 })
                     ])
                   }
                   className="px-3 py-1.5 text-sm rounded-xl bg-slate-900 text-white"
@@ -355,8 +386,8 @@ export default function App() {
                   <thead>
                     <tr className="text-left text-slate-500">
                       <th className="p-2">Shot Type</th>
-                      <th className="p-2">Flipper</th>
-                      <th className="p-2">Initial %</th>
+                      <th className="p-2">Left %</th>
+                      <th className="p-2">Right %</th>
                       <th className="p-2 w-12"></th>
                     </tr>
                   </thead>
@@ -375,27 +406,15 @@ export default function App() {
                           </div>
                         </td>
                         <td className="p-2">
-                          <div className="flex gap-2">
-                            {FLIPPERS.map(f => (
-                              <Chip
-                                key={f}
-                                active={r.side === f}
-                                onClick={() => setRows(prev => { const next=[...upgradeLegacyRows(prev)]; next[i]={...next[i], side:f}; return next; })}
-                              >{f === 'L' ? 'Left Flipper' : 'Right Flipper'}</Chip>
-                            ))}
-                          </div>
+                          <NumberInput
+                            value={r.initL ?? 0}
+                            onChange={(v) => setRows(prev => { const next=[...upgradeLegacyRows(prev)]; const val=validatePercent(v) ?? next[i].initL; next[i]={...next[i], initL: val}; return next; })}
+                          />
                         </td>
                         <td className="p-2">
                           <NumberInput
-                            value={r.init}
-                            onChange={(v) =>
-                              setRows((prev) => {
-                                const next = [...upgradeLegacyRows(prev)];
-                                const val = validatePercent(v) ?? next[i].init;
-                                next[i] = { ...next[i], init: val };
-                                return next;
-                              })
-                            }
+                            value={r.initR ?? 0}
+                            onChange={(v) => setRows(prev => { const next=[...upgradeLegacyRows(prev)]; const val=validatePercent(v) ?? next[i].initR; next[i]={...next[i], initR: val}; return next; })}
                           />
                         </td>
                         <td className="p-2 text-right">
@@ -459,9 +478,9 @@ export default function App() {
                 <button
                   onClick={() => {
                     setRows([
-                      { id: ROW_ID_SEED++, type: 'Left Ramp', side: 'L', init: 70 },
-                      { id: ROW_ID_SEED++, type: 'Right Ramp', side: 'R', init: 80 },
-                      { id: ROW_ID_SEED++, type: 'Left Orbit', side: 'L', init: 65 },
+                      { id: ROW_ID_SEED++, type: 'Left Ramp', initL: 70, initR: 55 },
+                      { id: ROW_ID_SEED++, type: 'Right Ramp', initL: 20, initR: 80 },
+                      { id: ROW_ID_SEED++, type: 'Left Orbit', initL: 65, initR: 40 },
                     ]);
                   }}
                   className="px-4 py-2 rounded-2xl border"
@@ -518,7 +537,7 @@ export default function App() {
                         <div className="flex gap-2 flex-wrap">
                           {rows.map((r, i) => (
                             <Chip key={r.id} active={selectedIdx === i} onClick={() => setSelectedIdx(i)}>
-                              {rowDisplay(r)}
+                              {r.type}
                             </Chip>
                           ))}
                         </div>
@@ -527,7 +546,7 @@ export default function App() {
                   ) : (
                     <div className="flex items-center gap-3 mb-3">
                       <label className="w-28 text-sm text-slate-600">Shot</label>
-                      <div className="px-3 py-1.5 border rounded-xl text-sm flex-1">{rows[selectedIdx] ? rowDisplay(rows[selectedIdx]) : ''}</div>
+                      <div className="px-3 py-1.5 border rounded-xl text-sm flex-1">{rows[selectedIdx] ? rows[selectedIdx].type : ''}</div>
                       <button
                         onClick={() => setSelectedIdx(pickRandomIdx())}
                         className="px-3 py-1.5 rounded-xl border text-sm"
@@ -536,6 +555,14 @@ export default function App() {
                       </button>
                     </div>
                   )}
+
+                  <div className="flex items-center gap-3 mb-4">
+                    <label className="w-28 text-sm text-slate-600">Flipper</label>
+                    <div className="flex gap-2">
+                      <Chip active={selectedSide==='L'} onClick={()=>setSelectedSide('L')}>Left</Chip>
+                      <Chip active={selectedSide==='R'} onClick={()=>setSelectedSide('R')}>Right</Chip>
+                    </div>
+                  </div>
 
                   <div className="flex items-center gap-3 mb-4">
                     <label className="w-28 text-sm text-slate-600">Your recall</label>
@@ -568,50 +595,19 @@ export default function App() {
                         <tbody>
                           {rows.map((r, i) => (
                             <tr key={r.id} className="border-t">
-                              <td className="p-2">{rowDisplay(r)}</td>
+                              <td className="p-2">{r.type}</td>
                               <td className="p-2 text-right">
-                                <NumberInput
-                                  value={mental[i] ?? 0}
-                                  onChange={(v) =>
-                                    setMental((m) => {
-                                      const next = [...m];
-                                      next[i] = validatePercent(v) ?? next[i] ?? 0;
-                                      return next;
-                                    })
-                                  }
-                                />
+                                <NumberInput value={mentalL[i] ?? 0} onChange={(v)=>setMentalL(m=>{const n=[...m]; n[i]=validatePercent(v) ?? n[i] ?? 0; return n;})} />
+                              </td>
+                              <td className="p-2 text-right">
+                                <NumberInput value={mentalR[i] ?? 0} onChange={(v)=>setMentalR(m=>{const n=[...m]; n[i]=validatePercent(v) ?? n[i] ?? 0; return n;})} />
                               </td>
                               {showTruth && (
-                                <td className="p-2 text-right text-slate-600">{formatPct(hidden[i] ?? 0)}</td>
+                                <>
+                                  <td className="p-2 text-right text-slate-600">{formatPct(hiddenL[i] ?? 0)}</td>
+                                  <td className="p-2 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td>
+                                </>
                               )}
-                              <td className="p-2 text-right">
-                                <div className="inline-flex gap-1">
-                                  <button
-                                    onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)-1); return n; })}
-                                    className="px-2 py-1 rounded-lg border"
-                                  >
-                                    −1
-                                  </button>
-                                  <button
-                                    onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)-5); return n; })}
-                                    className="px-2 py-1 rounded-lg border"
-                                  >
-                                    −5
-                                  </button>
-                                  <button
-                                    onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)+1); return n; })}
-                                    className="px-2 py-1 rounded-lg border"
-                                  >
-                                    +1
-                                  </button>
-                                  <button
-                                    onClick={() => setMental((m) => { const n=[...m]; n[i]=clamp((n[i]??0)+5); return n; })}
-                                    className="px-2 py-1 rounded-lg border"
-                                  >
-                                    +5
-                                  </button>
-                                </div>
-                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -630,7 +626,7 @@ export default function App() {
                       <div className="text-sm">
                         <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Last shot</div>
-                          <div className="font-medium">{rowDisplay(rows[attempts[0].idx] || { side:'L', type:'?' })}</div>
+                          <div className="font-medium">{rowDisplayWithSide(rows[attempts[0].idx], attempts[0].side)}</div>
                         </div>
                         <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Result</div>
@@ -688,7 +684,7 @@ export default function App() {
                       {attempts.map((a, i) => (
                         <tr key={a.t + ":" + i} className="border-t">
                           <td className="p-2">{new Date(a.t).toLocaleTimeString()}</td>
-                          <td className="p-2">{rowDisplay(rows[a.idx] || { side:'L', type:'?' })}</td>
+                          <td className="p-2">{rowDisplayWithSide(rows[a.idx], a.side)}</td>
                           <td className="p-2 text-right">{formatPct(a.input)}</td>
                           <td className="p-2 text-right">{formatPct(a.truth)}</td>
                           <td className="p-2 text-right">{a.delta > 0 ? "+" : ""}{a.delta}</td>
@@ -730,21 +726,15 @@ export default function App() {
                   <tbody>
                     {rows.map((r, i) => (
                       <tr key={r.id} className="border-t">
-                        <td className="p-2">{rowDisplay(r)}</td>
+                        <td className="p-2">{r.type}</td>
                         <td className="p-2 text-right">
-                          <NumberInput
-                            value={finalRecall[i] ?? 0}
-                            onChange={(v) =>
-                              setFinalRecall((arr) => {
-                                const next = [...arr];
-                                next[i] = validatePercent(v) ?? next[i] ?? 0;
-                                return next;
-                              })
-                            }
-                          />
+                          <NumberInput value={finalRecallL[i] ?? 0} onChange={(v)=>setFinalRecallL(arr=>{const next=[...arr]; next[i]=validatePercent(v) ?? next[i] ?? 0; return next;})} />
                         </td>
-                        <td className="p-2 text-right">{formatPct(hidden[i] ?? 0)}</td>
-                        <td className="p-2 text-right">{Math.abs(clamp(finalRecall[i] ?? 0) - (hidden[i] ?? 0)).toFixed(0)} pts</td>
+                        <td className="p-2 text-right">
+                          <NumberInput value={finalRecallR[i] ?? 0} onChange={(v)=>setFinalRecallR(arr=>{const next=[...arr]; next[i]=validatePercent(v) ?? next[i] ?? 0; return next;})} />
+                        </td>
+                        <td className="p-2 text-right">{formatPct(hiddenL[i] ?? 0)} / {formatPct(hiddenR[i] ?? 0)}</td>
+                        <td className="p-2 text-right">{(Math.abs(clamp(finalRecallL[i] ?? 0)-(hiddenL[i] ?? 0)) + Math.abs(clamp(finalRecallR[i] ?? 0)-(hiddenR[i] ?? 0))).toFixed(0)} pts</td>
                       </tr>
                     ))}
                   </tbody>
