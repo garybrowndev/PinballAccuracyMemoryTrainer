@@ -450,27 +450,30 @@ export default function App() {
     const idx = mode === "random" ? selectedIdx : selectedIdx;
     const val = validatePercent(guess);
     if (val === null) return;
-
-  const truth = (selectedSide === 'L' ? hiddenL[idx] : hiddenR[idx]) ?? 0;
-    const delta = Math.round(val - truth);
-    const abs = Math.abs(delta);
-    let label = "perfect";
-    if (abs > perfectTol) label = delta < 0 ? "early" : "late";
-
-    const severity = abs <= perfectTol ? "perfect" : abs <= 5 ? "slight" : abs <= 10 ? "moderate" : "severe";
-    const points = Math.max(0, Math.round(100 - abs));
-
-    const rec = { t: Date.now(), idx, side: selectedSide, input: val, truth, delta, label, severity, points };
-
-    setAttempts((a) => [rec, ...a].slice(0, 200));
-    setAttemptCount((c) => c + 1);
-
-    // Optionally update mental model toward the input guess
-    if (selectedSide === 'L') {
-      setMentalL(m => { const n=[...m]; n[idx]=val; return n; });
-    } else {
-      setMentalR(m => { const n=[...m]; n[idx]=val; return n; });
-    }
+      const truth = (selectedSide === 'L' ? hiddenL[idx] : hiddenR[idx]) ?? 0;
+      // Memory value before we update player's mental model
+      const memBefore = selectedSide === 'L' ? (mentalL[idx] ?? 0) : (mentalR[idx] ?? 0);
+      const delta = Math.round(val - truth);
+      const abs = Math.abs(delta);
+      let label = "perfect";
+      if (abs > perfectTol) label = delta < 0 ? "early" : "late";
+      const severity = abs <= perfectTol ? "perfect" : abs <= 5 ? "slight" : abs <= 10 ? "moderate" : "severe";
+      const basePoints = Math.max(0, Math.round(100 - abs));
+      // Penalty if recall differs from original memory (memBefore). Reward alignment of recall with your own model.
+      const memDelta = val - memBefore;
+      const memAbs = Math.abs(memDelta);
+      // Memory penalty: subtract up to 20 pts (1 pt per 5 difference), encourages stable calibration. Snap to increments of 5 diff.
+      const memoryPenalty = Math.min(20, Math.round(memAbs / 5));
+      const points = Math.max(0, basePoints - memoryPenalty);
+      const rec = { t: Date.now(), idx, side: selectedSide, input: val, truth, delta, label, severity, points, basePoints, memBefore, memDelta, memoryPenalty };
+      setAttempts((a) => [rec, ...a].slice(0, 200));
+      setAttemptCount((c) => c + 1);
+      // Update mental model toward the input guess (still adjusts background model)
+      if (selectedSide === 'L') {
+        setMentalL(m => { const n=[...m]; n[idx]=val; return n; });
+      } else {
+        setMentalR(m => { const n=[...m]; n[idx]=val; return n; });
+      }
 
     // Prepare next random shot if in random mode
   if (mode === "random") setSelectedIdx(pickRandomIdx());
@@ -799,12 +802,29 @@ export default function App() {
                           <div>{formatPct(attempts[0].input)}</div>
                         </div>
                         <div className="flex justify-between mb-1">
+                          <div className="text-slate-600">Memory before</div>
+                          <div>{attempts[0].memBefore != null ? formatPct(attempts[0].memBefore) : '—'}</div>
+                        </div>
+                        <div className="flex justify-between mb-1">
+                          <div className="text-slate-600">Recall vs memory</div>
+                          <div>{attempts[0].memDelta > 0 ? '+' : ''}{attempts[0].memDelta ?? 0}</div>
+                        </div>
+                        <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Hidden truth</div>
                           <div>{formatPct(attempts[0].truth)}</div>
                         </div>
                         <div className="flex justify-between">
                           <div className="text-slate-600">Error</div>
                           <div>{attempts[0].delta > 0 ? "+" : ""}{attempts[0].delta}</div>
+                        </div>
+                        <div className="flex justify-between mt-2 pt-2 border-t">
+                          <div className="text-slate-600">Points</div>
+                          <div className="text-right">
+                            <div>{attempts[0].points} pts</div>
+                            {attempts[0].basePoints != null && (
+                              <div className="text-[11px] text-slate-500">Base {attempts[0].basePoints} − Penalty {attempts[0].memoryPenalty ?? 0}</div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -837,7 +857,9 @@ export default function App() {
                         <th className="p-2 text-left">Shot</th>
                         <th className="p-2 text-right">Recall</th>
                         <th className="p-2 text-right">Truth</th>
+                        <th className="p-2 text-right">MemBefore</th>
                         <th className="p-2 text-right">Delta</th>
+                        <th className="p-2 text-right">MemΔ</th>
                         <th className="p-2 text-right">Label</th>
                         <th className="p-2 text-right">Points</th>
                       </tr>
@@ -849,7 +871,9 @@ export default function App() {
                           <td className="p-2">{rowDisplayWithSide(rows[a.idx], a.side)}</td>
                           <td className="p-2 text-right">{formatPct(a.input)}</td>
                           <td className="p-2 text-right">{formatPct(a.truth)}</td>
+                          <td className="p-2 text-right">{a.memBefore != null ? formatPct(a.memBefore) : '—'}</td>
                           <td className="p-2 text-right">{a.delta > 0 ? "+" : ""}{a.delta}</td>
+                          <td className="p-2 text-right">{a.memDelta != null ? (a.memDelta > 0 ? '+' : '') + a.memDelta : '—'}</td>
                           <td className="p-2 text-right capitalize">{a.label}</td>
                           <td className="p-2 text-right">{a.points}</td>
                         </tr>
