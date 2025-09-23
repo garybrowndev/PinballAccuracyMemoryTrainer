@@ -257,7 +257,6 @@ export default function App() {
     { id: ROW_ID_SEED++, type: 'Right Ramp', initL: 20, initR: 80 },
     { id: ROW_ID_SEED++, type: 'Left Orbit', initL: 65, initR: 40 },
   ]);
-  const [perfectTol, setPerfectTol] = useLocalStorage("pinball_tol_v1", 2);
   const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 5);
   const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2);
   const [driftBias, setDriftBias] = useLocalStorage("pinball_driftBias_v1", -0.5);
@@ -413,21 +412,31 @@ export default function App() {
       const prevInput = prevSame ? prevSame.input : null;
       const delta = Math.round(val - truth);
       const abs = Math.abs(delta);
-      let label = "perfect";
-      if (abs > perfectTol) label = delta < 0 ? "early" : "late";
-      const severity = abs <= perfectTol ? "perfect" : abs <= 5 ? "slight" : abs <= 10 ? "moderate" : "severe";
+      // Classification now fixed to 5% increments:
+      // 0 => perfect, 5 => slight, 10 => fairly, >=15 => very (early/late determined by sign)
+      let label;
+      if (abs === 0) {
+        label = "perfect";
+      } else {
+        label = delta < 0 ? "early" : "late";
+      }
+      let severity;
+      if (abs === 0) severity = "perfect";
+      else if (abs === 5) severity = "slight";
+      else if (abs === 10) severity = "fairly";
+      else severity = "very"; // abs >= 15
       const basePoints = Math.max(0, Math.round(100 - abs));
       // Adjustment logic:
-      // If previous attempt existed and was 'late' (prev delta > perfectTol), user should decrease number this time.
-      // If previous attempt existed and was 'early' (prev delta < -perfectTol), user should increase number.
+  // If previous attempt existed and was 'late' (prev delta > 0), user should decrease number this time.
+  // If previous attempt existed and was 'early' (prev delta < 0), user should increase number.
       // If previous attempt was within tolerance, no adjustment required.
       let adjustRequired = false;
       let requiredDir = 0; // -1 means should go lower, +1 higher, 0 none
       let adjustCorrect = true; // default true if no requirement
       if (prevSame) {
         const prevDelta = prevSame.delta;
-        if (prevDelta > perfectTol) { adjustRequired = true; requiredDir = -1; }
-        else if (prevDelta < -perfectTol) { adjustRequired = true; requiredDir = 1; }
+  if (prevDelta > 0) { adjustRequired = true; requiredDir = -1; }
+  else if (prevDelta < 0) { adjustRequired = true; requiredDir = 1; }
         if (adjustRequired) {
           if (requiredDir === -1 && !(val < prevSame.input)) adjustCorrect = false;
           if (requiredDir === 1 && !(val > prevSame.input)) adjustCorrect = false;
@@ -606,11 +615,6 @@ export default function App() {
 
             <Section title="2) Session parameters">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-3">
-                  <label className="w-48">Perfect tolerance ±</label>
-                  <NumberInput value={perfectTol} onChange={setPerfectTol} min={0} max={10} />
-                  <span>pts</span>
-                </div>
                 <div className="flex items-center gap-3">
                   <label className="w-48">Initial random steps</label>
                   <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} />
