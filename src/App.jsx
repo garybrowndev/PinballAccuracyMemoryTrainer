@@ -556,6 +556,12 @@ export default function App() {
   const ascR = rows.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
     // Candidate random offsets (independent) within allowed band using configurable steps
   const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // still capped at 4 for initial randomization.
+    // Edge case note: if initRandSteps exceeds the eventual drift usableSteps (floor(driftMag)) then
+    // the initial hidden offsets may land outside the subsequent drift band, making early large
+    // deviations unreachable until drift magnitude increases. For now we allow this (gives a
+    // slightly broader initial challenge) but we could alternatively clamp:
+    //   steps = Math.min(steps, Math.floor(Number(driftMag)||0));
+    // if consistent bands are preferred.
     const candL = bL.map(v => {
       const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
@@ -754,6 +760,78 @@ export default function App() {
   }, []);
 
   // (Section & NumberInput hoisted above)
+  // --- Reordering helpers (only active pre-session) ---
+  const [dragRowIdx, setDragRowIdx] = useState(null);
+  function normalizeRowPercents(rowsArr) {
+    // Left side normalization: non-decreasing; zeros allowed until first positive; after first positive, strictly increasing (>= +5); no zeros allowed below first positive.
+    let lastNonZero = 0;
+    const out = rowsArr.map(r => ({...r}));
+    for (let i=0;i<out.length;i++) {
+      let v = snap5(out[i].initL ?? 0);
+      if (lastNonZero === 0) {
+        // zeros allowed; ensure non-decreasing relative to lastNonZero (0) trivially; any positive okay
+        if (v < 0) v = 0;
+      } else {
+        // must be strictly greater than lastNonZero and cannot be zero
+        if (v === 0 || v <= lastNonZero) v = Math.min(100, lastNonZero + 5);
+      }
+      out[i].initL = v;
+      if (v > 0) lastNonZero = v;
+    }
+    // Right side normalization: strictly decreasing top -> bottom.
+    let prevR = 105; // greater than max
+    for (let i=0;i<out.length;i++) {
+      let v = snap5(out[i].initR ?? 0);
+      if (v >= prevR) v = prevR - 5; // enforce strictly less
+      if (v < 0) v = 0;
+      out[i].initR = v;
+      prevR = v;
+    }
+    return out;
+  }
+  function handleRowReorder(fromIdx, toIdx) {
+    if (fromIdx == null || toIdx == null || fromIdx === toIdx) { setDragRowIdx(null); return; }
+    setRows(prev => {
+      // Helper: align current spatial left->right order to current top->bottom order if out of sync.
+      function alignPositions(list) {
+        const sortedPositions = [...list].sort((a,b)=>a.x-b.x).map(r=>({x:r.x,y:r.y}));
+        return list.map((r,i)=> ({...r, x: sortedPositions[i].x, y: sortedPositions[i].y }));
+      }
+      // Start from a deep-ish copy (shallow objects cloned so we can mutate x,y safely)
+      let arr = prev.map(r=>({...r}));
+      // Pre-align if previous operations left them mismatched.
+      const misaligned = (()=>{
+        const orderByX = [...arr].sort((a,b)=>a.x-b.x);
+        for (let i=0;i<arr.length;i++) if (orderByX[i].id !== arr[i].id) return true;
+        return false;
+      })();
+      if (misaligned) arr = alignPositions(arr);
+      // Perform adjacent swaps to move fromIdx to toIdx while swapping spatial coordinates with each neighbor.
+      if (fromIdx < toIdx) {
+        for (let i = fromIdx; i < toIdx; i++) {
+          const a = arr[i];
+          const b = arr[i+1];
+          [a.x, b.x] = [b.x, a.x];
+          [a.y, b.y] = [b.y, a.y];
+          arr[i] = b; arr[i+1] = a;
+        }
+      } else if (fromIdx > toIdx) {
+        for (let i = fromIdx; i > toIdx; i--) {
+          const a = arr[i];
+          const b = arr[i-1];
+          [a.x, b.x] = [b.x, a.x];
+          [a.y, b.y] = [b.y, a.y];
+          arr[i] = b; arr[i-1] = a;
+        }
+      }
+      // Final guarantee: enforce left->right strictly increasing relative order to index sequence (minimal reassignment if needed)
+      const outOfOrder = arr.some((r,i)=> i>0 && arr[i-1].x > r.x);
+      if (outOfOrder) arr = alignPositions(arr);
+      // Normalize percentage constraints after reorder.
+      return normalizeRowPercents(arr);
+    });
+    setDragRowIdx(null);
+  }
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
       <div className="max-w-5xl mx-auto p-4 md:p-8">
@@ -800,7 +878,15 @@ export default function App() {
                   </thead>
                   <tbody>
                     {rows.map((r, i) => (
-                      <tr key={r.id} className="border-t align-top">
+                      <tr
+                        key={r.id}
+                        className={`border-t align-top ${dragRowIdx===i ? 'bg-slate-50' : ''}`}
+                        draggable={!initialized}
+                        onDragStart={(e)=>{ if(initialized) return; setDragRowIdx(i); e.dataTransfer.effectAllowed='move'; }}
+                        onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); }}
+                        onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); }}
+                        onDragEnd={()=> setDragRowIdx(null)}
+                      >
                         <td className="p-2 align-top">
                           {collapsedTypes.includes(r.id) && r.type ? (
                             <div className="flex flex-wrap gap-2 max-w-[520px]">
@@ -902,7 +988,7 @@ export default function App() {
                             </div>
                           )}
                         </td>
-                        <td className="p-2 text-right">
+                        <td className="p-2 text-right cursor-grab select-none" title={!initialized ? 'Drag to reorder' : ''}>
                           <button
                             onClick={() => setRows((prev) => prev.filter((_, k) => k !== i))}
                             className="text-slate-500 hover:text-red-600"
