@@ -307,11 +307,12 @@ export default function App() {
     { id: ROW_ID_SEED++, type: 'Right Ramp', initL: 20, initR: 80 },
     { id: ROW_ID_SEED++, type: 'Left Orbit', initL: 65, initR: 40 },
   ]);
-  const [randRange, setRandRange] = useLocalStorage("pinball_randRange_v1", 15);
   const [perfectTol, setPerfectTol] = useLocalStorage("pinball_tol_v1", 2);
   const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 5);
   const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2);
   const [driftBias, setDriftBias] = useLocalStorage("pinball_driftBias_v1", -0.5);
+  // Initial hidden truth randomization steps (each step = 5 percentage points). Previously fixed at 4 (±20).
+  const [initRandSteps, setInitRandSteps] = useLocalStorage("pinball_initRandSteps_v1", 4);
 
   const [initialized, setInitialized] = useLocalStorage("pinball_initialized_v1", false);
   // Hidden & mental per side
@@ -336,6 +337,8 @@ export default function App() {
   const [finalRecallL, setFinalRecallL] = useLocalStorage("pinball_finalRecallL_v1", []);
   const [finalRecallR, setFinalRecallR] = useLocalStorage("pinball_finalRecallR_v1", []);
   const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle
+  // UI local (non-persisted) state: collapsed shot type rows (store ids)
+  const [collapsedTypes, setCollapsedTypes] = useState([]);
 
   // Keep selectedIdx within bounds if rows shrink
   useEffect(() => {
@@ -367,12 +370,13 @@ export default function App() {
     // Determine original ordering by base values
     const ascL = upgraded.map((r,i)=>({i,v:r.initL})).sort((a,b)=>a.v-b.v).map(x=>x.i);
     const ascR = upgraded.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
-    // Candidate random offsets (independent) within allowed band
+    // Candidate random offsets (independent) within allowed band using configurable steps
+    const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // keep within drift anchor bounds (±20 max)
     const candL = bL.map(v => {
-      const off = rndInt(-4,4)*5; const lo = Math.max(0, v-20); const hi = Math.min(100, v+20); return snap5(Math.min(hi, Math.max(lo, v+off)));
+      const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
     const candR = bR.map(v => {
-      const off = rndInt(-4,4)*5; const lo = Math.max(0, v-20); const hi = Math.min(100, v+20); return snap5(Math.min(hi, Math.max(lo, v+off)));
+      const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
     // Enforce ordering via bounded isotonic regression
   const hiddenInitL = strictlyIncrease(isotonicWithBounds(candL, bL, ascL).map(v=>snap5(v)), bL, ascL);
@@ -399,15 +403,20 @@ export default function App() {
     if (attemptCount === 0) return;
     if (driftEvery <= 0) return;
     if (attemptCount % driftEvery !== 0) return;
-    const maxSteps = 4; // hard cap per requirements (4 * 5 = 20)
-    const stepDrift = () => (Math.random() < 0.5 ? -1 : 1) * rndInt(0, Math.min(maxSteps, driftMag)) * 5;
+  const maxSteps = 4; // hard cap per requirements (4 * 5 = 20)
+  // Defensive numeric coercion (in case stored as strings in localStorage parsing)
+  const driftMagNum = Number(driftMag);
+  const driftBiasNum = Number(driftBias);
+  const safeMag = Number.isFinite(driftMagNum) ? driftMagNum : 0;
+  const safeBias = Number.isFinite(driftBiasNum) ? driftBiasNum : 0;
+  const stepDrift = () => (Math.random() < 0.5 ? -1 : 1) * rndInt(0, Math.min(maxSteps, safeMag)) * 5;
 
     setHiddenL(prev => {
       if (!prev.length || !baseL.length) return prev;
       const drifted = prev.map((v,i) => {
         const b = baseL[i];
         const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
-        const candidate = snap5(v + stepDrift() + driftBias);
+  const candidate = snap5(v + stepDrift() + safeBias);
         return Math.min(hi, Math.max(lo, candidate));
       });
       const ordered = isotonicWithBounds(drifted, baseL, orderAscL);
@@ -418,7 +427,7 @@ export default function App() {
       const drifted = prev.map((v,i) => {
         const b = baseR[i];
         const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
-        const candidate = snap5(v + stepDrift() + driftBias);
+  const candidate = snap5(v + stepDrift() + safeBias);
         return Math.min(hi, Math.max(lo, candidate));
       });
       const ordered = isotonicWithBounds(drifted, baseR, orderAscR);
@@ -451,21 +460,40 @@ export default function App() {
     const val = validatePercent(guess);
     if (val === null) return;
       const truth = (selectedSide === 'L' ? hiddenL[idx] : hiddenR[idx]) ?? 0;
-      // Memory value before we update player's mental model
-      const memBefore = selectedSide === 'L' ? (mentalL[idx] ?? 0) : (mentalR[idx] ?? 0);
+      // Determine previous attempt for same shot & side to assess adjustment quality
+      const prevSame = attempts.find(a => a.idx === idx && a.side === selectedSide);
+      const prevInput = prevSame ? prevSame.input : null;
       const delta = Math.round(val - truth);
       const abs = Math.abs(delta);
       let label = "perfect";
       if (abs > perfectTol) label = delta < 0 ? "early" : "late";
       const severity = abs <= perfectTol ? "perfect" : abs <= 5 ? "slight" : abs <= 10 ? "moderate" : "severe";
       const basePoints = Math.max(0, Math.round(100 - abs));
-      // Penalty if recall differs from original memory (memBefore). Reward alignment of recall with your own model.
-      const memDelta = val - memBefore;
-      const memAbs = Math.abs(memDelta);
-      // Memory penalty: subtract up to 20 pts (1 pt per 5 difference), encourages stable calibration. Snap to increments of 5 diff.
-      const memoryPenalty = Math.min(20, Math.round(memAbs / 5));
-      const points = Math.max(0, basePoints - memoryPenalty);
-      const rec = { t: Date.now(), idx, side: selectedSide, input: val, truth, delta, label, severity, points, basePoints, memBefore, memDelta, memoryPenalty };
+      // Adjustment logic:
+      // If previous attempt existed and was 'late' (prev delta > perfectTol), user should decrease number this time.
+      // If previous attempt existed and was 'early' (prev delta < -perfectTol), user should increase number.
+      // If previous attempt was within tolerance, no adjustment required.
+      let adjustRequired = false;
+      let requiredDir = 0; // -1 means should go lower, +1 higher, 0 none
+      let adjustCorrect = true; // default true if no requirement
+      if (prevSame) {
+        const prevDelta = prevSame.delta;
+        if (prevDelta > perfectTol) { adjustRequired = true; requiredDir = -1; }
+        else if (prevDelta < -perfectTol) { adjustRequired = true; requiredDir = 1; }
+        if (adjustRequired) {
+          if (requiredDir === -1 && !(val < prevSame.input)) adjustCorrect = false;
+          if (requiredDir === 1 && !(val > prevSame.input)) adjustCorrect = false;
+        }
+      }
+      // Adjustment penalty only if required and incorrect. Penalty magnitude scaled by how strongly you went the wrong way or failed to move.
+      let adjustPenalty = 0;
+      if (adjustRequired && !adjustCorrect && prevInput != null) {
+        const diff = Math.abs(val - prevInput); // wrong direction or zero movement
+        // 5 points base penalty + 1 per 5% of (wrong or zero) adjustment up to 25
+        adjustPenalty = Math.min(25, 5 + Math.round(diff / 5));
+      }
+      const points = Math.max(0, basePoints - adjustPenalty);
+      const rec = { t: Date.now(), idx, side: selectedSide, input: val, truth, delta, label, severity, points, basePoints, prevInput, adjustRequired, requiredDir, adjustCorrect, adjustPenalty };
       setAttempts((a) => [rec, ...a].slice(0, 200));
       setAttemptCount((c) => c + 1);
       // Update mental model toward the input guess (still adjusts background model)
@@ -565,15 +593,38 @@ export default function App() {
                     {upgradeLegacyRows(rows).map((r, i) => (
                       <tr key={r.id} className="border-t align-top">
                         <td className="p-2">
-                          <div className="flex flex-wrap gap-2 max-w-xs">
-                            {SHOT_TYPES.map(t => (
+                          {collapsedTypes.includes(r.id) && r.type ? (
+                            <div className="flex flex-wrap gap-2 max-w-xs">
                               <Chip
-                                key={t}
-                                active={r.type === t}
-                                onClick={() => setRows(prev => { const next=[...upgradeLegacyRows(prev)]; next[i]={...next[i], type:t}; return next; })}
-                              >{t}</Chip>
-                            ))}
-                          </div>
+                                active
+                                onClick={() => {
+                                  // Deselect: clear type AND expand options again
+                                  setRows(prev => { const next=[...upgradeLegacyRows(prev)]; next[i]={...next[i], type:null}; return next; });
+                                  setCollapsedTypes(list => list.filter(id => id !== r.id));
+                                }}
+                              >{r.type}</Chip>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-2 max-w-xs">
+                              {SHOT_TYPES.map(t => (
+                                <Chip
+                                  key={t}
+                                  active={r.type === t}
+                                  onClick={() => {
+                                    const newType = (r.type === t) ? null : t; // toggle same chip off
+                                    setRows(prev => { const next=[...upgradeLegacyRows(prev)]; next[i]={...next[i], type:newType}; return next; });
+                                    // Collapse only if a type selected (non-null)
+                                    setCollapsedTypes(list => {
+                                      const has = list.includes(r.id);
+                                      if (newType && !has) return [...list, r.id];
+                                      if (!newType && has) return list.filter(id => id !== r.id);
+                                      return list;
+                                    });
+                                  }}
+                                >{t}</Chip>
+                              ))}
+                            </div>
+                          )}
                         </td>
                         <td className="p-2">
                           <div className="flex flex-wrap gap-1 max-w-[180px]">
@@ -608,14 +659,14 @@ export default function App() {
             <Section title="2) Session parameters">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-3">
-                  <label className="w-48">Hidden randomization ±</label>
-                  <NumberInput value={randRange} onChange={setRandRange} min={0} max={50} />
-                  <span>%</span>
-                </div>
-                <div className="flex items-center gap-3">
                   <label className="w-48">Perfect tolerance ±</label>
                   <NumberInput value={perfectTol} onChange={setPerfectTol} min={0} max={10} />
                   <span>pts</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="w-48">Initial random steps</label>
+                  <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} />
+                  <span className="text-slate-500">(×5%)</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <label className="w-48">Drift every</label>
@@ -801,14 +852,24 @@ export default function App() {
                           <div className="text-slate-600">Your recall</div>
                           <div>{formatPct(attempts[0].input)}</div>
                         </div>
-                        <div className="flex justify-between mb-1">
-                          <div className="text-slate-600">Memory before</div>
-                          <div>{attempts[0].memBefore != null ? formatPct(attempts[0].memBefore) : '—'}</div>
-                        </div>
-                        <div className="flex justify-between mb-1">
-                          <div className="text-slate-600">Recall vs memory</div>
-                          <div>{attempts[0].memDelta > 0 ? '+' : ''}{attempts[0].memDelta ?? 0}</div>
-                        </div>
+                        {attempts[0].prevInput != null && (
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Prev recall</div>
+                            <div>{formatPct(attempts[0].prevInput)}</div>
+                          </div>
+                        )}
+                        {attempts[0].adjustRequired && (
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Adjustment needed</div>
+                            <div className="capitalize">{attempts[0].requiredDir === -1 ? 'Lower' : attempts[0].requiredDir === 1 ? 'Higher' : 'None'}</div>
+                          </div>
+                        )}
+                        {attempts[0].adjustRequired && (
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Adjustment result</div>
+                            <div className={attempts[0].adjustCorrect ? 'text-emerald-600' : 'text-red-600'}>{attempts[0].adjustCorrect ? 'Correct' : 'Missed'}</div>
+                          </div>
+                        )}
                         <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Hidden truth</div>
                           <div>{formatPct(attempts[0].truth)}</div>
@@ -822,7 +883,7 @@ export default function App() {
                           <div className="text-right">
                             <div>{attempts[0].points} pts</div>
                             {attempts[0].basePoints != null && (
-                              <div className="text-[11px] text-slate-500">Base {attempts[0].basePoints} − Penalty {attempts[0].memoryPenalty ?? 0}</div>
+                              <div className="text-[11px] text-slate-500">Base {attempts[0].basePoints}{attempts[0].adjustPenalty ? ` − Adj Penalty ${attempts[0].adjustPenalty}` : ''}</div>
                             )}
                           </div>
                         </div>
@@ -857,9 +918,11 @@ export default function App() {
                         <th className="p-2 text-left">Shot</th>
                         <th className="p-2 text-right">Recall</th>
                         <th className="p-2 text-right">Truth</th>
-                        <th className="p-2 text-right">MemBefore</th>
+                        <th className="p-2 text-right">Prev</th>
                         <th className="p-2 text-right">Delta</th>
-                        <th className="p-2 text-right">MemΔ</th>
+                        <th className="p-2 text-right">Adj?</th>
+                        <th className="p-2 text-right">Dir</th>
+                        <th className="p-2 text-right">AdjPen</th>
                         <th className="p-2 text-right">Label</th>
                         <th className="p-2 text-right">Points</th>
                       </tr>
@@ -871,9 +934,11 @@ export default function App() {
                           <td className="p-2">{rowDisplayWithSide(rows[a.idx], a.side)}</td>
                           <td className="p-2 text-right">{formatPct(a.input)}</td>
                           <td className="p-2 text-right">{formatPct(a.truth)}</td>
-                          <td className="p-2 text-right">{a.memBefore != null ? formatPct(a.memBefore) : '—'}</td>
+                          <td className="p-2 text-right">{a.prevInput != null ? formatPct(a.prevInput) : '—'}</td>
                           <td className="p-2 text-right">{a.delta > 0 ? "+" : ""}{a.delta}</td>
-                          <td className="p-2 text-right">{a.memDelta != null ? (a.memDelta > 0 ? '+' : '') + a.memDelta : '—'}</td>
+                          <td className="p-2 text-right">{a.adjustRequired ? (a.adjustCorrect ? '✔' : '✖') : '—'}</td>
+                          <td className="p-2 text-right">{a.adjustRequired ? (a.requiredDir === -1 ? '↓' : a.requiredDir === 1 ? '↑' : '') : '—'}</td>
+                          <td className="p-2 text-right">{a.adjustPenalty ? a.adjustPenalty : 0}</td>
                           <td className="p-2 text-right capitalize">{a.label}</td>
                           <td className="p-2 text-right">{a.points}</td>
                         </tr>
