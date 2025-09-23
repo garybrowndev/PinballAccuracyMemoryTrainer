@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 
 // Pinball Accuracy Memory Trainer — single-file React app
 // Local, no backend. All data in memory + localStorage.
@@ -45,7 +45,16 @@ const SHOT_TYPE_GROUPS = [
 const FLIPPERS = ['L','R']; // left/right flippers
 
 // Current row schema only
-const newRow = (over = {}) => ({ id: ROW_ID_SEED++, type: 'Left Ramp', initL: 60, initR: 60, ...over });
+const newRow = (over = {}) => ({
+  id: ROW_ID_SEED++,
+  type: 'Left Ramp',
+  initL: 60,
+  initR: 60,
+  // Canvas position (relative 0..1). Center default.
+  x: 0.5,
+  y: 0.3,
+  ...over
+});
 
 function rowDisplay(r) { return r ? r.type : ''; }
 function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'L' : 'R'} • ${r.type}` : ''; }
@@ -259,22 +268,203 @@ const NumberInput = ({ value, onChange, min = 0, max = 100, step = 1, className 
   />
 );
 
-// Simple chip button
-const Chip = ({ active, children, onClick, className = "" }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={
-      `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none ` +
-      (active
-        ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-        : "bg-white hover:bg-slate-100 text-slate-700 border-slate-300") +
-      (className ? " " + className : "")
+// Simple chip button (auto multi-line for 3+ word shot type labels)
+const Chip = ({ active, children, onClick, className = "" }) => {
+  let content = children;
+  if (typeof children === 'string') {
+    const words = children.split(' ').filter(Boolean);
+    if (words.length >= 3) {
+      content = (
+        <span className="flex flex-col leading-tight items-center">
+          <span>{words[0]}</span>
+          <span>{words.slice(1).join(' ')}</span>
+        </span>
+      );
     }
-  >
-    {children}
-  </button>
-);
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center ` +
+        (active
+          ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+          : "bg-white hover:bg-slate-100 text-slate-700 border-slate-300") +
+        (className ? " " + className : "")
+      }
+    >
+      {content}
+    </button>
+  );
+};
+
+// Simple playfield editor for arranging shots spatially & adjusting flipper percentages
+function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
+  const canvasRef = React.useRef(null);
+  const [dragId, setDragId] = useState(null);
+  const [dragOffset, setDragOffset] = useState({x:0,y:0});
+
+  // Dimensions logic
+  function clamp01(v){ return Math.min(1, Math.max(0, v)); }
+
+  const handleMouseDown = (e, id) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const row = rows.find(r=>r.id===id);
+    if (!row) return;
+    const px = row.x * rect.width;
+    const py = row.y * rect.height;
+    setDragOffset({ x: e.clientX - (rect.left + px), y: e.clientY - (rect.top + py) });
+    setDragId(id);
+    setSelectedId(id);
+  };
+
+  useEffect(()=>{
+    const up = ()=> setDragId(null);
+    const move = (e)=>{
+      if (!dragId) return;
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const nx = clamp01((e.clientX - rect.left - dragOffset.x)/rect.width);
+      const ny = clamp01((e.clientY - rect.top - dragOffset.y)/rect.height);
+      setRows(prev => prev.map(r=> r.id===dragId ? {...r, x:nx, y:ny} : r));
+    };
+    window.addEventListener('mouseup', up);
+    window.addEventListener('mousemove', move);
+    return ()=>{ window.removeEventListener('mouseup', up); window.removeEventListener('mousemove', move); };
+  }, [dragId, dragOffset, setRows]);
+
+  // Constraint feedback: order along X should correlate with Right flipper percentage ordering (descending) and mirror for left side.
+  const violations = useMemo(()=>{
+    const issues = new Set();
+    // Right flipper: higher initR should be more to the left for natural forehand (approx). We'll enforce monotonic: sort by x ascending -> initR non-increasing.
+    const sortedByX = [...rows].sort((a,b)=>a.x-b.x);
+    let lastR = Infinity;
+    for (const r of sortedByX){
+      if (r.initR > lastR) issues.add(r.id); else lastR = r.initR;
+    }
+    // Left flipper: higher initL should be more to the right (mirror). sort by x descending -> initL non-increasing.
+    const sortedByXDesc = [...rows].sort((a,b)=>b.x-a.x);
+    let lastL = Infinity;
+    for (const r of sortedByXDesc){
+      if (r.initL > lastL) issues.add(r.id); else lastL = r.initL;
+    }
+    return issues;
+  }, [rows]);
+
+  return (
+    <div className="mt-6">
+      <h3 className="font-medium mb-2">Playfield Layout (beta)</h3>
+      <div className="text-xs text-slate-600 mb-2">Drag shot blocks. Percent ordering is softly validated against spatial ordering. Red border = spatial ordering conflict.</div>
+      <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
+        {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
+        <PlayfieldScenery />
+        {rows.map(r=>{
+          const sel = r.id === selectedId;
+          const vio = violations.has(r.id);
+          return (
+            <div
+              key={r.id}
+              style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
+              onMouseDown={(e)=>handleMouseDown(e,r.id)}
+              className={`absolute cursor-move select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${vio?'border-red-500':'border-slate-300'}`}
+            >
+              <div className="font-medium truncate max-w-[110px]" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
+              <div className="flex gap-1 mt-0.5">
+                <span className="px-1 rounded bg-slate-100">L {r.initL ?? '—'}</span>
+                <span className="px-1 rounded bg-slate-100">R {r.initR ?? '—'}</span>
+              </div>
+              <button
+                onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]"
+                title="Delete shot"
+              >✕</button>
+            </div>
+          );
+        })}
+        {/* Lines from flipper to selected block (rough illustration) */}
+        {selectedId && (()=>{
+          const r = rows.find(x=>x.id===selectedId); if(!r) return null;
+          const rect = canvasRef.current?.getBoundingClientRect();
+          const w = rect?.width || 1; const h = rect?.height || 1;
+          const bx = r.x * w; const by = r.y * h;
+          // Mapping: 0% = wide outer tip (rail side), 100% = narrow inner base near center drain.
+          // We interpolate linearly along each flipper's center edge approximation.
+          function lerp(a,b,t){return a+(b-a)*t;}
+          // Left flipper adjusted closer: tip low (415,970) base high (285,835)
+          const L_TIP = { x: 415, y: 970 }, L_BASE = { x: 285, y: 835 };
+          // Right flipper adjusted closer: tip low (585,970) base high (715,835)
+          const R_TIP = { x: 585, y: 970 }, R_BASE = { x: 715, y: 835 };
+          // Inverted mapping per request: previously 0=tip,100=base. Now 0=base,100=tip.
+          const Lp = (p)=>({ x: lerp(L_BASE.x, L_TIP.x, (p||0)/100)/1000*w, y: lerp(L_BASE.y, L_TIP.y, (p||0)/100)/1000*h });
+          const Rp = (p)=>({ x: lerp(R_BASE.x, R_TIP.x, (p||0)/100)/1000*w, y: lerp(R_BASE.y, R_TIP.y, (p||0)/100)/1000*h });
+          const leftAnchor = Lp(r.initL ?? 50);
+          const rightAnchor = Rp(r.initR ?? 50);
+          return (
+            <svg className="absolute inset-0 pointer-events-none" viewBox={`0 0 ${w} ${h}`}> 
+              { (r.initL ?? 0) > 0 && (()=>{
+                const label = `${r.initL}`;
+                const fs = 11; // match shot box number font size
+                const padX = 5, padY = 2;
+                const wTxt = label.length * fs * 0.6;
+                const rectW = wTxt + padX*2;
+                const rectH = fs + padY*2;
+                const cx = leftAnchor.x; const cy = leftAnchor.y - 8;
+                return (
+                  <g>
+                    <line x1={leftAnchor.x} y1={leftAnchor.y} x2={bx} y2={by} stroke="#0ea5e9" strokeWidth={6} />
+                    <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
+                    <text x={cx} y={cy - rectH/2 + fs/2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
+                  </g>
+                );
+              })()}
+              { (r.initR ?? 0) > 0 && (()=>{
+                const label = `${r.initR}`;
+                const fs = 11;
+                const padX = 5, padY = 2;
+                const wTxt = label.length * fs * 0.6;
+                const rectW = wTxt + padX*2;
+                const rectH = fs + padY*2;
+                const cx = rightAnchor.x; const cy = rightAnchor.y - 8;
+                return (
+                  <g>
+                    <line x1={rightAnchor.x} y1={rightAnchor.y} x2={bx} y2={by} stroke="#dc2626" strokeWidth={6} />
+                    <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
+                    <text x={cx} y={cy - rectH/2 + fs/2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
+                  </g>
+                );
+              })()}
+            </svg>
+          );
+        })()}
+      </div>
+      {/* Footer controls removed: editing now solely via table; additions via + Add shot button above. */}
+    </div>
+  );
+}
+
+function PlayfieldScenery(){
+  /* Simplified bottom: two basic elongated flippers only.
+     Coordinate system: 1000x1000 viewBox.
+     Desired physical proportions (approx): length ~3in, narrow base ~1cm, wide tip ~2.5cm.
+     We'll treat: base width = 22 units, tip width = 55 units, length projected along 45deg ~ 300 units.
+     Left flipper: narrow base near center bottom (x=500-40, y=970) offset left ~40; gap between bases ~ 80.
+     Right flipper: mirror.
+     Mapping for percentage anchors (used elsewhere):
+       Left: 0% = wide tip (outer/rail side), 100% = narrow base near center.
+       Right: 0% = wide tip (outer/rail side), 100% = narrow base near center.
+  */
+  return (
+    <div className="absolute inset-0 pointer-events-none">
+      <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 1000">
+        {/* Left flipper polygon (rounded by stroke-linejoin round + path) */}
+  <path d="M280 835 L250 855 L415 970 L440 945 Z" fill="#475569" stroke="#94a3b8" strokeWidth="8" strokeLinejoin="round" strokeLinecap="round" />
+  {/* Right flipper (flipped vertically, moved closer) */}
+  <path d="M720 835 L750 855 L585 970 L560 945 Z" fill="#475569" stroke="#94a3b8" strokeWidth="8" strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+    </div>
+  );
+}
 
 // ---------- main component ----------
 export default function App() {
@@ -316,6 +506,23 @@ export default function App() {
   const [collapsedTypes, setCollapsedTypes] = useState([]);
   const [collapsedLeft, setCollapsedLeft] = useState([]); // row ids whose Left % list is collapsed
   const [collapsedRight, setCollapsedRight] = useState([]); // row ids whose Right % list is collapsed
+  const [showPlayfield, setShowPlayfield] = useState(true);
+  const [selectedBlockId, setSelectedBlockId] = useState(null);
+  // One-time auto-collapse so pre-selected values (from persisted state or defaults) show as single chips, not full option lists on first load.
+  const didInitCollapse = useRef(false);
+  useEffect(() => {
+    if (didInitCollapse.current) return;
+    if (!rows || !rows.length) return; // nothing yet
+    // Only initialize if user hasn't interacted (arrays still empty)
+    if (collapsedTypes.length || collapsedLeft.length || collapsedRight.length) { didInitCollapse.current = true; return; }
+    const typeIds = rows.filter(r => !!r.type).map(r => r.id);
+    const leftIds = rows.filter(r => r.initL != null).map(r => r.id);
+    const rightIds = rows.filter(r => r.initR != null).map(r => r.id);
+    if (typeIds.length) setCollapsedTypes(typeIds);
+    if (leftIds.length) setCollapsedLeft(leftIds);
+    if (rightIds.length) setCollapsedRight(rightIds);
+    didInitCollapse.current = true;
+  }, [rows, collapsedTypes.length, collapsedLeft.length, collapsedRight.length]);
 
   // Keep selectedIdx within bounds if rows shrink
   useEffect(() => {
@@ -572,13 +779,20 @@ export default function App() {
                 </button>
               }
             >
+              <div className="mb-4 flex items-center gap-3 text-xs">
+                <label className="flex items-center gap-2"><input type="checkbox" checked={showPlayfield} onChange={e=>setShowPlayfield(e.target.checked)} />Show playfield editor (beta)</label>
+                <span className="text-slate-500">Spatial arrangement helps visualize logical ordering.</span>
+              </div>
+              {showPlayfield && (
+                <PlayfieldEditor rows={rows} setRows={setRows} selectedId={selectedBlockId} setSelectedId={setSelectedBlockId} />
+              )}
               <div className="overflow-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500">
                       <th className="p-2 w-[540px]">Shot Type</th>
-                      <th className="p-2">Left %</th>
-                      <th className="p-2">Right %</th>
+                      <th className="p-2">Left Flipper</th>
+                      <th className="p-2">Right Flipper</th>
                       <th className="p-2 w-12"></th>
                     </tr>
                   </thead>
