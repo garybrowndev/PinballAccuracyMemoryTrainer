@@ -13,8 +13,34 @@ const formatPct = (n) => `${Math.round(n)}%`;
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
 // Shot taxonomy
+// Flat list retained for any legacy usages; primary rendering uses SHOT_TYPE_GROUPS
 const SHOT_TYPES = [
-  'Left Orbit','Right Orbit','Left Ramp','Right Ramp','Center Ramp','Inner Loop','Scoop','Saucer','Left Saucer','Right Saucer','Standup','Drop Target','Drop Bank','Spinner','Bumper','Target Bank','Captive Ball','VUK','Lock','Mini-Loop','Upper Loop'
+  'Orbit','Left Orbit','Right Orbit',
+  'Ramp','Left Ramp','Right Ramp','Center Ramp',
+  'Loop','Left Loop','Right Loop','Inner Loop',
+  'Scoop','Left Scoop','Right Scoop','Center Scoop',
+  'Saucer','Left Saucer','Right Saucer','Center Saucer',
+  'Standup','Left Standup','Right Standup','Center Standup',
+  'Drop Bank','Left Drop Bank','Right Drop Bank','Center Drop Bank',
+  'Spinner','Left Spinner','Right Spinner','Center Spinner',
+  'Bumper','Left Bumper','Right Bumper','Center Bumper',
+  'Captive Ball','Left Captive Ball','Right Captive Ball','Center Captive Ball',
+  'VUK','Left VUK','Right VUK','Center VUK'
+];
+
+// Group structure for multi-row chip layout (first entry is the base name per group)
+const SHOT_TYPE_GROUPS = [
+  ['Orbit','Left Orbit','Right Orbit'],
+  ['Ramp','Left Ramp','Right Ramp','Center Ramp'],
+  ['Loop','Left Loop','Right Loop','Inner Loop'],
+  ['Scoop','Left Scoop','Right Scoop','Center Scoop'],
+  ['Saucer','Left Saucer','Right Saucer','Center Saucer'],
+  ['Standup','Left Standup','Right Standup','Center Standup',],
+  ['Drop Bank','Left Drop Bank','Right Drop Bank','Center Drop Bank'],
+  ['Spinner','Left Spinner','Right Spinner','Center Spinner'],
+  ['Bumper','Left Bumper','Right Bumper','Center Bumper',],
+  ['Captive Ball','Left Captive Ball','Right Captive Ball','Center Captive Ball'],
+  ['VUK','Left VUK','Right VUK','Center VUK']
 ];
 const FLIPPERS = ['L','R']; // left/right flippers
 
@@ -217,7 +243,7 @@ const Section = ({ title, children, right }) => (
   </div>
 );
 
-const NumberInput = ({ value, onChange, min = 0, max = 100, step = 1, className = "" }) => (
+const NumberInput = ({ value, onChange, min = 0, max = 100, step = 1, className = "", onKeyDown }) => (
   <input
     type="number"
     min={min}
@@ -225,6 +251,7 @@ const NumberInput = ({ value, onChange, min = 0, max = 100, step = 1, className 
     step={step}
     value={value}
     onChange={(e) => onChange(e.target.value)}
+    onKeyDown={onKeyDown}
     className={
       "w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring " +
       (className || "")
@@ -258,8 +285,7 @@ export default function App() {
     { id: ROW_ID_SEED++, type: 'Left Orbit', initL: 65, initR: 40 },
   ]);
   const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 5);
-  const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2);
-  const [driftBias, setDriftBias] = useLocalStorage("pinball_driftBias_v1", -0.5);
+  const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2); // magnitude in 5% steps
   // Initial hidden truth randomization steps (each step = 5 percentage points). Previously fixed at 4 (±20).
   const [initRandSteps, setInitRandSteps] = useLocalStorage("pinball_initRandSteps_v1", 4);
 
@@ -288,6 +314,8 @@ export default function App() {
   const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle
   // UI local (non-persisted) state: collapsed shot type rows (store ids)
   const [collapsedTypes, setCollapsedTypes] = useState([]);
+  const [collapsedLeft, setCollapsedLeft] = useState([]); // row ids whose Left % list is collapsed
+  const [collapsedRight, setCollapsedRight] = useState([]); // row ids whose Right % list is collapsed
 
   // Keep selectedIdx within bounds if rows shrink
   useEffect(() => {
@@ -318,7 +346,7 @@ export default function App() {
   const ascL = rows.map((r,i)=>({i,v:r.initL})).sort((a,b)=>a.v-b.v).map(x=>x.i);
   const ascR = rows.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
     // Candidate random offsets (independent) within allowed band using configurable steps
-    const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // keep within drift anchor bounds (±20 max)
+  const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // still capped at 4 for initial randomization.
     const candL = bL.map(v => {
       const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
@@ -350,20 +378,27 @@ export default function App() {
     if (attemptCount === 0) return;
     if (driftEvery <= 0) return;
     if (attemptCount % driftEvery !== 0) return;
-  const maxSteps = 4; // hard cap per requirements (4 * 5 = 20)
-  // Defensive numeric coercion (in case stored as strings in localStorage parsing)
+  // Drift logic:
+  // New rule: The drift band around each base value is dynamic: ± (driftMag * 5) percentage points.
+  // We still preserve ordering via isotonic regression after applying random steps.
+  // driftMag itself can be fractional (step input 0.5); we interpret usable integer steps as floor(driftMag),
+  // which determines both the maximum random step distance and the per-attempt clamp band.
   const driftMagNum = Number(driftMag);
-  const driftBiasNum = Number(driftBias);
-  const safeMag = Number.isFinite(driftMagNum) ? driftMagNum : 0;
-  const safeBias = Number.isFinite(driftBiasNum) ? driftBiasNum : 0;
-  const stepDrift = () => (Math.random() < 0.5 ? -1 : 1) * rndInt(0, Math.min(maxSteps, safeMag)) * 5;
+  const usableSteps = Math.max(0, Math.min(4, Math.floor(Number.isFinite(driftMagNum) ? driftMagNum : 0))); // retain legacy overall hard ceiling of 4 steps (±20)
+  const stepDrift = () => {
+    if (usableSteps === 0) return 0;
+    const k = rndInt(0, usableSteps);
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    return dir * k * 5;
+  };
 
     setHiddenL(prev => {
       if (!prev.length || !baseL.length) return prev;
       const drifted = prev.map((v,i) => {
         const b = baseL[i];
-        const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
-  const candidate = snap5(v + stepDrift() + safeBias);
+        const lo = Math.max(0, b - usableSteps * 5);
+        const hi = Math.min(100, b + usableSteps * 5);
+        const candidate = snap5(v + stepDrift());
         return Math.min(hi, Math.max(lo, candidate));
       });
       const ordered = isotonicWithBounds(drifted, baseL, orderAscL);
@@ -373,14 +408,15 @@ export default function App() {
       if (!prev.length || !baseR.length) return prev;
       const drifted = prev.map((v,i) => {
         const b = baseR[i];
-        const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
-  const candidate = snap5(v + stepDrift() + safeBias);
+        const lo = Math.max(0, b - usableSteps * 5);
+        const hi = Math.min(100, b + usableSteps * 5);
+        const candidate = snap5(v + stepDrift());
         return Math.min(hi, Math.max(lo, candidate));
       });
       const ordered = isotonicWithBounds(drifted, baseR, orderAscR);
       return strictlyIncrease(ordered, baseR, orderAscR);
     });
-  }, [attemptCount, driftEvery, driftMag, driftBias, orderAscL, orderAscR, initialized, baseL, baseR]);
+  }, [attemptCount, driftEvery, driftMag, orderAscL, orderAscR, initialized, baseL, baseR]);
 
   function validatePercent(numLike) {
     const x = Number(numLike);
@@ -463,7 +499,7 @@ export default function App() {
     // Prepare next random shot if in random mode
   if (mode === "random") setSelectedIdx(pickRandomIdx());
 
-    setGuess("");
+  // Do not clear guess; user wants value to persist across submits.
   }
 
   function endSession() {
@@ -540,7 +576,7 @@ export default function App() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500">
-                      <th className="p-2">Shot Type</th>
+                      <th className="p-2 w-[540px]">Shot Type</th>
                       <th className="p-2">Left %</th>
                       <th className="p-2">Right %</th>
                       <th className="p-2 w-12"></th>
@@ -549,53 +585,106 @@ export default function App() {
                   <tbody>
                     {rows.map((r, i) => (
                       <tr key={r.id} className="border-t align-top">
-                        <td className="p-2">
+                        <td className="p-2 align-top">
                           {collapsedTypes.includes(r.id) && r.type ? (
-                            <div className="flex flex-wrap gap-2 max-w-xs">
+                            <div className="flex flex-wrap gap-2 max-w-[520px]">
                               <Chip
                                 active
                                 onClick={() => {
-                                  // Deselect: clear type AND expand options again
                                   setRows(prev => { const next=[...prev]; next[i]={...next[i], type:null}; return next; });
                                   setCollapsedTypes(list => list.filter(id => id !== r.id));
                                 }}
                               >{r.type}</Chip>
                             </div>
                           ) : (
-                            <div className="flex flex-wrap gap-2 max-w-xs">
-                              {SHOT_TYPES.map(t => (
-                                <Chip
-                                  key={t}
-                                  active={r.type === t}
-                                  onClick={() => {
-                                    const newType = (r.type === t) ? null : t; // toggle same chip off
-                                    setRows(prev => { const next=[...prev]; next[i]={...next[i], type:newType}; return next; });
-                                    // Collapse only if a type selected (non-null)
-                                    setCollapsedTypes(list => {
-                                      const has = list.includes(r.id);
-                                      if (newType && !has) return [...list, r.id];
-                                      if (!newType && has) return list.filter(id => id !== r.id);
-                                      return list;
-                                    });
-                                  }}
-                                >{t}</Chip>
+                            <div className="flex flex-col gap-1 max-w-[520px]">
+                              {SHOT_TYPE_GROUPS.map((group, gi) => (
+                                <div key={gi} className="flex flex-nowrap gap-2 overflow-x-auto">
+                                  {group.map(t => (
+                                    <Chip
+                                      key={t}
+                                      active={r.type === t}
+                                      onClick={() => {
+                                        const newType = (r.type === t) ? null : t;
+                                        setRows(prev => { const next=[...prev]; next[i]={...next[i], type:newType}; return next; });
+                                        setCollapsedTypes(list => {
+                                          const has = list.includes(r.id);
+                                          if (newType && !has) return [...list, r.id];
+                                          if (!newType && has) return list.filter(id => id !== r.id);
+                                          return list;
+                                        });
+                                      }}
+                                    >{t}</Chip>
+                                  ))}
+                                </div>
                               ))}
                             </div>
                           )}
                         </td>
                         <td className="p-2">
-                          <div className="flex flex-wrap gap-1 max-w-[180px]">
-                            {computeAllowedValues(rows, 'L', i).map(val => (
-                              <Chip key={val} active={r.initL===val} onClick={()=>setRows(prev=>{const next=[...prev]; next[i]={...next[i], initL:val}; return next;})}>{val}</Chip>
-                            ))}
-                          </div>
+                          {collapsedLeft.includes(r.id) && r.initL != null ? (
+                            <div className="flex flex-wrap gap-1 max-w-[180px]">
+                              <Chip
+                                active
+                                onClick={() => {
+                                  // Deselect & expand
+                                  setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:null}; return next; });
+                                  setCollapsedLeft(list => list.filter(id => id !== r.id));
+                                }}
+                              >{r.initL}</Chip>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-1 max-w-[180px]">
+                              {computeAllowedValues(rows, 'L', i).map(val => (
+                                <Chip
+                                  key={val}
+                                  active={r.initL===val}
+                                  onClick={() => {
+                                    const newVal = (r.initL === val) ? null : val;
+                                    setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:newVal}; return next; });
+                                    setCollapsedLeft(list => {
+                                      const has = list.includes(r.id);
+                                      if (newVal != null && !has) return [...list, r.id];
+                                      if (newVal == null && has) return list.filter(id => id !== r.id);
+                                      return list;
+                                    });
+                                  }}
+                                >{val}</Chip>
+                              ))}
+                            </div>
+                          )}
                         </td>
                         <td className="p-2">
-                          <div className="flex flex-wrap gap-1 max-w-[180px]">
-                            {computeAllowedValues(rows, 'R', i).map(val => (
-                              <Chip key={val} active={r.initR===val} onClick={()=>setRows(prev=>{const next=[...prev]; next[i]={...next[i], initR:val}; return next;})}>{val}</Chip>
-                            ))}
-                          </div>
+                          {collapsedRight.includes(r.id) && r.initR != null ? (
+                            <div className="flex flex-wrap gap-1 max-w-[180px]">
+                              <Chip
+                                active
+                                onClick={() => {
+                                  setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:null}; return next; });
+                                  setCollapsedRight(list => list.filter(id => id !== r.id));
+                                }}
+                              >{r.initR}</Chip>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-1 max-w-[180px]">
+                              {computeAllowedValues(rows, 'R', i).map(val => (
+                                <Chip
+                                  key={val}
+                                  active={r.initR===val}
+                                  onClick={() => {
+                                    const newVal = (r.initR === val) ? null : val;
+                                    setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:newVal}; return next; });
+                                    setCollapsedRight(list => {
+                                      const has = list.includes(r.id);
+                                      if (newVal != null && !has) return [...list, r.id];
+                                      if (newVal == null && has) return list.filter(id => id !== r.id);
+                                      return list;
+                                    });
+                                  }}
+                                >{val}</Chip>
+                              ))}
+                            </div>
+                          )}
                         </td>
                         <td className="p-2 text-right">
                           <button
@@ -628,13 +717,9 @@ export default function App() {
                 <div className="flex items-center gap-3">
                   <label className="w-48">Drift magnitude</label>
                   <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} />
-                  <span>± pts</span>
+                  <span className="text-slate-500">(×5%)</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <label className="w-48">Drift bias</label>
-                  <NumberInput value={driftBias} onChange={setDriftBias} min={-5} max={5} step={0.5} />
-                  <span>pts (negative simulates fade)</span>
-                </div>
+                {/* Drift bias removed: drift band now directly based on magnitude (usable integer steps = floor(mag)) */}
                 <div className="flex items-center gap-3">
                   <label className="w-48">Mode</label>
                   <div className="flex gap-2 flex-wrap">
@@ -741,7 +826,17 @@ export default function App() {
 
                   <div className="flex items-center gap-3 mb-4">
                     <label className="w-28 text-sm text-slate-600">Your recall</label>
-                    <NumberInput value={guess} onChange={setGuess} />
+                    <NumberInput
+                      value={guess}
+                      onChange={setGuess}
+                      step={5}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          submitAttempt();
+                        }
+                      }}
+                    />
                     <span>%</span>
                   </div>
 
