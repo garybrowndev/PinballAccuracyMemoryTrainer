@@ -304,6 +304,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
   const canvasRef = React.useRef(null);
   const [dragId, setDragId] = useState(null);
   const [dragOffset, setDragOffset] = useState({x:0,y:0});
+  // Preserve initial horizontal ordering during a drag so blocks cannot cross.
+  const dragOrderRef = useRef(null);
 
   // Dimensions logic
   function clamp01(v){ return Math.min(1, Math.max(0, v)); }
@@ -317,57 +319,57 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
     setDragOffset({ x: e.clientX - (rect.left + px), y: e.clientY - (rect.top + py) });
     setDragId(id);
     setSelectedId(id);
+    // Snapshot ordering at drag start (sorted by current x)
+    dragOrderRef.current = [...rows].sort((a,b)=>a.x-b.x).map(r=>r.id);
   };
 
   useEffect(()=>{
-    const up = ()=> setDragId(null);
+    const up = ()=> { setDragId(null); dragOrderRef.current = null; };
     const move = (e)=>{
       if (!dragId) return;
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const nx = clamp01((e.clientX - rect.left - dragOffset.x)/rect.width);
-      const ny = clamp01((e.clientY - rect.top - dragOffset.y)/rect.height);
+      let nx = (e.clientX - rect.left - dragOffset.x)/rect.width;
+      let ny = (e.clientY - rect.top - dragOffset.y)/rect.height;
+      nx = clamp01(nx); ny = clamp01(ny);
+      const order = dragOrderRef.current;
+      if (order) {
+        const idx = order.indexOf(dragId);
+        const leftId = idx>0 ? order[idx-1] : null;
+        const rightId = idx<order.length-1 ? order[idx+1] : null;
+        // Use latest positions from state (rows may have updated vertically)
+        const currentRows = rows;
+        const left = leftId != null ? currentRows.find(r=>r.id===leftId) : null;
+        const right = rightId != null ? currentRows.find(r=>r.id===rightId) : null;
+        const gap = 0.01; // 1% width minimum spacing
+        if (left && nx <= left.x + gap) nx = left.x + gap;
+        if (right && nx >= right.x - gap) nx = right.x - gap;
+        nx = clamp01(nx);
+      }
       setRows(prev => prev.map(r=> r.id===dragId ? {...r, x:nx, y:ny} : r));
     };
     window.addEventListener('mouseup', up);
     window.addEventListener('mousemove', move);
     return ()=>{ window.removeEventListener('mouseup', up); window.removeEventListener('mousemove', move); };
-  }, [dragId, dragOffset, setRows]);
+  }, [dragId, dragOffset, rows, setRows]);
 
-  // Constraint feedback: order along X should correlate with Right flipper percentage ordering (descending) and mirror for left side.
-  const violations = useMemo(()=>{
-    const issues = new Set();
-    // Right flipper: higher initR should be more to the left for natural forehand (approx). We'll enforce monotonic: sort by x ascending -> initR non-increasing.
-    const sortedByX = [...rows].sort((a,b)=>a.x-b.x);
-    let lastR = Infinity;
-    for (const r of sortedByX){
-      if (r.initR > lastR) issues.add(r.id); else lastR = r.initR;
-    }
-    // Left flipper: higher initL should be more to the right (mirror). sort by x descending -> initL non-increasing.
-    const sortedByXDesc = [...rows].sort((a,b)=>b.x-a.x);
-    let lastL = Infinity;
-    for (const r of sortedByXDesc){
-      if (r.initL > lastL) issues.add(r.id); else lastL = r.initL;
-    }
-    return issues;
-  }, [rows]);
+  // Violation highlighting removed: ordering is now enforced directly during drag (blocks cannot cross horizontally).
 
   return (
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout (beta)</h3>
-      <div className="text-xs text-slate-600 mb-2">Drag shot blocks. Percent ordering is softly validated against spatial ordering. Red border = spatial ordering conflict.</div>
+  <div className="text-xs text-slate-600 mb-2">Drag shot blocks. Horizontal crossing is prevented to preserve original ordering.</div>
       <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
         <PlayfieldScenery />
         {rows.map(r=>{
           const sel = r.id === selectedId;
-          const vio = violations.has(r.id);
           return (
             <div
               key={r.id}
               style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
               onMouseDown={(e)=>handleMouseDown(e,r.id)}
-              className={`absolute cursor-move select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${vio?'border-red-500':'border-slate-300'}`}
+              className={`absolute cursor-move select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} border-slate-300`}
             >
               <div className="font-medium truncate max-w-[110px]" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
               <div className="flex gap-1 mt-0.5">
