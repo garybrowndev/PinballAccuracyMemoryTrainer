@@ -18,58 +18,8 @@ const SHOT_TYPES = [
 ];
 const FLIPPERS = ['L','R']; // left/right flippers
 
-// New row schema: per shot store both left/right initial percentages (initL, initR)
+// Current row schema only
 const newRow = (over = {}) => ({ id: ROW_ID_SEED++, type: 'Left Ramp', initL: 60, initR: 60, ...over });
-function ensureRowIds(rows) {
-  let changed = false;
-  const next = rows.map(r => {
-    if (r.id == null) { changed = true; return { ...r, id: ROW_ID_SEED++ }; }
-    return r;
-  });
-  return changed ? next : rows;
-}
-
-// Legacy upgrade: rows may have name field; attempt heuristic mapping
-// Upgrade legacy schemas:
-// 1) Old free-text name -> {type, side, init}
-// 2) Previous schema with per-row side + init -> merge by type into new structure with initL/initR
-function upgradeLegacyRows(rows) {
-  // First, normalize any entries missing type/side.
-  const normalized = rows.map(r => {
-    if (r.initL != null || r.initR != null) return r; // already new or partially new
-    if (r.type && r.side != null && r.init != null) {
-      // side-based legacy row
-      return { id: r.id || ROW_ID_SEED++, type: r.type, side: r.side, init: r.init };
-    }
-    if (!r.type) {
-      const name = r.name || '';
-      let side = name.toLowerCase().startsWith('left') ? 'L' : name.toLowerCase().startsWith('right') ? 'R' : 'L';
-      const lower = name.toLowerCase();
-      let type = SHOT_TYPES.find(t => lower.includes(t.split(' ')[t.split(' ').length-1].toLowerCase())) || SHOT_TYPES[0];
-      if (!type) type = SHOT_TYPES.find(t => lower.includes(t.toLowerCase().split(' ')[0])) || SHOT_TYPES[0];
-      return { id: r.id || ROW_ID_SEED++, type, side, init: r.init ?? 60 };
-    }
-    return r;
-  });
-  // Merge side-based rows into per-shot objects
-  const byType = new Map();
-  for (const r of normalized) {
-    if (r.initL != null || r.initR != null) {
-      // already new style
-      byType.set(r.type + ':' + (r.id || ''), r); // treat as distinct
-      continue;
-    }
-    const key = r.type;
-    if (!byType.has(key)) {
-      byType.set(key, { id: r.id || ROW_ID_SEED++, type: r.type, initL: r.side === 'L' ? (r.init ?? 0) : 0, initR: r.side === 'R' ? (r.init ?? 0) : 0 });
-    } else {
-      const existing = byType.get(key);
-      if (r.side === 'L') existing.initL = r.init ?? existing.initL;
-      else existing.initR = r.init ?? existing.initR;
-    }
-  }
-  return Array.from(byType.values());
-}
 
 function rowDisplay(r) { return r ? r.type : ''; }
 function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'L' : 'R'} • ${r.type}` : ''; }
@@ -361,15 +311,13 @@ export default function App() {
   // Initialize hidden matrix
   function startSession() {
     if (!rows.length) return;
-    const upgraded = upgradeLegacyRows(rows);
-    setRows(upgraded); // persist upgrade
-    // Capture bases
-    const bL = upgraded.map(r=>snap5(r.initL));
-    const bR = upgraded.map(r=>snap5(r.initR));
+    // Capture bases directly
+    const bL = rows.map(r=>snap5(r.initL));
+    const bR = rows.map(r=>snap5(r.initR));
     setBaseL(bL); setBaseR(bR);
     // Determine original ordering by base values
-    const ascL = upgraded.map((r,i)=>({i,v:r.initL})).sort((a,b)=>a.v-b.v).map(x=>x.i);
-    const ascR = upgraded.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
+  const ascL = rows.map((r,i)=>({i,v:r.initL})).sort((a,b)=>a.v-b.v).map(x=>x.i);
+  const ascR = rows.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
     // Candidate random offsets (independent) within allowed band using configurable steps
     const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // keep within drift anchor bounds (±20 max)
     const candL = bL.map(v => {
@@ -383,13 +331,13 @@ export default function App() {
   const hiddenInitR = strictlyIncrease(isotonicWithBounds(candR, bR, ascR).map(v=>snap5(v)), bR, ascR);
     setHiddenL(hiddenInitL); setHiddenR(hiddenInitR);
     setOrderAscL(ascL); setOrderAscR(ascR);
-    setMentalL(upgraded.map(r=>r.initL));
-    setMentalR(upgraded.map(r=>r.initR));
+  setMentalL(rows.map(r=>r.initL));
+  setMentalR(rows.map(r=>r.initR));
     setAttempts([]);
     setAttemptCount(0);
     setFinalPhase(false);
-    setFinalRecallL(upgraded.map(r=>r.initL));
-    setFinalRecallR(upgraded.map(r=>r.initR));
+  setFinalRecallL(rows.map(r=>r.initL));
+  setFinalRecallR(rows.map(r=>r.initR));
     setInitialized(true);
     // Hide mental model by default when a session starts
     setShowMentalModel(false);
@@ -541,7 +489,7 @@ export default function App() {
 
   // One-time snapping of any legacy non-5 values after load
   useEffect(() => {
-    setRows(prev => upgradeLegacyRows(prev).map(r => ({...r, initL: snap5(r.initL ?? 0), initR: snap5(r.initR ?? 0)})));
+    setRows(prev => prev.map(r => ({...r, initL: snap5(r.initL ?? 0), initR: snap5(r.initR ?? 0)})));
     setMentalL(m => m.map(v=>snap5(v ?? 0)));
     setMentalR(m => m.map(v=>snap5(v ?? 0)));
     setHiddenL(h => h.map(v=>snap5(v ?? 0)));
@@ -569,7 +517,7 @@ export default function App() {
                 <button
                   onClick={() =>
                     setRows((r) => [
-                      ...ensureRowIds(r),
+                      ...r,
                       newRow({ type: 'Left Ramp', initL: 60, initR: 0 })
                     ])
                   }
@@ -590,7 +538,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {upgradeLegacyRows(rows).map((r, i) => (
+                    {rows.map((r, i) => (
                       <tr key={r.id} className="border-t align-top">
                         <td className="p-2">
                           {collapsedTypes.includes(r.id) && r.type ? (
@@ -599,7 +547,7 @@ export default function App() {
                                 active
                                 onClick={() => {
                                   // Deselect: clear type AND expand options again
-                                  setRows(prev => { const next=[...upgradeLegacyRows(prev)]; next[i]={...next[i], type:null}; return next; });
+                                  setRows(prev => { const next=[...prev]; next[i]={...next[i], type:null}; return next; });
                                   setCollapsedTypes(list => list.filter(id => id !== r.id));
                                 }}
                               >{r.type}</Chip>
@@ -612,7 +560,7 @@ export default function App() {
                                   active={r.type === t}
                                   onClick={() => {
                                     const newType = (r.type === t) ? null : t; // toggle same chip off
-                                    setRows(prev => { const next=[...upgradeLegacyRows(prev)]; next[i]={...next[i], type:newType}; return next; });
+                                    setRows(prev => { const next=[...prev]; next[i]={...next[i], type:newType}; return next; });
                                     // Collapse only if a type selected (non-null)
                                     setCollapsedTypes(list => {
                                       const has = list.includes(r.id);
@@ -628,21 +576,21 @@ export default function App() {
                         </td>
                         <td className="p-2">
                           <div className="flex flex-wrap gap-1 max-w-[180px]">
-                            {computeAllowedValues(upgradeLegacyRows(rows), 'L', i).map(val => (
-                              <Chip key={val} active={r.initL===val} onClick={()=>setRows(prev=>{const cur=upgradeLegacyRows(prev); const next=[...cur]; next[i]={...next[i], initL:val}; return next;})}>{val}</Chip>
+                            {computeAllowedValues(rows, 'L', i).map(val => (
+                              <Chip key={val} active={r.initL===val} onClick={()=>setRows(prev=>{const next=[...prev]; next[i]={...next[i], initL:val}; return next;})}>{val}</Chip>
                             ))}
                           </div>
                         </td>
                         <td className="p-2">
                           <div className="flex flex-wrap gap-1 max-w-[180px]">
-                            {computeAllowedValues(upgradeLegacyRows(rows), 'R', i).map(val => (
-                              <Chip key={val} active={r.initR===val} onClick={()=>setRows(prev=>{const cur=upgradeLegacyRows(prev); const next=[...cur]; next[i]={...next[i], initR:val}; return next;})}>{val}</Chip>
+                            {computeAllowedValues(rows, 'R', i).map(val => (
+                              <Chip key={val} active={r.initR===val} onClick={()=>setRows(prev=>{const next=[...prev]; next[i]={...next[i], initR:val}; return next;})}>{val}</Chip>
                             ))}
                           </div>
                         </td>
                         <td className="p-2 text-right">
                           <button
-                            onClick={() => setRows((prev) => upgradeLegacyRows(prev).filter((_, k) => k !== i))}
+                            onClick={() => setRows((prev) => prev.filter((_, k) => k !== i))}
                             className="text-slate-500 hover:text-red-600"
                             title="Remove"
                           >
@@ -1018,4 +966,4 @@ export default function App() {
 }
 
 // Ensure existing stored rows (without ids) are upgraded on module load (outside component to avoid extra renders inside component body)
-// Note: actual upgrade handled inside component via ensureRowIds usage when adding new rows.
+// (Legacy upgrade logic removed; current schema assumed.)
