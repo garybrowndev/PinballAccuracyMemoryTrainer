@@ -832,6 +832,8 @@ export default function App() {
     });
     setDragRowIdx(null);
   }
+  // Compute dynamic insertion indicator index while dragging (target index under cursor)
+  const [dragOverIdx, setDragOverIdx] = useState(null);
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
       <div className="max-w-5xl mx-auto p-4 md:p-8">
@@ -878,15 +880,27 @@ export default function App() {
                   </thead>
                   <tbody>
                     {rows.map((r, i) => (
-                      <tr
-                        key={r.id}
-                        className={`border-t align-top ${dragRowIdx===i ? 'bg-slate-50' : ''}`}
-                        draggable={!initialized}
-                        onDragStart={(e)=>{ if(initialized) return; setDragRowIdx(i); e.dataTransfer.effectAllowed='move'; }}
-                        onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); }}
-                        onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); }}
-                        onDragEnd={()=> setDragRowIdx(null)}
-                      >
+                      <React.Fragment key={r.id}>
+                        {/* Insertion marker BEFORE row i (visible when dragging and target is i) */}
+                        {dragRowIdx != null && dragOverIdx === i && (
+                          <tr aria-hidden className="pointer-events-none">
+                            <td colSpan={4} className="p-0">
+                              <div className="h-2 relative">
+                                <div className="absolute inset-0 flex items-center">
+                                  <div className="w-full h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)] animate-pulse" />
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        <tr
+                          className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : ''}`}
+                          draggable={!initialized}
+                          onDragStart={(e)=>{ if(initialized) return; setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed='move'; }}
+                          onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); setDragOverIdx(i); }}
+                          onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
+                          onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
+                        >
                         <td className="p-2 align-top">
                           {collapsedTypes.includes(r.id) && r.type ? (
                             <div className="flex flex-wrap gap-2 max-w-[520px]">
@@ -997,8 +1011,33 @@ export default function App() {
                             ✕
                           </button>
                         </td>
-                      </tr>
+                        </tr>
+                        {/* If dragging to end: show marker after last row */}
+                        {dragRowIdx != null && i === rows.length-1 && dragOverIdx === rows.length && (
+                          <tr aria-hidden className="pointer-events-none">
+                            <td colSpan={4} className="p-0">
+                              <div className="h-2 relative">
+                                <div className="absolute inset-0 flex items-center">
+                                  <div className="w-full h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)] animate-pulse" />
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))}
+                    {/* Standalone insertion marker at list end when dragging over empty space below */}
+                    {dragRowIdx != null && dragOverIdx === rows.length && (
+                      <tr aria-hidden className="pointer-events-none">
+                        <td colSpan={4} className="p-0">
+                          <div className="h-2 relative">
+                            <div className="absolute inset-0 flex items-center">
+                              <div className="w-full h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)] animate-pulse" />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
