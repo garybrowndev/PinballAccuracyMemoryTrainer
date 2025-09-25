@@ -459,10 +459,57 @@ function PlayfieldScenery(){
   return (
     <div className="absolute inset-0 pointer-events-none">
       <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 1000">
-        {/* Left flipper polygon (rounded by stroke-linejoin round + path) */}
-  <path d="M280 835 L250 855 L415 970 L440 945 Z" fill="#475569" stroke="#94a3b8" strokeWidth="8" strokeLinejoin="round" strokeLinecap="round" />
-  {/* Right flipper (flipped vertically, moved closer) */}
-  <path d="M720 835 L750 855 L585 970 L560 945 Z" fill="#475569" stroke="#94a3b8" strokeWidth="8" strokeLinejoin="round" strokeLinecap="round" />
+        {/**
+         * Flippers: single capsule/tapered objects with rounded circular ends.
+         * We approximate each flipper by a constant-width capsule along the base->tip vector.
+         * Earlier logic (anchors in PlayfieldEditor) still uses BASE/TIP points below.
+         */}
+        {(() => {
+          // Reversed flipper orientation per request:
+          //   Circle (wide end) now at the HIGH / outer side ("base" argument) and
+          //   the narrow tapered point aims DOWN toward the center drain ("tip").
+          // Signature kept the same; rTip now represents the radius at BASE (circle),
+          // baseWidth is the width of the NARROW tip (pivot) at the lower/inner end.
+          function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl=0.6) {
+            const dx = tip.x - base.x, dy = tip.y - base.y;
+            const len = Math.sqrt(dx*dx + dy*dy) || 1;
+            const ux = dx / len, uy = dy / len;      // unit along length (base -> tip)
+            const px = -uy, py = ux;                 // perpendicular (left-hand)
+            const halfTip = tipWidth / 2;
+
+            // Narrow tip points
+            const tL = { x: tip.x + px*halfTip, y: tip.y + py*halfTip };
+            const tR = { x: tip.x - px*halfTip, y: tip.y - py*halfTip };
+            // Circle perimeter extreme points along perpendicular axis
+            const bL = { x: base.x + px*rBase, y: base.y + py*rBase };
+            const bR = { x: base.x - px*rBase, y: base.y - py*rBase };
+            // Control point for convex rounding at tip (extend slightly beyond tip in direction of ux,uy)
+            const ctrlTip = { x: tip.x + ux * (roundnessCtrl*halfTip), y: tip.y + uy * (roundnessCtrl*halfTip) };
+
+            // Single unified outline path:
+            // Start at left circle tangent, sweep large arc around outer side to right tangent, down right edge to tip, rounded tip to left tip edge, back to start.
+            // Using large-arc-flag=1 ensures >180° arc giving a smooth outer circular cap without an interior seam.
+            return [
+              `M ${bL.x} ${bL.y}`,
+              `A ${rBase} ${rBase} 0 1 1 ${bR.x} ${bR.y}`,
+              `L ${tR.x} ${tR.y}`,
+              `Q ${ctrlTip.x} ${ctrlTip.y} ${tL.x} ${tL.y}`,
+              'Z'
+            ].join(' ');
+          }
+          const L_BASE = { x: 285, y: 835 }; const L_TIP = { x: 415, y: 970 };
+          const R_BASE = { x: 715, y: 835 }; const R_TIP = { x: 585, y: 970 };
+          const rBase = 27.5; // full circle radius now at outer/high base side
+          const tipWidth = 22; // narrow tip (pivot) width toward center drain
+          const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth, 0.6);
+          const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth, 0.6);
+          return (
+            <g /* Flipper styling: white fill, thicker red border */ fill="#ffffff" stroke="#dc2626" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round">
+              <path d={leftD} />
+              <path d={rightD} />
+            </g>
+          );
+        })()}
       </svg>
     </div>
   );
