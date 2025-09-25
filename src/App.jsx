@@ -57,7 +57,7 @@ const newRow = (over = {}) => ({
 });
 
 function rowDisplay(r) { return r ? r.type : ''; }
-function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'L' : 'R'} • ${r.type}` : ''; }
+function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flipper' : 'Right Flipper'} → ${r.type}` : ''; }
 
 // Allowed value computation per side with domain-specific ordering rules:
 // Right flipper column: strictly decreasing top->bottom (earlier row must be > later row). No duplicates allowed anywhere.
@@ -357,7 +357,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
 
   return (
     <div className="mt-6">
-      <h3 className="font-medium mb-2">Playfield Layout (beta)</h3>
+      <h3 className="font-medium mb-2">Playfield Layout</h3>
   <div className="text-xs text-slate-600 mb-2">Drag shot blocks. Horizontal crossing is prevented to preserve original ordering.</div>
       <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
@@ -388,7 +388,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
         {selectedId && (()=>{
           const r = rows.find(x=>x.id===selectedId); if(!r) return null;
           const rect = canvasRef.current?.getBoundingClientRect();
-          const w = rect?.width || 1; const h = rect?.height || 1;
+          if (!rect || !rect.width || !rect.height) return null; // skip until measured to avoid giant scaled shapes
+          const w = rect.width; const h = rect.height;
           const bx = r.x * w; const by = r.y * h;
           // Mapping: 0% = wide outer tip (rail side), 100% = narrow inner base near center drain.
           // We interpolate linearly along each flipper's center edge approximation.
@@ -555,7 +556,8 @@ export default function App() {
   const [collapsedTypes, setCollapsedTypes] = useState([]);
   const [collapsedLeft, setCollapsedLeft] = useState([]); // row ids whose Left % list is collapsed
   const [collapsedRight, setCollapsedRight] = useState([]); // row ids whose Right % list is collapsed
-  const [showPlayfield, setShowPlayfield] = useState(true);
+  // Playfield editor is always visible now; toggle removed
+  // const [showPlayfield, setShowPlayfield] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   // One-time auto-collapse so pre-selected values (from persisted state or defaults) show as single chips, not full option lists on first load.
   const didInitCollapse = useRef(false);
@@ -683,7 +685,7 @@ export default function App() {
   function validatePercent(numLike) {
     const x = Number(numLike);
     if (!Number.isFinite(x)) return null;
-    return snap5(x);
+    return snap5(Math.max(0, Math.min(100, x)));
   }
 
   function pickRandomIdx() {
@@ -758,10 +760,14 @@ export default function App() {
         setMentalR(m => { const n=[...m]; n[idx]=val; return n; });
       }
 
-    // Prepare next random shot if in random mode
-  if (mode === "random") setSelectedIdx(pickRandomIdx());
+    // Prepare next random shot and flipper if in random mode
+    if (mode === "random") {
+      setSelectedIdx(pickRandomIdx());
+      setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
+    }
 
-  // Do not clear guess; user wants value to persist across submits.
+    // Clear guess so input resets for next attempt
+    setGuess("");
   }
 
   function endSession() {
@@ -777,6 +783,8 @@ export default function App() {
     setFinalPhase(false);
     setFinalRecallL([]); setFinalRecallR([]);
     setShowTruth(false);
+    // Clear any stale selection so overlay lines don't render before canvas measures
+    setSelectedBlockId(null);
   }
 
   // Final grading
@@ -883,7 +891,7 @@ export default function App() {
   const [dragOverIdx, setDragOverIdx] = useState(null);
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
-      <div className="max-w-5xl mx-auto p-4 md:p-8">
+  <div className="max-w-4xl mx-auto p-4 md:p-8">
         <header className="mb-6">
           <h1 className="text-2xl md:text-3xl font-bold">Pinball Accuracy Memory Trainer</h1>
           <p className="text-sm text-slate-600 mt-1">Train recall and calibration against a hidden, drifting truth matrix.</p>
@@ -908,13 +916,8 @@ export default function App() {
                 </button>
               }
             >
-              <div className="mb-4 flex items-center gap-3 text-xs">
-                <label className="flex items-center gap-2"><input type="checkbox" checked={showPlayfield} onChange={e=>setShowPlayfield(e.target.checked)} />Show playfield editor (beta)</label>
-                <span className="text-slate-500">Spatial arrangement helps visualize logical ordering.</span>
-              </div>
-              {showPlayfield && (
-                <PlayfieldEditor rows={rows} setRows={setRows} selectedId={selectedBlockId} setSelectedId={setSelectedBlockId} />
-              )}
+              <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering.</div>
+              <PlayfieldEditor rows={rows} setRows={setRows} selectedId={selectedBlockId} setSelectedId={setSelectedBlockId} />
               <div className="overflow-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -1167,7 +1170,7 @@ export default function App() {
                 </div>
               }
             >
-              <div className={`grid grid-cols-1 ${showMentalModel ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
+              <div className={`grid grid-cols-1 lg:[grid-template-columns:1.2fr_1fr] gap-4`}>
                 {/* Left: selection and input */}
                 <div className="lg:col-span-1">
                   <div className="flex items-center gap-3 mb-3">
@@ -1194,9 +1197,9 @@ export default function App() {
                   ) : (
                     <div className="flex items-center gap-3 mb-3">
                       <label className="w-28 text-sm text-slate-600">Shot</label>
-                      <div className="px-3 py-1.5 border rounded-xl text-sm flex-1">{rows[selectedIdx] ? rows[selectedIdx].type : ''}</div>
+                      <div className="px-3 py-1.5 border rounded-xl text-sm flex-none whitespace-nowrap">{rows[selectedIdx] ? rows[selectedIdx].type : ''}</div>
                       <button
-                        onClick={() => setSelectedIdx(pickRandomIdx())}
+                        onClick={() => { setSelectedIdx(pickRandomIdx()); setSelectedSide(Math.random() < 0.5 ? 'L' : 'R'); }}
                         className="px-3 py-1.5 rounded-xl border text-sm"
                       >
                         ↻ New
@@ -1213,10 +1216,18 @@ export default function App() {
                   </div>
 
                   <div className="flex items-center gap-3 mb-4">
-                    <label className="w-28 text-sm text-slate-600">Your recall</label>
+                    <label className="w-28 text-sm text-slate-600">Recall</label>
                     <NumberInput
                       value={guess}
-                      onChange={setGuess}
+                      min={0}
+                      max={100}
+                      onChange={(v) => {
+                        if (v === "" || v === null || v === undefined) { setGuess(""); return; }
+                        const n = Number(v);
+                        if (!Number.isFinite(n)) return;
+                        const clamped = Math.max(0, Math.min(100, n));
+                        setGuess(clamped);
+                      }}
                       step={5}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -1234,38 +1245,37 @@ export default function App() {
                   >
                     Submit
                   </button>
-                </div>
 
-                {/* Middle: mental model (conditionally rendered) */}
-                {showMentalModel && (
-                  <div className="lg:col-span-1">
-                    <h3 className="font-medium mb-2">Your mental model</h3>
-                    <div className="border rounded-2xl overflow-hidden">
-                      <table className="w-full text-xs md:text-sm">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-600">
-                            <th className="p-2 text-left">Shot</th>
-                            <th className="p-2 text-right">ML</th>
-                            {showTruth && <th className="p-2 text-right">HL</th>}
-                            <th className="p-2 text-right">MR</th>
-                            {showTruth && <th className="p-2 text-right">HR</th>}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rows.map((r, i) => (
-                            <tr key={r.id} className="border-t">
-                              <td className="p-2 whitespace-nowrap max-w-[110px] truncate" title={r.type}>{r.type}</td>
-                              <td className="p-2 text-right">{formatPct(mentalL[i] ?? 0)}</td>
-                              {showTruth && <td className="p-2 text-right text-slate-600">{formatPct(hiddenL[i] ?? 0)}</td>}
-                              <td className="p-2 text-right">{formatPct(mentalR[i] ?? 0)}</td>
-                              {showTruth && <td className="p-2 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td>}
+                  {showMentalModel && (
+                    <div className="mt-6">
+                      <h3 className="font-medium mb-2">Your mental model</h3>
+                      <div className="border rounded-2xl overflow-hidden">
+                        <table className="w-full text-xs md:text-sm">
+                          <thead>
+                            <tr className="bg-slate-50 text-slate-600">
+                              <th className="p-2 text-left">Shot</th>
+                              <th className="p-2 text-right">ML</th>
+                              {showTruth && <th className="p-2 text-right">HL</th>}
+                              <th className="p-2 text-right">MR</th>
+                              {showTruth && <th className="p-2 text-right">HR</th>}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {rows.map((r, i) => (
+                              <tr key={r.id} className="border-t">
+                                <td className="p-2 whitespace-nowrap max-w-[110px] truncate" title={r.type}>{r.type}</td>
+                                <td className="p-2 text-right">{formatPct(mentalL[i] ?? 0)}</td>
+                                {showTruth && <td className="p-2 text-right text-slate-600">{formatPct(hiddenL[i] ?? 0)}</td>}
+                                <td className="p-2 text-right">{formatPct(mentalR[i] ?? 0)}</td>
+                                {showTruth && <td className="p-2 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td>}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* Right: feedback and stats */}
                 <div className="lg:col-span-1">
@@ -1281,16 +1291,25 @@ export default function App() {
                         </div>
                         <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Result</div>
-                          <div className="font-medium capitalize">{attempts[0].label} <span className="text-slate-500">({attempts[0].severity})</span></div>
+                          <div className="font-medium capitalize">{attempts[0].label} <span className="text-slate-500">({attempts[0].severity} {attempts[0].delta > 0 ? '+' : ''}{attempts[0].delta})</span></div>
                         </div>
                         <div className="flex justify-between mb-1">
-                          <div className="text-slate-600">Your recall</div>
+                          <div className="text-slate-600">Recall</div>
                           <div>{formatPct(attempts[0].input)}</div>
                         </div>
-                        {attempts[0].prevInput != null && (
+                        {showMentalModel && attempts[0].prevInput != null && (
                           <div className="flex justify-between mb-1">
                             <div className="text-slate-600">Prev recall</div>
                             <div>{formatPct(attempts[0].prevInput)}</div>
+                          </div>
+                        )}
+                        {attempts[0].prevInput != null && (
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Recall delta</div>
+                            <div>{(() => {
+                              const diff = Math.round((attempts[0].input ?? 0) - (attempts[0].prevInput ?? 0));
+                              return (diff > 0 ? '+' : '') + diff;
+                            })()}</div>
                           </div>
                         )}
                         {attempts[0].adjustRequired && (
@@ -1305,14 +1324,13 @@ export default function App() {
                             <div className={attempts[0].adjustCorrect ? 'text-emerald-600' : 'text-red-600'}>{attempts[0].adjustCorrect ? 'Correct' : 'Missed'}</div>
                           </div>
                         )}
-                        <div className="flex justify-between mb-1">
-                          <div className="text-slate-600">Hidden truth</div>
-                          <div>{formatPct(attempts[0].truth)}</div>
-                        </div>
-                        <div className="flex justify-between">
-                          <div className="text-slate-600">Error</div>
-                          <div>{attempts[0].delta > 0 ? "+" : ""}{attempts[0].delta}</div>
-                        </div>
+                        {showTruth && (
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Hidden truth</div>
+                            <div>{formatPct(attempts[0].truth)}</div>
+                          </div>
+                        )}
+                        {/* Error moved into Result parentheses above */}
                         <div className="flex justify-between mt-2 pt-2 border-t">
                           <div className="text-slate-600">Points</div>
                           <div className="text-right">
