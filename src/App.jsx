@@ -455,8 +455,8 @@ function PlayfieldScenery(){
   return (
     <div className="absolute inset-0 pointer-events-none">
       <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 1000">
-        {/* Semi-circle arc: starts (0,500) ends (1000,500) with apex (500,0). Using large-arc-flag=1 sweep-flag=0 for upper arc. */}
-        <path d="M 0 500 A 500 500 0 0 1 1000 500" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
+  {/* Adjusted arc: endpoints (0,650)->(1000,650) (midpoints lowered ~15%), apex ~20% down at y=200. Circle radius ≈502.78 computed from sagitta. */}
+  <path d="M 0 650 A 502.78 502.78 0 0 1 1000 650" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
         {/**
          * Flippers: single capsule/tapered objects with rounded circular ends.
          * We approximate each flipper by a constant-width capsule along the base->tip vector.
