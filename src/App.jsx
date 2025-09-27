@@ -12,53 +12,45 @@ const formatPct = (n) => `${Math.round(n)}%`;
 
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
-// Shot taxonomy
-// Flat list retained for any legacy usages; primary rendering uses SHOT_TYPE_GROUPS
-const SHOT_TYPES = [
-  'Orbit','Left Orbit','Right Orbit',
-  'Ramp','Left Ramp','Right Ramp','Center Ramp',
-  'Loop','Left Loop','Right Loop','Inner Loop',
-  'Scoop','Left Scoop','Right Scoop','Center Scoop',
-  'Saucer','Left Saucer','Right Saucer','Center Saucer',
-  'Standups','Left Standups','Right Standups','Center Standups',
-  'Drops','Left Drops','Right Drops','Center Drops',
-  'Spinner','Left Spinner','Right Spinner','Center Spinner',
-  'Bumper','Left Bumper','Right Bumper','Center Bumper',
-  'Captive Ball','Left Captive Ball','Right Captive Ball','Center Captive Ball',
-  'VUK','Left VUK','Right VUK','Center VUK'
+// New taxonomy: separate base element from location. All bases share the same location set.
+// Location 'Base' (or null) means unsuffixed (e.g. "Ramp").
+const BASE_ELEMENTS = [
+  'Orbit','Ramp','Loop','Scoop','Saucer','Standups','Drops','Spinner','Bumper','Captive Ball','VUK'
 ];
+const LOCATIONS = ['Left','Center','Right'];
 
-// Group structure for multi-row chip layout (first entry is the base name per group)
-const SHOT_TYPE_GROUPS = [
-  ['Orbit','Left Orbit','Right Orbit'],
-  ['Ramp','Left Ramp','Right Ramp','Center Ramp'],
-  ['Loop','Left Loop','Right Loop','Inner Loop'],
-  ['Scoop','Left Scoop','Right Scoop','Center Scoop'],
-  ['Saucer','Left Saucer','Right Saucer','Center Saucer'],
-  ['Standups','Left Standups','Right Standups','Center Standups',],
-  ['Drops','Left Drops','Right Drops','Center Drops'],
-  ['Spinner','Left Spinner','Right Spinner','Center Spinner'],
-  ['Bumper','Left Bumper','Right Bumper','Center Bumper',],
-  ['Captive Ball','Left Captive Ball','Right Captive Ball','Center Captive Ball'],
-  ['VUK','Left VUK','Right VUK','Center VUK']
-];
+function buildType(base, location) {
+  if (!base) return '';
+  // If no location specified, return base unsuffixed
+  if (!location) return base;
+  // 'Base' sentinel or empty string both mean unsuffixed
+  if (location === 'Base') return base;
+  return `${location} ${base}`;
+}
 const FLIPPERS = ['L','R']; // left/right flippers
 
 // Current row schema only
 // Create a new shot row; if caller doesn't supply x/y we auto-distribute them to avoid overlap.
-const newRow = (over = {}, indexHint = 0) => ({
-  id: ROW_ID_SEED++,
-  type: '',
-  initL: null,
-  initR: null,
-  // Provide a basic fan-out pattern: stagger horizontally & vertically based on index.
-  x: 0.2 + ((indexHint % 6) * 0.12), // wraps every 6
-  y: 0.15 + Math.floor(indexHint / 6) * 0.18,
-  ...over,
-});
+const newRow = (over = {}, indexHint = 0) => {
+  const base = over.base || '';
+  const location = over.location || '';
+  const type = buildType(base, location);
+  return {
+    id: ROW_ID_SEED++,
+    base,
+    location,
+    type,
+    initL: null,
+    initR: null,
+    // Provide a basic fan-out pattern: stagger horizontally & vertically based on index.
+    x: 0.2 + ((indexHint % 6) * 0.12), // wraps every 6
+    y: 0.15 + Math.floor(indexHint / 6) * 0.18,
+    ...over,
+  };
+};
 
-function rowDisplay(r) { return r ? r.type : ''; }
-function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flipper' : 'Right Flipper'} → ${r.type}` : ''; }
+function rowDisplay(r) { return r ? (r.type || buildType(r.base, r.location)) : ''; }
+function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flipper' : 'Right Flipper'} → ${rowDisplay(r)}` : ''; }
 
 // Allowed value computation per side with domain-specific ordering rules:
 // Right flipper column: strictly decreasing top->bottom (earlier row must be > later row). No duplicates allowed anywhere.
@@ -520,11 +512,15 @@ function PlayfieldScenery(){
 // ---------- main component ----------
 export default function App() {
   // Setup state
-  const [rows, setRows] = useLocalStorage("pinball_rows_v1", [
-    { id: ROW_ID_SEED++, type: 'Left Ramp', initL: 70, initR: 55 },
-    { id: ROW_ID_SEED++, type: 'Right Ramp', initL: 20, initR: 80 },
-    { id: ROW_ID_SEED++, type: 'Left Orbit', initL: 65, initR: 40 },
+  const [rowsRaw, setRowsRaw] = useLocalStorage("pinball_rows_v1", [
+    { id: ROW_ID_SEED++, base: 'Ramp', location: 'Left', type: buildType('Ramp','Left'), initL: 70, initR: 55 },
+    { id: ROW_ID_SEED++, base: 'Ramp', location: 'Right', type: buildType('Ramp','Right'), initL: 20, initR: 80 },
+    { id: ROW_ID_SEED++, base: 'Orbit', location: 'Left', type: buildType('Orbit','Left'), initL: 65, initR: 40 },
   ]);
+  const rows = rowsRaw; // direct; legacy upgrade removed
+  const setRows = (updater) => {
+    setRowsRaw(prev => (typeof updater === 'function' ? updater(prev) : updater));
+  };
   const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 5);
   const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2); // magnitude in 5% steps
   // Initial hidden truth randomization steps (each step = 5 percentage points). Previously fixed at 4 (±20).
@@ -593,6 +589,12 @@ export default function App() {
     const m = attempts.reduce((s, a) => s + Math.abs(a.delta), 0) / attempts.length;
     return m;
   }, [attempts]);
+
+  // Session can start only if every row has a shot type (base chosen) and both flipper values
+  const canStart = useMemo(() => {
+    if (!rows.length) return false;
+    return rows.every(r => r.base && r.base.length > 0 && r.initL != null && r.initR != null);
+  }, [rows]);
 
   // Initialize hidden matrix
   function startSession() {
@@ -922,9 +924,9 @@ export default function App() {
               <div className="overflow-auto">
                 <table className="w-full text-sm table-fixed">
                   <colgroup>
-                    <col className="w-3/5" />
-                    <col className="w-1/5" />
-                    <col className="w-1/5" />
+                    <col className="w-46-/100" />
+                    <col className="w-28/100" />
+                    <col className="w-28/100" />
                     <col className="w-[40px]" />
                   </colgroup>
                   <thead>
@@ -959,40 +961,69 @@ export default function App() {
                           onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
                         >
                         <td className="p-2 align-top">
-                          {collapsedTypes.includes(r.id) && r.type ? (
-                            <div className="flex flex-wrap gap-2 max-w-[520px]">
-                              <Chip
-                                active
-                                onClick={() => {
-                                  setRows(prev => { const next=[...prev]; next[i]={...next[i], type:null}; return next; });
-                                  setCollapsedTypes(list => list.filter(id => id !== r.id));
-                                }}
-                              >{r.type}</Chip>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col gap-1 max-w-[520px]">
-                              {SHOT_TYPE_GROUPS.map((group, gi) => (
-                                <div key={gi} className="flex flex-nowrap gap-2 overflow-x-auto">
-                                  {group.map(t => (
+                          {(() => {
+                            const currentBase = r.base || '';
+                            const currentLocation = r.location ?? '';
+                            if (!currentBase) {
+                              // Stage 1: choose a base only (unsuffixed), keep list expanded
+                              return (
+                                <div className="flex flex-wrap gap-2 max-w-[520px]">
+                                  {BASE_ELEMENTS.map(base => (
                                     <Chip
-                                      key={t}
-                                      active={r.type === t}
+                                      key={base}
+                                      active={false}
                                       onClick={() => {
-                                        const newType = (r.type === t) ? null : t;
-                                        setRows(prev => { const next=[...prev]; next[i]={...next[i], type:newType}; return next; });
-                                        setCollapsedTypes(list => {
-                                          const has = list.includes(r.id);
-                                          if (newType && !has) return [...list, r.id];
-                                          if (!newType && has) return list.filter(id => id !== r.id);
-                                          return list;
-                                        });
+                                        setRows(prev => { const next=[...prev]; next[i] = { ...next[i], base, location: '', type: buildType(base, '') }; return next; });
+                                        // Do NOT collapse yet – user may now pick a location variant
                                       }}
-                                    >{t}</Chip>
+                                    >{base}</Chip>
                                   ))}
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              );
+                            }
+                            // Stage 2: base chosen -> show unsuffixed + location variants
+                            return (
+                              <div className="flex flex-wrap gap-2 max-w-[520px]">
+                                {/* Unsuffixed base chip */}
+                                <Chip
+                                  key="_base_unsuffixed"
+                                  active={!currentLocation}
+                                  onClick={() => {
+                                    if (!currentLocation) {
+                                      // Clicking again clears base entirely
+                                      setRows(prev => { const next=[...prev]; next[i] = { ...next[i], base: '', location: '', type: '' }; return next; });
+                                      setCollapsedTypes(list => list.filter(id => id !== r.id));
+                                    } else {
+                                      // Revert to unsuffixed
+                                      setRows(prev => { const next=[...prev]; next[i] = { ...next[i], location: '', type: buildType(currentBase, '') }; return next; });
+                                      // Expand (remove collapse) since user is at base-only stage
+                                      setCollapsedTypes(list => list.filter(id => id !== r.id));
+                                    }
+                                  }}
+                                >{currentBase}</Chip>
+                                {LOCATIONS.map(loc => {
+                                  const label = buildType(currentBase, loc);
+                                  return (
+                                    <Chip
+                                      key={loc}
+                                      active={currentLocation === loc}
+                                      onClick={() => {
+                                        if (currentLocation === loc) {
+                                          // Deselect entirely (same behavior as clearing the base chip) -> return to element list stage
+                                          setRows(prev => { const next=[...prev]; next[i] = { ...next[i], base: '', location: '', type: '' }; return next; });
+                                          setCollapsedTypes(list => list.filter(id => id !== r.id));
+                                        } else {
+                                          // Select specific location variant and collapse
+                                          setRows(prev => { const next=[...prev]; next[i] = { ...next[i], location: loc, type: buildType(currentBase, loc) }; return next; });
+                                          setCollapsedTypes(list => list.includes(r.id) ? list : [...list, r.id]);
+                                        }
+                                      }}
+                                    >{label}</Chip>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="p-2">
                           {collapsedLeft.includes(r.id) && r.initL != null ? (
@@ -1128,17 +1159,19 @@ export default function App() {
               </div>
               <div className="mt-4 flex gap-3">
                 <button
-                  onClick={startSession}
-                  className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
+                  onClick={canStart ? startSession : undefined}
+                  disabled={!canStart}
+                  title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
+                  className={"px-4 py-2 rounded-2xl text-white " + (canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed')}
                 >
                   Start Session
                 </button>
                 <button
                   onClick={() => {
                     setRows([
-                      { id: ROW_ID_SEED++, type: 'Left Ramp', initL: 70, initR: 55 },
-                      { id: ROW_ID_SEED++, type: 'Right Ramp', initL: 20, initR: 80 },
-                      { id: ROW_ID_SEED++, type: 'Left Orbit', initL: 65, initR: 40 },
+                      newRow({ base: 'Ramp', location: 'Left', initL: 70, initR: 55 }, 0),
+                      newRow({ base: 'Ramp', location: 'Right', initL: 20, initR: 80 }, 1),
+                      newRow({ base: 'Orbit', location: 'Left', initL: 65, initR: 40 }, 2),
                     ]);
                   }}
                   className="px-4 py-2 rounded-2xl border"
