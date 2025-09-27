@@ -50,7 +50,10 @@ const BASE_ELEMENTS = [
   // Rare / Niche / Specific mechanical assemblies or less standardized names
   'Roto','Roto Target','Waterfall','Alley','Capture'
 ];
-const LOCATIONS = ['Left','Center','Right'];
+// Added extended location variants to support richer spatial descriptors in practice:
+// Previous: Left, Center, Right. New additions: Bottom, Top, Upper, Lower, Side.
+// These simply expand selectable suffixes; no logic elsewhere depends on specific set/order.
+const LOCATIONS = ['Left','Center','Right','Bottom','Top','Upper','Lower','Side'];
 
 function buildType(base, location) {
   if (!base) return '';
@@ -243,8 +246,9 @@ const Section = ({ title, children, right }) => (
   </div>
 );
 
-const NumberInput = ({ value, onChange, min = 0, max = 100, step = 1, className = "", onKeyDown }) => (
+const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, step = 1, className = "", onKeyDown }, ref) => (
   <input
+    ref={ref}
     type="number"
     min={min}
     max={max}
@@ -257,7 +261,8 @@ const NumberInput = ({ value, onChange, min = 0, max = 100, step = 1, className 
       (className || "")
     }
   />
-);
+));
+NumberInput.displayName = 'NumberInput';
 
 // Simple chip button (auto multi-line for 3+ word shot type labels)
 const Chip = ({ active, children, onClick, className = "" }) => {
@@ -509,7 +514,7 @@ function PlayfieldScenery(){
 
 // Read-only playfield during practice: displays shot boxes at their spatial positions plus flippers & connection lines
 // Hides any numeric percentages (mental model or hidden truth). Boxes show only shot type. No dragging or deletion.
-function PracticePlayfield({ rows, selectedIdx, selectedSide }) {
+function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
   useEffect(()=>{ setMounted(true); }, []);
@@ -527,6 +532,11 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide }) {
             title={r.type}
           >
             <div className="font-medium truncate max-w-[120px] text-center" title={r.type}>{r.type || '—'}</div>
+            {/* Invisible placeholder row to preserve height parity with setup editor (which shows L/R values) */}
+            <div className="flex gap-1 mt-0.5 opacity-0 select-none pointer-events-none">
+              <span className="px-1 rounded bg-slate-100">L 00</span>
+              <span className="px-1 rounded bg-slate-100">R 00</span>
+            </div>
           </div>
         ))}
   {mounted && selectedRow && selectedSide && (()=>{
@@ -546,10 +556,86 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide }) {
             const p100 = isLeft ? Lp(100) : Rp(100); // tip extreme
           // Unified green guide color for both flippers during practice
           const stroke = '#10b981'; // emerald-500
+          // Determine anchor for showing last recall value (only one value shown at a time on the active flipper).
+          let recallNode = null;
+          if (lastRecall && Number.isFinite(lastRecall.input)) {
+            const prevRow = rows[lastRecall.idx];
+            const anchor = lastRecall.side === 'L' ? Lp(lastRecall.input) : Rp(lastRecall.input);
+            const label = `${format2(lastRecall.input)}`;
+            const fs = 11; const padX = 5; const padY = 2; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX*2; const rectH = fs + padY*2;
+            const cx = anchor.x; const cy = anchor.y - 8;
+            // Dynamic yellow line endpoint reflecting timing error (early/late severity) relative to shot box.
+            // Rules (described for right flipper; mirrored for left):
+            // Perfect => center bottom of box.
+            // Slight early => 25% to the right of center (x + 0.25*width).
+            // Slight late  => 25% to the left of center (x - 0.25*width).
+            // Fairly early/late => 50% (edge) to that side.
+            // Very early/late => 25% beyond the edge (overshoot) past box boundary.
+            // Mapping of 'early/late' sign: delta < 0 => early, delta > 0 => late per earlier logic (delta = recall - truth).
+            let lineEl = null;
+            if (prevRow) {
+              const boxCX = prevRow.x * w; // geometric center x (box centered at r.x via translate -50%)
+              const boxCY = prevRow.y * h; // geometric center y
+              const boxW = 120; // heuristic width (matches earlier assumption)
+              const boxH = 30;  // heuristic height
+              const dirLate = lastRecall.delta > 0 ? 1 : (lastRecall.delta < 0 ? -1 : 0); // +1 late, -1 early
+              let shiftSign = 0;
+              if (dirLate !== 0) {
+                // Both flippers share same visual mapping: early shifts right, late shifts left
+                shiftSign = dirLate === -1 ? 1 : -1;
+              }
+              const absDelta = Math.abs(lastRecall.delta);
+              let endX = boxCX; // default perfect
+              const endY = boxCY + boxH/2; // bottom center of box
+              if (absDelta !== 0) {
+                let desiredShift;
+                if (absDelta === 5) desiredShift = 0.15 * boxW;
+                else if (absDelta === 10) desiredShift = 0.35 * boxW; // near edge
+                else desiredShift = 0.50 * boxW; // very (>=15) slight overshoot
+                endX = boxCX + shiftSign * desiredShift;
+              }
+              // Build feedback text (reversed order): "Slight Early", "Fairly Late", etc. Perfect => "Perfect".
+              let word1, word2 = null;
+              if (lastRecall.severity === 'perfect') {
+                word1 = 'Perfect';
+              } else {
+                // Capitalize helper
+                const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+                word1 = cap(lastRecall.severity); // Slight / Fairly / Very
+                word2 = cap(lastRecall.label);     // Early / Late
+              }
+              lineEl = (
+                <g>
+                  <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke="#eab308" strokeWidth={4} strokeLinecap="round" />
+                  {/* Feedback label at line endpoint */}
+                  <text
+                    x={endX}
+                    y={endY - 6}
+                    fontSize={10}
+                    fontFamily="ui-sans-serif"
+                    fontWeight={600}
+                    textAnchor="middle"
+                    fill="#78350f"
+                  >
+                    <tspan x={endX}>{word1}</tspan>
+                    {word2 && <tspan x={endX} dy="1.05em">{word2}</tspan>}
+                  </text>
+                </g>
+              );
+            }
+            recallNode = (
+              <g>
+                {lineEl}
+                <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
+                <text x={cx} y={cy - rectH/2 + fs/2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
+              </g>
+            );
+          }
           return (
             <svg className="absolute inset-0 pointer-events-none" viewBox={`0 0 ${w} ${h}`}>
               <line x1={p0.x} y1={p0.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
               <line x1={p100.x} y1={p100.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
+              {recallNode}
             </svg>
           );
         })()}
@@ -645,6 +731,21 @@ export default function App() {
     if (!rows.length) return false;
     return rows.every(r => r.base && r.base.length > 0 && r.initL != null && r.initR != null);
   }, [rows]);
+
+  // Allow pressing Enter anywhere on setup screen to start the session (if valid)
+  useEffect(() => {
+    if (initialized) return; // only before session starts
+    function handleKey(e) {
+      if (e.key === 'Enter' && !initialized && canStart) {
+        // Avoid starting if user holding modifier (e.g., Shift+Enter) for potential future multiline inputs
+        if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) return;
+        e.preventDefault();
+        startSession();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [initialized, canStart]);
 
   // Initialize hidden matrix
   function startSession() {
@@ -762,7 +863,12 @@ export default function App() {
     if (!initialized) return;
     const idx = mode === "random" ? selectedIdx : selectedIdx;
     const val = validatePercent(guess);
-    if (val === null) return;
+    if (guess === "" || val === null) {
+      setRecallError("Enter a number 0–100");
+      setTimeout(()=>{ recallInputRef.current?.focus(); recallInputRef.current?.select(); },0);
+      return;
+    }
+    setRecallError("");
       const truth = (selectedSide === 'L' ? hiddenL[idx] : hiddenR[idx]) ?? 0;
       // Determine previous attempt for same shot & side to assess adjustment quality
       const prevSame = attempts.find(a => a.idx === idx && a.side === selectedSide);
@@ -825,6 +931,7 @@ export default function App() {
 
     // Clear guess so input resets for next attempt
     setGuess("");
+    setRecallError("");
   }
 
   function endSession() {
@@ -946,6 +1053,17 @@ export default function App() {
   }
   // Compute dynamic insertion indicator index while dragging (target index under cursor)
   const [dragOverIdx, setDragOverIdx] = useState(null);
+  // Recall input ref for auto-focus
+  const recallInputRef = useRef(null);
+  // Validation error message for recall input
+  const [recallError, setRecallError] = useState("");
+  // Focus recall input when session starts (initialized true and not final phase)
+  useEffect(()=>{
+    if (initialized && !finalPhase) {
+      // small timeout ensures element mounted after conditional render
+      setTimeout(()=>{ recallInputRef.current?.focus(); recallInputRef.current?.select(); }, 0);
+    }
+  }, [initialized, finalPhase]);
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
   <div className="max-w-4xl mx-auto p-4 md:p-8">
@@ -1269,9 +1387,18 @@ export default function App() {
                 <div className="lg:col-span-1">
                   <div className="flex items-center gap-3 mb-3">
                     <label className="w-28 text-sm text-slate-600">Mode</label>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap items-center">
                       <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
-                      <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                      <div className="flex items-center gap-2">
+                        <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                        {mode === 'random' && (
+                          <button
+                            onClick={() => { setSelectedIdx(pickRandomIdx()); setSelectedSide(Math.random() < 0.5 ? 'L' : 'R'); }}
+                            className="px-3 py-1.5 rounded-xl border text-sm"
+                            title="Random new shot & flipper"
+                          >↻ New</button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1292,49 +1419,70 @@ export default function App() {
                     <div className="flex items-center gap-3 mb-3">
                       <label className="w-28 text-sm text-slate-600">Shot</label>
                       <div className="px-3 py-1.5 border rounded-xl text-sm flex-none whitespace-nowrap">{rows[selectedIdx] ? rows[selectedIdx].type : ''}</div>
-                      <button
-                        onClick={() => { setSelectedIdx(pickRandomIdx()); setSelectedSide(Math.random() < 0.5 ? 'L' : 'R'); }}
-                        className="px-3 py-1.5 rounded-xl border text-sm"
-                      >
-                        ↻ New
-                      </button>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 mb-4">
-                    <label className="w-28 text-sm text-slate-600">Flipper</label>
-                    <div className="flex gap-2">
-                      <Chip active={selectedSide==='L'} onClick={()=>setSelectedSide('L')}>Left</Chip>
-                      <Chip active={selectedSide==='R'} onClick={()=>setSelectedSide('R')}>Right</Chip>
+                  {mode === 'manual' ? (
+                    <div className="flex items-center gap-3 mb-4">
+                      <label className="w-28 text-sm text-slate-600">Flipper</label>
+                      <div className="flex gap-2">
+                        <Chip active={selectedSide==='L'} onClick={()=>setSelectedSide('L')}>Left</Chip>
+                        <Chip active={selectedSide==='R'} onClick={()=>setSelectedSide('R')}>Right</Chip>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-3 mb-4">
+                      <label className="w-28 text-sm text-slate-600">Flipper</label>
+                      <div className="px-3 py-1.5 border rounded-xl text-sm flex-none whitespace-nowrap">{selectedSide === 'L' ? 'Left' : 'Right'}</div>
+                    </div>
+                  )}
 
-                  <div className="flex items-center gap-3 mb-4">
-                    <label className="w-28 text-sm text-slate-600">Recall</label>
-                    <NumberInput
-                      value={guess}
-                      min={0}
-                      max={100}
-                      onChange={(v) => {
-                        if (v === "" || v === null || v === undefined) { setGuess(""); return; }
-                        const n = Number(v);
-                        if (!Number.isFinite(n)) return;
-                        const clamped = Math.max(0, Math.min(100, n));
-                        setGuess(clamped);
-                      }}
-                      step={5}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          submitAttempt();
-                        }
-                      }}
-                    />
-                    <span>%</span>
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3">
+                      <label className="w-28 text-sm text-slate-600">Recall</label>
+                      <div className="flex items-center gap-2">
+                        <NumberInput
+                          ref={recallInputRef}
+                          value={guess}
+                          min={0}
+                          max={100}
+                          className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
+                          onChange={(v) => {
+                            if (v === "" || v === null || v === undefined) {
+                              // Allow clearing without showing an error immediately
+                              setGuess("");
+                              // Clear any prior error when user resumes editing
+                              if (recallError) setRecallError("");
+                              return;
+                            }
+                            const n = Number(v);
+                            if (!Number.isFinite(n)) {
+                              // Ignore invalid keystrokes; keep previous value
+                              return;
+                            }
+                            // Clamp into range but do not show error yet; final validation occurs on submitAttempt
+                            const clamped = Math.max(0, Math.min(100, n));
+                            setGuess(clamped);
+                            if (recallError) setRecallError("");
+                          }}
+                          step={5}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              submitAttempt();
+                            }
+                          }}
+                        />
+                        <span>%</span>
+                      </div>
+                    </div>
+                    {recallError && (
+                      <div className="mt-1 ml-28 text-[11px] text-red-600">{recallError}</div>
+                    )}
                   </div>
 
                   <button
-                    onClick={submitAttempt}
+                    onClick={() => { submitAttempt(); /* keep focus for rapid entry */ setTimeout(()=>{recallInputRef.current?.focus(); recallInputRef.current?.select();},0); }}
                     className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
                   >
                     Submit
@@ -1457,7 +1605,7 @@ export default function App() {
 
               <div className="mt-6">
                 {/* Practice playfield (read-only visual) */}
-                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} />
+                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
                 {/* Attempt history below playfield */}
                 <h3 className="font-medium mb-2">Attempt history</h3>
                 <div className="overflow-auto border rounded-2xl">
