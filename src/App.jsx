@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 
 // Pinball Accuracy Memory Trainer — single-file React app
 // Local, no backend. All data in memory + localStorage.
@@ -308,41 +308,31 @@ const Chip = ({ active, children, onClick, className = "", disabled = false }) =
 // Simple playfield editor for arranging shots spatially & adjusting flipper percentages
 function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedIds }) {
   const canvasRef = React.useRef(null);
-
-  // Auto-arrange rows along the visible arc (endpoints (0,550)->(1000,550) apex (500,100) in 1000x1000 space).
-  const autoArrange = () => {
+  // Auto-arrange rows along arc; effect recomputes when rows array changes length or order.
+  useEffect(() => {
     if (!rows.length) return;
-    // Geometry: chord endpoints (0,550) & (1000,550), apex (500,100) (upper arc). Sagitta = 450; radius R computed from sagitta formula.
     const endpointY = 550; const apexY = 100; const chord = 1000; const sagitta = endpointY - apexY; // 450
-    const R = (sagitta*sagitta + (chord/2)*(chord/2))/(2*sagitta); // ≈502.78
-    // For an upper arc with apex above endpoints, circle center lies BELOW the endpoints by distance (R - sagitta) from apex.
-    // centerY = apexY + R (since apex is directly above center by radius R)
-    const centerY = apexY + R;
-    const centerX = 500;
-    // Angle at left endpoint relative to center. Points lie on a circle of radius R.
-    // Left endpoint coordinates: (0, endpointY). Vector from center:
-    const vLeft = { x: 0 - centerX, y: endpointY - centerY };
-    const vRight = { x: 1000 - centerX, y: endpointY - centerY };
-    const startAngle = Math.atan2(vLeft.y, vLeft.x);
-    const endAngle = Math.atan2(vRight.y, vRight.x);
-    // Ensure traversal from left to right following the upper arc (smaller magnitude span)
-    // Typically startAngle ~ some positive, endAngle ~ symmetric.
+    const R = (sagitta*sagitta + (chord/2)*(chord/2))/(2*sagitta);
+    const centerY = apexY + R; const centerX = 500;
+    const vLeft = { x: 0 - centerX, y: endpointY - centerY }; const vRight = { x: 1000 - centerX, y: endpointY - centerY };
+    const startAngle = Math.atan2(vLeft.y, vLeft.x); const endAngle = Math.atan2(vRight.y, vRight.x);
     const n = rows.length;
-    // Fractions: single -> 0.5, else k/(n+1) for k=1..n .
-    const fracs = n === 1 ? [0.5] : Array.from({length:n}, (_,i)=>(i+1)/(n+1));
-    // Interpolate angles linearly between start and end (since arc is circular, equal angle spacing approximates equal chord spacing; spec wants fraction marks 33%,66%, etc.)
+    const fracs = n === 1 ? [0.5] : Array.from({ length: n }, (_, i) => (i + 1) / (n + 1));
     const angleDiff = endAngle - startAngle;
     const newPositions = fracs.map(f => {
       const ang = startAngle + angleDiff * f;
-      const x = centerX + R * Math.cos(ang);
-      const y = centerY + R * Math.sin(ang);
-      return { x: x/1000, y: y/1000 };
+      return { x: (centerX + R * Math.cos(ang)) / 1000, y: (centerY + R * Math.sin(ang)) / 1000 };
     });
-    setRows(prev => prev.map((r,i)=> ({ ...r, x: newPositions[i].x, y: newPositions[i].y })));
-  };
-
-  // Always keep shots arranged along arc whenever rows length or ordering changes.
-  useEffect(()=>{ autoArrange(); /* intentionally not including autoArrange in deps to avoid redefinition loops */ }, [rows.length]);
+    // Only update state if at least one coordinate actually changed; avoids infinite render loop.
+    let anyDiff = false;
+    for (let i = 0; i < rows.length; i++) {
+      const np = newPositions[i];
+      const r = rows[i];
+      if (r.x !== np.x || r.y !== np.y) { anyDiff = true; break; }
+    }
+    if (!anyDiff) return; // positions already correct
+    setRows(prev => prev.map((r, i) => ({ ...r, x: newPositions[i].x, y: newPositions[i].y })));
+  }, [rows, setRows]);
 
   // Drag removed; no clamping helper needed.
 
@@ -412,7 +402,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               key={r.id}
               style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
               onMouseDown={(e)=>handleMouseDown(e,r.id)}
-              className={`absolute z-20 select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
+              className={`absolute z-30 select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
             >
               <div className="font-medium truncate max-w-[110px] text-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
               <div className="flex gap-1 mt-0.5">
@@ -421,7 +411,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               </div>
               <button
                 onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
-                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]"
+                className="absolute -top-[18px] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]"
                 title="Delete shot"
               >✕</button>
             </div>
@@ -435,8 +425,22 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           function lerp(a,b,t){return a+(b-a)*t;}
           const L_TIP = { x: 415, y: 970 }, L_BASE = { x: 285, y: 835 };
           const R_TIP = { x: 585, y: 970 }, R_BASE = { x: 715, y: 835 };
-          const Lp = (p)=>({ x: lerp(L_BASE.x, L_TIP.x, (p||0)/100)/1000*w, y: lerp(L_BASE.y, L_TIP.y, (p||0)/100)/1000*h });
-          const Rp = (p)=>({ x: lerp(R_BASE.x, R_TIP.x, (p||0)/100)/1000*w, y: lerp(R_BASE.y, R_TIP.y, (p||0)/100)/1000*h });
+          // Reuse geometry: compute top edge anchor for percentage along flipper length.
+          function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
+            const t = Math.min(1, Math.max(0, (percent||0)/100));
+            const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx*dx + dy*dy) || 1;
+            const ux = dx / len, uy = dy / len; // along center line
+            const px = -uy, py = ux;            // perpendicular
+            const cx = base.x + dx * t; const cy = base.y + dy * t; // center line point (1000-space)
+            const wBase = rBase*2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width/2;
+            const cand1 = { x: cx + px*half, y: cy + py*half };
+            const cand2 = { x: cx - px*half, y: cy - py*half };
+            const edge = cand1.y < cand2.y ? cand1 : cand2; // choose visually higher (smaller y)
+            return edge;
+          }
+          const rBaseConst = 27.5; const tipWidthConst = 22;
+          const Lp = (p)=>{ const e=flipperTopEdge(L_BASE, L_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
+          const Rp = (p)=>{ const e=flipperTopEdge(R_BASE, R_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
           if (selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_R') {
             const isLeft = selectedId === 'FLIPPER_L';
             const BOX_HALF = 15; // approximate half-height of shot box for bottom-center targeting
@@ -500,8 +504,9 @@ function PlayfieldScenery(){
        Left: 0% = wide tip (outer/rail side), 100% = narrow base near center.
        Right: 0% = wide tip (outer/rail side), 100% = narrow base near center.
   */
+  // z-index note: keep scenery beneath interactive shot boxes (boxes use z-30 in editor)
   return (
-    <div className="absolute inset-0 pointer-events-none z-10">
+    <div className="absolute inset-0 pointer-events-none z-0">
       <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 1000">
   {/* Arc moved up ~10%: endpoints (0,550)->(1000,550); apex now at y=100 (still 450 sagitta, same radius ≈502.78). */}
   <path d="M 0 550 A 502.78 502.78 0 0 1 1000 550" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
@@ -561,8 +566,6 @@ function PlayfieldScenery(){
   );
 }
 
-// Read-only playfield during practice: displays shot boxes at their spatial positions plus flippers & connection lines
-// Hides any numeric percentages (mental model or hidden truth). Boxes show only shot type. No dragging or deletion.
 function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
@@ -803,7 +806,7 @@ export default function App() {
   useEffect(() => {
     setSelectedIdx((idx) => (idx >= rows.length ? Math.max(0, rows.length - 1) : idx));
     setSelectedSide(s => (s === 'L' || s === 'R') ? s : 'L');
-  }, [rows.length, setSelectedIdx]);
+  }, [rows.length, setSelectedIdx, setSelectedSide]);
 
   // Derived
   const totalPoints = useMemo(
@@ -823,23 +826,8 @@ export default function App() {
     return rows.every(r => r.base && r.base.length > 0 && r.initL != null && r.initR != null);
   }, [rows]);
 
-  // Allow pressing Enter anywhere on setup screen to start the session (if valid)
-  useEffect(() => {
-    if (initialized) return; // only before session starts
-    function handleKey(e) {
-      if (e.key === 'Enter' && !initialized && canStart) {
-        // Avoid starting if user holding modifier (e.g., Shift+Enter) for potential future multiline inputs
-        if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) return;
-        e.preventDefault();
-        startSession();
-      }
-    }
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [initialized, canStart]);
-
-  // Initialize hidden matrix
-  function startSession() {
+  // Initialize hidden matrix (wrapped so effects & handlers can depend on stable reference)
+  const startSession = useCallback(() => {
     if (!rows.length) return;
     // Capture bases directly
     const bL = rows.map(r=>snap5(r.initL));
@@ -883,7 +871,21 @@ export default function App() {
       setSelectedIdx(randIdx);
       setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
     }
-  }
+  }, [rows, initRandSteps, setBaseL, setBaseR, setHiddenL, setHiddenR, setOrderAscL, setOrderAscR, setMentalL, setMentalR, setAttempts, setAttemptCount, setFinalPhase, setFinalRecallL, setFinalRecallR, setInitialized, setShowMentalModel, setSelectedIdx, setSelectedSide]);
+
+  // Allow pressing Enter anywhere on setup screen to start the session (if valid)
+  useEffect(() => {
+    if (initialized) return; // only before session starts
+    function handleKey(e) {
+      if (e.key === 'Enter' && !initialized && canStart) {
+        if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) return;
+        e.preventDefault();
+        startSession();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [initialized, canStart, startSession]);
 
   // Apply drift every N attempts
   useEffect(() => {
@@ -929,7 +931,7 @@ export default function App() {
       const ordered = isotonicWithBounds(drifted, baseR, orderAscR);
       return strictlyIncrease(ordered, baseR, orderAscR);
     });
-  }, [attemptCount, driftEvery, driftMag, orderAscL, orderAscR, initialized, baseL, baseR]);
+  }, [attemptCount, driftEvery, driftMag, orderAscL, orderAscR, initialized, baseL, baseR, setHiddenL, setHiddenR]);
 
   function validatePercent(numLike) {
     const x = Number(numLike);
