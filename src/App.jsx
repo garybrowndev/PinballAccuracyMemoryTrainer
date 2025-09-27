@@ -356,9 +356,54 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout</h3>
       <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
-      <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
+  <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
-        <PlayfieldScenery />
+  <PlayfieldScenery />
+        {/* Precise clickable flipper paths (no visible outline when selected) */}
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          {(() => {
+            function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl=0.6) {
+              const dx = tip.x - base.x, dy = tip.y - base.y;
+              const len = Math.sqrt(dx*dx + dy*dy) || 1;
+              const ux = dx / len, uy = dy / len;
+              const px = -uy, py = ux;
+              const halfTip = tipWidth / 2;
+              const tL = { x: tip.x + px*halfTip, y: tip.y + py*halfTip };
+              const tR = { x: tip.x - px*halfTip, y: tip.y - py*halfTip };
+              const bL = { x: base.x + px*rBase, y: base.y + py*rBase };
+              const bR = { x: base.x - px*rBase, y: base.y - py*rBase };
+              const ctrlTip = { x: tip.x + ux * (roundnessCtrl*halfTip), y: tip.y + uy * (roundnessCtrl*halfTip) };
+              return [
+                `M ${bL.x} ${bL.y}`,
+                `A ${rBase} ${rBase} 0 1 1 ${bR.x} ${bR.y}`,
+                `L ${tR.x} ${tR.y}`,
+                `Q ${ctrlTip.x} ${ctrlTip.y} ${tL.x} ${tL.y}`,
+                'Z'
+              ].join(' ');
+            }
+            const L_BASE = { x: 285, y: 835 }; const L_TIP = { x: 415, y: 970 };
+            const R_BASE = { x: 715, y: 835 }; const R_TIP = { x: 585, y: 970 };
+            const rBase = 27.5; const tipWidth = 22;
+            const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth);
+            const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth);
+            return (
+              <g className="cursor-pointer select-none">
+                <path
+                  d={leftD}
+                  fill="transparent"
+                  onMouseDown={(e)=>{ e.stopPropagation(); setSelectedId(selectedId==='FLIPPER_L'? null : 'FLIPPER_L'); }}
+                  title="Toggle Left flipper shot lines"
+                />
+                <path
+                  d={rightD}
+                  fill="transparent"
+                  onMouseDown={(e)=>{ e.stopPropagation(); setSelectedId(selectedId==='FLIPPER_R'? null : 'FLIPPER_R'); }}
+                  title="Toggle Right flipper shot lines"
+                />
+              </g>
+            );
+          })()}
+        </svg>
         {rows.map(r=>{
           const sel = r.id === selectedId;
           const misordered = misorderedIds?.has(r.id);
@@ -367,7 +412,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               key={r.id}
               style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
               onMouseDown={(e)=>handleMouseDown(e,r.id)}
-              className={`absolute select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
+              className={`absolute z-20 select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
             >
               <div className="font-medium truncate max-w-[110px] text-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
               <div className="flex gap-1 mt-0.5">
@@ -382,56 +427,56 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
             </div>
           );
         })}
-        {/* Lines from flipper to selected block (rough illustration) */}
+        {/* Lines visualization: either single-shot selection or flipper-wide selection */}
         {selectedId && (()=>{
-          const r = rows.find(x=>x.id===selectedId); if(!r) return null;
           const rect = canvasRef.current?.getBoundingClientRect();
-          if (!rect || !rect.width || !rect.height) return null; // skip until measured to avoid giant scaled shapes
+          if (!rect || !rect.width || !rect.height) return null;
           const w = rect.width; const h = rect.height;
-          const bx = r.x * w; const by = r.y * h;
-          // Mapping: 0% = wide outer tip (rail side), 100% = narrow inner base near center drain.
-          // We interpolate linearly along each flipper's center edge approximation.
           function lerp(a,b,t){return a+(b-a)*t;}
-          // Left flipper adjusted closer: tip low (415,970) base high (285,835)
           const L_TIP = { x: 415, y: 970 }, L_BASE = { x: 285, y: 835 };
-          // Right flipper adjusted closer: tip low (585,970) base high (715,835)
           const R_TIP = { x: 585, y: 970 }, R_BASE = { x: 715, y: 835 };
-          // Inverted mapping per request: previously 0=tip,100=base. Now 0=base,100=tip.
           const Lp = (p)=>({ x: lerp(L_BASE.x, L_TIP.x, (p||0)/100)/1000*w, y: lerp(L_BASE.y, L_TIP.y, (p||0)/100)/1000*h });
           const Rp = (p)=>({ x: lerp(R_BASE.x, R_TIP.x, (p||0)/100)/1000*w, y: lerp(R_BASE.y, R_TIP.y, (p||0)/100)/1000*h });
+          if (selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_R') {
+            const isLeft = selectedId === 'FLIPPER_L';
+            const BOX_HALF = 15; // approximate half-height of shot box for bottom-center targeting
+            return (
+              <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
+                {rows.map(r=>{
+                  const val = isLeft ? r.initL : r.initR;
+                  if (val == null || val <= 0) return null; // skip impossible shots
+                  const anchor = isLeft ? Lp(val) : Rp(val);
+                  const bx = r.x * w; const by = r.y * h + BOX_HALF; // bottom center of box
+                  return <line key={r.id} x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={isLeft?'#0ea5e9':'#dc2626'} strokeWidth={4} strokeLinecap="round" opacity={r.type?1:0.3} />;
+                })}
+              </svg>
+            );
+          }
+          // Otherwise a single shot is selected
+          const r = rows.find(x=>x.id===selectedId); if(!r) return null;
+          const BOX_HALF = 15;
+          const bx = r.x * w; const by = r.y * h + BOX_HALF; // bottom center of box
           const leftAnchor = Lp(r.initL ?? 50);
           const rightAnchor = Rp(r.initR ?? 50);
           return (
-            <svg className="absolute inset-0 pointer-events-none" viewBox={`0 0 ${w} ${h}`}> 
-              { (r.initL ?? 0) > 0 && (()=>{
-                const label = `${format2(r.initL)}`;
-                const fs = 11; // match shot box number font size
-                const padX = 5, padY = 2;
-                const wTxt = label.length * fs * 0.6;
-                const rectW = wTxt + padX*2;
-                const rectH = fs + padY*2;
-                const cx = leftAnchor.x; const cy = leftAnchor.y - 8;
+            <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
+              {(r.initL ?? 0) > 0 && (()=>{
+                const label = `${format2(r.initL)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=leftAnchor.x; const cy=leftAnchor.y-8;
                 return (
                   <g>
                     <line x1={leftAnchor.x} y1={leftAnchor.y} x2={bx} y2={by} stroke="#0ea5e9" strokeWidth={6} />
-                    <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
-                    <text x={cx} y={cy - rectH/2 + fs/2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
+                    <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
+                    <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
                   </g>
                 );
               })()}
-              { (r.initR ?? 0) > 0 && (()=>{
-                const label = `${format2(r.initR)}`;
-                const fs = 11;
-                const padX = 5, padY = 2;
-                const wTxt = label.length * fs * 0.6;
-                const rectW = wTxt + padX*2;
-                const rectH = fs + padY*2;
-                const cx = rightAnchor.x; const cy = rightAnchor.y - 8;
+              {(r.initR ?? 0) > 0 && (()=>{
+                const label = `${format2(r.initR)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=rightAnchor.x; const cy=rightAnchor.y-8;
                 return (
                   <g>
                     <line x1={rightAnchor.x} y1={rightAnchor.y} x2={bx} y2={by} stroke="#dc2626" strokeWidth={6} />
-                    <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
-                    <text x={cx} y={cy - rectH/2 + fs/2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
+                    <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
+                    <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
                   </g>
                 );
               })()}
@@ -456,7 +501,7 @@ function PlayfieldScenery(){
        Right: 0% = wide tip (outer/rail side), 100% = narrow base near center.
   */
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div className="absolute inset-0 pointer-events-none z-10">
       <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 1000">
   {/* Arc moved up ~10%: endpoints (0,550)->(1000,550); apex now at y=100 (still 450 sagitta, same radius ≈502.78). */}
   <path d="M 0 550 A 502.78 502.78 0 0 1 1000 550" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
@@ -527,12 +572,12 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
     <div className="mt-8">
       <h3 className="font-medium mb-2">Playfield</h3>
   <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
-        <PlayfieldScenery />
+  <PlayfieldScenery />
         {rows.map(r => (
           <div
             key={r.id}
             style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
-            className={`absolute select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white border-slate-300 ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
+            className={`absolute z-20 select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white border-slate-300 ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
             title={r.type}
           >
             <div className="font-medium truncate max-w-[120px] text-center" title={r.type}>{r.type || '—'}</div>
@@ -548,7 +593,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
           const rect = canvasRef.current?.getBoundingClientRect();
           if (!rect || !rect.width || !rect.height) return null;
           const w = rect.width; const h = rect.height;
-          const bx = selectedRow.x * w; const by = selectedRow.y * h;
+          const BOX_HALF = 15; // approximate half-height of shot box
+          const bx = selectedRow.x * w; const by = selectedRow.y * h + BOX_HALF; // bottom center of shot box
           function lerp(a,b,t){return a+(b-a)*t;}
           // Coordinate anchors (note mapping: 0=base,100=tip in editor, but we now need both extremes).
           const L_TIP = { x: 415, y: 970 }, L_BASE = { x: 285, y: 835 };
@@ -564,7 +610,9 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
           let recallNode = null;
           if (lastRecall && Number.isFinite(lastRecall.input)) {
             const prevRow = rows[lastRecall.idx];
-            const anchor = lastRecall.side === 'L' ? Lp(lastRecall.input) : Rp(lastRecall.input);
+            let anchor = lastRecall.side === 'L' ? Lp(lastRecall.input) : Rp(lastRecall.input);
+            // Shift anchor upward so yellow feedback line meets the top edge of the flipper instead of mid-body
+            anchor = { ...anchor, y: anchor.y - 20 };
             const label = `${format2(lastRecall.input)}`;
             const fs = 11; const padX = 5; const padY = 2; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX*2; const rectH = fs + padY*2;
             const cx = anchor.x; const cy = anchor.y - 8;
@@ -652,13 +700,20 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
               </g>
             );
           }
-          return (
-            <svg className="absolute inset-0 pointer-events-none" viewBox={`0 0 ${w} ${h}`}>
+          // Split rendering: green guide lines behind (z-0) already fine; yellow feedback & recall node should be ABOVE flippers/boxes.
+          // We'll draw green lines first (existing layer), then overlay a second SVG (z-30) for yellow feedback + recall node.
+          const greenLayer = (
+            <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
               <line x1={p0.x} y1={p0.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
               <line x1={p100.x} y1={p100.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
+            </svg>
+          );
+          const yellowLayer = recallNode && (
+            <svg className="absolute inset-0 pointer-events-none z-30" viewBox={`0 0 ${w} ${h}`}>
               {recallNode}
             </svg>
           );
+          return <>{greenLayer}{yellowLayer}</>;
         })()}
       </div>
     </div>
@@ -1166,7 +1221,7 @@ export default function App() {
                           onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
                           onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
                         >
-                        <td className="pt-2 pr-2 pl-2 pb-0 align-top relative">
+                        <td className="pt-2 pr-2 pl-2 pb-8 align-top relative">
                           {(() => {
                             const currentBase = r.base || '';
                             const currentLocation = r.location ?? '';
