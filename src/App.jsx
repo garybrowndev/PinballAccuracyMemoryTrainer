@@ -455,8 +455,8 @@ function PlayfieldScenery(){
   return (
     <div className="absolute inset-0 pointer-events-none">
       <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 1000">
-  {/* Adjusted arc: endpoints (0,650)->(1000,650) (midpoints lowered ~15%), apex ~20% down at y=200. Circle radius ≈502.78 computed from sagitta. */}
-  <path d="M 0 650 A 502.78 502.78 0 0 1 1000 650" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
+  {/* Arc moved up ~10%: endpoints (0,550)->(1000,550); apex now at y=100 (still 450 sagitta, same radius ≈502.78). */}
+  <path d="M 0 550 A 502.78 502.78 0 0 1 1000 550" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
         {/**
          * Flippers: single capsule/tapered objects with rounded circular ends.
          * We approximate each flipper by a constant-width capsule along the base->tip vector.
