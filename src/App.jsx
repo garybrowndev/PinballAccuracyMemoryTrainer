@@ -610,9 +610,26 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
           let recallNode = null;
           if (lastRecall && Number.isFinite(lastRecall.input)) {
             const prevRow = rows[lastRecall.idx];
-            let anchor = lastRecall.side === 'L' ? Lp(lastRecall.input) : Rp(lastRecall.input);
-            // Shift anchor upward so yellow feedback line meets the top edge of the flipper instead of mid-body
-            anchor = { ...anchor, y: anchor.y - 20 };
+            // Compute precise top-edge anchor on the flipper outline at the recall percentage.
+            function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
+              const t = Math.min(1, Math.max(0, percent/100));
+              const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx*dx + dy*dy) || 1;
+              const ux = dx / len, uy = dy / len; // along center line
+              const px = -uy, py = ux;            // perpendicular
+              const cx = base.x + dx * t; const cy = base.y + dy * t; // center line point (1000-space)
+              const wBase = rBase*2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width/2;
+              // Two candidates (top vs bottom relative to screen): choose the one with smaller y (visually higher => top edge)
+              const cand1 = { x: cx + px*half, y: cy + py*half };
+              const cand2 = { x: cx - px*half, y: cy - py*half };
+              const edge = cand1.y < cand2.y ? cand1 : cand2;
+              return edge; // still in 1000-space
+            }
+            const rBaseConst = 27.5; const tipWidthConst = 22;
+            const rawEdge = lastRecall.side === 'L'
+              ? flipperTopEdge({ x:285, y:835 }, { x:415, y:970 }, rBaseConst, tipWidthConst, lastRecall.input)
+              : flipperTopEdge({ x:715, y:835 }, { x:585, y:970 }, rBaseConst, tipWidthConst, lastRecall.input);
+            // Scale to canvas dimensions
+            let anchor = { x: rawEdge.x/1000*w, y: rawEdge.y/1000*h };
             const label = `${format2(lastRecall.input)}`;
             const fs = 11; const padX = 5; const padY = 2; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX*2; const rectH = fs + padY*2;
             const cx = anchor.x; const cy = anchor.y - 8;
