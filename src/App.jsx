@@ -14,6 +14,14 @@ const format2 = (n) => {
   return String(v).padStart(2, '0');
 };
 const formatPct = (n) => `${format2(n)}%`;
+// Severity color mapping (Perfect, Slight, Fairly, Very)
+// Tailwind palette approximations: green (emerald), yellow-green (lime), yellow (amber), red (rose)
+const SEVERITY_COLORS = {
+  perfect: '#059669',      // emerald-600
+  slight: '#65a30d',       // lime-600 (yellow-green)
+  fairly: '#ca8a04',       // amber-600 (yellow)
+  very: '#dc2626',         // red-600
+};
 
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
@@ -581,8 +589,14 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
               const dirLate = lastRecall.delta > 0 ? 1 : (lastRecall.delta < 0 ? -1 : 0); // +1 late, -1 early
               let shiftSign = 0;
               if (dirLate !== 0) {
-                // Both flippers share same visual mapping: early shifts right, late shifts left
-                shiftSign = dirLate === -1 ? 1 : -1;
+                // Right flipper (current correct behavior): early (delta<0) shifts right, late shifts left.
+                // Left flipper should be mirrored: early shifts LEFT, late shifts RIGHT.
+                if (lastRecall.side === 'R') {
+                  shiftSign = dirLate === -1 ? 1 : -1; // unchanged
+                } else {
+                  // Mirror for left flipper
+                  shiftSign = dirLate === -1 ? -1 : 1;
+                }
               }
               const absDelta = Math.abs(lastRecall.delta);
               let endX = boxCX; // default perfect
@@ -604,18 +618,29 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
                 word1 = cap(lastRecall.severity); // Slight / Fairly / Very
                 word2 = cap(lastRecall.label);     // Early / Late
               }
+              // Background sizing heuristic: width based on longest line length * charWidth approximation.
+              const charW = 6; // rough average glyph width at fontSize 10 (monospace-ish approximation for sizing box)
+              const longest = word2 ? Math.max(word1.length, word2.length) : word1.length;
+              const padX = 6; const padY = 4;
+              const textW = longest * charW;
+              const lineCount = word2 ? 2 : 1;
+              const lineHeight = 12; // fontSize 10 with ~1.05em dy
+              const boxHeight = lineCount * lineHeight + padY*2 - (lineCount>1 ? 4 : 0); // tighten for two-line stack
+              const boxWidth = textW + padX*2;
+              const boxX = endX - boxWidth/2;
+              const boxY = endY - 6 - padY - (lineCount>1 ? lineHeight/2 : lineHeight/2); // center above endpoint slightly
               lineEl = (
                 <g>
                   <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke="#eab308" strokeWidth={4} strokeLinecap="round" />
-                  {/* Feedback label at line endpoint */}
+                  <rect x={boxX} y={boxY} width={boxWidth} height={boxHeight} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
                   <text
                     x={endX}
-                    y={endY - 6}
+                    y={boxY + padY + 9} /* first line baseline */
                     fontSize={10}
                     fontFamily="ui-sans-serif"
                     fontWeight={600}
                     textAnchor="middle"
-                    fill="#78350f"
+                    fill={SEVERITY_COLORS[lastRecall.severity] || '#78350f'}
                   >
                     <tspan x={endX}>{word1}</tspan>
                     {word2 && <tspan x={endX} dy="1.05em">{word2}</tspan>}
@@ -1533,7 +1558,13 @@ export default function App() {
                         </div>
                         <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Result</div>
-                          <div className="font-medium capitalize">{attempts[0].label} <span className="text-slate-500">({attempts[0].severity} {attempts[0].delta > 0 ? '+' : ''}{attempts[0].delta})</span></div>
+                          <div className="font-medium capitalize">
+                            {attempts[0].label}
+                            {' '}
+                            <span className="text-slate-500">(</span>
+                            <span style={{color: SEVERITY_COLORS[attempts[0].severity] || '#334155'}}>{attempts[0].severity}</span>{' '}
+                            <span className="text-slate-500">{attempts[0].delta > 0 ? '+' : ''}{attempts[0].delta})</span>
+                          </div>
                         </div>
                         <div className="flex justify-between mb-1">
                           <div className="text-slate-600">Recall</div>
@@ -1554,18 +1585,20 @@ export default function App() {
                             })()}</div>
                           </div>
                         )}
-                        {attempts[0].adjustRequired && (
-                          <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Adjustment needed</div>
-                            <div className="capitalize">{attempts[0].requiredDir === -1 ? 'Lower' : attempts[0].requiredDir === 1 ? 'Higher' : 'None'}</div>
+                        <div className="flex justify-between mb-1">
+                          <div className="text-slate-600">Adjustment needed</div>
+                          <div className="capitalize">
+                            {attempts[0].adjustRequired ? (
+                              attempts[0].requiredDir === -1 ? 'Lower' : attempts[0].requiredDir === 1 ? 'Higher' : 'None'
+                            ) : 'N/A'}
                           </div>
-                        )}
-                        {attempts[0].adjustRequired && (
-                          <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Adjustment result</div>
-                            <div className={attempts[0].adjustCorrect ? 'text-emerald-600' : 'text-red-600'}>{attempts[0].adjustCorrect ? 'Correct' : 'Missed'}</div>
+                        </div>
+                        <div className="flex justify-between mb-1">
+                          <div className="text-slate-600">Adjustment result</div>
+                          <div className={attempts[0].adjustRequired ? (attempts[0].adjustCorrect ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400'}>
+                            {attempts[0].adjustRequired ? (attempts[0].adjustCorrect ? 'Correct' : 'Missed') : 'N/A'}
                           </div>
-                        )}
+                        </div>
                         {showTruth && (
                           <div className="flex justify-between mb-1">
                             <div className="text-slate-600">Hidden truth</div>
@@ -1586,20 +1619,23 @@ export default function App() {
                     </div>
                   )}
 
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                    <div className="border rounded-2xl p-3">
-                      <div className="text-slate-600">Attempts</div>
-                      <div className="text-2xl font-semibold">{attemptCount}</div>
-                    </div>
-                    <div className="border rounded-2xl p-3">
-                      <div className="text-slate-600">Total points</div>
-                      <div className="text-2xl font-semibold">{totalPoints}</div>
-                    </div>
-                    <div className="border rounded-2xl p-3 col-span-2">
-                      <div className="text-slate-600">Avg abs error</div>
-                      <div className="text-xl font-semibold">{avgAbsErr.toFixed(1)} pts</div>
-                    </div>
-                  </div>
+                  {/* Metrics relocated below overall practice/feedback columns */}
+                </div>
+              </div>
+
+              {/* Consolidated metrics row above playfield */}
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
+                  <div className="text-slate-600 mb-1">Attempts</div>
+                  <div className="text-2xl font-semibold">{attemptCount}</div>
+                </div>
+                <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
+                  <div className="text-slate-600 mb-1">Total points</div>
+                  <div className="text-2xl font-semibold">{totalPoints}</div>
+                </div>
+                <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
+                  <div className="text-slate-600 mb-1">Avg abs error</div>
+                  <div className="text-2xl font-semibold">{avgAbsErr.toFixed(1)} pts</div>
                 </div>
               </div>
 
