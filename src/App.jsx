@@ -20,8 +20,8 @@ const SHOT_TYPES = [
   'Loop','Left Loop','Right Loop','Inner Loop',
   'Scoop','Left Scoop','Right Scoop','Center Scoop',
   'Saucer','Left Saucer','Right Saucer','Center Saucer',
-  'Standup','Left Standup','Right Standup','Center Standup',
-  'Drop Bank','Left Drop Bank','Right Drop Bank','Center Drop Bank',
+  'Standups','Left Standups','Right Standups','Center Standups',
+  'Drops','Left Drops','Right Drops','Center Drops',
   'Spinner','Left Spinner','Right Spinner','Center Spinner',
   'Bumper','Left Bumper','Right Bumper','Center Bumper',
   'Captive Ball','Left Captive Ball','Right Captive Ball','Center Captive Ball',
@@ -35,8 +35,8 @@ const SHOT_TYPE_GROUPS = [
   ['Loop','Left Loop','Right Loop','Inner Loop'],
   ['Scoop','Left Scoop','Right Scoop','Center Scoop'],
   ['Saucer','Left Saucer','Right Saucer','Center Saucer'],
-  ['Standup','Left Standup','Right Standup','Center Standup',],
-  ['Drop Bank','Left Drop Bank','Right Drop Bank','Center Drop Bank'],
+  ['Standups','Left Standups','Right Standups','Center Standups',],
+  ['Drops','Left Drops','Right Drops','Center Drops'],
   ['Spinner','Left Spinner','Right Spinner','Center Spinner'],
   ['Bumper','Left Bumper','Right Bumper','Center Bumper',],
   ['Captive Ball','Left Captive Ball','Right Captive Ball','Center Captive Ball'],
@@ -45,15 +45,16 @@ const SHOT_TYPE_GROUPS = [
 const FLIPPERS = ['L','R']; // left/right flippers
 
 // Current row schema only
-const newRow = (over = {}) => ({
+// Create a new shot row; if caller doesn't supply x/y we auto-distribute them to avoid overlap.
+const newRow = (over = {}, indexHint = 0) => ({
   id: ROW_ID_SEED++,
-  type: 'Left Ramp',
-  initL: 60,
-  initR: 60,
-  // Canvas position (relative 0..1). Center default.
-  x: 0.5,
-  y: 0.3,
-  ...over
+  type: '',
+  initL: null,
+  initR: null,
+  // Provide a basic fan-out pattern: stagger horizontally & vertically based on index.
+  x: 0.2 + ((indexHint % 6) * 0.12), // wraps every 6
+  y: 0.15 + Math.floor(indexHint / 6) * 0.18,
+  ...over,
 });
 
 function rowDisplay(r) { return r ? r.type : ''; }
@@ -907,7 +908,7 @@ export default function App() {
                   onClick={() =>
                     setRows((r) => [
                       ...r,
-                      newRow({ type: 'Left Ramp', initL: 60, initR: 0 })
+                      newRow({}, r.length)
                     ])
                   }
                   className="px-3 py-1.5 text-sm rounded-xl bg-slate-900 text-white"
@@ -919,13 +920,19 @@ export default function App() {
               <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering.</div>
               <PlayfieldEditor rows={rows} setRows={setRows} selectedId={selectedBlockId} setSelectedId={setSelectedBlockId} />
               <div className="overflow-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm table-fixed">
+                  <colgroup>
+                    <col className="w-3/5" />
+                    <col className="w-1/5" />
+                    <col className="w-1/5" />
+                    <col className="w-[40px]" />
+                  </colgroup>
                   <thead>
                     <tr className="text-left text-slate-500">
-                      <th className="p-2 w-[540px]">Shot Type</th>
+                      <th className="p-2">Shot Type</th>
                       <th className="p-2">Left Flipper</th>
                       <th className="p-2">Right Flipper</th>
-                      <th className="p-2 w-12"></th>
+                      <th className="p-2"></th>
                     </tr>
                   </thead>
                   <tbody>
