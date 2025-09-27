@@ -308,51 +308,54 @@ const Chip = ({ active, children, onClick, className = "", disabled = false }) =
 // Simple playfield editor for arranging shots spatially & adjusting flipper percentages
 function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedIds }) {
   const canvasRef = React.useRef(null);
-  const [dragId, setDragId] = useState(null);
-  const [dragOffset, setDragOffset] = useState({x:0,y:0});
-  // Previously we preserved initial horizontal ordering (no crossing). Now allow free overlap/crossing.
-  const dragOrderRef = useRef(null); // retained in case future features need original snapshot
 
-  // Dimensions logic
-  function clamp01(v){ return Math.min(1, Math.max(0, v)); }
-
-  const handleMouseDown = (e, id) => {
-    const rect = canvasRef.current.getBoundingClientRect();
-    const row = rows.find(r=>r.id===id);
-    if (!row) return;
-    const px = row.x * rect.width;
-    const py = row.y * rect.height;
-    setDragOffset({ x: e.clientX - (rect.left + px), y: e.clientY - (rect.top + py) });
-    setDragId(id);
-    setSelectedId(id);
-  // Snapshot ordering (not used for clamping anymore, but may aid future features)
-  dragOrderRef.current = [...rows].sort((a,b)=>a.x-b.x).map(r=>r.id);
+  // Auto-arrange rows along the visible arc (endpoints (0,550)->(1000,550) apex (500,100) in 1000x1000 space).
+  const autoArrange = () => {
+    if (!rows.length) return;
+    // Geometry: chord endpoints (0,550) & (1000,550), apex (500,100) (upper arc). Sagitta = 450; radius R computed from sagitta formula.
+    const endpointY = 550; const apexY = 100; const chord = 1000; const sagitta = endpointY - apexY; // 450
+    const R = (sagitta*sagitta + (chord/2)*(chord/2))/(2*sagitta); // ≈502.78
+    // For an upper arc with apex above endpoints, circle center lies BELOW the endpoints by distance (R - sagitta) from apex.
+    // centerY = apexY + R (since apex is directly above center by radius R)
+    const centerY = apexY + R;
+    const centerX = 500;
+    // Angle at left endpoint relative to center. Points lie on a circle of radius R.
+    // Left endpoint coordinates: (0, endpointY). Vector from center:
+    const vLeft = { x: 0 - centerX, y: endpointY - centerY };
+    const vRight = { x: 1000 - centerX, y: endpointY - centerY };
+    const startAngle = Math.atan2(vLeft.y, vLeft.x);
+    const endAngle = Math.atan2(vRight.y, vRight.x);
+    // Ensure traversal from left to right following the upper arc (smaller magnitude span)
+    // Typically startAngle ~ some positive, endAngle ~ symmetric.
+    const n = rows.length;
+    // Fractions: single -> 0.5, else k/(n+1) for k=1..n .
+    const fracs = n === 1 ? [0.5] : Array.from({length:n}, (_,i)=>(i+1)/(n+1));
+    // Interpolate angles linearly between start and end (since arc is circular, equal angle spacing approximates equal chord spacing; spec wants fraction marks 33%,66%, etc.)
+    const angleDiff = endAngle - startAngle;
+    const newPositions = fracs.map(f => {
+      const ang = startAngle + angleDiff * f;
+      const x = centerX + R * Math.cos(ang);
+      const y = centerY + R * Math.sin(ang);
+      return { x: x/1000, y: y/1000 };
+    });
+    setRows(prev => prev.map((r,i)=> ({ ...r, x: newPositions[i].x, y: newPositions[i].y })));
   };
 
-  useEffect(()=>{
-    const up = ()=> { setDragId(null); dragOrderRef.current = null; };
-    const move = (e)=>{
-      if (!dragId) return;
-      const rect = canvasRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      let nx = (e.clientX - rect.left - dragOffset.x)/rect.width;
-      let ny = (e.clientY - rect.top - dragOffset.y)/rect.height;
-      nx = clamp01(nx); ny = clamp01(ny);
-      // Free drag: allow crossing / reordering; only clamp to bounds
-      nx = clamp01(nx);
-      setRows(prev => prev.map(r=> r.id===dragId ? {...r, x:nx, y:ny} : r));
-    };
-    window.addEventListener('mouseup', up);
-    window.addEventListener('mousemove', move);
-    return ()=>{ window.removeEventListener('mouseup', up); window.removeEventListener('mousemove', move); };
-  }, [dragId, dragOffset, rows, setRows]);
+  // Always keep shots arranged along arc whenever rows length or ordering changes.
+  useEffect(()=>{ autoArrange(); /* intentionally not including autoArrange in deps to avoid redefinition loops */ }, [rows.length]);
+
+  // Drag removed; no clamping helper needed.
+
+  const handleMouseDown = (e, id) => { setSelectedId(id); };
+
+  // Drag logic removed.
 
   // Violation highlighting removed earlier; now no ordering enforcement (free horizontal movement).
 
   return (
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout</h3>
-  <div className="text-xs text-slate-600 mb-2">Drag shot blocks freely; horizontal crossing now allowed.</div>
+      <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
       <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
         <PlayfieldScenery />
@@ -364,7 +367,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               key={r.id}
               style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
               onMouseDown={(e)=>handleMouseDown(e,r.id)}
-              className={`absolute cursor-move select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
+              className={`absolute select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
             >
               <div className="font-medium truncate max-w-[110px] text-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
               <div className="flex gap-1 mt-0.5">
@@ -986,7 +989,11 @@ export default function App() {
 
   // One-time snapping of any legacy non-5 values after load
   useEffect(() => {
-    setRows(prev => prev.map(r => ({...r, initL: snap5(r.initL ?? 0), initR: snap5(r.initR ?? 0)})));
+    setRows(prev => prev.map(r => ({
+      ...r,
+      initL: r.initL == null ? null : snap5(r.initL),
+      initR: r.initR == null ? null : snap5(r.initR)
+    })));
     setMentalL(m => m.map(v=>snap5(v ?? 0)));
     setMentalR(m => m.map(v=>snap5(v ?? 0)));
     setHiddenL(h => h.map(v=>snap5(v ?? 0)));
@@ -1004,12 +1011,13 @@ export default function App() {
     let lastNonZero = 0;
     const out = rowsArr.map(r => ({...r}));
     for (let i=0;i<out.length;i++) {
-      let v = snap5(out[i].initL ?? 0);
+      let raw = out[i].initL;
+      if (raw == null) continue; // leave nulls untouched
+      let v = snap5(raw);
+      if (v < 0) v = 0;
       if (lastNonZero === 0) {
-        // zeros allowed; ensure non-decreasing relative to lastNonZero (0) trivially; any positive okay
-        if (v < 0) v = 0;
+        // zeros allowed; any positive establishes lastNonZero
       } else {
-        // must be strictly greater than lastNonZero and cannot be zero
         if (v === 0 || v <= lastNonZero) v = Math.min(100, lastNonZero + 5);
       }
       out[i].initL = v;
@@ -1018,8 +1026,10 @@ export default function App() {
     // Right side normalization: strictly decreasing top -> bottom.
     let prevR = 105; // greater than max
     for (let i=0;i<out.length;i++) {
-      let v = snap5(out[i].initR ?? 0);
-      if (v >= prevR) v = prevR - 5; // enforce strictly less
+      let raw = out[i].initR;
+      if (raw == null) continue; // leave nulls untouched
+      let v = snap5(raw);
+      if (v >= prevR) v = prevR - 5;
       if (v < 0) v = 0;
       out[i].initR = v;
       prevR = v;
@@ -1094,19 +1104,6 @@ export default function App() {
             })()}
             <Section
               title="1) Define shots and initial guessed percentages"
-              right={
-                <button
-                  onClick={() =>
-                    setRows((r) => [
-                      ...r,
-                      newRow({}, r.length)
-                    ])
-                  }
-                  className="px-3 py-1.5 text-sm rounded-xl bg-slate-900 text-white"
-                >
-                  + Add shot
-                </button>
-              }
             >
               <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
@@ -1136,6 +1133,17 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
+                    {rows.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-sm text-slate-600">
+                          <button
+                            type="button"
+                            onClick={() => setRows([newRow({}, 0)])}
+                            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800"
+                          >+ Add Shot</button>
+                        </td>
+                      </tr>
+                    )}
                     {rows.map((r, i) => (
                       <React.Fragment key={r.id}>
                         {/* Insertion marker BEFORE row i (visible when dragging and target is i) */}
@@ -1158,7 +1166,7 @@ export default function App() {
                           onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
                           onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
                         >
-                        <td className="p-2 align-top">
+                        <td className="pt-2 pr-2 pl-2 pb-0 align-top relative">
                           {(() => {
                             const currentBase = r.base || '';
                             const currentLocation = r.location ?? '';
@@ -1222,6 +1230,18 @@ export default function App() {
                               </div>
                             );
                           })()}
+                          {/* Insert button anchored to cell bottom */}
+                          <div className="absolute left-2 right-2 bottom-1">
+                            <button
+                              type="button"
+                              onClick={() => setRows(prev => {
+                                const next=[...prev];
+                                next.splice(i+1,0,newRow({}, prev.length));
+                                return next;
+                              })}
+                              className="px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-[11px] text-slate-700"
+                            >+ Insert Shot</button>
+                          </div>
                         </td>
                         <td className="p-2">
                           {collapsedLeft.includes(r.id) && r.initL != null ? (
