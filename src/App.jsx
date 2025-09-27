@@ -92,7 +92,6 @@ function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flippe
 function computeAllowedValues(rows, side, index) {
   const STEP_VALUES = Array.from({length:21},(_,k)=>k*5);
   const vals = side==='L' ? rows.map(r=>r.initL) : rows.map(r=>r.initR);
-  const current = vals[index];
   if (side === 'R') {
     // Strictly decreasing top->bottom
     // Earlier rows (0..index-1) must each be > value at index; Later rows must be < value at index.
@@ -111,10 +110,8 @@ function computeAllowedValues(rows, side, index) {
     // Left side:
     // Ascending: later rows >= earlier rows. Zero can repeat any number of times until first non-zero above appears.
     // Once a non-zero appears above, later rows must be >= that non-zero + 5 (strictly increasing beyond first positive anchor).
-    const earlier = vals.slice(0,index).filter(v=>v!=null);
-    const later = vals.slice(index+1).filter(v=>v!=null);
-    const firstPositiveAbove = earlier.find(v=>v>0);
-    const maxEarlier = earlier.length ? Math.max(...earlier) : 0; // largest earlier value
+  const earlier = vals.slice(0,index).filter(v=>v!=null);
+  const later = vals.slice(index+1).filter(v=>v!=null);
     // Lower bound logic:
     // If no positive above: lower bound = 0 (zeros allowed)
     // If positive above exists: lower bound = maxEarlier (if maxEarlier===0) else firstPositiveAbove + 5? Need strictly greater than last non-zero above.
@@ -217,38 +214,6 @@ function strictlyIncrease(values, base, orderAsc) {
   return out;
 }
 
-// Isotonic regression (non-decreasing). Preserves initial order while minimally adjusting values.
-function isotonicNonDecreasing(values) {
-  // Pool-Adjacent-Violators algorithm
-  const n = values.length;
-  // Each block has {sum, count, value}
-  const blocks = [];
-  for (let i = 0; i < n; i++) {
-    let block = { sum: values[i], count: 1, value: values[i] };
-    blocks.push(block);
-    // Merge while violation exists
-    while (
-      blocks.length >= 2 &&
-      blocks[blocks.length - 2].value > blocks[blocks.length - 1].value
-    ) {
-      const b = blocks.pop();
-      const a = blocks.pop();
-      const merged = {
-        sum: a.sum + b.sum,
-        count: a.count + b.count,
-        value: (a.sum + b.sum) / (a.count + b.count),
-      };
-      blocks.push(merged);
-    }
-  }
-  // Expand blocks back to an array
-  const out = new Array(n);
-  let idx = 0;
-  for (const bl of blocks) {
-    for (let j = 0; j < bl.count; j++) out[idx++] = bl.value;
-  }
-  return out;
-}
 
 function useLocalStorage(key, initialValue) {
   const [state, setState] = useState(() => {
@@ -262,7 +227,7 @@ function useLocalStorage(key, initialValue) {
   useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(state));
-    } catch {}
+    } catch { /* noop persist failure */ }
   }, [key, state]);
   return [state, setState];
 }
@@ -397,7 +362,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
               onMouseDown={(e)=>handleMouseDown(e,r.id)}
               className={`absolute cursor-move select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} border-slate-300`}
             >
-              <div className="font-medium truncate max-w-[110px]" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
+              <div className="font-medium truncate max-w-[110px] text-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
               <div className="flex gap-1 mt-0.5">
                 <span className="px-1 rounded bg-slate-100">L {r.initL != null ? format2(r.initL) : '—'}</span>
                 <span className="px-1 rounded bg-slate-100">R {r.initR != null ? format2(r.initR) : '—'}</span>
@@ -531,13 +496,65 @@ function PlayfieldScenery(){
           const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth, 0.6);
           const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth, 0.6);
           return (
-            <g /* Flipper styling: white fill, thicker red border */ fill="#ffffff" stroke="#dc2626" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round">
-              <path d={leftD} />
-              <path d={rightD} />
+            <g /* Flipper styling: individual stroke colors per flipper */ fill="#ffffff" strokeLinecap="round" strokeLinejoin="round">
+              <path d={leftD} stroke="#0ea5e9" strokeWidth={8} />
+              <path d={rightD} stroke="#dc2626" strokeWidth={8} />
             </g>
           );
         })()}
       </svg>
+    </div>
+  );
+}
+
+// Read-only playfield during practice: displays shot boxes at their spatial positions plus flippers & connection lines
+// Hides any numeric percentages (mental model or hidden truth). Boxes show only shot type. No dragging or deletion.
+function PracticePlayfield({ rows, selectedIdx, selectedSide }) {
+  const canvasRef = useRef(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(()=>{ setMounted(true); }, []);
+  const selectedRow = rows[selectedIdx] || null;
+  return (
+    <div className="mt-8">
+      <h3 className="font-medium mb-2">Playfield</h3>
+  <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
+        <PlayfieldScenery />
+        {rows.map(r => (
+          <div
+            key={r.id}
+            style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
+            className={`absolute select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white border-slate-300 ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
+            title={r.type}
+          >
+            <div className="font-medium truncate max-w-[120px] text-center" title={r.type}>{r.type || '—'}</div>
+          </div>
+        ))}
+  {mounted && selectedRow && selectedSide && (()=>{
+          // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (!rect || !rect.width || !rect.height) return null;
+          const w = rect.width; const h = rect.height;
+          const bx = selectedRow.x * w; const by = selectedRow.y * h;
+          function lerp(a,b,t){return a+(b-a)*t;}
+          // Coordinate anchors (note mapping: 0=base,100=tip in editor, but we now need both extremes).
+          const L_TIP = { x: 415, y: 970 }, L_BASE = { x: 285, y: 835 };
+          const R_TIP = { x: 585, y: 970 }, R_BASE = { x: 715, y: 835 };
+          const Lp = (p)=>({ x: lerp(L_BASE.x, L_TIP.x, p/100)/1000*w, y: lerp(L_BASE.y, L_TIP.y, p/100)/1000*h });
+          const Rp = (p)=>({ x: lerp(R_BASE.x, R_TIP.x, p/100)/1000*w, y: lerp(R_BASE.y, R_TIP.y, p/100)/1000*h });
+          const isLeft = selectedSide === 'L';
+          const p0 = isLeft ? Lp(0) : Rp(0);    // base extreme
+            const p100 = isLeft ? Lp(100) : Rp(100); // tip extreme
+          // Unified green guide color for both flippers during practice
+          const stroke = '#10b981'; // emerald-500
+          return (
+            <svg className="absolute inset-0 pointer-events-none" viewBox={`0 0 ${w} ${h}`}>
+              <line x1={p0.x} y1={p0.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
+              <line x1={p100.x} y1={p100.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
+            </svg>
+          );
+        })()}
+      </div>
+      <div className="text-[11px] text-slate-500 mt-2">Spatial reference only – numbers hidden during practice to encourage internal calibration.</div>
     </div>
   );
 }
@@ -668,8 +685,12 @@ export default function App() {
     setInitialized(true);
     // Hide mental model by default when a session starts
     setShowMentalModel(false);
-    // pick a random starting shot for random mode
-    if (mode === "random") setSelectedIdx(rndInt(0, rows.length - 1));
+    // Pick a random starting shot & flipper for both modes so manual mode doesn't always start at first row
+    if (rows.length) {
+      const randIdx = rndInt(0, rows.length - 1);
+      setSelectedIdx(randIdx);
+      setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
+    }
   }
 
   // Apply drift every N attempts
@@ -1435,6 +1456,9 @@ export default function App() {
               </div>
 
               <div className="mt-6">
+                {/* Practice playfield (read-only visual) */}
+                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} />
+                {/* Attempt history below playfield */}
                 <h3 className="font-medium mb-2">Attempt history</h3>
                 <div className="overflow-auto border rounded-2xl">
                   <table className="w-full text-sm">
