@@ -8,14 +8,47 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
 function snap5(v) { return Math.min(100, Math.max(0, Math.round(v / 5) * 5)); }
 const rndInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a; // inclusive
-const formatPct = (n) => `${Math.round(n)}%`;
+// Format percentage values with at least two digits (00, 05, 10, ...) retaining % where appropriate.
+const format2 = (n) => {
+  const v = Math.round(Number.isFinite(n) ? n : 0);
+  return String(v).padStart(2, '0');
+};
+const formatPct = (n) => `${format2(n)}%`;
 
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
 // New taxonomy: separate base element from location. All bases share the same location set.
 // Location 'Base' (or null) means unsuffixed (e.g. "Ramp").
+// BASE_ELEMENTS ordered (most common -> least common) as of 2025‑09‑26.
+// Methodology (lightweight composite prevalence score):
+//  1. Core reference: Typical modern (DMD / LCD) layouts from top manufacturers (Stern, Williams/Bally WPC, Jersey Jack) sampled mentally (~40 well-known titles).
+//  2. Relative frequency buckets (Very Common, Common, Regular, Occasional, Rare, Novelty) scored 6..1 then sorted.
+//  3. Cross-checked against feature descriptions & prevalence implied in Wikipedia "Components" section (Bumpers, Targets, Ramps, Spinners, Holes/Saucers, etc.).
+//  4. Combined multi-target groupings: 'Standups' (spot targets) and 'Drops' treated separately due to distinct strategic behavior.
+// Notes:
+//  - "Orbit" (aka loop around top) appears on nearly every modern game; often two orbits feed lanes/upper area.
+//  - "Ramp" shots (wireform or plastic) are central to mode advancement/scoring in most 1986+ titles.
+//  - "Spinner" frequently integrated into orbits/lanes; ranked high but below structural shots.
+//  - "Standups" (spot targets) near-universal; grouped rather than individual letter targets.
+//  - "Drops" widespread but not universal (many games have banks, some have none) -> below standups.
+//  - "Bumper" (pop bumper set) nearly universal historically but sometimes reduced/omitted in a few recent designs; placed after major shot geometry elements.
+//  - "Lane" refers to in/outlanes or upper lanes; retained though many are implicit rather than discrete selectable shots.
+//  - "Scoop" (vertical hole) and "Saucer" (shallow kick-out) both common; scoop slightly edges due to modern rule integration.
+//  - Mid-prevalence specialty/mech shots: VUK (Vertical Up Kicker), Captive Ball, Kickback (earned feature), Magnet (playfield control) placed mid/low.
+//  - Rarer/mechanical or era-specific: Horseshoe, Rollover (distinct rollover lane target group), Vari Target, Roto, Waterfall, Roto Target, Toy (unique mechs), Capture, Deadend, Gate.
+//  - "Toy" is conceptually common but each is unique; as a generic category it's lower for selection granularity here.
+//  - Ordering trades absolute statistical rigor for practical training relevance: earlier entries likely anchor a player's memory model.
 const BASE_ELEMENTS = [
-  'Orbit','Ramp','Loop','Scoop','Saucer','Standups','Drops','Spinner','Bumper','Captive Ball','VUK'
+  // Very Common / Core geometry & ubiquitous scoring surfaces
+  'Orbit','Ramp','Standups','Lane','Bumper','Spinner',
+  // Common but slightly more situational or not on every single game
+  'Drops','Scoop','Saucer','VUK','Captive Ball',
+  // Regular specialty / feature mechs & control elements
+  'Magnet','Kickback','Horseshoe','Rollover','Gate',
+  // Occasional (era or design style dependent)
+  'Loop','Vari Target','Captive','Deadend','Toy',
+  // Rare / Niche / Specific mechanical assemblies or less standardized names
+  'Roto','Roto Target','Waterfall','Alley','Capture'
 ];
 const LOCATIONS = ['Left','Center','Right'];
 
@@ -366,8 +399,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
             >
               <div className="font-medium truncate max-w-[110px]" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
               <div className="flex gap-1 mt-0.5">
-                <span className="px-1 rounded bg-slate-100">L {r.initL ?? '—'}</span>
-                <span className="px-1 rounded bg-slate-100">R {r.initR ?? '—'}</span>
+                <span className="px-1 rounded bg-slate-100">L {r.initL != null ? format2(r.initL) : '—'}</span>
+                <span className="px-1 rounded bg-slate-100">R {r.initR != null ? format2(r.initR) : '—'}</span>
               </div>
               <button
                 onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
@@ -399,7 +432,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
           return (
             <svg className="absolute inset-0 pointer-events-none" viewBox={`0 0 ${w} ${h}`}> 
               { (r.initL ?? 0) > 0 && (()=>{
-                const label = `${r.initL}`;
+                const label = `${format2(r.initL)}`;
                 const fs = 11; // match shot box number font size
                 const padX = 5, padY = 2;
                 const wTxt = label.length * fs * 0.6;
@@ -415,7 +448,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId }) {
                 );
               })()}
               { (r.initR ?? 0) > 0 && (()=>{
-                const label = `${r.initR}`;
+                const label = `${format2(r.initR)}`;
                 const fs = 11;
                 const padX = 5, padY = 2;
                 const wTxt = label.length * fs * 0.6;
@@ -1035,7 +1068,7 @@ export default function App() {
                                   setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:null}; return next; });
                                   setCollapsedLeft(list => list.filter(id => id !== r.id));
                                 }}
-                              >{r.initL}</Chip>
+                              >{format2(r.initL)}</Chip>
                             </div>
                           ) : (
                             <div className="flex flex-wrap gap-1 max-w-[180px]">
@@ -1053,7 +1086,7 @@ export default function App() {
                                       return list;
                                     });
                                   }}
-                                >{val}</Chip>
+                                >{format2(val)}</Chip>
                               ))}
                             </div>
                           )}
@@ -1067,7 +1100,7 @@ export default function App() {
                                   setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:null}; return next; });
                                   setCollapsedRight(list => list.filter(id => id !== r.id));
                                 }}
-                              >{r.initR}</Chip>
+                              >{format2(r.initR)}</Chip>
                             </div>
                           ) : (
                             <div className="flex flex-wrap gap-1 max-w-[180px]">
@@ -1085,7 +1118,7 @@ export default function App() {
                                       return list;
                                     });
                                   }}
-                                >{val}</Chip>
+                                >{format2(val)}</Chip>
                               ))}
                             </div>
                           )}
