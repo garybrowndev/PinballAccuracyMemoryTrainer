@@ -744,6 +744,18 @@ export default function App() {
   const setRows = (updater) => {
     setRowsRaw(prev => (typeof updater === 'function' ? updater(prev) : updater));
   };
+  // Popup menus for new shot/location selector
+  const [openShotMenuId, setOpenShotMenuId] = useState(null); // row id currently showing shot list
+  const [openLocMenuId, setOpenLocMenuId] = useState(null);  // row id currently showing location list
+  // Close menus on outside click
+  useEffect(()=>{
+    const handler = ()=>{
+      // Any click not stopped will close both menus
+      setOpenShotMenuId(null); setOpenLocMenuId(null);
+    };
+    window.addEventListener('click', handler);
+    return ()=> window.removeEventListener('click', handler);
+  },[]);
   const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 5);
   const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2); // magnitude in 5% steps
   // Initial hidden truth randomization steps (each step = 5 percentage points). Previously fixed at 4 (±20).
@@ -1301,69 +1313,70 @@ export default function App() {
                         >
                         <td className="pt-2 pr-2 pl-2 pb-2 align-top relative">
                           {(() => {
-                            const currentBase = r.base || '';
-                            const currentLocation = r.location ?? '';
-                            if (!currentBase) {
-                              // Stage 1: choose a base only (unsuffixed), keep list expanded
-                              return (
-                                <div className="flex flex-wrap gap-2 max-w-[520px]">
-                                  {BASE_ELEMENTS.map(base => (
-                                    <Chip
-                                      key={base}
-                                      active={false}
-                                      onClick={() => {
-                                        setRows(prev => { const next=[...prev]; next[i] = { ...next[i], base, location: '', type: buildType(base, '') }; return next; });
-                                        // Do NOT collapse yet – user may now pick a location variant
-                                      }}
-                                    >{base}</Chip>
-                                  ))}
-                                </div>
-                              );
-                            }
-                            // Stage 2: base chosen -> show unsuffixed + location variants
+                            const base = r.base || '';
+                            const location = r.location || '';
+                            const shotMenuOpen = openShotMenuId === r.id;
+                            const locMenuOpen = openLocMenuId === r.id;
+                            const closeMenus = () => { setOpenShotMenuId(null); setOpenLocMenuId(null); };
                             return (
-                              <div className="flex flex-wrap gap-2 max-w-[520px]">
-                                {/* Unsuffixed base chip */}
+                              <div className="flex items-center gap-2 relative">
                                 <Chip
-                                  key="_base_unsuffixed"
-                                  active={!currentLocation}
-                                  onClick={() => {
-                                    if (!currentLocation) {
-                                      // Clicking again clears base entirely
-                                      setRows(prev => { const next=[...prev]; next[i] = { ...next[i], base: '', location: '', type: '' }; return next; });
-                                      setCollapsedTypes(list => list.filter(id => id !== r.id));
+                                  active={!!base}
+                                  onClick={(e)=>{
+                                    e.stopPropagation();
+                                    if (base) {
+                                      // Deselect shot + cascade location
+                                      setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:'', location:'', type:''}; return next; });
+                                      closeMenus();
                                     } else {
-                                      // Revert to unsuffixed
-                                      setRows(prev => { const next=[...prev]; next[i] = { ...next[i], location: '', type: buildType(currentBase, '') }; return next; });
-                                      // Expand (remove collapse) since user is at base-only stage
-                                      setCollapsedTypes(list => list.filter(id => id !== r.id));
+                                      setOpenShotMenuId(shotMenuOpen ? null : r.id); setOpenLocMenuId(null);
                                     }
                                   }}
-                                >{currentBase}</Chip>
-                                {LOCATIONS.map(loc => {
-                                  const label = buildType(currentBase, loc);
-                                  return (
-                                    <Chip
-                                      key={loc}
-                                      active={currentLocation === loc}
-                                      onClick={() => {
-                                        if (currentLocation === loc) {
-                                          // Deselect entirely (same behavior as clearing the base chip) -> return to element list stage
-                                          setRows(prev => { const next=[...prev]; next[i] = { ...next[i], base: '', location: '', type: '' }; return next; });
-                                          setCollapsedTypes(list => list.filter(id => id !== r.id));
-                                        } else {
-                                          // Select specific location variant and collapse
-                                          setRows(prev => { const next=[...prev]; next[i] = { ...next[i], location: loc, type: buildType(currentBase, loc) }; return next; });
-                                          setCollapsedTypes(list => list.includes(r.id) ? list : [...list, r.id]);
-                                        }
-                                      }}
-                                    >{label}</Chip>
-                                  );
-                                })}
+                                >{base || 'Select Shot'}</Chip>
+                                {base && (
+                                  <Chip
+                                    active={!!location}
+                                    onClick={(e)=>{
+                                      e.stopPropagation();
+                                      if (location) {
+                                        // Deselect only location
+                                        setRows(prev=>{ const next=[...prev]; next[i]={...next[i], location:'', type: buildType(base,'')}; return next; });
+                                        closeMenus();
+                                      } else {
+                                        setOpenLocMenuId(locMenuOpen ? null : r.id); setOpenShotMenuId(null);
+                                      }
+                                    }}
+                                  >{location || 'Select Location'}</Chip>
+                                )}
+                                {shotMenuOpen && (
+                                  <div className="absolute z-20 top-full left-0 mt-2 w-72 rounded-xl border bg-white shadow-lg p-2 grid grid-cols-3 gap-2" onClick={e=>e.stopPropagation()}>
+                                    {BASE_ELEMENTS.map(b=> (
+                                      <button
+                                        key={b}
+                                        type="button"
+                                        onClick={()=>{ setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:b, location:'', type: buildType(b,'')}; return next; }); setOpenShotMenuId(null); }}
+                                        className={(b===base?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
+                                      >{b}</button>
+                                    ))}
+                                    <div className="col-span-2 mt-1 text-[10px] text-slate-400 text-center">Select shot</div>
+                                  </div>
+                                )}
+                                {locMenuOpen && base && (
+                                  <div className="absolute z-20 top-full left-0 mt-2 w-48 rounded-xl border bg-white shadow-lg p-2 grid grid-cols-2 gap-2" onClick={e=>e.stopPropagation()}>
+                                    {LOCATIONS.map(loc=> (
+                                      <button
+                                        key={loc}
+                                        type="button"
+                                        onClick={()=>{ setRows(prev=>{ const next=[...prev]; next[i]={...next[i], location:loc, type: buildType(base,loc)}; return next; }); setOpenLocMenuId(null); }}
+                                        className={(loc===location?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
+                                      >{loc}</button>
+                                    ))}
+                                    <div className="col-span-2 mt-1 text-[10px] text-slate-400 text-center">Select location (optional)</div>
+                                  </div>
+                                )}
                               </div>
                             );
                           })()}
-                          {/* Insert button relocated to action cell */}
                         </td>
                         <td className="p-2">
                           <div className="flex flex-col gap-1 max-w-[220px]">
