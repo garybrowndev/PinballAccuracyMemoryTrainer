@@ -96,30 +96,29 @@ const newRow = (over = {}, indexHint = 0) => {
 function rowDisplay(r) { return r ? (r.type || buildType(r.base, r.location)) : ''; }
 function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flipper' : 'Right Flipper'} → ${rowDisplay(r)}` : ''; }
 
-// Allowed value computation with NEUTRAL 0 (Not Possible does not constrain other rows):
-// Left: strictly decreasing among positive values only (ignore zeros for ordering bounds). Right: ascending among positives only.
-// 0 always available and never propagates constraints.
-function computeAllowedValues(rows, side, index) {
-  const STEP_VALUES = Array.from({length:21},(_,k)=>k*5);
+
+// Compute inclusive min/max positive (>=5) range for slider given ordering constraints (0 neutral/not part of ordering)
+function computeAllowedRange(rows, side, index) {
   const vals = side==='L' ? rows.map(r=>r.initL) : rows.map(r=>r.initR);
   if (side === 'L') {
     const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
     const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
-    let upper = earlierPos.length ? Math.min(...earlierPos) - 5 : 100;
-    let lower = laterPos.length ? Math.max(...laterPos) + 5 : 0;
-    upper = Math.min(100, upper); lower = Math.max(0, lower);
-    const allowed = STEP_VALUES.filter(v=>v>=lower && v<=upper);
-    if (!allowed.includes(0)) allowed.unshift(0);
-    return allowed;
+    let maxAllowed = earlierPos.length ? Math.min(...earlierPos) - 5 : 100; // strictly less than smallest earlier
+    let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5;       // strictly greater than largest later
+    maxAllowed = Math.min(100, maxAllowed);
+    minAllowed = Math.max(5, minAllowed);
+    if (minAllowed > maxAllowed) return null; // no positive slot available
+    return [minAllowed, maxAllowed];
   } else {
     const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
     const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
     const lastPosAbove = [...earlierPos].reverse()[0] || 0;
-    let lowerBound = lastPosAbove === 0 ? 0 : lastPosAbove + 5;
-    const minLater = laterPos.length ? Math.min(...laterPos) : 100;
-    const allowed = STEP_VALUES.filter(v=>v>=lowerBound && v<=minLater);
-    if (!allowed.includes(0)) allowed.unshift(0);
-    return allowed;
+    let minAllowed = lastPosAbove === 0 ? 5 : lastPosAbove + 5;
+    let maxAllowed = laterPos.length ? Math.min(...laterPos) - 5 : 100;
+    maxAllowed = Math.min(100, maxAllowed);
+    minAllowed = Math.max(5, minAllowed);
+    if (minAllowed > maxAllowed) return null;
+    return [minAllowed, maxAllowed];
   }
 }
 
@@ -770,9 +769,7 @@ export default function App() {
   const [showFeedbackPanel, setShowFeedbackPanel] = useLocalStorage("pinball_showFeedback_v1", false); // new toggle for Feedback table
   // Restore stacks removed (Not Possible is neutral now)
   // UI local (non-persisted) state: collapsed shot type rows (store ids)
-  const [collapsedTypes, setCollapsedTypes] = useState([]);
-  const [collapsedLeft, setCollapsedLeft] = useState([]); // row ids whose Left % list is collapsed
-  const [collapsedRight, setCollapsedRight] = useState([]); // row ids whose Right % list is collapsed
+  const [collapsedTypes, setCollapsedTypes] = useState([]); // Only shot type collapsing retained; flipper collapsing removed.
   // Playfield editor is always visible now; toggle removed
   // const [showPlayfield, setShowPlayfield] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
@@ -782,15 +779,13 @@ export default function App() {
     if (didInitCollapse.current) return;
     if (!rows || !rows.length) return; // nothing yet
     // Only initialize if user hasn't interacted (arrays still empty)
-    if (collapsedTypes.length || collapsedLeft.length || collapsedRight.length) { didInitCollapse.current = true; return; }
+  if (collapsedTypes.length) { didInitCollapse.current = true; return; }
     const typeIds = rows.filter(r => !!r.type).map(r => r.id);
-    const leftIds = rows.filter(r => r.initL != null).map(r => r.id);
-    const rightIds = rows.filter(r => r.initR != null).map(r => r.id);
+  // Flipper collapse removed (left/right arrays no longer tracked)
     if (typeIds.length) setCollapsedTypes(typeIds);
-    if (leftIds.length) setCollapsedLeft(leftIds);
-    if (rightIds.length) setCollapsedRight(rightIds);
+  // (No flipper collapse initialization)
     didInitCollapse.current = true;
-  }, [rows, collapsedTypes.length, collapsedLeft.length, collapsedRight.length]);
+  }, [rows, collapsedTypes.length]);
 
   // Keep selectedIdx within bounds if rows shrink
   useEffect(() => {
@@ -1215,7 +1210,6 @@ export default function App() {
                               type="button"
                               onClick={() => {
                                 setRows(prev => prev.map(rw => ({ ...rw, initL: null })));
-                                setCollapsedLeft([]);
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
                               title="Clear all left flipper selections"
@@ -1231,7 +1225,6 @@ export default function App() {
                               type="button"
                               onClick={() => {
                                 setRows(prev => prev.map(rw => ({ ...rw, initR: null })));
-                                setCollapsedRight([]);
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
                               title="Clear all right flipper selections"
@@ -1270,11 +1263,8 @@ export default function App() {
                         )}
                         <tr
                           className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : ''}`}
-                          draggable={!initialized}
-                          onDragStart={(e)=>{ if(initialized) return; setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed='move'; }}
                           onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); setDragOverIdx(i); }}
                           onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
-                          onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
                         >
                         <td className="pt-2 pr-2 pl-2 pb-8 align-top relative">
                           {(() => {
@@ -1354,125 +1344,155 @@ export default function App() {
                           </div>
                         </td>
                         <td className="p-2">
-                          {collapsedLeft.includes(r.id) && r.initL != null ? (
-                            <div className="flex flex-wrap gap-1 max-w-[180px]">
-                              <Chip
-                                active
-                                onClick={() => {
-                                  // Deselect & expand
-                                  setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:null}; return next; });
-                                  setCollapsedLeft(list => list.filter(id => id !== r.id));
-                                }}
-                              >{r.initL === 0 ? 'Not Possible' : format2(r.initL)}</Chip>
-                            </div>
-                          ) : (
-                            <div className="flex flex-wrap gap-1 max-w-[180px]">
-                              {(() => {
-                                const vals = computeAllowedValues(rows, 'L', i);
-                                const hasZero = vals.includes(0);
-                                const positivesAsc = vals.filter(v=>v>0).sort((a,b)=>a-b); // 05 -> 100
-                                return { positivesAsc, hasZero };
-                              })().positivesAsc.map(val => (
-                                <Chip
-                                  key={val}
-                                  active={r.initL===val}
-                                  onClick={() => {
-                                    const newVal = (r.initL === val) ? null : val;
-                                    setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:newVal}; return next; });
-                                    setCollapsedLeft(list => {
-                                      const has = list.includes(r.id);
-                                      if (newVal != null && !has) return [...list, r.id];
-                                      if (newVal == null && has) return list.filter(id => id !== r.id);
-                                      return list;
-                                    });
-                                  }}
-                                >{format2(val)}</Chip>
-                              ))}
-                              {(() => {
-                                const vals = computeAllowedValues(rows, 'L', i);
-                                if (!vals.includes(0)) return null;
-                                return (
-                                  <div className="basis-full w-full mt-1">
-                                    <Chip
-                                      key={0}
-                                      active={r.initL===0}
-                                      onClick={() => {
-                                        const newVal = (r.initL === 0) ? null : 0;
-                                        setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:newVal}; return next; });
-                                        setCollapsedLeft(list => {
-                                          const has = list.includes(r.id);
-                                          if (newVal != null && !has) return [...list, r.id];
-                                          if (newVal == null && has) return list.filter(id => id !== r.id);
-                                          return list;
-                                        });
-                                      }}
-                                    >Not Possible</Chip>
+                          <div className="flex flex-col gap-1 max-w-[220px]">
+                            {(() => {
+                              const range = computeAllowedRange(rows,'L',i); // may be null -> no positive allowed
+                              // Allowed positive band always within absolute 5..100 domain (5% steps)
+                              const allowedMin = range ? range[0] : 5; // if null we still allow selection but will snap/clamp to 0 (Not Possible)
+                              const allowedMax = range ? range[1] : 100;
+                              // Current actual value (persisted as normal orientation); ensure snaps
+                              let actual = r.initL && r.initL>0 ? r.initL : null;
+                              // Clamp if outside tightened constraints
+                              if (actual != null) {
+                                if (actual > allowedMax) actual = allowedMax;
+                                if (actual < allowedMin) actual = allowedMin;
+                              }
+                              // Map to reversed slider visual (fixed bounds 5..100 -> internal reversed 100..5)
+                              const sliderMin = 5; const sliderMax = 100; // fixed domain for user perception
+                              const displayVal = actual != null ? actual : 50; // fallback midpoint when null
+                              // Compute gradient to grey out disallowed zones (top side larger values at left due to reversal)
+                              // Visual axis (0% left -> 100% right) corresponds to decreasing actual values.
+                              // Grey left segment: actual > allowedMax; Grey right segment: actual < allowedMin.
+                              const leftStopPct = ((100 - allowedMax) / 95) * 100; // portion to grey on left
+                              const rightStartPct = ((100 - allowedMin) / 95) * 100; // start of right grey (since values drop left->right)
+                              const trackBg = range ? `linear-gradient(to right, 
+                                rgba(55,65,81,0.70) 0%, 
+                                rgba(55,65,81,0.70) ${leftStopPct}%, 
+                                rgba(16,185,129,0.35) ${leftStopPct}%, 
+                                rgba(16,185,129,0.35) ${rightStartPct}%, 
+                                rgba(55,65,81,0.70) ${rightStartPct}%, 
+                                rgba(55,65,81,0.70) 100%)` : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
+                              return (
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
+                                    <span>100</span><span>05</span>
                                   </div>
-                                );
-                              })()}
+                                  <div className="relative">
+                                    <input
+                                      data-slider
+                                      type="range"
+                                      min={sliderMin}
+                                      max={sliderMax}
+                                      step={5}
+                                      value={Math.min(Math.max(105 - (actual != null ? actual : displayVal), sliderMin), sliderMax)}
+                                      onMouseDown={e=>{ e.stopPropagation(); }}
+                                      onPointerDown={e=>{ e.stopPropagation(); }}
+                                      onDragStart={e=>{ e.preventDefault(); e.stopPropagation(); }}
+                                      onChange={e=>{
+                                        const raw = Number(e.target.value); // 5..100 reversed domain
+                                        let newActual = 105 - raw; // convert back
+                                        if (newActual > allowedMax) newActual = allowedMax;
+                                        if (newActual < allowedMin) newActual = allowedMin;
+                                        setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL: newActual}; return next; });
+                                      }}
+                                      style={{ background: trackBg }}
+                                      className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
+                                    {actual!=null && range && (()=>{
+                                      const pct = ((100 - actual) / 95) * 100; // map actual to visual percentage
+                                      return (
+                                        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-emerald-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
+                                      );
+                                    })()}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-[11px]">
+                                    {range ? <span className="text-slate-400">Allowed {format2(allowedMin)}–{format2(allowedMax)}</span> : <span className="text-slate-400">Select Not Possible or set later</span>}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            <div>
+                              <Chip
+                                active={r.initL===0}
+                                onClick={()=>{
+                                  const newVal = r.initL === 0 ? null : 0;
+                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL:newVal}; return next; });
+                                }}
+                              >Not Possible</Chip>
                             </div>
-                          )}
+                          </div>
                         </td>
                         <td className="p-2">
-                          {collapsedRight.includes(r.id) && r.initR != null ? (
-                            <div className="flex flex-wrap gap-1 max-w-[180px]">
-                              <Chip
-                                active
-                                onClick={() => {
-                                  setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:null}; return next; });
-                                  setCollapsedRight(list => list.filter(id => id !== r.id));
-                                }}
-                              >{r.initR === 0 ? 'Not Possible' : format2(r.initR)}</Chip>
-                            </div>
-                          ) : (
-                            <div className="flex flex-wrap gap-1 max-w-[180px]">
-                              {(() => {
-                                const vals = computeAllowedValues(rows, 'R', i);
-                                const hasZero = vals.includes(0);
-                                const positivesDesc = vals.filter(v=>v>0).sort((a,b)=>b-a); // 100 -> 05
-                                return { positivesDesc, hasZero };
-                              })().positivesDesc.map(val => (
-                                <Chip
-                                  key={val}
-                                  active={r.initR===val}
-                                  onClick={() => {
-                                    const newVal = (r.initR === val) ? null : val;
-                                    setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:newVal}; return next; });
-                                    setCollapsedRight(list => {
-                                      const has = list.includes(r.id);
-                                      if (newVal != null && !has) return [...list, r.id];
-                                      if (newVal == null && has) return list.filter(id => id !== r.id);
-                                      return list;
-                                    });
-                                  }}
-                                >{format2(val)}</Chip>
-                              ))}
-                              {(() => {
-                                const vals = computeAllowedValues(rows, 'R', i);
-                                if (!vals.includes(0)) return null;
-                                return (
-                                  <div className="basis-full w-full mt-1">
-                                    <Chip
-                                      key={0}
-                                      active={r.initR===0}
-                                      onClick={() => {
-                                        const newVal = (r.initR === 0) ? null : 0;
-                                        setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:newVal}; return next; });
-                                        setCollapsedRight(list => {
-                                          const has = list.includes(r.id);
-                                          if (newVal != null && !has) return [...list, r.id];
-                                          if (newVal == null && has) return list.filter(id => id !== r.id);
-                                          return list;
-                                        });
-                                      }}
-                                    >Not Possible</Chip>
+                          <div className="flex flex-col gap-1 max-w-[220px]">
+                            {(() => {
+                              const range = computeAllowedRange(rows,'R',i);
+                              const allowedMin = range ? range[0] : 5;
+                              const allowedMax = range ? range[1] : 100;
+                              let actual = r.initR && r.initR>0 ? r.initR : null;
+                              if (actual != null) {
+                                if (actual < allowedMin) actual = allowedMin; // Right side ascending; clamp upward
+                                if (actual > allowedMax) actual = allowedMax;
+                              }
+                              const sliderMin = 5; const sliderMax = 100; // direct orientation 5 -> 100 left->right
+                              const displayVal = actual != null ? actual : 50;
+                              // Grey disallowed segments: before allowedMin and after allowedMax
+                              const leftGreyPct = ((allowedMin - 5) / 95) * 100;
+                              const rightGreyStartPct = ((allowedMax - 5) / 95) * 100;
+                              const trackBg = range ? `linear-gradient(to right,
+                                rgba(55,65,81,0.70) 0%,
+                                rgba(55,65,81,0.70) ${leftGreyPct}%,
+                                rgba(244,63,94,0.35) ${leftGreyPct}%,
+                                rgba(244,63,94,0.35) ${rightGreyStartPct}%,
+                                rgba(55,65,81,0.70) ${rightGreyStartPct}%,
+                                rgba(55,65,81,0.70) 100%)` : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
+                              return (
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
+                                    <span>05</span><span>100</span>
                                   </div>
-                                );
-                              })()}
+                                  <div className="relative">
+                                    <input
+                                      data-slider
+                                      type="range"
+                                      min={sliderMin}
+                                      max={sliderMax}
+                                      step={5}
+                                      value={Math.min(Math.max(actual != null ? actual : displayVal, sliderMin), sliderMax)}
+                                      onMouseDown={e=>{ e.stopPropagation(); }}
+                                      onPointerDown={e=>{ e.stopPropagation(); }}
+                                      onDragStart={e=>{ e.preventDefault(); e.stopPropagation(); }}
+                                      onChange={e=>{
+                                        let newActual = Number(e.target.value);
+                                        if (newActual < allowedMin) newActual = allowedMin;
+                                        if (newActual > allowedMax) newActual = allowedMax;
+                                        setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initR: newActual}; return next; });
+                                      }}
+                                      style={{ background: trackBg }}
+                                      className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
+                                    {actual!=null && range && (()=>{
+                                      const pct = ((actual - 5) / 95) * 100;
+                                      return (
+                                        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
+                                      );
+                                    })()}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-[11px]">
+                                    {range ? <span className="text-slate-400">Allowed {format2(allowedMin)}–{format2(allowedMax)}</span> : <span className="text-slate-400">Select Not Possible or set later</span>}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            <div>
+                              <Chip
+                                active={r.initR===0}
+                                onClick={()=>{
+                                  const newVal = r.initR === 0 ? null : 0;
+                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initR:newVal}; return next; });
+                                }}
+                              >Not Possible</Chip>
                             </div>
-                          )}
+                          </div>
                         </td>
-                        <td className="p-2 text-right cursor-grab select-none" title={!initialized ? 'Drag to reorder' : ''}>
+                        <td className="p-2 text-right relative select-none">
                           <button
                             onClick={() => setRows((prev) => prev.filter((_, k) => k !== i))}
                             className="text-slate-500 hover:text-red-600"
@@ -1480,6 +1500,21 @@ export default function App() {
                           >
                             ✕
                           </button>
+                          {!initialized && (
+                            <button
+                              type="button"
+                              aria-label="Drag to reorder"
+                              draggable
+                              onDragStart={(e)=>{ if(initialized) return; setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed='move'; }}
+                              onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
+                              className="absolute right-1 bottom-1 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200 cursor-grab active:cursor-grabbing"
+                              title="Drag to reorder"
+                            >
+                              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                                <path d="M7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7 10a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7 15a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0" />
+                              </svg>
+                            </button>
+                          )}
                         </td>
                         </tr>
                         {/* If dragging to end: show marker after last row */}
