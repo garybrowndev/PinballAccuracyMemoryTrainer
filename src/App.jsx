@@ -43,7 +43,7 @@ let ROW_ID_SEED = 1;
 //  - "Lane" refers to in/outlanes or upper lanes; retained though many are implicit rather than discrete selectable shots.
 //  - "Scoop" (vertical hole) and "Saucer" (shallow kick-out) both common; scoop slightly edges due to modern rule integration.
 //  - Mid-prevalence specialty/mech shots: VUK (Vertical Up Kicker), Captive Ball, Kickback (earned feature), Magnet (playfield control) placed mid/low.
-//  - Rarer/mechanical or era-specific: Horseshoe, Rollover (distinct rollover lane target group), Vari Target, Roto, Waterfall, Roto Target, Toy (unique mechs), Capture, Deadend, Gate.
+//  - Rarer/mechanical or era-specific: Horseshoe, Rollover (distinct rollover lane target group), Vari Target, Waterfall, Roto Target, Toy (unique mechs), Capture, Deadend, Gate.
 //  - "Toy" is conceptually common but each is unique; as a generic category it's lower for selection granularity here.
 //  - Ordering trades absolute statistical rigor for practical training relevance: earlier entries likely anchor a player's memory model.
 const BASE_ELEMENTS = [
@@ -56,7 +56,7 @@ const BASE_ELEMENTS = [
   // Occasional (era or design style dependent)
   'Loop','Vari Target','Captive','Deadend','Toy',
   // Rare / Niche / Specific mechanical assemblies or less standardized names
-  'Roto','Roto Target','Waterfall','Alley','Capture'
+  'Roto Target','Waterfall','Alley','Capture'
 ];
 // Added extended location variants to support richer spatial descriptors in practice:
 // Previous: Left, Center, Right. New additions: Bottom, Top, Upper, Lower, Side.
@@ -98,18 +98,28 @@ function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flippe
 
 
 // Compute inclusive min/max positive (>=5) range for slider given ordering constraints (0 neutral/not part of ordering)
+// Left flipper: strictly INCREASING top->bottom (low -> high)
+// Right flipper: strictly DECREASING top->bottom (high -> low)
 function computeAllowedRange(rows, side, index) {
-  // Updated: both flippers now enforce strictly decreasing positive values (top -> bottom) to support
-  // descending auto-fill patterns like 100,95,90,... without clamping the first row.
   const vals = side==='L' ? rows.map(r=>r.initL) : rows.map(r=>r.initR);
   const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
   const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
-  let maxAllowed = earlierPos.length ? Math.min(...earlierPos) - 5 : 100; // strictly less than smallest earlier
-  let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5;       // strictly greater than largest later
-  maxAllowed = Math.min(100, maxAllowed);
-  minAllowed = Math.max(5, minAllowed);
-  if (minAllowed > maxAllowed) return null; // no positive slot available
-  return [minAllowed, maxAllowed];
+  if (side === 'L') {
+    let minAllowed = earlierPos.length ? Math.max(...earlierPos) + 5 : 5; // greater than largest earlier
+    let maxAllowed = laterPos.length ? Math.min(...laterPos) - 5 : 100;   // less than smallest later
+    minAllowed = Math.max(5, minAllowed);
+    maxAllowed = Math.min(100, maxAllowed);
+    if (minAllowed > maxAllowed) return null;
+    return [minAllowed, maxAllowed];
+  } else { // Right: descending
+    // For descending: value[i] < all earlier positives AND value[i] > all later positives.
+    let maxAllowed = earlierPos.length ? Math.min(...earlierPos) - 5 : 100; // smaller than smallest earlier
+    let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5;       // greater than largest later
+    maxAllowed = Math.min(100, maxAllowed);
+    minAllowed = Math.max(5, minAllowed);
+    if (minAllowed > maxAllowed) return null;
+    return [minAllowed, maxAllowed];
+  }
 }
 
 
@@ -1217,18 +1227,17 @@ export default function App() {
                                 setRows(prev => {
                                   const n = prev.length;
                                   if (!n) return prev;
-                                  // Even spacing via (i+1)/(n+1)*100 then snap to 5, produce ascending then reverse for descending constraint.
-                                  const asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
-                                  // Deduplicate if snapping caused collisions: nudge later duplicates by -5 if possible.
-                                  for (let i=1;i<asc.length;i++) {
-                                    if (asc[i] <= asc[i-1]) asc[i] = Math.min(100, asc[i-1] + 5); // ensure strict ascending pre-reverse
-                                  }
-                                  const desc = [...asc].reverse();
-                                  return prev.map((rw, idx)=> ({ ...rw, initL: desc[idx] }));
+                                  // Interior partition (i+1)/(n+1)*100 snapped to 5 yields centered spread; we now keep ascending directly.
+                                  let asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
+                                  // Ensure strict ascending (dedupe by bumping forward)
+                                  for (let k=1;k<asc.length;k++) if (asc[k] <= asc[k-1]) asc[k] = Math.min(100, asc[k-1] + 5);
+                                  // Clamp top if overflowed due to bumps - back-propagate if needed
+                                  for (let k=asc.length-2;k>=0;k--) if (asc[k] >= asc[k+1]) asc[k] = Math.max(5, asc[k+1]-5);
+                                  return prev.map((rw, idx)=> ({ ...rw, initL: asc[idx] }));
                                 });
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
-                              title="Auto-fill evenly spaced (center-out) values for left flipper"
+                              title="Auto-fill evenly spaced ascending values starting near center for left flipper"
                             >Clear</button>
                           )}
                         </div>
@@ -1241,18 +1250,17 @@ export default function App() {
                               type="button"
                               onClick={() => {
                                 setRows(prev => {
-                                  const n = prev.length;
-                                  if (!n) return prev;
-                                  const asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
-                                  for (let i=1;i<asc.length;i++) {
-                                    if (asc[i] <= asc[i-1]) asc[i] = Math.min(100, asc[i-1] + 5);
-                                  }
+                                  const n = prev.length; if (!n) return prev;
+                                  // Generate ascending interior partition then reverse for descending constraint (high -> low)
+                                  let asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
+                                  for (let k=1;k<asc.length;k++) if (asc[k] <= asc[k-1]) asc[k] = Math.min(100, asc[k-1] + 5);
+                                  for (let k=asc.length-2;k>=0;k--) if (asc[k] >= asc[k+1]) asc[k] = Math.max(5, asc[k+1]-5);
                                   const desc = [...asc].reverse();
                                   return prev.map((rw, idx)=> ({ ...rw, initR: desc[idx] }));
                                 });
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
-                              title="Auto-fill evenly spaced (center-out) values for right flipper"
+                              title="Auto-fill evenly spaced descending values (high→low) for right flipper"
                             >Clear</button>
                           )}
                         </div>
@@ -1291,7 +1299,7 @@ export default function App() {
                           onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); setDragOverIdx(i); }}
                           onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
                         >
-                        <td className="pt-2 pr-2 pl-2 pb-8 align-top relative">
+                        <td className="pt-2 pr-2 pl-2 pb-2 align-top relative">
                           {(() => {
                             const currentBase = r.base || '';
                             const currentLocation = r.location ?? '';
@@ -1355,150 +1363,29 @@ export default function App() {
                               </div>
                             );
                           })()}
-                          {/* Insert button anchored to cell bottom */}
-                          <div className="absolute left-2 right-2 bottom-1">
-                            <button
-                              type="button"
-                              onClick={() => setRows(prev => {
-                                const next=[...prev];
-                                // Determine midpoint values for L and R using surrounding rows (descending ordering)
-                                const aboveIdx = i; // current row above insertion point
-                                const belowIdx = i+1 < prev.length ? i+1 : null;
-                                const computeMid = (side)=>{
-                                  const aboveVal = side==='L'? prev[aboveIdx].initL : prev[aboveIdx].initR;
-                                  const belowVal = belowIdx!=null ? (side==='L'? prev[belowIdx].initL : prev[belowIdx].initR) : 5;
-                                  if (!(aboveVal>0)) return 50; // fallback
-                                  const effectiveBelow = belowVal>0 ? belowVal : 5;
-                                  if (aboveVal - effectiveBelow <=5) {
-                                    pushToast('Cannot insert: adjust surrounding values to create space (need >5 difference).');
-                                    return null; // signal abort
-                                  }
-                                  const mid = Math.round((aboveVal + effectiveBelow)/2/5)*5;
-                                  // Ensure strict ordering: mid < aboveVal and mid > effectiveBelow
-                                  let candidate = mid;
-                                  if (candidate >= aboveVal) candidate = aboveVal - 5;
-                                  if (candidate <= effectiveBelow) candidate = effectiveBelow + 5;
-                                  if (candidate <= effectiveBelow || candidate >= aboveVal) {
-                                    pushToast('Cannot insert midpoint within 5% granularity. Adjust values.');
-                                    return null;
-                                  }
-                                  return clamp(candidate,5,100);
-                                };
-                                const midL = computeMid('L');
-                                const midR = computeMid('R');
-                                if (midL==null && midR==null) return prev; // abort entire insert
-                                const row = newRow({ initL: midL==null?50:midL, initR: midR==null?50:midR }, prev.length);
-                                next.splice(i+1,0,row);
-                                return next;
-                              })}
-                              className="px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-[11px] text-slate-700"
-                            >+ Insert Shot</button>
-                          </div>
+                          {/* Insert button relocated to action cell */}
                         </td>
                         <td className="p-2">
                           <div className="flex flex-col gap-1 max-w-[220px]">
                             {(() => {
-                              const range = computeAllowedRange(rows,'L',i); // may be null -> no positive allowed
-                              // Allowed positive band always within absolute 5..100 domain (5% steps)
-                              const allowedMin = range ? range[0] : 5; // if null we still allow selection but will snap/clamp to 0 (Not Possible)
+                              const range = computeAllowedRange(rows,'L',i);
+                              const allowedMin = range ? range[0] : 5;
                               const allowedMax = range ? range[1] : 100;
-                              // Current actual value (persisted as normal orientation); ensure snaps
                               let actual = r.initL && r.initL>0 ? r.initL : null;
-                              // Clamp if outside tightened constraints
                               if (actual != null) {
                                 if (actual > allowedMax) actual = allowedMax;
                                 if (actual < allowedMin) actual = allowedMin;
                               }
-                              // Map to reversed slider visual (fixed bounds 5..100 -> internal reversed 100..5)
-                              const sliderMin = 5; const sliderMax = 100; // fixed domain for user perception
-                              const displayVal = actual != null ? actual : 50; // fallback midpoint when null
-                              // Compute gradient to grey out disallowed zones (top side larger values at left due to reversal)
-                              // Visual axis (0% left -> 100% right) corresponds to decreasing actual values.
-                              // Grey left segment: actual > allowedMax; Grey right segment: actual < allowedMin.
-                              const leftStopPct = ((100 - allowedMax) / 95) * 100; // portion to grey on left
-                              const rightStartPct = ((100 - allowedMin) / 95) * 100; // start of right grey (since values drop left->right)
-                              const trackBg = range ? `linear-gradient(to right, 
-                                rgba(55,65,81,0.70) 0%, 
-                                rgba(55,65,81,0.70) ${leftStopPct}%, 
-                                rgba(16,185,129,0.35) ${leftStopPct}%, 
-                                rgba(16,185,129,0.35) ${rightStartPct}%, 
-                                rgba(55,65,81,0.70) ${rightStartPct}%, 
-                                rgba(55,65,81,0.70) 100%)` : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
-                              return (
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
-                                    <span>100</span><span>05</span>
-                                  </div>
-                                  <div className="relative">
-                                    <input
-                                      data-slider
-                                      type="range"
-                                      min={sliderMin}
-                                      max={sliderMax}
-                                      step={5}
-                                      value={Math.min(Math.max(105 - (actual != null ? actual : displayVal), sliderMin), sliderMax)}
-                                      onMouseDown={e=>{ e.stopPropagation(); }}
-                                      onPointerDown={e=>{ e.stopPropagation(); }}
-                                      onDragStart={e=>{ e.preventDefault(); e.stopPropagation(); }}
-                                      onChange={e=>{
-                                        const raw = Number(e.target.value); // 5..100 reversed domain
-                                        let newActual = 105 - raw; // convert back
-                                        if (newActual > allowedMax) newActual = allowedMax;
-                                        if (newActual < allowedMin) newActual = allowedMin;
-                                        setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL: newActual}; return next; });
-                                      }}
-                                      style={{ background: trackBg }}
-                                      className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
-                                    {range && !(allowedMin===5 && allowedMax===100) && (()=>{
-                                      return (
-                                        <>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: leftStopPct + '%' }}>{format2(allowedMax)}</div>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: rightStartPct + '%' }}>{format2(allowedMin)}</div>
-                                        </>
-                                      );
-                                    })()}
-                                    {actual!=null && range && (()=>{
-                                      const pct = ((100 - actual) / 95) * 100; // map actual to visual percentage
-                                      return (
-                                        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-emerald-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
-                                      );
-                                    })()}
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                            <div className="mt-5">
-                              <Chip
-                                active={r.initL===0}
-                                onClick={()=>{
-                                  if (r.initL===0) return; // do nothing; cannot toggle back to blank
-                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL:0}; return next; });
-                                }}
-                              >Not Possible</Chip>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-2">
-                          <div className="flex flex-col gap-1 max-w-[220px]">
-                            {(() => {
-                              const range = computeAllowedRange(rows,'R',i);
-                              const allowedMin = range ? range[0] : 5;
-                              const allowedMax = range ? range[1] : 100;
-                              let actual = r.initR && r.initR>0 ? r.initR : null;
-                              if (actual != null) {
-                                if (actual < allowedMin) actual = allowedMin; // Right side ascending; clamp upward
-                                if (actual > allowedMax) actual = allowedMax;
-                              }
-                              const sliderMin = 5; const sliderMax = 100; // direct orientation 5 -> 100 left->right
+                              const sliderMin = 5; const sliderMax = 100;
                               const displayVal = actual != null ? actual : 50;
-                              // Grey disallowed segments: before allowedMin and after allowedMax
+                              // Ascending visual (05 -> 100). Grey before allowedMin and after allowedMax.
                               const leftGreyPct = ((allowedMin - 5) / 95) * 100;
                               const rightGreyStartPct = ((allowedMax - 5) / 95) * 100;
                               const trackBg = range ? `linear-gradient(to right,
                                 rgba(55,65,81,0.70) 0%,
                                 rgba(55,65,81,0.70) ${leftGreyPct}%,
-                                rgba(244,63,94,0.35) ${leftGreyPct}%,
-                                rgba(244,63,94,0.35) ${rightGreyStartPct}%,
+                                rgba(16,185,129,0.35) ${leftGreyPct}%,
+                                rgba(16,185,129,0.35) ${rightGreyStartPct}%,
                                 rgba(55,65,81,0.70) ${rightGreyStartPct}%,
                                 rgba(55,65,81,0.70) 100%)` : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
                               return (
@@ -1519,8 +1406,85 @@ export default function App() {
                                       onDragStart={e=>{ e.preventDefault(); e.stopPropagation(); }}
                                       onChange={e=>{
                                         let newActual = Number(e.target.value);
-                                        if (newActual < allowedMin) newActual = allowedMin;
                                         if (newActual > allowedMax) newActual = allowedMax;
+                                        if (newActual < allowedMin) newActual = allowedMin;
+                                        setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL: newActual}; return next; });
+                                      }}
+                                      style={{ background: trackBg }}
+                                      className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
+                                    {range && !(allowedMin===5 && allowedMax===100) && (()=>{
+                                      return (
+                                        <>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: leftGreyPct + '%' }}>{format2(allowedMin)}</div>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: rightGreyStartPct + '%' }}>{format2(allowedMax)}</div>
+                                        </>
+                                      );
+                                    })()}
+                                    {actual!=null && range && (()=>{
+                                      const pct = ((actual - 5) / 95) * 100;
+                                      return (
+                                        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-emerald-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            <div className="mt-5">
+                              <Chip
+                                active={r.initL===0}
+                                onClick={()=>{
+                                  if (r.initL===0) return;
+                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL:0}; return next; });
+                                }}
+                              >Not Possible</Chip>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-2">
+                          <div className="flex flex-col gap-1 max-w-[220px]">
+                            {(() => {
+                              const range = computeAllowedRange(rows,'R',i);
+                              const allowedMin = range ? range[0] : 5;
+                              const allowedMax = range ? range[1] : 100;
+                              let actual = r.initR && r.initR>0 ? r.initR : null;
+                              if (actual != null) {
+                                if (actual > allowedMax) actual = allowedMax;
+                                if (actual < allowedMin) actual = allowedMin;
+                              }
+                              const sliderMin = 5; const sliderMax = 100; // reversed visual
+                              const displayVal = actual != null ? actual : 50;
+                              // Descending visual (100 -> 05). Grey left (values > allowedMax after reversal) and right (values < allowedMin).
+                              const leftStopPct = ((100 - allowedMax) / 95) * 100;
+                              const rightStartPct = ((100 - allowedMin) / 95) * 100;
+                              const trackBg = range ? `linear-gradient(to right,
+                                rgba(55,65,81,0.70) 0%,
+                                rgba(55,65,81,0.70) ${leftStopPct}%,
+                                rgba(244,63,94,0.35) ${leftStopPct}%,
+                                rgba(244,63,94,0.35) ${rightStartPct}%,
+                                rgba(55,65,81,0.70) ${rightStartPct}%,
+                                rgba(55,65,81,0.70) 100%)` : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
+                              return (
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
+                                    <span>100</span><span>05</span>
+                                  </div>
+                                  <div className="relative">
+                                    <input
+                                      data-slider
+                                      type="range"
+                                      min={sliderMin}
+                                      max={sliderMax}
+                                      step={5}
+                                      value={Math.min(Math.max(105 - (actual != null ? actual : displayVal), sliderMin), sliderMax)}
+                                      onMouseDown={e=>{ e.stopPropagation(); }}
+                                      onPointerDown={e=>{ e.stopPropagation(); }}
+                                      onDragStart={e=>{ e.preventDefault(); e.stopPropagation(); }}
+                                      onChange={e=>{
+                                        const raw = Number(e.target.value);
+                                        let newActual = 105 - raw;
+                                        if (newActual > allowedMax) newActual = allowedMax;
+                                        if (newActual < allowedMin) newActual = allowedMin;
                                         setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initR: newActual}; return next; });
                                       }}
                                       style={{ background: trackBg }}
@@ -1528,13 +1492,13 @@ export default function App() {
                                     {range && !(allowedMin===5 && allowedMax===100) && (()=>{
                                       return (
                                         <>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: leftGreyPct + '%' }}>{format2(allowedMin)}</div>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: rightGreyStartPct + '%' }}>{format2(allowedMax)}</div>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: leftStopPct + '%' }}>{format2(allowedMax)}</div>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: rightStartPct + '%' }}>{format2(allowedMin)}</div>
                                         </>
                                       );
                                     })()}
                                     {actual!=null && range && (()=>{
-                                      const pct = ((actual - 5) / 95) * 100;
+                                      const pct = ((100 - actual) / 95) * 100;
                                       return (
                                         <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
                                       );
@@ -1576,6 +1540,50 @@ export default function App() {
                                 <path d="M7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7 10a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7 15a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0" />
                               </svg>
                             </button>
+                          )}
+                          {!initialized && (
+                            <button
+                              type="button"
+                              onClick={() => setRows(prev => {
+                                const next=[...prev];
+                                const aboveIdx = i; // row above insertion point
+                                const belowIdx = i+1 < prev.length ? i+1 : null;
+                                const computeMid = (side)=>{
+                                  if (side==='L') { // ascending ordering
+                                    const aboveVal = prev[aboveIdx].initL;
+                                    const belowVal = belowIdx!=null ? prev[belowIdx].initL : 100;
+                                    if (!(aboveVal>0)) return 50;
+                                    const effBelow = belowVal>0 ? belowVal : 100;
+                                    if (effBelow - aboveVal <=5) { pushToast('Cannot insert: adjust surrounding (need >5 gap).'); return null; }
+                                    const mid = Math.round((aboveVal + effBelow)/2/5)*5;
+                                    let c = mid;
+                                    if (c <= aboveVal) c = aboveVal + 5;
+                                    if (c >= effBelow) c = effBelow - 5;
+                                    if (c <= aboveVal || c >= effBelow) { pushToast('Cannot insert midpoint (5% granularity).'); return null; }
+                                    return clamp(c,5,100);
+                                  } else { // Right descending ordering
+                                    const aboveVal = prev[aboveIdx].initR; // larger
+                                    const belowVal = belowIdx!=null ? prev[belowIdx].initR : 5; // smaller end
+                                    if (!(aboveVal>0)) return 50;
+                                    const effBelow = belowVal>0 ? belowVal : 5;
+                                    if (aboveVal - effBelow <=5) { pushToast('Cannot insert: adjust surrounding (need >5 gap).'); return null; }
+                                    const mid = Math.round((aboveVal + effBelow)/2/5)*5;
+                                    let c = mid;
+                                    if (c >= aboveVal) c = aboveVal - 5;
+                                    if (c <= effBelow) c = effBelow + 5;
+                                    if (c >= aboveVal || c <= effBelow) { pushToast('Cannot insert midpoint (5% granularity).'); return null; }
+                                    return clamp(c,5,100);
+                                  }
+                                };
+                                const midL = computeMid('L');
+                                const midR = computeMid('R');
+                                if (midL==null && midR==null) return prev;
+                                const row = newRow({ initL: midL==null?50:midL, initR: midR==null?50:midR }, prev.length);
+                                next.splice(i+1,0,row);
+                                return next;
+                              })}
+                              className="absolute right-8 bottom-1 px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-[11px] text-slate-700 whitespace-nowrap"
+                            >+ Insert Shot</button>
                           )}
                         </td>
                         </tr>
