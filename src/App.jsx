@@ -84,8 +84,8 @@ const newRow = (over = {}, indexHint = 0) => {
     base,
     location,
     type,
-    initL: null,
-    initR: null,
+    initL: over.initL != null ? over.initL : 50,
+    initR: over.initR != null ? over.initR : 50,
     // Provide a basic fan-out pattern: stagger horizontally & vertically based on index.
     x: 0.2 + ((indexHint % 6) * 0.12), // wraps every 6
     y: 0.15 + Math.floor(indexHint / 6) * 0.18,
@@ -99,28 +99,19 @@ function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flippe
 
 // Compute inclusive min/max positive (>=5) range for slider given ordering constraints (0 neutral/not part of ordering)
 function computeAllowedRange(rows, side, index) {
+  // Updated: both flippers now enforce strictly decreasing positive values (top -> bottom) to support
+  // descending auto-fill patterns like 100,95,90,... without clamping the first row.
   const vals = side==='L' ? rows.map(r=>r.initL) : rows.map(r=>r.initR);
-  if (side === 'L') {
-    const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
-    const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
-    let maxAllowed = earlierPos.length ? Math.min(...earlierPos) - 5 : 100; // strictly less than smallest earlier
-    let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5;       // strictly greater than largest later
-    maxAllowed = Math.min(100, maxAllowed);
-    minAllowed = Math.max(5, minAllowed);
-    if (minAllowed > maxAllowed) return null; // no positive slot available
-    return [minAllowed, maxAllowed];
-  } else {
-    const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
-    const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
-    const lastPosAbove = [...earlierPos].reverse()[0] || 0;
-    let minAllowed = lastPosAbove === 0 ? 5 : lastPosAbove + 5;
-    let maxAllowed = laterPos.length ? Math.min(...laterPos) - 5 : 100;
-    maxAllowed = Math.min(100, maxAllowed);
-    minAllowed = Math.max(5, minAllowed);
-    if (minAllowed > maxAllowed) return null;
-    return [minAllowed, maxAllowed];
-  }
+  const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
+  const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
+  let maxAllowed = earlierPos.length ? Math.min(...earlierPos) - 5 : 100; // strictly less than smallest earlier
+  let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5;       // strictly greater than largest later
+  maxAllowed = Math.min(100, maxAllowed);
+  minAllowed = Math.max(5, minAllowed);
+  if (minAllowed > maxAllowed) return null; // no positive slot available
+  return [minAllowed, maxAllowed];
 }
+
 
 // Bounded isotonic regression preserving initial ordering defined by orderAsc.
 // Each point i constrained within base[i] ± 20 and 0..100; values snapped to 5.
@@ -730,6 +721,12 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
 
 // ---------- main component ----------
 export default function App() {
+  const [toasts, setToasts] = useState([]); // {id,msg}
+  const pushToast = useCallback((msg)=>{
+    const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random());
+    setToasts(t=>[...t,{id,msg}]);
+    setTimeout(()=> setToasts(t=> t.filter(x=>x.id!==id)), 3200);
+  },[]);
   // Setup state
   // Start with no shots by default; user must explicitly add via + Add shot.
   const [rowsRaw, setRowsRaw] = useLocalStorage("pinball_rows_v1", []);
@@ -1154,6 +1151,14 @@ export default function App() {
   }, [initialized, finalPhase]);
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
+    {/* Toast notifications */}
+    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+      {toasts.map(t=> (
+        <div key={t.id} className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein">
+          {t.msg}
+        </div>
+      ))}
+    </div>
   <div className="max-w-4xl mx-auto p-4 md:p-8">
         {/* Setup */}
         {!initialized && (
@@ -1209,10 +1214,21 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => {
-                                setRows(prev => prev.map(rw => ({ ...rw, initL: null })));
+                                setRows(prev => {
+                                  const n = prev.length;
+                                  if (!n) return prev;
+                                  // Even spacing via (i+1)/(n+1)*100 then snap to 5, produce ascending then reverse for descending constraint.
+                                  const asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
+                                  // Deduplicate if snapping caused collisions: nudge later duplicates by -5 if possible.
+                                  for (let i=1;i<asc.length;i++) {
+                                    if (asc[i] <= asc[i-1]) asc[i] = Math.min(100, asc[i-1] + 5); // ensure strict ascending pre-reverse
+                                  }
+                                  const desc = [...asc].reverse();
+                                  return prev.map((rw, idx)=> ({ ...rw, initL: desc[idx] }));
+                                });
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
-                              title="Clear all left flipper selections"
+                              title="Auto-fill evenly spaced (center-out) values for left flipper"
                             >Clear</button>
                           )}
                         </div>
@@ -1224,10 +1240,19 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => {
-                                setRows(prev => prev.map(rw => ({ ...rw, initR: null })));
+                                setRows(prev => {
+                                  const n = prev.length;
+                                  if (!n) return prev;
+                                  const asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
+                                  for (let i=1;i<asc.length;i++) {
+                                    if (asc[i] <= asc[i-1]) asc[i] = Math.min(100, asc[i-1] + 5);
+                                  }
+                                  const desc = [...asc].reverse();
+                                  return prev.map((rw, idx)=> ({ ...rw, initR: desc[idx] }));
+                                });
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
-                              title="Clear all right flipper selections"
+                              title="Auto-fill evenly spaced (center-out) values for right flipper"
                             >Clear</button>
                           )}
                         </div>
@@ -1241,7 +1266,7 @@ export default function App() {
                         <td colSpan={4} className="p-8 text-center text-sm text-slate-600">
                           <button
                             type="button"
-                            onClick={() => setRows([newRow({}, 0)])}
+                            onClick={() => setRows([newRow({ initL:50, initR:50 }, 0)])}
                             className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800"
                           >+ Add Shot</button>
                         </td>
@@ -1336,7 +1361,34 @@ export default function App() {
                               type="button"
                               onClick={() => setRows(prev => {
                                 const next=[...prev];
-                                next.splice(i+1,0,newRow({}, prev.length));
+                                // Determine midpoint values for L and R using surrounding rows (descending ordering)
+                                const aboveIdx = i; // current row above insertion point
+                                const belowIdx = i+1 < prev.length ? i+1 : null;
+                                const computeMid = (side)=>{
+                                  const aboveVal = side==='L'? prev[aboveIdx].initL : prev[aboveIdx].initR;
+                                  const belowVal = belowIdx!=null ? (side==='L'? prev[belowIdx].initL : prev[belowIdx].initR) : 5;
+                                  if (!(aboveVal>0)) return 50; // fallback
+                                  const effectiveBelow = belowVal>0 ? belowVal : 5;
+                                  if (aboveVal - effectiveBelow <=5) {
+                                    pushToast('Cannot insert: adjust surrounding values to create space (need >5 difference).');
+                                    return null; // signal abort
+                                  }
+                                  const mid = Math.round((aboveVal + effectiveBelow)/2/5)*5;
+                                  // Ensure strict ordering: mid < aboveVal and mid > effectiveBelow
+                                  let candidate = mid;
+                                  if (candidate >= aboveVal) candidate = aboveVal - 5;
+                                  if (candidate <= effectiveBelow) candidate = effectiveBelow + 5;
+                                  if (candidate <= effectiveBelow || candidate >= aboveVal) {
+                                    pushToast('Cannot insert midpoint within 5% granularity. Adjust values.');
+                                    return null;
+                                  }
+                                  return clamp(candidate,5,100);
+                                };
+                                const midL = computeMid('L');
+                                const midR = computeMid('R');
+                                if (midL==null && midR==null) return prev; // abort entire insert
+                                const row = newRow({ initL: midL==null?50:midL, initR: midR==null?50:midR }, prev.length);
+                                next.splice(i+1,0,row);
                                 return next;
                               })}
                               className="px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-[11px] text-slate-700"
@@ -1397,6 +1449,14 @@ export default function App() {
                                       }}
                                       style={{ background: trackBg }}
                                       className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
+                                    {range && !(allowedMin===5 && allowedMax===100) && (()=>{
+                                      return (
+                                        <>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: leftStopPct + '%' }}>{format2(allowedMax)}</div>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: rightStartPct + '%' }}>{format2(allowedMin)}</div>
+                                        </>
+                                      );
+                                    })()}
                                     {actual!=null && range && (()=>{
                                       const pct = ((100 - actual) / 95) * 100; // map actual to visual percentage
                                       return (
@@ -1404,18 +1464,15 @@ export default function App() {
                                       );
                                     })()}
                                   </div>
-                                  <div className="flex items-center gap-2 text-[11px]">
-                                    {range ? <span className="text-slate-400">Allowed {format2(allowedMin)}–{format2(allowedMax)}</span> : <span className="text-slate-400">Select Not Possible or set later</span>}
-                                  </div>
                                 </div>
                               );
                             })()}
-                            <div>
+                            <div className="mt-5">
                               <Chip
                                 active={r.initL===0}
                                 onClick={()=>{
-                                  const newVal = r.initL === 0 ? null : 0;
-                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL:newVal}; return next; });
+                                  if (r.initL===0) return; // do nothing; cannot toggle back to blank
+                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL:0}; return next; });
                                 }}
                               >Not Possible</Chip>
                             </div>
@@ -1468,6 +1525,14 @@ export default function App() {
                                       }}
                                       style={{ background: trackBg }}
                                       className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
+                                    {range && !(allowedMin===5 && allowedMax===100) && (()=>{
+                                      return (
+                                        <>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: leftGreyPct + '%' }}>{format2(allowedMin)}</div>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: rightGreyStartPct + '%' }}>{format2(allowedMax)}</div>
+                                        </>
+                                      );
+                                    })()}
                                     {actual!=null && range && (()=>{
                                       const pct = ((actual - 5) / 95) * 100;
                                       return (
@@ -1475,18 +1540,15 @@ export default function App() {
                                       );
                                     })()}
                                   </div>
-                                  <div className="flex items-center gap-2 text-[11px]">
-                                    {range ? <span className="text-slate-400">Allowed {format2(allowedMin)}–{format2(allowedMax)}</span> : <span className="text-slate-400">Select Not Possible or set later</span>}
-                                  </div>
                                 </div>
                               );
                             })()}
-                            <div>
+                            <div className="mt-5">
                               <Chip
                                 active={r.initR===0}
                                 onClick={()=>{
-                                  const newVal = r.initR === 0 ? null : 0;
-                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initR:newVal}; return next; });
+                                  if (r.initR===0) return;
+                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initR:0}; return next; });
                                 }}
                               >Not Possible</Chip>
                             </div>
