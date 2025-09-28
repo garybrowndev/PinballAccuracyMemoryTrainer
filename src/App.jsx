@@ -96,35 +96,30 @@ const newRow = (over = {}, indexHint = 0) => {
 function rowDisplay(r) { return r ? (r.type || buildType(r.base, r.location)) : ''; }
 function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flipper' : 'Right Flipper'} → ${rowDisplay(r)}` : ''; }
 
-// Allowed value computation per side with domain-specific ordering rules (INVERTED per latest requirement):
-// Left flipper column: strictly decreasing top->bottom (earlier row must be > later row). Once a 0 (Not Possible) appears above, all later rows are forced to 0.
-// Right flipper column: non-decreasing (ascending) top->bottom. Zero may repeat until the first non-zero; thereafter later non-zero values must be strictly greater than the last non-zero above (increments of at least 5). Once a 0 appears above with no non-zero yet, 0 remains allowed; after a positive appears, 0 is no longer allowed below.
-// All values are multiples of 5 between 0..100.
+// Allowed value computation with NEUTRAL 0 (Not Possible does not constrain other rows):
+// Left: strictly decreasing among positive values only (ignore zeros for ordering bounds). Right: ascending among positives only.
+// 0 always available and never propagates constraints.
 function computeAllowedValues(rows, side, index) {
   const STEP_VALUES = Array.from({length:21},(_,k)=>k*5);
   const vals = side==='L' ? rows.map(r=>r.initL) : rows.map(r=>r.initR);
   if (side === 'L') {
-    // LEFT: strictly decreasing.
-    const earlier = vals.slice(0,index).filter(v=>v!=null);
-    if (earlier.includes(0)) return [0]; // earlier Not Possible locks remainder
-    const later = vals.slice(index+1).filter(v=>v!=null);
-    // For strictly decreasing: allowed value must be < all earlier chosen and > all later chosen.
-    // Upper bound (max candidate) = (min earlier) - 5, else 100 if none earlier.
-    // Lower bound (min candidate) = (max later) + 5, else 0 if none later.
-    let upper = earlier.length ? Math.min(...earlier) - 5 : 100;
-    let lower = later.length ? Math.max(...later) + 5 : 0;
-    upper = Math.min(100, upper);
-    lower = Math.max(0, lower);
-    return STEP_VALUES.filter(v=>v>=lower && v<=upper);
+    const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
+    const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
+    let upper = earlierPos.length ? Math.min(...earlierPos) - 5 : 100;
+    let lower = laterPos.length ? Math.max(...laterPos) + 5 : 0;
+    upper = Math.min(100, upper); lower = Math.max(0, lower);
+    const allowed = STEP_VALUES.filter(v=>v>=lower && v<=upper);
+    if (!allowed.includes(0)) allowed.unshift(0);
+    return allowed;
   } else {
-    // RIGHT: ascending / non-decreasing with strictly greater steps for positive sequence.
-    const earlier = vals.slice(0,index).filter(v=>v!=null);
-    if (earlier.includes(0)) return [0];
-    const later = vals.slice(index+1).filter(v=>v!=null);
-    const lastNonZeroAbove = [...earlier].reverse().find(v=>v>0) || 0;
-    let lowerBound = lastNonZeroAbove === 0 ? 0 : lastNonZeroAbove + 5; // strictly greater than last non-zero
-    const minLater = later.length ? Math.min(...later) : 100; // cannot exceed later fixed selection
-    return STEP_VALUES.filter(v=>v>=lowerBound && v<=minLater);
+    const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
+    const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
+    const lastPosAbove = [...earlierPos].reverse()[0] || 0;
+    let lowerBound = lastPosAbove === 0 ? 0 : lastPosAbove + 5;
+    const minLater = laterPos.length ? Math.min(...laterPos) : 100;
+    const allowed = STEP_VALUES.filter(v=>v>=lowerBound && v<=minLater);
+    if (!allowed.includes(0)) allowed.unshift(0);
+    return allowed;
   }
 }
 
@@ -773,9 +768,7 @@ export default function App() {
   const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle
   const [showAttemptHistory, setShowAttemptHistory] = useLocalStorage("pinball_showAttemptHistory_v1", false);
   const [showFeedbackPanel, setShowFeedbackPanel] = useLocalStorage("pinball_showFeedback_v1", false); // new toggle for Feedback table
-  // Restore stacks for Not Possible propagation so deselecting reverts prior values
-  const [restoreStackL, setRestoreStackL] = useState(null); // { startIdx, originals: number[] }
-  const [restoreStackR, setRestoreStackR] = useState(null);
+  // Restore stacks removed (Not Possible is neutral now)
   // UI local (non-persisted) state: collapsed shot type rows (store ids)
   const [collapsedTypes, setCollapsedTypes] = useState([]);
   const [collapsedLeft, setCollapsedLeft] = useState([]); // row ids whose Left % list is collapsed
@@ -803,9 +796,7 @@ export default function App() {
   useEffect(() => {
     setSelectedIdx((idx) => (idx >= rows.length ? Math.max(0, rows.length - 1) : idx));
     setSelectedSide(s => (s === 'L' || s === 'R') ? s : 'L');
-    // Invalidate stacks if rows length shrinks above snapshots
-    setRestoreStackL(st => st && st.startIdx < rows.length ? st : null);
-    setRestoreStackR(st => st && st.startIdx < rows.length ? st : null);
+    // No restore stacks to invalidate.
   }, [rows.length, setSelectedIdx, setSelectedSide]);
 
   // Derived
@@ -1199,10 +1190,55 @@ export default function App() {
                     <col className="w-[40px]" />
                   </colgroup>
                   <thead>
-                    <tr className="text-left text-slate-500">
-                      <th className="p-2">Shot Type</th>
-                      <th className="p-2">Left Flipper</th>
-                      <th className="p-2">Right Flipper</th>
+                    <tr className="text-left text-slate-500 align-bottom">
+                      <th className="p-2">
+                        <div className="flex items-center gap-2">
+                          <span>Shot Type</span>
+                          {!!rows.length && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRows(prev => prev.map(rw => ({ ...rw, base:'', location:'', type:'', initL: rw.initL, initR: rw.initR })));
+                                setCollapsedTypes([]);
+                              }}
+                              className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
+                              title="Clear all shot type selections"
+                            >Clear</button>
+                          )}
+                        </div>
+                      </th>
+                      <th className="p-2">
+                        <div className="flex items-center gap-2">
+                          <span>Left Flipper</span>
+                          {!!rows.length && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRows(prev => prev.map(rw => ({ ...rw, initL: null })));
+                                setCollapsedLeft([]);
+                              }}
+                              className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
+                              title="Clear all left flipper selections"
+                            >Clear</button>
+                          )}
+                        </div>
+                      </th>
+                      <th className="p-2">
+                        <div className="flex items-center gap-2">
+                          <span>Right Flipper</span>
+                          {!!rows.length && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRows(prev => prev.map(rw => ({ ...rw, initR: null })));
+                                setCollapsedRight([]);
+                              }}
+                              className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
+                              title="Clear all right flipper selections"
+                            >Clear</button>
+                          )}
+                        </div>
+                      </th>
                       <th className="p-2"></th>
                     </tr>
                   </thead>
@@ -1333,48 +1369,16 @@ export default function App() {
                             <div className="flex flex-wrap gap-1 max-w-[180px]">
                               {(() => {
                                 const vals = computeAllowedValues(rows, 'L', i);
-                                // Display order requested: 100,95,...,05 (and place 0 'Not Possible' at the end if present)
-                                const zero = vals.includes(0);
-                                const sorted = vals.filter(v=>v!==0).sort((a,b)=>b-a);
-                                if (zero) sorted.push(0);
-                                return sorted;
-                              })().map(val => (
+                                const hasZero = vals.includes(0);
+                                const positivesAsc = vals.filter(v=>v>0).sort((a,b)=>a-b); // 05 -> 100
+                                return { positivesAsc, hasZero };
+                              })().positivesAsc.map(val => (
                                 <Chip
                                   key={val}
                                   active={r.initL===val}
                                   onClick={() => {
                                     const newVal = (r.initL === val) ? null : val;
-                                    if (val === 0 && newVal === 0) {
-                                      // Propagate Not Possible to all rows below
-                                      setRestoreStackL(stack => stack || { startIdx: i, originals: rows.slice(i).map(rr=>rr.initL) });
-                                      setRows(prev => { const next=[...prev]; for (let j=i;j<next.length;j++) next[j]={...next[j], initL:0}; return next; });
-                                      setCollapsedLeft(list => {
-                                        const addIds = rows.slice(i).map(rw=>rw.id);
-                                        const setAll = new Set([...list, ...addIds]);
-                                        return Array.from(setAll);
-                                      });
-                                      return;
-                                    } else {
-                                      // If deselecting origin Not Possible (setting to null) restore
-                                      if (r.initL === 0 && val === 0 && newVal === null && restoreStackL && restoreStackL.startIdx === i) {
-                                        const originals = restoreStackL.originals;
-                                        setRows(prev => { const next=[...prev]; for (let k=0;k<originals.length;k++){ const rowIdx=i+k; if(rowIdx<next.length) next[rowIdx]={...next[rowIdx], initL:originals[k]}; } return next; });
-                                        // Restore collapsed state: collapsed only if value not null
-                                        setCollapsedLeft(prev => {
-                                          const nextSet = new Set(prev);
-                                          for (let k=0;k<originals.length;k++) {
-                                            const rowIdx=i+k; if (rowIdx>=rows.length) break;
-                                            const id = rows[rowIdx].id;
-                                            if (originals[k] == null) nextSet.delete(id); else nextSet.add(id);
-                                          }
-                                          return Array.from(nextSet);
-                                        });
-                                        setRestoreStackL(null);
-                                        return; // skip below collapsedLeft toggle logic
-                                      } else {
-                                        setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:newVal}; return next; });
-                                      }
-                                    }
+                                    setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:newVal}; return next; });
                                     setCollapsedLeft(list => {
                                       const has = list.includes(r.id);
                                       if (newVal != null && !has) return [...list, r.id];
@@ -1382,8 +1386,30 @@ export default function App() {
                                       return list;
                                     });
                                   }}
-                                >{val === 0 ? 'Not Possible' : format2(val)}</Chip>
+                                >{format2(val)}</Chip>
                               ))}
+                              {(() => {
+                                const vals = computeAllowedValues(rows, 'L', i);
+                                if (!vals.includes(0)) return null;
+                                return (
+                                  <div className="basis-full w-full mt-1">
+                                    <Chip
+                                      key={0}
+                                      active={r.initL===0}
+                                      onClick={() => {
+                                        const newVal = (r.initL === 0) ? null : 0;
+                                        setRows(prev => { const next=[...prev]; next[i]={...next[i], initL:newVal}; return next; });
+                                        setCollapsedLeft(list => {
+                                          const has = list.includes(r.id);
+                                          if (newVal != null && !has) return [...list, r.id];
+                                          if (newVal == null && has) return list.filter(id => id !== r.id);
+                                          return list;
+                                        });
+                                      }}
+                                    >Not Possible</Chip>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           )}
                         </td>
@@ -1400,41 +1426,18 @@ export default function App() {
                             </div>
                           ) : (
                             <div className="flex flex-wrap gap-1 max-w-[180px]">
-                              {computeAllowedValues(rows, 'R', i).map(val => (
+                              {(() => {
+                                const vals = computeAllowedValues(rows, 'R', i);
+                                const hasZero = vals.includes(0);
+                                const positivesDesc = vals.filter(v=>v>0).sort((a,b)=>b-a); // 100 -> 05
+                                return { positivesDesc, hasZero };
+                              })().positivesDesc.map(val => (
                                 <Chip
                                   key={val}
                                   active={r.initR===val}
                                   onClick={() => {
                                     const newVal = (r.initR === val) ? null : val;
-                                    if (val === 0 && newVal === 0) {
-                                      // Propagate Not Possible downward for right side as well
-                                      setRestoreStackR(stack => stack || { startIdx: i, originals: rows.slice(i).map(rr=>rr.initR) });
-                                      setRows(prev => { const next=[...prev]; for (let j=i;j<next.length;j++) next[j]={...next[j], initR:0}; return next; });
-                                      setCollapsedRight(list => {
-                                        const addIds = rows.slice(i).map(rw=>rw.id);
-                                        const setAll = new Set([...list, ...addIds]);
-                                        return Array.from(setAll);
-                                      });
-                                      return;
-                                    } else {
-                                      if (r.initR === 0 && val === 0 && newVal === null && restoreStackR && restoreStackR.startIdx === i) {
-                                        const originals = restoreStackR.originals;
-                                        setRows(prev => { const next=[...prev]; for (let k=0;k<originals.length;k++){ const rowIdx=i+k; if(rowIdx<next.length) next[rowIdx]={...next[rowIdx], initR:originals[k]}; } return next; });
-                                        setCollapsedRight(prev => {
-                                          const nextSet = new Set(prev);
-                                          for (let k=0;k<originals.length;k++) {
-                                            const rowIdx=i+k; if (rowIdx>=rows.length) break;
-                                            const id = rows[rowIdx].id;
-                                            if (originals[k] == null) nextSet.delete(id); else nextSet.add(id);
-                                          }
-                                          return Array.from(nextSet);
-                                        });
-                                        setRestoreStackR(null);
-                                        return;
-                                      } else {
-                                        setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:newVal}; return next; });
-                                      }
-                                    }
+                                    setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:newVal}; return next; });
                                     setCollapsedRight(list => {
                                       const has = list.includes(r.id);
                                       if (newVal != null && !has) return [...list, r.id];
@@ -1442,8 +1445,30 @@ export default function App() {
                                       return list;
                                     });
                                   }}
-                                >{val === 0 ? 'Not Possible' : format2(val)}</Chip>
+                                >{format2(val)}</Chip>
                               ))}
+                              {(() => {
+                                const vals = computeAllowedValues(rows, 'R', i);
+                                if (!vals.includes(0)) return null;
+                                return (
+                                  <div className="basis-full w-full mt-1">
+                                    <Chip
+                                      key={0}
+                                      active={r.initR===0}
+                                      onClick={() => {
+                                        const newVal = (r.initR === 0) ? null : 0;
+                                        setRows(prev => { const next=[...prev]; next[i]={...next[i], initR:newVal}; return next; });
+                                        setCollapsedRight(list => {
+                                          const has = list.includes(r.id);
+                                          if (newVal != null && !has) return [...list, r.id];
+                                          if (newVal == null && has) return list.filter(id => id !== r.id);
+                                          return list;
+                                        });
+                                      }}
+                                    >Not Possible</Chip>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           )}
                         </td>
