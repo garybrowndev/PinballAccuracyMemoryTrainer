@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { createPortal } from 'react-dom';
 
 // Pinball Accuracy Memory Trainer — single-file React app
 // Local, no backend. All data in memory + localStorage.
@@ -427,15 +428,26 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           const Rp = (p)=>{ const e=flipperTopEdge(R_BASE, R_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
           if (selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_R') {
             const isLeft = selectedId === 'FLIPPER_L';
-            const BOX_HALF = 15; // approximate half-height of shot box for bottom-center targeting
+            const BOX_HALF = 15;
             return (
               <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
                 {rows.map(r=>{
                   const val = isLeft ? r.initL : r.initR;
-                  if (val == null || val <= 0) return null; // skip impossible shots
+                  if (val == null || val <= 0) return null;
                   const anchor = isLeft ? Lp(val) : Rp(val);
-                  const bx = r.x * w; const by = r.y * h + BOX_HALF; // bottom center of box
-                  return <line key={r.id} x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={isLeft?'#0ea5e9':'#dc2626'} strokeWidth={4} strokeLinecap="round" opacity={r.type?1:0.3} />;
+                  const bx = r.x * w; const by = r.y * h + BOX_HALF;
+                  const color = isLeft ? '#0ea5e9' : '#dc2626';
+                  const incomplete = !r.type; // no shot type chosen
+                  const opacity = incomplete ? 0.3 : 1;
+                  const label = format2(val);
+                  const fs=11; const padX=5, padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=anchor.x; const cy=anchor.y; // position directly at flipper edge
+                  return (
+                    <g key={r.id}>
+                      <line x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={color} strokeWidth={4} strokeLinecap="round" opacity={opacity} />
+                      <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                      <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                    </g>
+                  );
                 })}
               </svg>
             );
@@ -449,22 +461,22 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           return (
             <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
               {(r.initL ?? 0) > 0 && (()=>{
-                const label = `${format2(r.initL)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=leftAnchor.x; const cy=leftAnchor.y-8;
+                const label = `${format2(r.initL)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=leftAnchor.x; const cy=leftAnchor.y; const incomplete=!r.type; const opacity=incomplete?0.3:1; // direct edge
                 return (
                   <g>
-                    <line x1={leftAnchor.x} y1={leftAnchor.y} x2={bx} y2={by} stroke="#0ea5e9" strokeWidth={6} />
-                    <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
-                    <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
+                    <line x1={leftAnchor.x} y1={leftAnchor.y} x2={bx} y2={by} stroke="#0ea5e9" strokeWidth={4} strokeLinecap="round" opacity={opacity} />
+                    <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                    <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                   </g>
                 );
               })()}
               {(r.initR ?? 0) > 0 && (()=>{
-                const label = `${format2(r.initR)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=rightAnchor.x; const cy=rightAnchor.y-8;
+                const label = `${format2(r.initR)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=rightAnchor.x; const cy=rightAnchor.y; const incomplete=!r.type; const opacity=incomplete?0.3:1; // direct edge
                 return (
                   <g>
-                    <line x1={rightAnchor.x} y1={rightAnchor.y} x2={bx} y2={by} stroke="#dc2626" strokeWidth={6} />
-                    <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
-                    <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
+                    <line x1={rightAnchor.x} y1={rightAnchor.y} x2={bx} y2={by} stroke="#dc2626" strokeWidth={4} strokeLinecap="round" opacity={opacity} />
+                    <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                    <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                   </g>
                 );
               })()}
@@ -747,11 +759,41 @@ export default function App() {
   // Popup menus for new shot/location selector
   const [openShotMenuId, setOpenShotMenuId] = useState(null); // row id currently showing shot list
   const [openLocMenuId, setOpenLocMenuId] = useState(null);  // row id currently showing location list
+  const [shotMenuAnchor, setShotMenuAnchor] = useState(null); // {id,x,y}
+  const [locMenuAnchor, setLocMenuAnchor] = useState(null);   // {id,x,y}
+  // Keep popup anchored to triggering chip while scrolling/resizing
+  useEffect(()=>{
+    if (openShotMenuId==null && openLocMenuId==null) return;
+    let raf = null;
+    const update = ()=>{
+      if (raf) return;
+      raf = requestAnimationFrame(()=>{
+        raf = null;
+        if (openShotMenuId!=null) {
+          const el = document.querySelector(`[data-shot-chip="${openShotMenuId}"]`);
+          if (el) {
+            const r = el.getBoundingClientRect();
+            setShotMenuAnchor(a=> a && a.id===openShotMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
+          }
+        }
+        if (openLocMenuId!=null) {
+          const el = document.querySelector(`[data-loc-chip="${openLocMenuId}"]`);
+          if (el) {
+            const r = el.getBoundingClientRect();
+            setLocMenuAnchor(a=> a && a.id===openLocMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
+          }
+        }
+      });
+    };
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return ()=>{ window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); if(raf) cancelAnimationFrame(raf); };
+  }, [openShotMenuId, openLocMenuId]);
   // Close menus on outside click
   useEffect(()=>{
     const handler = ()=>{
       // Any click not stopped will close both menus
-      setOpenShotMenuId(null); setOpenLocMenuId(null);
+      setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null);
     };
     window.addEventListener('click', handler);
     return ()=> window.removeEventListener('click', handler);
@@ -1181,6 +1223,43 @@ export default function App() {
         </div>
       ))}
     </div>
+    {/* Detached popups (portals) for shot & location selection */}
+    {shotMenuAnchor && openShotMenuId!=null && createPortal(
+      <div
+        className="absolute z-50 w-72 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-3 gap-2"
+        style={{ left: Math.max(8, shotMenuAnchor.x) + 'px', top: shotMenuAnchor.y + 'px' }}
+        onClick={e=> e.stopPropagation()}
+      >
+        {BASE_ELEMENTS.map(b => (
+          <button
+            key={b}
+            type="button"
+            onClick={()=>{ setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:b, location:'', type: buildType(b,'')}; } return next; }); setOpenShotMenuId(null); setShotMenuAnchor(null); }}
+            className={(rows.find(r=>r.id===shotMenuAnchor.id)?.base===b?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
+          >{b}</button>
+        ))}
+        <div className="col-span-3 mt-1 text-[10px] text-slate-400 text-center">Select shot</div>
+      </div>,
+      document.body
+    )}
+    {locMenuAnchor && openLocMenuId!=null && createPortal(
+      <div
+        className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
+        style={{ left: Math.max(8, locMenuAnchor.x) + 'px', top: locMenuAnchor.y + 'px' }}
+        onClick={e=> e.stopPropagation()}
+      >
+        {LOCATIONS.map(loc => (
+          <button
+            key={loc}
+            type="button"
+            onClick={()=>{ setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:loc, type: buildType(base,loc)}; } return next; }); setOpenLocMenuId(null); setLocMenuAnchor(null); }}
+            className={(rows.find(r=>r.id===locMenuAnchor.id)?.location===loc?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
+          >{loc}</button>
+        ))}
+        <div className="col-span-2 mt-1 text-[10px] text-slate-400 text-center">Select location (optional)</div>
+      </div>,
+      document.body
+    )}
   <div className="max-w-4xl mx-auto p-4 md:p-8">
         {/* Setup */}
         {!initialized && (
@@ -1250,7 +1329,7 @@ export default function App() {
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
                               title="Auto-fill evenly spaced ascending values starting near center for left flipper"
-                            >Clear</button>
+                            >Reset</button>
                           )}
                         </div>
                       </th>
@@ -1273,7 +1352,7 @@ export default function App() {
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
                               title="Auto-fill evenly spaced descending values (high→low) for right flipper"
-                            >Clear</button>
+                            >Reset</button>
                           )}
                         </div>
                       </th>
@@ -1317,11 +1396,12 @@ export default function App() {
                             const location = r.location || '';
                             const shotMenuOpen = openShotMenuId === r.id;
                             const locMenuOpen = openLocMenuId === r.id;
-                            const closeMenus = () => { setOpenShotMenuId(null); setOpenLocMenuId(null); };
+                            const closeMenus = () => { setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null); };
                             return (
                               <div className="flex items-center gap-2 relative">
                                 <Chip
                                   active={!!base}
+                                  data-shot-chip={r.id}
                                   onClick={(e)=>{
                                     e.stopPropagation();
                                     if (base) {
@@ -1329,13 +1409,21 @@ export default function App() {
                                       setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:'', location:'', type:''}; return next; });
                                       closeMenus();
                                     } else {
-                                      setOpenShotMenuId(shotMenuOpen ? null : r.id); setOpenLocMenuId(null);
+                                      if (shotMenuOpen) {
+                                        closeMenus();
+                                      } else {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
+                                        setOpenShotMenuId(r.id);
+                                        setOpenLocMenuId(null);
+                                      }
                                     }
                                   }}
                                 >{base || 'Select Shot'}</Chip>
                                 {base && (
                                   <Chip
                                     active={!!location}
+                                    data-loc-chip={r.id}
                                     onClick={(e)=>{
                                       e.stopPropagation();
                                       if (location) {
@@ -1343,37 +1431,19 @@ export default function App() {
                                         setRows(prev=>{ const next=[...prev]; next[i]={...next[i], location:'', type: buildType(base,'')}; return next; });
                                         closeMenus();
                                       } else {
-                                        setOpenLocMenuId(locMenuOpen ? null : r.id); setOpenShotMenuId(null);
+                                        if (locMenuOpen) {
+                                          closeMenus();
+                                        } else {
+                                          const rect = e.currentTarget.getBoundingClientRect();
+                                          setLocMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
+                                          setOpenLocMenuId(r.id);
+                                          setOpenShotMenuId(null);
+                                        }
                                       }
                                     }}
                                   >{location || 'Select Location'}</Chip>
                                 )}
-                                {shotMenuOpen && (
-                                  <div className="absolute z-20 top-full left-0 mt-2 w-72 rounded-xl border bg-white shadow-lg p-2 grid grid-cols-3 gap-2" onClick={e=>e.stopPropagation()}>
-                                    {BASE_ELEMENTS.map(b=> (
-                                      <button
-                                        key={b}
-                                        type="button"
-                                        onClick={()=>{ setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:b, location:'', type: buildType(b,'')}; return next; }); setOpenShotMenuId(null); }}
-                                        className={(b===base?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
-                                      >{b}</button>
-                                    ))}
-                                    <div className="col-span-2 mt-1 text-[10px] text-slate-400 text-center">Select shot</div>
-                                  </div>
-                                )}
-                                {locMenuOpen && base && (
-                                  <div className="absolute z-20 top-full left-0 mt-2 w-48 rounded-xl border bg-white shadow-lg p-2 grid grid-cols-2 gap-2" onClick={e=>e.stopPropagation()}>
-                                    {LOCATIONS.map(loc=> (
-                                      <button
-                                        key={loc}
-                                        type="button"
-                                        onClick={()=>{ setRows(prev=>{ const next=[...prev]; next[i]={...next[i], location:loc, type: buildType(base,loc)}; return next; }); setOpenLocMenuId(null); }}
-                                        className={(loc===location?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
-                                      >{loc}</button>
-                                    ))}
-                                    <div className="col-span-2 mt-1 text-[10px] text-slate-400 text-center">Select location (optional)</div>
-                                  </div>
-                                )}
+                                {/* Popup menus rendered outside table to avoid layout shift */}
                               </div>
                             );
                           })()}
