@@ -1631,37 +1631,85 @@ export default function App() {
                                 const next=[...prev];
                                 const aboveIdx = i; // row above insertion point
                                 const belowIdx = i+1 < prev.length ? i+1 : null;
-                                const computeMid = (side)=>{
-                                  if (side==='L') { // ascending ordering
-                                    const aboveVal = prev[aboveIdx].initL;
-                                    const belowVal = belowIdx!=null ? prev[belowIdx].initL : 100;
-                                    if (!(aboveVal>0)) return 50;
-                                    const effBelow = belowVal>0 ? belowVal : 100;
-                                    if (effBelow - aboveVal <=5) { pushToast('Cannot insert: adjust surrounding (need >5 gap).'); return null; }
-                                    const mid = Math.round((aboveVal + effBelow)/2/5)*5;
-                                    let c = mid;
-                                    if (c <= aboveVal) c = aboveVal + 5;
-                                    if (c >= effBelow) c = effBelow - 5;
-                                    if (c <= aboveVal || c >= effBelow) { pushToast('Cannot insert midpoint (5% granularity).'); return null; }
-                                    return clamp(c,5,100);
-                                  } else { // Right descending ordering
-                                    const aboveVal = prev[aboveIdx].initR; // larger
-                                    const belowVal = belowIdx!=null ? prev[belowIdx].initR : 5; // smaller end
-                                    if (!(aboveVal>0)) return 50;
-                                    const effBelow = belowVal>0 ? belowVal : 5;
-                                    if (aboveVal - effBelow <=5) { pushToast('Cannot insert: adjust surrounding (need >5 gap).'); return null; }
-                                    const mid = Math.round((aboveVal + effBelow)/2/5)*5;
-                                    let c = mid;
-                                    if (c >= aboveVal) c = aboveVal - 5;
-                                    if (c <= effBelow) c = effBelow + 5;
-                                    if (c >= aboveVal || c <= effBelow) { pushToast('Cannot insert midpoint (5% granularity).'); return null; }
-                                    return clamp(c,5,100);
+                                // Compute insertion default per flipper. If adjacent (<=5 gap) auto set Not Possible (0) for that side.
+                                const computeInsertValue = (side) => {
+                                  if (side === 'L') { // ascending
+                                    // Find nearest positive above (strictly >0) scanning upward including immediate above
+                                    let upIdx = aboveIdx;
+                                    while (upIdx >= 0 && !(prev[upIdx].initL > 0)) upIdx--;
+                                    // Find nearest positive below scanning downward starting at belowIdx
+                                    let downIdx = belowIdx;
+                                    while (downIdx != null && downIdx < prev.length && !(prev[downIdx].initL > 0)) downIdx++;
+                                    const haveUpper = upIdx >= 0;
+                                    const haveLower = downIdx != null && downIdx < prev.length;
+                                    if (!haveUpper && !haveLower) return 0; // no usable bounds
+                                    // Phantom lower bound of 100 if inserting at bottom with only an upper bound.
+                                    if (haveUpper && !haveLower) {
+                                      const aboveVal = prev[upIdx].initL;
+                                      if (!(aboveVal > 0)) return 0;
+                                      // Special boundary cases:
+                                      // If above=95 and phantom=100 -> place 100 (allowed) instead of Not Possible.
+                                      if (aboveVal === 95) return 100;
+                                      // If above already at 100 -> Not Possible below.
+                                      if (aboveVal === 100) return 0;
+                                      const gap = 100 - aboveVal;
+                                      if (gap <= 5) return 0; // (covers aboveVal 96-100 except 95 handled earlier)
+                                      let mid = Math.round(((aboveVal + 100) / 2) / 5) * 5;
+                                      if (mid <= aboveVal) mid = aboveVal + 5;
+                                      if (mid >= 100) mid = 95; // keep strictly below phantom 100
+                                      if (!(mid > aboveVal && mid < 100)) return 0;
+                                      return clamp(mid, 5, 100);
+                                    }
+                                    if (!haveUpper && haveLower) return 0; // top insertion without upper bound -> Not Possible
+                                    const aboveVal = prev[upIdx].initL;
+                                    const belowVal = prev[downIdx].initL; // real lower bound
+                                    const gap = belowVal - aboveVal;
+                                    if (!(aboveVal > 0) || !(belowVal > 0) || gap <= 5) return 0;
+                                    let mid = Math.round(((aboveVal + belowVal) / 2) / 5) * 5;
+                                    if (mid <= aboveVal) mid = aboveVal + 5;
+                                    if (mid >= belowVal) mid = belowVal - 5;
+                                    if (!(mid > aboveVal && mid < belowVal)) return 0;
+                                    return clamp(mid, 5, 100);
+                                  } else { // Right descending (higher -> lower)
+                                    let upIdx = aboveIdx; // upIdx is the immediate above (should be higher value in descending sequence)
+                                    while (upIdx >= 0 && !(prev[upIdx].initR > 0)) upIdx--;
+                                    let downIdx = belowIdx;
+                                    while (downIdx != null && downIdx < prev.length && !(prev[downIdx].initR > 0)) downIdx++;
+                                    const haveUpper = upIdx >= 0;
+                                    const haveLower = downIdx != null && downIdx < prev.length;
+                                    if (!haveUpper && !haveLower) return 0;
+                                    // Phantom lower (smaller) bound of 5 if inserting at bottom with only upper bound in descending sequence
+                                    if (haveUpper && !haveLower) {
+                                      const aboveVal = prev[upIdx].initR;
+                                      if (!(aboveVal > 0)) return 0;
+                                      // Special boundary cases for descending side with phantom 5:
+                                      // If above=10 and phantom=5 -> set 5 (allowed) instead of Not Possible.
+                                      if (aboveVal === 10) return 5;
+                                      // If above=5 -> Not Possible (can't go below 5).
+                                      if (aboveVal === 5) return 0;
+                                      const gap = aboveVal - 5;
+                                      if (gap <= 5) return 0; // covers aboveVal 6-10 except 10 handled above
+                                      let mid = Math.round(((aboveVal + 5) / 2) / 5) * 5;
+                                      if (mid >= aboveVal) mid = aboveVal - 5;
+                                      if (mid <= 5) mid = 10; // keep strictly above phantom 5
+                                      if (!(mid < aboveVal && mid > 5)) return 0;
+                                      return clamp(mid, 5, 100);
+                                    }
+                                    if (!haveUpper && haveLower) return 0; // top insertion without upper bound
+                                    const aboveVal = prev[upIdx].initR; // higher
+                                    const belowVal = prev[downIdx].initR; // real lower
+                                    const gap = aboveVal - belowVal;
+                                    if (!(aboveVal > 0) || !(belowVal > 0) || gap <= 5) return 0;
+                                    let mid = Math.round(((aboveVal + belowVal) / 2) / 5) * 5;
+                                    if (mid >= aboveVal) mid = aboveVal - 5;
+                                    if (mid <= belowVal) mid = belowVal + 5;
+                                    if (!(mid < aboveVal && mid > belowVal)) return 0;
+                                    return clamp(mid, 5, 100);
                                   }
                                 };
-                                const midL = computeMid('L');
-                                const midR = computeMid('R');
-                                if (midL==null && midR==null) return prev;
-                                const row = newRow({ initL: midL==null?50:midL, initR: midR==null?50:midR }, prev.length);
+                                const midL = computeInsertValue('L');
+                                const midR = computeInsertValue('R');
+                                const row = newRow({ initL: midL, initR: midR }, prev.length);
                                 next.splice(i+1,0,row);
                                 return next;
                               })}
