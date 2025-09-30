@@ -1014,7 +1014,7 @@ export default function App() {
     const usingOverride = overrideVal != null;
     const val = validatePercent(usingOverride ? overrideVal : guess);
     if (!usingOverride && (guess === "" || val === null)) {
-      setRecallError("Enter a number 0–100");
+      setRecallError("0–100 (0 - Not Possible)");
       setTimeout(()=>{ recallInputRef.current?.focus(); recallInputRef.current?.select(); },0);
       return;
     }
@@ -1929,47 +1929,44 @@ export default function App() {
                   </div>
 
                   <div className="mb-4">
-                    <div className="flex items-center gap-3">
-                      <label className="w-28 text-sm text-slate-600">Recall</label>
-                      <div className="flex items-center gap-2">
-                        <NumberInput
-                          ref={recallInputRef}
-                          value={guess}
-                          min={0}
-                          max={100}
-                          className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
-                          onChange={(v) => {
-                            if (v === "" || v === null || v === undefined) {
-                              // Allow clearing without showing an error immediately
-                              setGuess("");
-                              // Clear any prior error when user resumes editing
+                    <div className="flex items-start gap-3">
+                      <label className="w-28 text-sm text-slate-600 mt-1">Recall</label>
+                      <div className="flex flex-col items-stretch">
+                        <div className="flex items-center gap-2">
+                          <NumberInput
+                            ref={recallInputRef}
+                            value={guess}
+                            min={0}
+                            max={100}
+                            className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
+                            onChange={(v) => {
+                              if (v === "" || v === null || v === undefined) {
+                                setGuess("");
+                                if (recallError) setRecallError("");
+                                return;
+                              }
+                              const n = Number(v);
+                              if (!Number.isFinite(n)) return;
+                              const clamped = Math.max(0, Math.min(100, n));
+                              setGuess(clamped);
                               if (recallError) setRecallError("");
-                              return;
-                            }
-                            const n = Number(v);
-                            if (!Number.isFinite(n)) {
-                              // Ignore invalid keystrokes; keep previous value
-                              return;
-                            }
-                            // Clamp into range but do not show error yet; final validation occurs on submitAttempt
-                            const clamped = Math.max(0, Math.min(100, n));
-                            setGuess(clamped);
-                            if (recallError) setRecallError("");
-                          }}
-                          step={5}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              submitAttempt();
-                            }
-                          }}
-                        />
-                        <span>%</span>
+                            }}
+                            step={5}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                submitAttempt();
+                              }
+                            }}
+                          />
+                        </div>
+                        {recallError && (
+                          <div className="mt-1 text-center text-[11px] leading-snug whitespace-pre-line text-red-600">
+                            {recallError}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {recallError && (
-                      <div className="mt-1 ml-28 text-[11px] text-red-600">{recallError}</div>
-                    )}
                   </div>
 
                   <button
@@ -2011,7 +2008,7 @@ export default function App() {
                               </div>
                               <div className="flex justify-between mb-1">
                                 <div className="text-slate-600">Recall</div>
-                                <div>{has ? formatPct(a.input) : '—'}</div>
+                                <div>{has ? format2(a.input) : '—'}</div>
                               </div>
                               {showMentalModel && has && a.prevInput != null && (
                                 <div className="flex justify-between mb-1">
@@ -2134,23 +2131,33 @@ export default function App() {
               <div className="mt-6">
                 {/* Practice playfield (read-only visual) */}
                 <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
-                {/* Quick recall chips (dynamic order by flipper) */}
+                {/* Quick recall chips (values 5..100 plus centered Not Possible) */}
                 <div className="mt-4">
                   {(() => {
-                    const values = Array.from({length:21},(_,k)=>k*5);
-                    // Ordering requirement: Left flipper 0→100, Right flipper 100→0
+                    const values = Array.from({length:20},(_,k)=> (k+1)*5); // 5..100
                     const ordered = selectedSide === 'L' ? values : [...values].reverse();
                     return (
-                      <div className="flex gap-1 w-full select-none">
-                        {ordered.map(v => (
-                          <div key={v} className="flex-1 min-w-0">
+                      <div className="w-full select-none flex flex-col items-stretch gap-2">
+                        <div className="flex gap-1 w-full">
+                          {ordered.map(v => (
+                            <div key={v} className="flex-1 min-w-0">
+                              <Chip
+                                className="w-full px-1 py-1"
+                                active={false}
+                                onClick={()=>submitAttempt(v)}
+                              >{format2(v)}</Chip>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-center">
+                          <div className="w-32">
                             <Chip
                               className="w-full px-1 py-1"
                               active={false}
-                              onClick={()=>submitAttempt(v)}
-                            >{format2(v)}</Chip>
+                              onClick={()=>submitAttempt(0)}
+                            >Not Possible</Chip>
                           </div>
-                        ))}
+                        </div>
                       </div>
                     );
                   })()}
