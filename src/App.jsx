@@ -723,10 +723,41 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
           }
           // Split rendering: green guide lines behind (z-0) already fine; yellow feedback & recall node should be ABOVE flippers/boxes.
           // We'll draw green lines first (existing layer), then overlay a second SVG (z-30) for yellow feedback + recall node.
+          // Recompute p0/p100 using top-edge anchor logic so green lines terminate on visible flipper edge (not center line)
+          function topEdgePoint(side, percent) {
+            // Replicate flipperTopEdge from earlier (editor & yellow feedback) for consistency
+            function flipperTopEdge(base, tip, rBase, tipWidth, pct) {
+              const t = Math.min(1, Math.max(0, pct/100));
+              const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx*dx + dy*dy) || 1;
+              const ux = dx / len, uy = dy / len;
+              const px = -uy, py = ux; // perpendicular
+              const cx = base.x + dx * t; const cy = base.y + dy * t;
+              const wBase = rBase*2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width/2;
+              const cand1 = { x: cx + px*half, y: cy + py*half };
+              const cand2 = { x: cx - px*half, y: cy - py*half };
+              return cand1.y < cand2.y ? cand1 : cand2; // choose visually higher
+            }
+            const rBaseConst = 27.5; const tipWidthConst = 22;
+            if (side === 'L') {
+              const edge = flipperTopEdge({ x:285, y:835 }, { x:415, y:970 }, rBaseConst, tipWidthConst, percent);
+              return { x: edge.x/1000*w, y: edge.y/1000*h };
+            } else {
+              const edge = flipperTopEdge({ x:715, y:835 }, { x:585, y:970 }, rBaseConst, tipWidthConst, percent);
+              return { x: edge.x/1000*w, y: edge.y/1000*h };
+            }
+          }
+          const p0Top = topEdgePoint(selectedSide, 0);
+          const p100Top = topEdgePoint(selectedSide, 100);
           const greenLayer = (
             <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
-              <line x1={p0.x} y1={p0.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
-              <line x1={p100.x} y1={p100.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
+              {/* Shaded wedge between anchors and shot box */}
+              <polygon
+                points={`${p0Top.x},${p0Top.y} ${p100Top.x},${p100Top.y} ${bx},${by}`}
+                fill={stroke}
+                fillOpacity={0.18}
+              />
+              <line x1={p0Top.x} y1={p0Top.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
+              <line x1={p100Top.x} y1={p100Top.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
             </svg>
           );
           const yellowLayer = recallNode && (
