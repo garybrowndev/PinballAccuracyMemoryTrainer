@@ -62,7 +62,7 @@ const BASE_ELEMENTS = [
 // Added extended location variants to support richer spatial descriptors in practice:
 // Previous: Left, Center, Right. New additions: Bottom, Top, Upper, Lower, Side.
 // These simply expand selectable suffixes; no logic elsewhere depends on specific set/order.
-const LOCATIONS = ['Left','Center','Right','Bottom','Top','Upper','Lower','Side'];
+const LOCATIONS = ['Left','Right','Center','Side','Top','Upper','Bottom','Lower'];
 
 function buildType(base, location) {
   if (!base) return '';
@@ -761,9 +761,11 @@ export default function App() {
   const [openLocMenuId, setOpenLocMenuId] = useState(null);  // row id currently showing location list
   const [shotMenuAnchor, setShotMenuAnchor] = useState(null); // {id,x,y}
   const [locMenuAnchor, setLocMenuAnchor] = useState(null);   // {id,x,y}
+  // Anchor for multi-add popup when list is empty
+  const [addCountAnchor, setAddCountAnchor] = useState(null); // {x,y} or null
   // Keep popup anchored to triggering chip while scrolling/resizing
   useEffect(()=>{
-    if (openShotMenuId==null && openLocMenuId==null) return;
+    if (openShotMenuId==null && openLocMenuId==null && !addCountAnchor) return;
     let raf = null;
     const update = ()=>{
       if (raf) return;
@@ -783,17 +785,24 @@ export default function App() {
             setLocMenuAnchor(a=> a && a.id===openLocMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
           }
         }
+        if (addCountAnchor) {
+          const el = document.querySelector('[data-add-multi]');
+          if (el) {
+            const r = el.getBoundingClientRect();
+            setAddCountAnchor({ x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 });
+          }
+        }
       });
     };
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
     return ()=>{ window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); if(raf) cancelAnimationFrame(raf); };
-  }, [openShotMenuId, openLocMenuId]);
+  }, [openShotMenuId, openLocMenuId, addCountAnchor]);
   // Close menus on outside click
   useEffect(()=>{
     const handler = ()=>{
-      // Any click not stopped will close both menus
-      setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null);
+      // Outside click closes all popups
+      setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null); setAddCountAnchor(null);
     };
     window.addEventListener('click', handler);
     return ()=> window.removeEventListener('click', handler);
@@ -1260,6 +1269,35 @@ export default function App() {
       </div>,
       document.body
     )}
+    {addCountAnchor && rows.length===0 && createPortal(
+      <div
+        className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-4 gap-1"
+        style={{ left: Math.max(8, addCountAnchor.x) + 'px', top: addCountAnchor.y + 'px' }}
+        onClick={e=> e.stopPropagation()}
+      >
+        {Array.from({length:20},(_,k)=>k+1).map(n => (
+          <button
+            key={n}
+            type="button"
+            className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
+            onClick={()=>{
+              const count = n;
+              const buildRows = (cnt)=>{
+                const asc = Array.from({length:cnt},(_,i)=> snap5(((i+1)/(cnt+1))*100));
+                for (let i=1;i<asc.length;i++) if (asc[i] <= asc[i-1]) asc[i] = Math.min(100, asc[i-1]+5);
+                for (let i=asc.length-2;i>=0;i--) if (asc[i] >= asc[i+1]) asc[i] = Math.max(5, asc[i+1]-5);
+                const desc = [...asc].reverse();
+                return asc.map((v,i)=> newRow({ initL: v, initR: desc[i] }, i));
+              };
+              setRows(buildRows(count));
+              setAddCountAnchor(null);
+            }}
+          >{n}</button>
+        ))}
+        <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
+      </div>,
+      document.body
+    )}
   <div className="max-w-4xl mx-auto p-4 md:p-8">
         {/* Setup */}
         {!initialized && (
@@ -1365,9 +1403,15 @@ export default function App() {
                         <td colSpan={4} className="p-8 text-center text-sm text-slate-600">
                           <button
                             type="button"
-                            onClick={() => setRows([newRow({ initL:50, initR:50 }, 0)])}
+                            data-add-multi
+                            onClick={(e)=>{
+                              e.stopPropagation();
+                              if (addCountAnchor) { setAddCountAnchor(null); return; }
+                              const r = e.currentTarget.getBoundingClientRect();
+                              setAddCountAnchor({ x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 });
+                            }}
                             className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800"
-                          >+ Add Shot</button>
+                          >+ Add Shot(s)</button>
                         </td>
                       </tr>
                     )}
