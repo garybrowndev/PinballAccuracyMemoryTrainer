@@ -562,37 +562,77 @@ function PlayfieldScenery(){
   );
 }
 
-function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
+function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale }) {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
+  const [size, setSize] = useState({ w: 0, h: 0 });
   useEffect(()=>{ setMounted(true); }, []);
+  useEffect(()=>{
+    if (!fullscreen) return; // only track for fullscreen scaling
+    const el = canvasRef.current; if (!el) return;
+    // Immediate measurement so first render already scales
+    const first = el.getBoundingClientRect();
+    setSize({ w: first.width, h: first.height });
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const cr = entry.contentRect; setSize({ w: cr.width, h: cr.height });
+      }
+    });
+    ro.observe(el);
+    return ()=> ro.disconnect();
+  }, [fullscreen]);
   const selectedRow = rows[selectedIdx] || null;
+  // Default (non-fullscreen) canvas height is h-96 => 384px (24rem at 16px). Typical width in layout around ~800px.
+  // Scale shot boxes proportionally relative to BOTH dimensions so they enlarge meaningfully on large screens.
+  let scale = 1;
+  if (fullscreen && size.w && size.h) {
+    const baseH = 384; // baseline small-mode height
+    const baseW = 800; // approximate mid-size width used in standard layout
+    scale = Math.min(size.h / baseH, size.w / baseW);
+    if (scale < 1) scale = 1; // never shrink below normal size
+    if (scale > 2.6) scale = 2.6; // prevent comically large boxes
+  }
+  // Notify parent of scale when in fullscreen so ancillary UI (chips) can track size.
+  useEffect(()=>{ if (fullscreen && typeof onScale === 'function') onScale(scale); }, [scale, fullscreen, onScale]);
   return (
-    <div className="mt-8">
-      <h3 className="font-medium mb-2">Playfield</h3>
-  <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
+    <div className={fullscreen ? 'w-full h-full flex flex-col' : 'mt-8'}>
+      {!fullscreen && <h3 className="font-medium mb-2">Playfield</h3>}
+  <div ref={canvasRef} className={
+        'relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden ' +
+        (fullscreen ? 'flex-1 min-h-0' : 'h-96')
+      }>
   <PlayfieldScenery />
-        {rows.map(r => (
-          <div
-            key={r.id}
-            style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
-            className={`absolute z-20 select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white border-slate-300 ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
-            title={r.type}
-          >
-            <div className="font-medium truncate max-w-[120px] text-center" title={r.type}>{r.type || '—'}</div>
-            {/* Invisible placeholder row to preserve height parity with setup editor (which shows L/R values) */}
-            <div className="flex gap-1 mt-0.5 opacity-0 select-none pointer-events-none">
-              <span className="px-1 rounded bg-slate-100">L 00</span>
-              <span className="px-1 rounded bg-slate-100">R 00</span>
+        {rows.map(r => {
+          const style = fullscreen ? {
+            left: `${r.x*100}%`,
+            top: `${r.y*100}%`,
+            transform: `translate(-50%, -50%) scale(${scale})`,
+          } : {
+            left: `${r.x*100}%`,
+            top: `${r.y*100}%`,
+            transform: 'translate(-50%, -50%)'
+          };
+          return (
+            <div
+              key={r.id}
+              style={style}
+              className={`absolute z-20 select-none px-2 py-1 rounded-lg shadow border bg-white border-slate-300 origin-center ${fullscreen ? 'text-[11px]' : 'text-[11px]'} ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
+              title={r.type}
+            >
+              <div className="font-medium truncate max-w-[120px] text-center" title={r.type}>{r.type || '—'}</div>
+              <div className="flex gap-1 mt-0.5 opacity-0 select-none pointer-events-none">
+                <span className="px-1 rounded bg-slate-100">L 00</span>
+                <span className="px-1 rounded bg-slate-100">R 00</span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
   {mounted && selectedRow && selectedSide && (()=>{
           // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
           const rect = canvasRef.current?.getBoundingClientRect();
           if (!rect || !rect.width || !rect.height) return null;
           const w = rect.width; const h = rect.height;
-          const BOX_HALF = 15; // approximate half-height of shot box
+          const BOX_HALF = 15 * scale; // approximate half-height scaled
           const bx = selectedRow.x * w; const by = selectedRow.y * h + BOX_HALF; // bottom center of shot box
           // Coordinate anchors (note mapping: 0=base,100=tip in editor, but we now need both extremes).
           const L_TIP = { x: 415, y: 970 }, L_BASE = { x: 285, y: 835 };
@@ -635,7 +675,9 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
             // Scale to canvas dimensions
             let anchor = { x: rawEdge.x/1000*w, y: rawEdge.y/1000*h };
             const label = `${format2(lastRecall.input)}`;
-            const fs = 11; const padX = 5; const padY = 2; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX*2; const rectH = fs + padY*2;
+            const textScale = scale; // unify scaling for recall label
+            const baseFs = 11; const basePadX = 5; const basePadY = 2;
+            const fs = baseFs * textScale; const padX = basePadX * textScale; const padY = basePadY * textScale; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX*2; const rectH = fs + padY*2;
             const cx = anchor.x; const cy = anchor.y - 8;
             // Dynamic yellow line endpoint reflecting timing error (early/late severity) relative to shot box.
             // Rules (described for right flipper; mirrored for left):
@@ -664,14 +706,23 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
                 }
               }
               const absDelta = Math.abs(lastRecall.delta);
-              let endX = boxCX; // default perfect
+              let endX = boxCX; // default perfect center
               const endY = boxCY + boxH/2; // bottom center of box
               if (absDelta !== 0) {
-                let desiredShift;
-                if (absDelta === 5) desiredShift = 0.15 * boxW;
-                else if (absDelta === 10) desiredShift = 0.35 * boxW; // near edge
-                else desiredShift = 0.50 * boxW; // very (>=15) slight overshoot
-                endX = boxCX + shiftSign * desiredShift;
+                // Placement rule summary:
+                // Slight: midpoint of box aligns with 25% (early) or 75% (late) horizontal mark (internal). We'll treat that as ±0.25 * boxW from center.
+                // Fairly: midpoint aligns with shot box edge (±0.5 * boxW from center).
+                // Very: whole feedback box sits fully outside, touching edge. We'll set end point just outside box edge (±0.5*boxW) and later offset box itself outward.
+                // We'll compute endX as the point where the yellow line terminates (bottom of feedback box). For Very, we put endpoint at box edge, then shift the box further outward.
+                let severity = lastRecall.severity; // 'slight' | 'fairly' | 'very'
+                if (severity === 'perfect') severity = null;
+                if (severity === 'slight') {
+                  endX = boxCX + shiftSign * (0.25 * boxW);
+                } else if (severity === 'fairly') {
+                  endX = boxCX + shiftSign * (0.5 * boxW);
+                } else if (severity === 'very') {
+                  endX = boxCX + shiftSign * (0.5 * boxW); // edge; box will shift further outward below
+                }
               }
               // Build feedback text (reversed order): "Slight Early", "Fairly Late", etc. Perfect => "Perfect".
               let word1, word2 = null;
@@ -684,31 +735,43 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
                 word2 = cap(lastRecall.label);     // Early / Late
               }
               // Background sizing heuristic: width based on longest line length * charWidth approximation.
-              const charW = 6; // rough average glyph width at fontSize 10 (monospace-ish approximation for sizing box)
+              const tScale = scale;
+              const fontSize = 10 * tScale;
+              const lineGap = 2 * tScale; // tighter explicit gap
+              const padX = 6 * tScale; const padY = 4 * tScale;
               const longest = word2 ? Math.max(word1.length, word2.length) : word1.length;
-              const padX = 6; const padY = 4;
-              const textW = longest * charW;
+              const approxCharW = fontSize * 0.6; // better than fixed 6
+              const textW = longest * approxCharW;
               const lineCount = word2 ? 2 : 1;
-              const lineHeight = 12; // fontSize 10 with ~1.05em dy
-              const boxHeight = lineCount * lineHeight + padY*2 - (lineCount>1 ? 4 : 0); // tighten for two-line stack
+              const lineHeight = fontSize; // use fontSize baseline, we add custom gap
+              const contentHeight = lineCount === 1 ? lineHeight : (lineHeight*2 + lineGap);
+              const boxHeight = contentHeight + padY*2;
               const boxWidth = textW + padX*2;
-              const boxX = endX - boxWidth/2;
-              const boxY = endY - 6 - padY - (lineCount>1 ? lineHeight/2 : lineHeight/2); // center above endpoint slightly
+              // Adjust box horizontal for VERY severity so whole box is outside touching edge.
+              let boxCenterX = endX;
+              if (lastRecall.severity === 'very' && lastRecall.severity !== 'perfect') {
+                // Shift center outward by half box width so inner edge touches shot box edge at endX.
+                boxCenterX = endX + (shiftSign * (boxWidth/2 + 4 * tScale)); // small 4px visual gutter
+              }
+              const boxX = boxCenterX - boxWidth/2;
+              // Vertical: place box above end point with small gap
+              // Align bottom of feedback box with bottom edge of shot box (endY is bottom center of box)
+              const boxY = endY - boxHeight;
               lineEl = (
                 <g>
-                  <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke="#eab308" strokeWidth={4} strokeLinecap="round" />
-                  <rect x={boxX} y={boxY} width={boxWidth} height={boxHeight} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
+                  <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke="#eab308" strokeWidth={4 * tScale} strokeLinecap="round" />
+                  <rect x={boxX} y={boxY} width={boxWidth} height={boxHeight} rx={6 * tScale} ry={6 * tScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * tScale} />
                   <text
-                    x={endX}
-                    y={boxY + padY + 9} /* first line baseline */
-                    fontSize={10}
+                    x={boxCenterX}
+                    y={boxY + padY + fontSize * 0.78}
+                    fontSize={fontSize}
                     fontFamily="ui-sans-serif"
                     fontWeight={600}
                     textAnchor="middle"
                     fill={SEVERITY_COLORS[lastRecall.severity] || '#78350f'}
                   >
-                    <tspan x={endX}>{word1}</tspan>
-                    {word2 && <tspan x={endX} dy="1.05em">{word2}</tspan>}
+                    <tspan x={boxCenterX}>{word1}</tspan>
+                    {word2 && <tspan x={boxCenterX} dy={lineGap + lineHeight}>{word2}</tspan>}
                   </text>
                 </g>
               );
@@ -716,8 +779,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall }) {
             recallNode = (
               <g>
                 {lineEl}
-                <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
-                <text x={cx} y={cy - rectH/2 + fs/2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
+                <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6 * textScale} ry={6 * textScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * textScale} />
+                <text x={cx} y={cy - rectH/2 + fs/2 - 1 * textScale} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
               </g>
             );
           }
@@ -1246,6 +1309,9 @@ export default function App() {
   const recallInputRef = useRef(null);
   // Validation error message for recall input
   const [recallError, setRecallError] = useState("");
+  // Fullscreen playfield state
+  const [playfieldFullscreen, setPlayfieldFullscreen] = useState(false);
+  const [fullscreenScale, setFullscreenScale] = useState(1); // current scale reported by fullscreen playfield
   // Focus recall input when session starts (initialized true and not final phase)
   useEffect(()=>{
     if (initialized && !finalPhase) {
@@ -2161,7 +2227,22 @@ export default function App() {
 
               <div className="mt-6">
                 {/* Practice playfield (read-only visual) */}
-                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
+                <div className="relative">
+                  {/* Fullscreen toggle button (enter) */}
+                  {!playfieldFullscreen && (
+                    <button
+                      type="button"
+                      onClick={()=> setPlayfieldFullscreen(true)}
+                      title="Fullscreen"
+                      className="absolute top-2 right-2 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1"
+                    >
+                      {/* Enter fullscreen icon */}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8H5V5"/><path d="M16 8h3V5"/><path d="M16 16h3v3"/><path d="M8 16H5v3"/></svg>
+                      Fullscreen
+                    </button>
+                  )}
+                  <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
+                </div>
                 {/* Quick recall chips (values 5..100 plus centered Not Possible) */}
                 <div className="mt-4">
                   {(() => {
@@ -2237,6 +2318,62 @@ export default function App() {
                 )}
               </div>
             </Section>
+            {playfieldFullscreen && createPortal(
+              <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 text-slate-200 text-sm">
+                  <div className="font-medium">Practice Playfield</div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={()=> setPlayfieldFullscreen(false)}
+                      title="Exit fullscreen"
+                      className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 flex items-center gap-2 text-xs border border-white/20"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 9H5V5"/><path d="M15 9h4V5"/><path d="M15 15h4v4"/><path d="M9 15H5v4"/><path d="M8 3h3"/><path d="M13 21h-3"/><path d="M3 8v3"/><path d="M21 13v-3"/></svg>
+                      Exit
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col items-stretch px-4 pb-4 gap-4 overflow-auto">
+                    <div className="relative flex-1 flex flex-col min-h-0">
+                      <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s=> setFullscreenScale(s)} />
+                    </div>
+                    <div className="w-full mx-auto pt-2">
+                    {/* Quick recall chips duplicated for fullscreen */}
+                    {(() => {
+                      const values = Array.from({length:20},(_,k)=> (k+1)*5); // 5..100
+                      const ordered = selectedSide === 'L' ? values : [...values].reverse();
+                      const chipFont = Math.round(12 * fullscreenScale);
+                      return (
+                        <div className="w-full select-none flex flex-col items-stretch gap-2">
+                          <div className="flex gap-1 w-full">
+                            {ordered.map(v => (
+                              <div key={v} className="flex-1 min-w-0">
+                                <Chip
+                                  className="w-full px-1 py-2"
+                                  active={false}
+                                  onClick={()=>submitAttempt(v)}
+                                ><span style={{fontSize: chipFont}}>{format2(v)}</span></Chip>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex justify-center">
+                            <div className="w-40">
+                              <Chip
+                                className="w-full px-1 py-2"
+                                active={false}
+                                onClick={()=>submitAttempt(0)}
+                              ><span style={{fontSize: chipFont}}>Not Possible</span></Chip>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )}
           </>
         )}
 
