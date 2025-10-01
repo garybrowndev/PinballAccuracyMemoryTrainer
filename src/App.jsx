@@ -717,13 +717,13 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 let severity = lastRecall.severity; // 'slight' | 'fairly' | 'very'
                 if (severity === 'perfect') severity = null;
                 if (severity === 'slight') {
-                  endX = boxCX + shiftSign * (0.25 * boxW);
+                  endX = boxCX + shiftSign * (0.40 * boxW);
                 } else if (severity === 'fairly') {
                   // move a further 15% of box width toward side
-                  endX = boxCX + shiftSign * (0.65 * boxW);
+                  endX = boxCX + shiftSign * (0.85 * boxW);
                 } else if (severity === 'very') {
                   // bring in closer (previously 0.80)
-                  endX = boxCX + shiftSign * (0.65 * boxW);
+                  endX = boxCX + shiftSign * (0.85 * boxW);
                 }
               }
               // Build feedback text (reversed order): "Slight Early", "Fairly Late", etc. Perfect => "Perfect".
