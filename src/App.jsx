@@ -717,13 +717,13 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 let severity = lastRecall.severity; // 'slight' | 'fairly' | 'very'
                 if (severity === 'perfect') severity = null;
                 if (severity === 'slight') {
-                  endX = boxCX + shiftSign * (0.40 * boxW);
+                  endX = boxCX + shiftSign * (0.25 * boxW);
                 } else if (severity === 'fairly') {
                   // move a further 15% of box width toward side
-                  endX = boxCX + shiftSign * (0.85 * boxW);
+                  endX = boxCX + shiftSign * (0.65 * boxW);
                 } else if (severity === 'very') {
                   // bring in closer (previously 0.80)
-                  endX = boxCX + shiftSign * (0.85 * boxW);
+                  endX = boxCX + shiftSign * (0.65 * boxW);
                 }
               }
               // Build feedback text (reversed order): "Slight Early", "Fairly Late", etc. Perfect => "Perfect".
@@ -2324,20 +2324,47 @@ export default function App() {
             </Section>
             {playfieldFullscreen && createPortal(
               <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 text-slate-200 text-sm">
-                  <div className="font-medium">Practice Playfield</div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={()=> setPlayfieldFullscreen(false)}
-                      title="Exit fullscreen"
-                      className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 flex items-center gap-2 text-xs border border-white/20"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 9H5V5"/><path d="M15 9h4V5"/><path d="M15 15h4v4"/><path d="M9 15H5v4"/><path d="M8 3h3"/><path d="M13 21h-3"/><path d="M3 8v3"/><path d="M21 13v-3"/></svg>
-                      Exit
-                    </button>
-                  </div>
-                </div>
+                {(() => {
+                  const s = fullscreenScale || 1;
+                  const fontSize = Math.round(11 * s); // base 11px scaled
+                  const padY = 0.9 * s; // base 0.9 (~py-1.5 ≈6px) adjust
+                  const padX = 1.2 * s; // base horizontal
+                  const gap = 6 * s; // base gap 6px
+                  const iconSize = Math.max(14, Math.round(14 * s));
+                  return (
+                    <div className="flex items-center justify-between px-4 py-2 text-slate-200" style={{fontSize}}>
+                      <div className="font-medium" style={{fontSize: Math.round(fontSize*1.05)}}>Practice Playfield</div>
+                      <div className="flex items-center" style={{gap}}>
+                        <button
+                          type="button"
+                          onClick={()=> setPlayfieldFullscreen(false)}
+                          title="Exit fullscreen"
+                          style={{
+                            padding: `${padY}px ${padX*8}px`,
+                            fontSize: fontSize * 0.9,
+                            lineHeight: 1.1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: `${Math.round(4*s)}px`,
+                            borderWidth: 1,
+                          }}
+                          className="rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 transition-colors"
+                        >
+                          {/* Standard fullscreen exit: arrows pointing inward */}
+                          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 3H5a2 2 0 0 0-2 2v4" />
+                            <path d="M15 3h4a2 2 0 0 1 2 2v4" />
+                            <path d="M9 21H5a2 2 0 0 1-2-2v-4" />
+                            <path d="M15 21h4a2 2 0 0 0 2-2v-4" />
+                            <path d="M10 14v4h4v-4" />
+                            <path d="M10 10V6h4v4" />
+                          </svg>
+                          <span>Exit</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="flex-1 flex flex-col items-stretch px-4 pb-4 gap-4 overflow-auto">
                     <div className="relative flex-1 flex flex-col min-h-0">
                       <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s=> setFullscreenScale(s)} />
