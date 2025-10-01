@@ -722,7 +722,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                   // move a further 15% of box width toward side
                   endX = boxCX + shiftSign * (0.65 * boxW);
                 } else if (severity === 'very') {
-                  // base edge at 50%, keep endpoint at 65% as well before outer shift for box
+                  // bring in closer (previously 0.80)
                   endX = boxCX + shiftSign * (0.65 * boxW);
                 }
               }
@@ -752,9 +752,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               // Adjust box horizontal for VERY severity so whole box is outside touching edge.
               let boxCenterX = endX;
               if (lastRecall.severity === 'very' && lastRecall.severity !== 'perfect') {
-                // Shift center outward so inner edge roughly aligns with 65% position; we already used 0.65*boxW for endpoint.
-                // Additional outward shift: half width + small gutter
-                boxCenterX = endX + (shiftSign * (boxWidth/2 + 4 * tScale));
+                // Adjust gutter to be smaller since distance reduced
+                boxCenterX = endX + (shiftSign * (boxWidth/2 + 1 * tScale));
               }
               const boxX = boxCenterX - boxWidth/2;
               // Vertical positioning refinement: introduce a small scalable gap and pointer triangle for clarity.
