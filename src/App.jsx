@@ -2374,7 +2374,8 @@ export default function App() {
                     {(() => {
                       const values = Array.from({length:20},(_,k)=> (k+1)*5); // 5..100
                       const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                      const chipFont = Math.round(12 * fullscreenScale);
+                      // Increase base font size for better fill inside chip and clamp for readability.
+                      const chipFont = Math.min( Math.round(14 * fullscreenScale), 42 );
                       return (
                         <div className="w-full select-none flex flex-col items-stretch gap-2">
                           <div className="flex gap-1 w-full">
@@ -2384,18 +2385,16 @@ export default function App() {
                                   className="w-full px-1 py-2"
                                   active={false}
                                   onClick={()=>submitAttempt(v)}
-                                ><span style={{fontSize: chipFont}}>{format2(v)}</span></Chip>
+                                ><span style={{fontSize: chipFont, lineHeight: 1}}>{format2(v)}</span></Chip>
                               </div>
                             ))}
                           </div>
                           <div className="flex justify-center">
-                            <div className="w-40">
-                              <Chip
-                                className="w-full px-1 py-2"
-                                active={false}
-                                onClick={()=>submitAttempt(0)}
-                              ><span style={{fontSize: chipFont}}>Not Possible</span></Chip>
-                            </div>
+                            <Chip
+                              className="px-3 py-2 whitespace-nowrap"
+                              active={false}
+                              onClick={()=>submitAttempt(0)}
+                              ><span style={{fontSize: chipFont, lineHeight: 1}}>Not Possible</span></Chip>
                           </div>
                         </div>
                       );
