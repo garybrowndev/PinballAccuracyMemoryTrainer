@@ -719,9 +719,11 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 if (severity === 'slight') {
                   endX = boxCX + shiftSign * (0.25 * boxW);
                 } else if (severity === 'fairly') {
-                  endX = boxCX + shiftSign * (0.5 * boxW);
+                  // move a further 15% of box width toward side
+                  endX = boxCX + shiftSign * (0.65 * boxW);
                 } else if (severity === 'very') {
-                  endX = boxCX + shiftSign * (0.5 * boxW); // edge; box will shift further outward below
+                  // base edge at 50%, keep endpoint at 65% as well before outer shift for box
+                  endX = boxCX + shiftSign * (0.65 * boxW);
                 }
               }
               // Build feedback text (reversed order): "Slight Early", "Fairly Late", etc. Perfect => "Perfect".
@@ -750,13 +752,16 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               // Adjust box horizontal for VERY severity so whole box is outside touching edge.
               let boxCenterX = endX;
               if (lastRecall.severity === 'very' && lastRecall.severity !== 'perfect') {
-                // Shift center outward by half box width so inner edge touches shot box edge at endX.
-                boxCenterX = endX + (shiftSign * (boxWidth/2 + 4 * tScale)); // small 4px visual gutter
+                // Shift center outward so inner edge roughly aligns with 65% position; we already used 0.65*boxW for endpoint.
+                // Additional outward shift: half width + small gutter
+                boxCenterX = endX + (shiftSign * (boxWidth/2 + 4 * tScale));
               }
               const boxX = boxCenterX - boxWidth/2;
-              // Vertical: place box above end point with small gap
-              // Align bottom of feedback box with bottom edge of shot box (endY is bottom center of box)
-              const boxY = endY - boxHeight;
+              // Vertical positioning refinement: introduce a small scalable gap and pointer triangle for clarity.
+              // Position: move feedback box further downward so its bottom is 50% of shot box height below shot box bottom.
+              // shot box height heuristic = boxH (30 * scale influence only through visual ref). Use 0.5 * boxH offset.
+              const downwardOffset = 0.80 * boxHeight; // 80% of shot box height (moved further down)
+              const boxY = endY + downwardOffset - boxHeight; // bottom of box = endY + downwardOffset
               lineEl = (
                 <g>
                   <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke="#eab308" strokeWidth={4 * tScale} strokeLinecap="round" />
