@@ -159,30 +159,26 @@ function isotonicWithBounds(current, base, orderAsc) {
   return next;
 }
 
-// Ensure strict increasing (no equal adjacent) by minimally bumping later duplicates within bounds
+// Ensure strict increasing / decreasing ordering (depending on provided index order) within ±20 bounds and snapping to 5.
 function strictlyIncrease(values, base, orderAsc) {
   if (!values.length) return values;
-  // Work in sorted order space
   const idxs = orderAsc;
   const arr = idxs.map(i => values[i]);
   const bases = idxs.map(i => base[i]);
-  // Forward ensure arr[i] < arr[i+1]
   for (let i=1;i<arr.length;i++) {
     if (arr[i] <= arr[i-1]) {
       const b = bases[i];
       const hi = Math.min(100, b + 20);
       let candidate = snap5(arr[i-1] + 5);
       if (candidate > hi) {
-        // Need to raise earlier chain if possible OR reduce previous while keeping ordering relative to its own lower bound
-        // Try pulling previous downward if its base allows
-        let j = i-1;
-        while (j >=0 && candidate > hi) {
+        let j=i-1;
+        while (j>=0 && candidate>hi) {
           const bj = bases[j];
-          const loPrev = Math.max(0, bj - 20);
-          const lowered = snap5(arr[j] - 5);
-          if (lowered >= loPrev && (j===0 || lowered > arr[j-1])) { arr[j] = lowered; } else break;
-          candidate = snap5(arr[i-1] + 5);
-          j--;
+            const loPrev = Math.max(0, bj - 20);
+            const lowered = snap5(arr[j] - 5);
+            if (lowered >= loPrev && (j===0 || lowered > arr[j-1])) { arr[j] = lowered; } else break;
+            candidate = snap5(arr[i-1] + 5);
+            j--;
         }
         candidate = Math.min(hi, candidate);
       }
@@ -190,10 +186,8 @@ function strictlyIncrease(values, base, orderAsc) {
       arr[i] = candidate;
     }
   }
-  // Map back
   const out = [...values];
   for (let k=0;k<idxs.length;k++) out[idxs[k]] = arr[k];
-  // Final clamp per base bounds & snapping & ensure strictness one more pass
   for (let k=0;k<idxs.length;k++) {
     const i = idxs[k];
     const b = base[i];
@@ -203,7 +197,7 @@ function strictlyIncrease(values, base, orderAsc) {
       const prevIdx = idxs[k-1];
       if (out[i] <= out[prevIdx]) {
         let nv = snap5(out[prevIdx] + 5);
-        if (nv > hi) nv = hi; // may compress but ordering should hold due to earlier adjustments
+        if (nv > hi) nv = hi;
         out[i] = nv;
       }
     }
@@ -615,6 +609,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           return (
             <div
               key={r.id}
+              data-shot-box={r.id}
               style={style}
               className={`absolute z-20 select-none px-2 py-1 rounded-lg shadow border bg-white border-slate-300 origin-center ${fullscreen ? 'text-[11px]' : 'text-[11px]'} ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
               title={r.type}
@@ -645,129 +640,89 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             x: (R_BASE.x + (R_TIP.x - R_BASE.x)*(p/100))/1000*w,
             y: (R_BASE.y + (R_TIP.y - R_BASE.y)*(p/100))/1000*h
           });
-          const isLeft = selectedSide === 'L';
-          const p0 = isLeft ? Lp(0) : Rp(0);    // base extreme
-            const p100 = isLeft ? Lp(100) : Rp(100); // tip extreme
           // Unified green guide color for both flippers during practice
           const stroke = '#10b981'; // emerald-500
           // Determine anchor for showing last recall value (only one value shown at a time on the active flipper).
           let recallNode = null;
           if (lastRecall && Number.isFinite(lastRecall.input)) {
-            const prevRow = rows[lastRecall.idx];
-            // Compute precise top-edge anchor on the flipper outline at the recall percentage.
-            function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
-              const t = Math.min(1, Math.max(0, percent/100));
-              const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx*dx + dy*dy) || 1;
-              const ux = dx / len, uy = dy / len; // along center line
-              const px = -uy, py = ux;            // perpendicular
-              const cx = base.x + dx * t; const cy = base.y + dy * t; // center line point (1000-space)
-              const wBase = rBase*2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width/2;
-              // Two candidates (top vs bottom relative to screen): choose the one with smaller y (visually higher => top edge)
-              const cand1 = { x: cx + px*half, y: cy + py*half };
-              const cand2 = { x: cx - px*half, y: cy - py*half };
-              const edge = cand1.y < cand2.y ? cand1 : cand2;
-              return edge; // still in 1000-space
-            }
-            const rBaseConst = 27.5; const tipWidthConst = 22;
-            const rawEdge = lastRecall.side === 'L'
-              ? flipperTopEdge({ x:285, y:835 }, { x:415, y:970 }, rBaseConst, tipWidthConst, lastRecall.input)
-              : flipperTopEdge({ x:715, y:835 }, { x:585, y:970 }, rBaseConst, tipWidthConst, lastRecall.input);
-            // Scale to canvas dimensions
-            let anchor = { x: rawEdge.x/1000*w, y: rawEdge.y/1000*h };
-            const label = `${format2(lastRecall.input)}`;
-            const textScale = scale; // unify scaling for recall label
-            const baseFs = 11; const basePadX = 5; const basePadY = 2;
-            const fs = baseFs * textScale; const padX = basePadX * textScale; const padY = basePadY * textScale; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX*2; const rectH = fs + padY*2;
-            const cx = anchor.x; const cy = anchor.y - 8;
-            // Dynamic yellow line endpoint reflecting timing error (early/late severity) relative to shot box.
-            // Rules (described for right flipper; mirrored for left):
-            // Perfect => center bottom of box.
-            // Slight early => 25% to the right of center (x + 0.25*width).
-            // Slight late  => 25% to the left of center (x - 0.25*width).
-            // Fairly early/late => 50% (edge) to that side.
-            // Very early/late => 25% beyond the edge (overshoot) past box boundary.
-            // Mapping of 'early/late' sign: delta < 0 => early, delta > 0 => late per earlier logic (delta = recall - truth).
+            // Placeholder for feedback line/group before recall value label box; restored after refactor
             let lineEl = null;
+            const prevRow = rows[lastRecall.idx];
             if (prevRow) {
-              const boxCX = prevRow.x * w; // geometric center x (box centered at r.x via translate -50%)
-              const boxCY = prevRow.y * h; // geometric center y
-              const boxW = 120; // heuristic width (matches earlier assumption)
-              const boxH = 30;  // heuristic height
-              const dirLate = lastRecall.delta > 0 ? 1 : (lastRecall.delta < 0 ? -1 : 0); // +1 late, -1 early
+              // Precise flipper edge anchor at recall %
+              function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
+                const t = Math.min(1, Math.max(0, percent/100));
+                const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx*dx + dy*dy) || 1;
+                const ux = dx / len, uy = dy / len;
+                const px = -uy, py = ux;
+                const cxLine = base.x + dx * t; const cyLine = base.y + dy * t;
+                const wBase = rBase*2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width/2;
+                const cand1 = { x: cxLine + px*half, y: cyLine + py*half };
+                const cand2 = { x: cxLine - px*half, y: cyLine - py*half };
+                return cand1.y < cand2.y ? cand1 : cand2;
+              }
+              const rawEdge = lastRecall.side === 'L'
+                ? flipperTopEdge({ x:285, y:835 }, { x:415, y:970 }, 27.5, 22, lastRecall.input)
+                : flipperTopEdge({ x:715, y:835 }, { x:585, y:970 }, 27.5, 22, lastRecall.input);
+              const anchor = { x: rawEdge.x/1000*w, y: rawEdge.y/1000*h };
+              const label = `${format2(lastRecall.input)}`;
+              const textScale = scale;
+              // Recall value label sizing (50% larger)
+              const baseFs = 11 * 1.5; const rPadXBase = 5; const rPadYBase = 2;
+              const fs = baseFs * textScale; const rPadX = rPadXBase * textScale; const rPadY = rPadYBase * textScale;
+              const wTxt = label.length * fs * 0.6; const rectW = wTxt + rPadX*2; const rectH = fs + rPadY*2;
+              const cx = anchor.x; const cy = anchor.y - 8;
+              // Shot box center (percent coords already represent center due to translate(-50%, -50%))
+              const boxCX = prevRow.x * w; const boxCY = prevRow.y * h;
+              // Measure actual shot box width (after scaling) for proportional offsets
+              let boxW = 120;
+              const shotEl = canvasRef.current?.querySelector(`[data-shot-box="${prevRow.id}"]`);
+              if (shotEl) { try { const br = shotEl.getBoundingClientRect(); if (br?.width) boxW = br.width; } catch {} }
+              const boxH = 30; // heuristic height only for vertical anchor reference
+              // Direction: Right flipper early-> +x, late-> -x; Left flipper mirrored
+              const dirLate = lastRecall.delta > 0 ? 1 : (lastRecall.delta < 0 ? -1 : 0);
               let shiftSign = 0;
               if (dirLate !== 0) {
-                // Right flipper (current correct behavior): early (delta<0) shifts right, late shifts left.
-                // Left flipper should be mirrored: early shifts LEFT, late shifts RIGHT.
-                if (lastRecall.side === 'R') {
-                  shiftSign = dirLate === -1 ? 1 : -1; // unchanged
-                } else {
-                  // Mirror for left flipper
-                  shiftSign = dirLate === -1 ? -1 : 1;
-                }
+                if (lastRecall.side === 'R') shiftSign = dirLate === -1 ? 1 : -1; else shiftSign = dirLate === -1 ? -1 : 1;
               }
-              const absDelta = Math.abs(lastRecall.delta);
-              let endX = boxCX; // default perfect center
-              const endY = boxCY + boxH/2; // bottom center of box
-              if (absDelta !== 0) {
-                // Placement rule summary:
-                // Slight: midpoint of box aligns with 25% (early) or 75% (late) horizontal mark (internal). We'll treat that as ±0.25 * boxW from center.
-                // Fairly: midpoint aligns with shot box edge (±0.5 * boxW from center).
-                // Very: whole feedback box sits fully outside, touching edge. We'll set end point just outside box edge (±0.5*boxW) and later offset box itself outward.
-                // We'll compute endX as the point where the yellow line terminates (bottom of feedback box). For Very, we put endpoint at box edge, then shift the box further outward.
-                let severity = lastRecall.severity; // 'slight' | 'fairly' | 'very'
-                if (severity === 'perfect') severity = null;
-                if (severity === 'slight') {
-                  endX = boxCX + shiftSign * (0.25 * boxW);
-                } else if (severity === 'fairly') {
-                  // move a further 15% of box width toward side
-                  endX = boxCX + shiftSign * (0.65 * boxW);
-                } else if (severity === 'very') {
-                  // bring in closer (previously 0.80)
-                  endX = boxCX + shiftSign * (0.65 * boxW);
-                }
-              }
-              // Build feedback text (reversed order): "Slight Early", "Fairly Late", etc. Perfect => "Perfect".
+              // Proportional factor (of half shot box width): perfect 0, slight 0.50, fairly 1.00, very 1.75
+              let factor = 0;
+              if (lastRecall.severity === 'slight') factor = 0.50;
+              else if (lastRecall.severity === 'fairly') factor = 1.00;
+              else if (lastRecall.severity === 'very') factor = 1.75;
+              const endX = boxCX + shiftSign * (factor * (boxW / 2));
+              const endY = boxCY + boxH/2;
+              // Feedback text content
               let word1, word2 = null;
               if (lastRecall.severity === 'perfect') {
                 word1 = 'Perfect';
               } else {
-                // Capitalize helper
-                const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-                word1 = cap(lastRecall.severity); // Slight / Fairly / Very
-                word2 = cap(lastRecall.label);     // Early / Late
+                const cap = (s)=> s.charAt(0).toUpperCase() + s.slice(1);
+                word1 = cap(lastRecall.severity);
+                word2 = cap(lastRecall.label);
               }
-              // Background sizing heuristic: width based on longest line length * charWidth approximation.
-              const tScale = scale;
-              const fontSize = 10 * tScale;
-              const lineGap = 2 * tScale; // tighter explicit gap
-              const padX = 6 * tScale; const padY = 4 * tScale;
+              // Feedback box sizing
+              const tScale = scale; const fontSize = 10 * 1.5 * tScale; const lineGap = 2 * tScale;
+              const fbPadX = 6 * tScale; const fbPadY = 4 * tScale;
               const longest = word2 ? Math.max(word1.length, word2.length) : word1.length;
-              const approxCharW = fontSize * 0.6; // better than fixed 6
+              const approxCharW = fontSize * 0.6;
               const textW = longest * approxCharW;
               const lineCount = word2 ? 2 : 1;
-              const lineHeight = fontSize; // use fontSize baseline, we add custom gap
+              const lineHeight = fontSize;
               const contentHeight = lineCount === 1 ? lineHeight : (lineHeight*2 + lineGap);
-              const boxHeight = contentHeight + padY*2;
-              const boxWidth = textW + padX*2;
-              // Adjust box horizontal for VERY severity so whole box is outside touching edge.
-              let boxCenterX = endX;
-              if (lastRecall.severity === 'very' && lastRecall.severity !== 'perfect') {
-                // Adjust gutter to be smaller since distance reduced
-                boxCenterX = endX + (shiftSign * (boxWidth/2 + 1 * tScale));
-              }
+              const boxHeight = contentHeight + fbPadY*2;
+              const boxWidth = textW + fbPadX*2;
+              const boxCenterX = endX; // center box at computed endX
               const boxX = boxCenterX - boxWidth/2;
-              // Vertical positioning refinement: introduce a small scalable gap and pointer triangle for clarity.
-              // Position: move feedback box further downward so its bottom is 50% of shot box height below shot box bottom.
-              // shot box height heuristic = boxH (30 * scale influence only through visual ref). Use 0.5 * boxH offset.
-              const downwardOffset = 0.80 * boxHeight; // 80% of shot box height (moved further down)
-              const boxY = endY + downwardOffset - boxHeight; // bottom of box = endY + downwardOffset
+              const downwardOffset = 0.80 * boxHeight;
+              const boxY = endY + downwardOffset - boxHeight;
               lineEl = (
                 <g>
                   <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke="#eab308" strokeWidth={4 * tScale} strokeLinecap="round" />
                   <rect x={boxX} y={boxY} width={boxWidth} height={boxHeight} rx={6 * tScale} ry={6 * tScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * tScale} />
                   <text
                     x={boxCenterX}
-                    y={boxY + padY + fontSize * 0.78}
+                    y={boxY + fbPadY + fontSize * 0.78}
                     fontSize={fontSize}
                     fontFamily="ui-sans-serif"
                     fontWeight={600}
@@ -779,14 +734,15 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                   </text>
                 </g>
               );
+              recallNode = (
+                <g>
+                  {lineEl}
+                  <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6 * textScale} ry={6 * textScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * textScale} />
+                  {/* Display 'NP' (Not Possible) instead of '00' when the recalled value is 0 */}
+                  <text x={cx} y={cy - rectH/2 + fs/2 - 1 * textScale} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label === '00' ? 'NP' : label}</text>
+                </g>
+              );
             }
-            recallNode = (
-              <g>
-                {lineEl}
-                <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6 * textScale} ry={6 * textScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * textScale} />
-                <text x={cx} y={cy - rectH/2 + fs/2 - 1 * textScale} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label}</text>
-              </g>
-            );
           }
           // Split rendering: green guide lines behind (z-0) already fine; yellow feedback & recall node should be ABOVE flippers/boxes.
           // We'll draw green lines first (existing layer), then overlay a second SVG (z-30) for yellow feedback + recall node.
@@ -842,7 +798,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
 // ---------- main component ----------
 export default function App() {
   const [toasts, setToasts] = useState([]); // {id,msg}
-  const pushToast = useCallback((msg)=>{
+  const _pushToast = useCallback((msg)=>{
     const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random());
     setToasts(t=>[...t,{id,msg}]);
     setTimeout(()=> setToasts(t=> t.filter(x=>x.id!==id)), 3200);
@@ -1316,6 +1272,30 @@ export default function App() {
   // Fullscreen playfield state
   const [playfieldFullscreen, setPlayfieldFullscreen] = useState(false);
   const [fullscreenScale, setFullscreenScale] = useState(1); // current scale reported by fullscreen playfield
+  // Prevent body/document scrolling when fullscreen overlay is active (removes stray window scrollbar)
+  useEffect(() => {
+    if (!playfieldFullscreen) return; // only lock when entering fullscreen
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [playfieldFullscreen]);
+  // Allow pressing Escape to exit fullscreen (mirrors clicking Exit button)
+  useEffect(() => {
+    if (!playfieldFullscreen) return;
+    function handleEsc(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setPlayfieldFullscreen(false);
+      }
+    }
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [playfieldFullscreen]);
   // Focus recall input when session starts (initialized true and not final phase)
   useEffect(()=>{
     if (initialized && !finalPhase) {
@@ -2247,13 +2227,13 @@ export default function App() {
                   )}
                   <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
                 </div>
-                {/* Quick recall chips (values 5..100 plus centered Not Possible) */}
+                {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
                 <div className="mt-4">
                   {(() => {
-                    const values = Array.from({length:20},(_,k)=> (k+1)*5); // 5..100
+                    const values = Array.from({length:19},(_,k)=> (k+1)*5); // 5..95
                     const ordered = selectedSide === 'L' ? values : [...values].reverse();
                     return (
-                      <div className="w-full select-none flex flex-col items-stretch gap-2">
+                      <div className="w-full select-none flex flex-col items-stretch gap-3">
                         <div className="flex gap-1 w-full">
                           {ordered.map(v => (
                             <div key={v} className="flex-1 min-w-0">
@@ -2266,13 +2246,11 @@ export default function App() {
                           ))}
                         </div>
                         <div className="flex justify-center">
-                          <div className="w-32">
-                            <Chip
-                              className="w-full px-1 py-1"
-                              active={false}
-                              onClick={()=>submitAttempt(0)}
-                            >Not Possible</Chip>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={()=>submitAttempt(0)}
+                            className="px-5 py-2 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 text-xs font-medium"
+                          >Not Possible</button>
                         </div>
                       </div>
                     );
@@ -2338,7 +2316,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={()=> setPlayfieldFullscreen(false)}
-                          title="Exit fullscreen"
+                          title="Exit fullscreen (Esc)"
                           style={{
                             padding: `${padY}px ${padX*8}px`,
                             fontSize: fontSize * 0.9,
@@ -2365,36 +2343,85 @@ export default function App() {
                     </div>
                   );
                 })()}
-                <div className="flex-1 flex flex-col items-stretch px-4 pb-4 gap-4 overflow-auto">
+                {/* Main fullscreen content column. Use overflow-hidden to avoid phantom scrollbar when content fits. */}
+                <div className="flex-1 flex flex-col items-stretch px-4 pb-4 gap-4 overflow-hidden">
                     <div className="relative flex-1 flex flex-col min-h-0">
                       <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s=> setFullscreenScale(s)} />
                     </div>
                     <div className="w-full mx-auto pt-2">
-                    {/* Quick recall chips duplicated for fullscreen */}
+                    {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
                     {(() => {
-                      const values = Array.from({length:20},(_,k)=> (k+1)*5); // 5..100
+                      // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
+                      // Strategy:
+                      // 1. Measure available container width (window.innerWidth minus side padding ~32px).
+                      // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
+                      //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
+                      // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
+                      const values = Array.from({length:19},(_,k)=> (k+1)*5); // 5..95
                       const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                      // Increase base font size for better fill inside chip and clamp for readability.
-                      const chipFont = Math.min( Math.round(14 * fullscreenScale), 42 );
+                      const totalChips = 19; // numeric chips only (NP below)
+                      // Estimate inner horizontal padding (px). Container uses px-4 on parent (16px each side).
+                      const horizontalPadding = 32; // 16 left + 16 right
+                      const avail = Math.max(300, window.innerWidth - horizontalPadding); // safeguard
+                      // Increase overall size (~25%) and tighten spacing.
+                      const maxDiameter = 112; // was 90
+                      const minDiameter = 26;
+                      const baseGap = 3 * fullscreenScale; // target very tight spacing (~2-3px final)
+                      // First pass assume gap = baseGap => candidate diameter
+                      let gap = baseGap;
+                      let d = (avail - (totalChips - 1) * gap) / totalChips;
+                      if (d > maxDiameter) {
+                        // Grow gap to consume extra space while keeping diameter at cap
+                        d = maxDiameter;
+                        gap = (avail - totalChips * d) / (totalChips - 1);
+                      }
+                      if (d < minDiameter) {
+                        // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
+                        gap = 4; // minimal aesthetic gap
+                        d = (avail - (totalChips - 1) * gap) / totalChips;
+                        if (d < 20) d = 20; // absolute floor
+                      }
+                      // Final safety clamp
+                      d = Math.max(20, Math.min(maxDiameter, d));
+                      // Recompute gap precisely to fill width (avoid leftover). Bound gap min/max after recompute.
+                      gap = (avail - totalChips * d) / (totalChips - 1);
+                      const minGap = 2, maxGap = 24; // allow tighter minimum
+                      if (gap < minGap) {
+                        // Reduce diameter slightly so gap hits minGap.
+                        const targetD = (avail - (totalChips - 1) * minGap) / totalChips;
+                        d = Math.max(20, Math.min(maxDiameter, targetD));
+                        gap = minGap;
+                      } else if (gap > maxGap) {
+                        // Increase diameter so gap hits maxGap.
+                        const targetD = (avail - (totalChips - 1) * maxGap) / totalChips;
+                        d = Math.max(20, Math.min(maxDiameter, targetD));
+                        gap = maxGap;
+                      }
+                      const diameter = Math.round(d);
+                      const chipFont = Math.round(diameter * 0.65); // enlarge ~25% more from 0.52
+                      // Container style: use exact width so chips line up flush without overflow/underflow.
+                      const containerStyle = { width: avail, margin: '0 auto' };
                       return (
-                        <div className="w-full select-none flex flex-col items-stretch gap-2">
-                          <div className="flex gap-1 w-full">
+                        <div className="w-full select-none" style={containerStyle}>
+                          <div className="flex items-center" style={{ gap: Math.round(gap) }}>
                             {ordered.map(v => (
-                              <div key={v} className="flex-1 min-w-0">
-                                <Chip
-                                  className="w-full px-1 py-2"
-                                  active={false}
-                                  onClick={()=>submitAttempt(v)}
-                                ><span style={{fontSize: chipFont, lineHeight: 1}}>{format2(v)}</span></Chip>
-                              </div>
+                              <button
+                                key={v}
+                                type="button"
+                                onClick={()=>submitAttempt(v)}
+                                className="rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0"
+                                style={{ width: diameter, height: diameter, fontSize: chipFont, lineHeight: 1, fontWeight: 600 }}
+                                aria-label={`Recall ${format2(v)}`}
+                              >{format2(v)}</button>
                             ))}
                           </div>
-                          <div className="flex justify-center">
-                            <Chip
-                              className="px-3 py-2 whitespace-nowrap"
-                              active={false}
+                          <div className="mt-4 flex justify-center">
+                            <button
+                              type="button"
                               onClick={()=>submitAttempt(0)}
-                              ><span style={{fontSize: chipFont, lineHeight: 1}}>Not Possible</span></Chip>
+                              className="px-6 py-3 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.97] transition-transform text-sm font-medium"
+                              style={{ fontSize: Math.max(12, Math.round(chipFont*0.75)) }}
+                            >Not Possible</button>
                           </div>
                         </div>
                       );
