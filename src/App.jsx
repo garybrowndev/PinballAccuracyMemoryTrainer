@@ -16,12 +16,13 @@ const format2 = (n) => {
 };
 const formatPct = (n) => `${format2(n)}%`;
 // Severity color mapping (Perfect, Slight, Fairly, Very)
-// Tailwind palette approximations: green (emerald), yellow-green (lime), yellow (amber), red (rose)
+// Updated per request: perfect bright green, slight darker green, fairly yellow, very bright red
+// Chosen accessible hues (WCAG contrast vs white/black text considered). Adjust if future theme changes.
 const SEVERITY_COLORS = {
-  perfect: '#059669',      // emerald-600
-  slight: '#65a30d',       // lime-600 (yellow-green)
-  fairly: '#ca8a04',       // amber-600 (yellow)
-  very: '#dc2626',         // red-600
+  perfect: '#4ade80',  // lighter/brighter green (emerald-400)
+  slight:  '#15803d',  // darker green (emerald-700)
+  fairly:  '#f59e0b',  // yellow (amber-500)
+  very:    '#dc2626',  // bright red (red-600)
 };
 
 // Stable id generator for rows to prevent input remount/focus loss
@@ -685,11 +686,11 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               if (dirLate !== 0) {
                 if (lastRecall.side === 'R') shiftSign = dirLate === -1 ? 1 : -1; else shiftSign = dirLate === -1 ? -1 : 1;
               }
-              // Proportional factor (of half shot box width): perfect 0, slight 0.50, fairly 1.00, very 1.75
+              // Proportional factor (of half shot box width): perfect 0, slight 0.50, fairly 1.00, very 1.65
               let factor = 0;
               if (lastRecall.severity === 'slight') factor = 0.50;
               else if (lastRecall.severity === 'fairly') factor = 1.00;
-              else if (lastRecall.severity === 'very') factor = 1.75;
+              else if (lastRecall.severity === 'very') factor = 1.65;
               const endX = boxCX + shiftSign * (factor * (boxW / 2));
               const endY = boxCY + boxH/2;
               // Feedback text content
@@ -716,10 +717,21 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               const boxX = boxCenterX - boxWidth/2;
               const downwardOffset = 0.80 * boxHeight;
               const boxY = endY + downwardOffset - boxHeight;
+              // Update: pill fill now matches severity color; border same color; text remains black for contrast
               lineEl = (
                 <g>
                   <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke="#eab308" strokeWidth={4 * tScale} strokeLinecap="round" />
-                  <rect x={boxX} y={boxY} width={boxWidth} height={boxHeight} rx={6 * tScale} ry={6 * tScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * tScale} />
+                  <rect
+                    x={boxX}
+                    y={boxY}
+                    width={boxWidth}
+                    height={boxHeight}
+                    rx={6 * tScale}
+                    ry={6 * tScale}
+                    fill={SEVERITY_COLORS[lastRecall.severity] || '#eab308'}
+                    stroke={SEVERITY_COLORS[lastRecall.severity] || '#eab308'}
+                    strokeWidth={1 * tScale}
+                  />
                   <text
                     x={boxCenterX}
                     y={boxY + fbPadY + fontSize * 0.78}
@@ -727,7 +739,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                     fontFamily="ui-sans-serif"
                     fontWeight={600}
                     textAnchor="middle"
-                    fill={SEVERITY_COLORS[lastRecall.severity] || '#78350f'}
+                    fill="#000"
                   >
                     <tspan x={boxCenterX}>{word1}</tspan>
                     {word2 && <tspan x={boxCenterX} dy={lineGap + lineHeight}>{word2}</tspan>}
