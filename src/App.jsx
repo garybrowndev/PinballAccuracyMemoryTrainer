@@ -1698,22 +1698,13 @@ export default function App() {
                                     selected={true}
                                     onClick={(e)=>{
                                       e.stopPropagation();
-                                      // Deselect then immediately open selection popup so user doesn't need second click
+                                      // Deselect and show menu directly
                                       setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:'', location:'', type:''}; return next; });
-                                      // Capture current tile rect as fallback
-                                      const prevRect = e.currentTarget.getBoundingClientRect();
-                                      // After state commit & re-render, measure the new "Select Shot" chip for accurate anchor
-                                      const openFromChip = () => {
-                                        const chipEl = document.querySelector(`[data-shot-chip="${r.id}"]`);
-                                        const rect = chipEl ? chipEl.getBoundingClientRect() : prevRect;
-                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
-                                        setOpenShotMenuId(r.id);
-                                        setOpenLocMenuId(null);
-                                      };
-                                      // Use rAF to ensure layout reflects new chip; fallback timeout if needed
-                                      requestAnimationFrame(()=> openFromChip());
-                                      // Safety fallback in case rAF missed (very unlikely)
-                                      setTimeout(()=>{ if(openShotMenuId!==r.id) openFromChip(); }, 50);
+                                      // Open the shot selection menu using the same logic as the "Select Shot" chip
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY - ((rect.bottom - rect.top) * 0.7)});
+                                      setOpenShotMenuId(r.id);
+                                      setOpenLocMenuId(null);
                                     }}
                                   />
                                 ) : (
