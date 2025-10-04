@@ -72,6 +72,47 @@ function ElementTile({ name, selected, onSelect }) {
     </button>
   );
 }
+
+// Inline thumbnail used inside table cell (smaller API: no selection ring offset, but clickable area opens menu / toggles)
+function InlineElementThumb({ name, selected, onClick }) {
+  const slug = name ? elementSlug(name) : null;
+  const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
+  const [imgVisible, setImgVisible] = React.useState(false);
+  const size = 80; // same as selection tiles (w-20 h-20)
+  // If no name (not selected) just show original placeholder styling handled by parent fallback.
+  if (!name) return null;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-shot-chip-thumb
+      className={(selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500') + ' relative rounded-md overflow-hidden bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900'}
+      style={{ width: size, height: size }}
+      aria-pressed={selected}
+    >
+      {!imgVisible && (
+        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+          {name}
+        </div>
+      )}
+      {imgSrc && (
+        <img
+          src={imgSrc}
+          alt={name}
+          onLoad={()=> setImgVisible(true)}
+          onError={()=> setImgVisible(false)}
+          className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
+          draggable={false}
+        />
+      )}
+      {imgVisible && (
+        <div className="absolute bottom-0 left-0 right-0 bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center select-none">
+          {name}
+        </div>
+      )}
+    </button>
+  );
+}
 // New taxonomy: separate base element from location. All bases share the same location set.
 // Location 'Base' (or null) means unsuffixed (e.g. "Ramp").
 // BASE_ELEMENTS ordered (most common -> least common) as of 2025‑09‑26.
@@ -1587,16 +1628,23 @@ export default function App() {
                             const closeMenus = () => { setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null); };
                             return (
                               <div className="flex items-center gap-2 relative">
-                                <Chip
-                                  active={!!base}
-                                  data-shot-chip={r.id}
-                                  onClick={(e)=>{
-                                    e.stopPropagation();
-                                    if (base) {
-                                      // Deselect shot + cascade location
+                                {base ? (
+                                  <InlineElementThumb
+                                    name={base}
+                                    selected={true}
+                                    onClick={(e)=>{
+                                      e.stopPropagation();
+                                      // Clicking when selected toggles off (previous behavior)
                                       setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:'', location:'', type:''}; return next; });
                                       closeMenus();
-                                    } else {
+                                    }}
+                                  />
+                                ) : (
+                                  <Chip
+                                    active={false}
+                                    data-shot-chip={r.id}
+                                    onClick={(e)=>{
+                                      e.stopPropagation();
                                       if (shotMenuOpen) {
                                         closeMenus();
                                       } else {
@@ -1605,9 +1653,9 @@ export default function App() {
                                         setOpenShotMenuId(r.id);
                                         setOpenLocMenuId(null);
                                       }
-                                    }
-                                  }}
-                                >{base || 'Select Shot'}</Chip>
+                                    }}
+                                  >Select Shot</Chip>
+                                )}
                                 {base && (
                                   <Chip
                                     active={!!location}
