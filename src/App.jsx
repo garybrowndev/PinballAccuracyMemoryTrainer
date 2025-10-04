@@ -138,13 +138,11 @@ const BASE_ELEMENTS = [
   // Very Common / Core geometry & ubiquitous scoring surfaces
   'Orbit','Ramp','Standups','Lane','Bumper','Spinner',
   // Common but slightly more situational or not on every single game
-  'Drops','Scoop','Saucer','VUK','Captive Ball',
+  'Drops','Scoop','Saucer','VUK','Lock','Captive Ball',
   // Regular specialty / feature mechs & control elements
-  'Magnet','Kickback','Horseshoe','Rollover','Gate',
+  'Magnet','Horseshoe','Rollover','Gate',
   // Occasional (era or design style dependent)
-  'Loop','Vari Target','Captive','Deadend','Toy',
-  // Rare / Niche / Specific mechanical assemblies or less standardized names
-  'Roto Target','Waterfall','Alley','Capture'
+  'Vari Target','Deadend','Toy','Roto Target'
 ];
 // Added extended location variants to support richer spatial descriptors in practice:
 // Previous: Left, Center, Right. New additions: Bottom, Top, Upper, Lower, Side.
@@ -464,18 +462,53 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
         {rows.map(r=>{
           const sel = r.id === selectedId;
           const misordered = misorderedIds?.has(r.id);
+          const hasType = !!r.type;
+          const basePart = r.base || '';
+          const slug = basePart ? elementSlug(basePart) : null;
+          const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
+          const [imgVisible, setImgVisible] = React.useState(false); // per render; lightweight
+          // Decide if we try to show image (only when base present)
+          const showImageAttempt = !!imgSrc;
+          const size = 80; // tile size to match selector
           return (
             <div
               key={r.id}
-              style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)' }}
+              style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)', width: size, height: size }}
               onMouseDown={(e)=>handleMouseDown(e,r.id)}
-              className={`absolute z-30 select-none px-2 py-1 rounded-lg text-[11px] shadow border bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
+              className={`absolute z-30 select-none rounded-md shadow border overflow-hidden bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
             >
-              <div className="font-medium truncate max-w-[110px] text-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
-              <div className="flex gap-1 mt-0.5">
-                <span className="px-1 rounded bg-slate-100">L {r.initL != null ? format2(r.initL) : '—'}</span>
-                <span className="px-1 rounded bg-slate-100">R {r.initR != null ? format2(r.initR) : '—'}</span>
-              </div>
+              {/* Background image layer */}
+              {showImageAttempt && (
+                <img
+                  src={imgSrc}
+                  alt={r.type}
+                  onLoad={()=> setImgVisible(true)}
+                  onError={()=> setImgVisible(false)}
+                  className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
+                  draggable={false}
+                />
+              )}
+              {/* Top overlay with type text when image present */}
+              {imgVisible && (
+                <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>{r.type}</div>
+              )}
+              {/* L/R values overlay moved to bottom */}
+              {imgVisible && (
+                <div className="absolute left-0 right-0 flex justify-between text-[11px] font-medium text-white drop-shadow pointer-events-none bg-black/35 backdrop-blur-[1px] px-1 py-[1px]" style={{ bottom: '1px' }}>
+                  <span>L {r.initL != null ? format2(r.initL) : '—'}</span>
+                  <span>R {r.initR != null ? format2(r.initR) : '—'}</span>
+                </div>
+              )}
+              {/* Fallback original content if no image (or no type) */}
+              {!imgVisible && (
+                <div className="absolute inset-0 flex flex-col p-1 text-[11px]">
+                  <div className="font-medium truncate max-w-[70px] text-center mt-4 flex-1 flex items-start justify-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
+                  <div className="mt-auto flex justify-between text-[11px]">
+                    <span className="px-1 rounded bg-slate-100">L {r.initL != null ? format2(r.initL) : '—'}</span>
+                    <span className="px-1 rounded bg-slate-100">R {r.initR != null ? format2(r.initR) : '—'}</span>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
                 className="absolute -top-[18px] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]"
@@ -684,7 +717,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
       }>
   <PlayfieldScenery />
         {rows.map(r => {
-          const style = fullscreen ? {
+          // Practice playfield: NO L/R values. Show image tile if available (square 80x80), else fallback text box.
+          const styleBase = fullscreen ? {
             left: `${r.x*100}%`,
             top: `${r.y*100}%`,
             transform: `translate(-50%, -50%) scale(${scale})`,
@@ -693,19 +727,48 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             top: `${r.y*100}%`,
             transform: 'translate(-50%, -50%)'
           };
+          const basePart = r.base || '';
+          const slug = basePart ? elementSlug(basePart) : null;
+          const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
+          const [imgVisible, setImgVisible] = React.useState(false);
+          const showImageAttempt = !!imgSrc;
+          const size = 80; // match setup tile size when image
+          if (showImageAttempt) {
+            return (
+              <div
+                key={r.id}
+                data-shot-box={r.id}
+                style={{ ...styleBase, width: size, height: size }}
+                className={`absolute z-20 select-none rounded-md shadow border overflow-hidden bg-white border-slate-300 origin-center ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
+                title={r.type}
+              >
+                <img
+                  src={imgSrc}
+                  alt={r.type}
+                  onLoad={()=> setImgVisible(true)}
+                  onError={()=> setImgVisible(false)}
+                  className={(imgVisible?'opacity-100':'opacity-0')+ ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
+                  draggable={false}
+                />
+                {imgVisible && (
+                  <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>{r.type || '—'}</div>
+                )}
+                {!imgVisible && (
+                  <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium px-1 text-center" title={r.type||'—'}>{r.type||'—'}</div>
+                )}
+              </div>
+            );
+          }
+          // Fallback standard-size (previously w-24 h-20) text box (keep prior proportions) without L/R
           return (
             <div
               key={r.id}
               data-shot-box={r.id}
-              style={style}
-              className={`absolute z-20 select-none px-2 py-1 rounded-lg shadow border bg-white border-slate-300 origin-center ${fullscreen ? 'text-[11px]' : 'text-[11px]'} ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
+              style={styleBase}
+              className={`absolute z-20 select-none rounded-lg shadow border bg-white border-slate-300 origin-center w-24 h-20 overflow-hidden ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
               title={r.type}
             >
-              <div className="font-medium truncate max-w-[120px] text-center" title={r.type}>{r.type || '—'}</div>
-              <div className="flex gap-1 mt-0.5 opacity-0 select-none pointer-events-none">
-                <span className="px-1 rounded bg-slate-100">L 00</span>
-                <span className="px-1 rounded bg-slate-100">R 00</span>
-              </div>
+              <div className="absolute inset-0 flex items-center justify-center px-1 text-center text-[11px] font-medium" title={r.type||'—'}>{r.type||'—'}</div>
             </div>
           );
         })}
