@@ -25,8 +25,53 @@ const SEVERITY_COLORS = {
   very:    '#dc2626',  // bright red (red-600)
 };
 
+// --- Image infrastructure for shot base element tiles ---
+// In future you will host JPGs at a backend/static path. For now we attempt to load them optimistically.
+// Convention: filename derived from element slug (lowercase, spaces -> dashes): e.g. "Left Ramp" -> "left-ramp.jpg".
+// If an image 404s the browser will show the fallback text layer (we keep text absolutely positioned).
+// You can later move IMAGE_BASE_URL to an environment variable if desired.
+const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
+function elementSlug(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
+// Square selectable tile for base element selection (replaces textual chips in popup)
+function ElementTile({ name, selected, onSelect }) {
+  const slug = elementSlug(name);
+  const imgSrc = `${IMAGE_BASE_URL}/${slug}.jpg`;
+  const [imgVisible, setImgVisible] = React.useState(false); // show only after successful load
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={(selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500') + ' relative w-20 h-20 rounded-md overflow-hidden bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900'}
+      aria-pressed={selected}
+    >
+      {/* Centered text shown until image successfully loads (or if missing) */}
+      {!imgVisible && (
+        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+          {name}
+        </div>
+      )}
+      {/* Render image only once it has loaded to avoid broken icon flash */}
+      <img
+        src={imgSrc}
+        alt={name}
+        onLoad={()=> setImgVisible(true)}
+        onError={()=> setImgVisible(false)}
+        className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
+        draggable={false}
+      />
+      {/* Bottom overlay label if image present */}
+      {imgVisible && (
+        <div className="absolute bottom-0 left-0 right-0 bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center select-none">
+          {name}
+        </div>
+      )}
+      {selected && <div className="absolute inset-0 ring-4 ring-offset-2 ring-slate-900 pointer-events-none" />}
+    </button>
+  );
+}
 // New taxonomy: separate base element from location. All bases share the same location set.
 // Location 'Base' (or null) means unsuffixed (e.g. "Ramp").
 // BASE_ELEMENTS ordered (most common -> least common) as of 2025‑09‑26.
@@ -1328,19 +1373,25 @@ export default function App() {
     {/* Detached popups (portals) for shot & location selection */}
     {shotMenuAnchor && openShotMenuId!=null && createPortal(
       <div
-        className="absolute z-50 w-72 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-3 gap-2"
+        className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
         style={{ left: Math.max(8, shotMenuAnchor.x) + 'px', top: shotMenuAnchor.y + 'px' }}
         onClick={e=> e.stopPropagation()}
       >
-        {BASE_ELEMENTS.map(b => (
-          <button
-            key={b}
-            type="button"
-            onClick={()=>{ setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:b, location:'', type: buildType(b,'')}; } return next; }); setOpenShotMenuId(null); setShotMenuAnchor(null); }}
-            className={(rows.find(r=>r.id===shotMenuAnchor.id)?.base===b?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
-          >{b}</button>
-        ))}
-        <div className="col-span-3 mt-1 text-[10px] text-slate-400 text-center">Select shot</div>
+        {BASE_ELEMENTS.map(b => {
+          const isSel = rows.find(r=>r.id===shotMenuAnchor.id)?.base===b;
+          return (
+            <ElementTile
+              key={b}
+              name={b}
+              selected={isSel}
+              onSelect={()=>{
+                setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:b, location:'', type: buildType(b,'')}; } return next; });
+                setOpenShotMenuId(null); setShotMenuAnchor(null);
+              }}
+            />
+          );
+        })}
+        <div className="col-span-4 -mb-1 text-[10px] text-slate-400 text-center">Select shot element</div>
       </div>,
       document.body
     )}
