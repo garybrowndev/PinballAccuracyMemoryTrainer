@@ -1827,9 +1827,16 @@ export default function App() {
                             <div className="mt-5">
                               <Chip
                                 active={r.initL===0}
-                                onClick={()=>{
-                                  if (r.initL===0) return;
-                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL:0}; return next; });
+                                onClick={() => {
+                                  const range = computeAllowedRange(rows, 'L', i);
+                                  if (r.initL === 0) {
+                                    if (range) {
+                                      const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
+                                      setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initL: mid }; return next; });
+                                    }
+                                  } else {
+                                    setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initL: 0 }; return next; });
+                                  }
                                 }}
                               >Not Possible</Chip>
                             </div>
@@ -1904,9 +1911,16 @@ export default function App() {
                             <div className="mt-5">
                               <Chip
                                 active={r.initR===0}
-                                onClick={()=>{
-                                  if (r.initR===0) return;
-                                  setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initR:0}; return next; });
+                                onClick={() => {
+                                  const range = computeAllowedRange(rows, 'R', i);
+                                  if (r.initR === 0) {
+                                    if (range) {
+                                      const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
+                                      setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initR: mid }; return next; });
+                                    }
+                                  } else {
+                                    setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initR: 0 }; return next; });
+                                  }
                                 }}
                               >Not Possible</Chip>
                             </div>
