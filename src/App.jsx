@@ -40,34 +40,33 @@ function ElementTile({ name, selected, onSelect }) {
   const slug = elementSlug(name);
   const imgSrc = `${IMAGE_BASE_URL}/${slug}.jpg`;
   const [imgVisible, setImgVisible] = React.useState(false); // show only after successful load
+  const size = 80; // consistent square image size
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={(selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500') + ' relative w-20 h-20 rounded-md overflow-hidden bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900'}
+      className={(selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500') + ' relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible'}
+      style={{ width: size, height: size + 18 }}
       aria-pressed={selected}
     >
-      {/* Centered text shown until image successfully loads (or if missing) */}
-      {!imgVisible && (
-        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
-          {name}
-        </div>
-      )}
-      {/* Render image only once it has loaded to avoid broken icon flash */}
-      <img
-        src={imgSrc}
-        alt={name}
-        onLoad={()=> setImgVisible(true)}
-        onError={()=> setImgVisible(false)}
-        className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
-        draggable={false}
-      />
-      {/* Bottom overlay label if image present */}
-      {imgVisible && (
-        <div className="absolute bottom-0 left-0 right-0 bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center select-none">
-          {name}
-        </div>
-      )}
+      <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
+        {!imgVisible && (
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+            {name}
+          </div>
+        )}
+        <img
+          src={imgSrc}
+          alt={name}
+          onLoad={()=> setImgVisible(true)}
+          onError={()=> setImgVisible(false)}
+          className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md'}
+          draggable={false}
+        />
+      </div>
+      <div className="absolute left-0" style={{ top: size, width: size }}>
+        <div className="bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center rounded-b-md select-none truncate">{name}</div>
+      </div>
       {selected && <div className="absolute inset-0 ring-4 ring-offset-2 ring-slate-900 pointer-events-none" />}
     </button>
   );
@@ -78,38 +77,38 @@ function InlineElementThumb({ name, selected, onClick }) {
   const slug = name ? elementSlug(name) : null;
   const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
   const [imgVisible, setImgVisible] = React.useState(false);
-  const size = 80; // same as selection tiles (w-20 h-20)
-  // If no name (not selected) just show original placeholder styling handled by parent fallback.
+  const size = 80; // square image area
   if (!name) return null;
   return (
     <button
       type="button"
       onClick={onClick}
       data-shot-chip-thumb
-      className={(selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500') + ' relative rounded-md overflow-hidden bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900'}
-      style={{ width: size, height: size }}
+      className={(selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500') + ' relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible'}
+      style={{ width: size, height: size + 18 }} // extra space for hanging label
       aria-pressed={selected}
     >
-      {!imgVisible && (
-        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
-          {name}
-        </div>
-      )}
-      {imgSrc && (
-        <img
-          src={imgSrc}
-          alt={name}
-          onLoad={()=> setImgVisible(true)}
-          onError={()=> setImgVisible(false)}
-          className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
-          draggable={false}
-        />
-      )}
-      {imgVisible && (
-        <div className="absolute bottom-0 left-0 right-0 bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center select-none">
-          {name}
-        </div>
-      )}
+      <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
+        {!imgVisible && (
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+            {name}
+          </div>
+        )}
+        {imgSrc && (
+          <img
+            src={imgSrc}
+            alt={name}
+            onLoad={()=> setImgVisible(true)}
+            onError={()=> setImgVisible(false)}
+            className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md'}
+            draggable={false}
+          />
+        )}
+      </div>
+      {/* Hanging label below the square image (no longer overlapping). Use same style but positioned outside. */}
+      <div className="absolute left-0" style={{ top: size, width: size }}>
+        <div className="bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center rounded-b-md select-none truncate">{name}</div>
+      </div>
     </button>
   );
 }
@@ -373,6 +372,8 @@ const Chip = ({ active, children, onClick, className = "", disabled = false }) =
 // Simple playfield editor for arranging shots spatially & adjusting flipper percentages
 function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedIds }) {
   const canvasRef = React.useRef(null);
+  // Track which shot images have successfully loaded (id -> true). Avoid per-item hooks inside map.
+  const [imageLoadedMap, setImageLoadedMap] = useState({});
   // Auto-arrange rows along arc; effect recomputes when rows array changes length or order.
   useEffect(() => {
     if (!rows.length) return;
@@ -466,7 +467,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           const basePart = r.base || '';
           const slug = basePart ? elementSlug(basePart) : null;
           const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
-          const [imgVisible, setImgVisible] = React.useState(false); // per render; lightweight
+          const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
           // Decide if we try to show image (only when base present)
           const showImageAttempt = !!imgSrc;
           const size = 80; // tile size to match selector
@@ -482,8 +483,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 <img
                   src={imgSrc}
                   alt={r.type}
-                  onLoad={()=> setImgVisible(true)}
-                  onError={()=> setImgVisible(false)}
+                  onLoad={()=> setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
+                  onError={()=> setImageLoadedMap(m => { if (!m[r.id]) return m; const copy = { ...m }; delete copy[r.id]; return copy; })}
                   className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
                   draggable={false}
                 />
@@ -1697,9 +1698,22 @@ export default function App() {
                                     selected={true}
                                     onClick={(e)=>{
                                       e.stopPropagation();
-                                      // Clicking when selected toggles off (previous behavior)
+                                      // Deselect then immediately open selection popup so user doesn't need second click
                                       setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:'', location:'', type:''}; return next; });
-                                      closeMenus();
+                                      // Capture current tile rect as fallback
+                                      const prevRect = e.currentTarget.getBoundingClientRect();
+                                      // After state commit & re-render, measure the new "Select Shot" chip for accurate anchor
+                                      const openFromChip = () => {
+                                        const chipEl = document.querySelector(`[data-shot-chip="${r.id}"]`);
+                                        const rect = chipEl ? chipEl.getBoundingClientRect() : prevRect;
+                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
+                                        setOpenShotMenuId(r.id);
+                                        setOpenLocMenuId(null);
+                                      };
+                                      // Use rAF to ensure layout reflects new chip; fallback timeout if needed
+                                      requestAnimationFrame(()=> openFromChip());
+                                      // Safety fallback in case rAF missed (very unlikely)
+                                      setTimeout(()=>{ if(openShotMenuId!==r.id) openFromChip(); }, 50);
                                     }}
                                   />
                                 ) : (
@@ -1712,7 +1726,7 @@ export default function App() {
                                         closeMenus();
                                       } else {
                                         const rect = e.currentTarget.getBoundingClientRect();
-                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
+                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
                                         setOpenShotMenuId(r.id);
                                         setOpenLocMenuId(null);
                                       }
