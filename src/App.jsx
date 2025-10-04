@@ -1346,6 +1346,13 @@ export default function App() {
     setHiddenR(h => h.map(v=>snap5(v ?? 0)));
     setFinalRecallL(r => r.map(v=>snap5(v ?? 0)));
     setFinalRecallR(r => r.map(v=>snap5(v ?? 0)));
+    // Update ROW_ID_SEED to avoid ID conflicts with loaded rows
+    if (rows.length > 0) {
+      const maxId = Math.max(...rows.map(r => r.id));
+      if (maxId >= ROW_ID_SEED) {
+        ROW_ID_SEED = maxId + 1;
+      }
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
