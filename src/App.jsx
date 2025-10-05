@@ -981,6 +981,21 @@ export default function App() {
   const [locMenuAnchor, setLocMenuAnchor] = useState(null);   // {id,x,y}
   // Anchor for multi-add popup when list is empty
   const [addCountAnchor, setAddCountAnchor] = useState(null); // {x,y} or null
+  // Available presets loaded from /presets/index.json - array of {name, filename} objects
+  const [availablePresets, setAvailablePresets] = useState([]);
+  // Load available presets on mount
+  useEffect(() => {
+    // Fetch the index.json file which lists all available presets
+    fetch('/presets/index.json')
+      .then(response => response.json())
+      .then(presets => {
+        setAvailablePresets(presets);
+      })
+      .catch(error => {
+        console.error('Failed to load preset index:', error);
+        setAvailablePresets([]);
+      });
+  }, []);
   // Keep popup anchored to triggering chip while scrolling/resizing
   useEffect(()=>{
     if (openShotMenuId==null && openLocMenuId==null && !addCountAnchor) return;
@@ -1100,6 +1115,52 @@ export default function App() {
     return rows.every(r => r.base && r.base.length > 0 && r.initL != null && r.initR != null);
   }, [rows]);
 
+  // Load a preset from /presets/ folder
+  const loadPreset = useCallback(async (preset) => {
+    try {
+      const response = await fetch(`/presets/${preset.filename}`);
+      if (!response.ok) throw new Error('Preset not found');
+      const presetData = await response.json();
+      
+      // Parse preset data and create rows
+      const newRows = presetData.map((shot, idx) => {
+        // Parse shot type to extract base and location
+        const typeStr = shot.shotType || '';
+        const words = typeStr.split(' ');
+        let base = '';
+        let location = '';
+        
+        // Try to match against known locations
+        const foundLoc = LOCATIONS.find(loc => typeStr.includes(loc));
+        if (foundLoc) {
+          location = foundLoc;
+          base = typeStr.replace(foundLoc, '').trim();
+        } else {
+          // No location, entire string is base
+          base = typeStr;
+        }
+        
+        // Parse flipper values (handle "NP" for Not Possible)
+        const leftVal = shot.leftFlipper === 'NP' || shot.leftFlipper === 'np' ? 0 : snap5(Number(shot.leftFlipper) || 0);
+        const rightVal = shot.rightFlipper === 'NP' || shot.rightFlipper === 'np' ? 0 : snap5(Number(shot.rightFlipper) || 0);
+        
+        return newRow({
+          base,
+          location,
+          initL: leftVal,
+          initR: rightVal
+        }, idx);
+      });
+      
+      setRows(newRows);
+      setAddCountAnchor(null);
+      _pushToast(`Loaded preset: ${preset.name}`);
+    } catch (error) {
+      console.error('Failed to load preset:', error);
+      _pushToast(`Failed to load preset: ${preset.name}`);
+    }
+  }, [setRows, _pushToast]);
+  
   // Initialize hidden matrix (wrapped so effects & handlers can depend on stable reference)
   const startSession = useCallback(() => {
     if (!rows.length) return;
@@ -1529,30 +1590,47 @@ export default function App() {
     )}
     {addCountAnchor && rows.length===0 && createPortal(
       <div
-        className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-4 gap-1"
+        className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
         style={{ left: Math.max(8, addCountAnchor.x) + 'px', top: addCountAnchor.y + 'px' }}
         onClick={e=> e.stopPropagation()}
       >
-        {Array.from({length:20},(_,k)=>k+1).map(n => (
-          <button
-            key={n}
-            type="button"
-            className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-            onClick={()=>{
-              const count = n;
-              const buildRows = (cnt)=>{
-                const asc = Array.from({length:cnt},(_,i)=> snap5(((i+1)/(cnt+1))*100));
-                for (let i=1;i<asc.length;i++) if (asc[i] <= asc[i-1]) asc[i] = Math.min(100, asc[i-1]+5);
-                for (let i=asc.length-2;i>=0;i--) if (asc[i] >= asc[i+1]) asc[i] = Math.max(5, asc[i+1]-5);
-                const desc = [...asc].reverse();
-                return asc.map((v,i)=> newRow({ initL: v, initR: desc[i] }, i));
-              };
-              setRows(buildRows(count));
-              setAddCountAnchor(null);
-            }}
-          >{n}</button>
-        ))}
-        <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
+        <div className="grid grid-cols-4 gap-1">
+          {Array.from({length:20},(_,k)=>k+1).map(n => (
+            <button
+              key={n}
+              type="button"
+              className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
+              onClick={()=>{
+                const count = n;
+                const buildRows = (cnt)=>{
+                  const asc = Array.from({length:cnt},(_,i)=> snap5(((i+1)/(cnt+1))*100));
+                  for (let i=1;i<asc.length;i++) if (asc[i] <= asc[i-1]) asc[i] = Math.min(100, asc[i-1]+5);
+                  for (let i=asc.length-2;i>=0;i--) if (asc[i] >= asc[i+1]) asc[i] = Math.max(5, asc[i+1]-5);
+                  const desc = [...asc].reverse();
+                  return asc.map((v,i)=> newRow({ initL: v, initR: desc[i] }, i));
+                };
+                setRows(buildRows(count));
+                setAddCountAnchor(null);
+              }}
+            >{n}</button>
+          ))}
+          <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
+        </div>
+        {availablePresets.length > 0 && (
+          <div className="mt-2 pt-2 border-t">
+            <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
+            <div className="flex flex-wrap gap-1">
+              {availablePresets.map(preset => (
+                <button
+                  key={preset.filename}
+                  type="button"
+                  className="text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex-1"
+                  onClick={() => loadPreset(preset)}
+                >{preset.name}</button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>,
       document.body
     )}

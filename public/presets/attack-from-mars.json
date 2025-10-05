@@ -1,0 +1,22 @@
+[
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": 15,
+    "rightFlipper": 85
+  },
+  {
+    "shotType": "Center Ramp",
+    "leftFlipper": 35,
+    "rightFlipper": 65
+  },
+  {
+    "shotType": "Right Ramp",
+    "leftFlipper": 65,
+    "rightFlipper": 30
+  },
+  {
+    "shotType": "Left Orbit",
+    "leftFlipper": 80,
+    "rightFlipper": 20
+  }
+]

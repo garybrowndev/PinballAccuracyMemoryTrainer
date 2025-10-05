@@ -93,6 +93,7 @@ Avoid until justified:
 4. Update ordering & drift logic only if semantics change; avoid incidental coupling.
 5. Provide UI affordances consistent with chips, tables, or existing panel paradigms.
 6. Add discoverability hint if introducing a non-obvious control.
+7. When editing via AI Agentic mode, provide a single unified patch / WorkspaceEdit (do not use "Streaming" method)
 
 ## 13. Coding Style & Linting
 - Prefer small pure helper functions above component body.
