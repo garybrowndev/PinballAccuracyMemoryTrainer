@@ -20,12 +20,12 @@
     "rightFlipper": 70
   },
   {
-    "shotType": "Left Horseshoe",
+    "shotType": "Left Loop",
     "leftFlipper": "NP",
     "rightFlipper": 65
   },
   {
-    "shotType": "Right Horseshoe",
+    "shotType": "Right Loop",
     "leftFlipper": 25,
     "rightFlipper": 50
   },

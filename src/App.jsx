@@ -139,7 +139,7 @@ const BASE_ELEMENTS = [
   // Common but slightly more situational or not on every single game
   'Drops','Scoop','Saucer','VUK','Lock','Captive Ball',
   // Regular specialty / feature mechs & control elements
-  'Magnet','Horseshoe','Rollover','Gate',
+  'Magnet','Loop','Rollover','Gate',
   // Occasional (era or design style dependent)
   'Vari Target','Deadend','Toy','Roto Target'
 ];
@@ -1641,14 +1641,18 @@ export default function App() {
         {availablePresets.length > 0 && (
           <div className="mt-2 pt-2 border-t">
             <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-col gap-1">
               {availablePresets.map(preset => (
                 <button
                   key={preset.filename}
                   type="button"
-                  className="text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex-1"
                   onClick={() => loadPreset(preset)}
-                >{preset.name}</button>
+                  title={preset.name}
+                  aria-label={`Load preset ${preset.name}`}
+                  className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
+                >
+                  <span className="truncate block" style={{ maxWidth: '100%' }}>{preset.name}</span>
+                </button>
               ))}
             </div>
           </div>

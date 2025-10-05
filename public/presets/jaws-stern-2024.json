@@ -1,0 +1,47 @@
+[
+  {
+    "shotType": "Left Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Left Spinner",
+    "leftFlipper": "NP",
+    "rightFlipper": 90
+  },
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": "NP",
+    "rightFlipper": 80
+  },
+  {
+    "shotType": "Center Captive Ball",
+    "leftFlipper": 25,
+    "rightFlipper": 65
+  },
+  {
+    "shotType": "Center Ramp",
+    "leftFlipper": 45,
+    "rightFlipper": 55
+  },
+  {
+    "shotType": "Center Captive Ball",
+    "leftFlipper": 60,
+    "rightFlipper": 40
+  },
+  {
+    "shotType": "Right Loop",
+    "leftFlipper": 70,
+    "rightFlipper": 15
+  },
+  {
+    "shotType": "Right Ramp",
+    "leftFlipper": 80,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Standups",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]

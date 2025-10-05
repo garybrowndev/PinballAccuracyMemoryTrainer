@@ -6,5 +6,25 @@
   {
     "name": "Godzilla (Stern 2021)",
     "filename": "godzilla-stern-2021.json"
+  },
+  {
+    "name": "Jaws (Stern 2024)",
+    "filename": "jaws-stern-2024.json"
+  },
+  {
+    "name": "Jurassic Park (Stern 2019)",
+    "filename": "jurassic-park-stern-2019.json"
+  }
+  {
+    "name": "Deadpool (Stern 2018)",
+    "filename": "deadpool-stern-2018.json"
+  },
+  {
+    "name": "The Lord Of The Rings (Stern 2003)",
+    "filename": "the-lord-of-the-rings-stern-2013.json"
+  },
+  {
+    "name": "The Simpsons Pinball Party (Stern 2003)",
+    "filename": "the-simpsons-pinball-party-stern-2003.json"
   }
 ]
