@@ -1882,18 +1882,22 @@ export default function App() {
                           <div className="flex flex-col gap-1 max-w-[220px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'L',i);
-                              const allowedMin = range ? range[0] : 5;
-                              const allowedMax = range ? range[1] : 100;
+                              const rawAllowedMin = range ? range[0] : 5;
+                              const rawAllowedMax = range ? range[1] : 100;
+                              // Clamp to new visual/domain max of 95
+                              const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
+                              const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
                               let actual = r.initL && r.initL>0 ? r.initL : null;
                               if (actual != null) {
-                                if (actual > allowedMax) actual = allowedMax;
+                                if (actual > allowedMax) actual = allowedMax; // clamp any legacy 100s down to 95 visually
                                 if (actual < allowedMin) actual = allowedMin;
                               }
-                              const sliderMin = 5; const sliderMax = 100;
+                              const sliderMin = 5; const sliderMax = 95;
                               const displayVal = actual != null ? actual : 50;
-                              // Ascending visual (05 -> 100). Grey before allowedMin and after allowedMax.
-                              const leftGreyPct = ((allowedMin - 5) / 95) * 100;
-                              const rightGreyStartPct = ((allowedMax - 5) / 95) * 100;
+                              // Ascending visual (05 -> 95). Grey before allowedMin and after allowedMax.
+                              const span = 95 - 5; // 90
+                              const leftGreyPct = ((allowedMin - 5) / span) * 100;
+                              const rightGreyStartPct = ((allowedMax - 5) / span) * 100;
                               const trackBg = range ? `linear-gradient(to right,
                                 rgba(55,65,81,0.70) 0%,
                                 rgba(55,65,81,0.70) ${leftGreyPct}%,
@@ -1904,7 +1908,7 @@ export default function App() {
                               return (
                                 <div className="flex flex-col gap-1">
                                   <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
-                                    <span>05</span><span>100</span>
+                                    <span>05</span><span>95</span>
                                   </div>
                                   <div className="relative">
                                     <input
@@ -1925,7 +1929,7 @@ export default function App() {
                                       }}
                                       style={{ background: trackBg }}
                                       className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
-                                    {range && !(allowedMin===5 && allowedMax===100) && (()=>{
+                                    {range && !(allowedMin===5 && allowedMax===95) && (()=>{
                                       return (
                                         <>
                                           <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: leftGreyPct + '%' }}>{format2(allowedMin)}</div>
@@ -1934,7 +1938,7 @@ export default function App() {
                                       );
                                     })()}
                                     {actual!=null && range && (()=>{
-                                      const pct = ((actual - 5) / 95) * 100;
+                                      const pct = ((actual - 5) / span) * 100;
                                       return (
                                         <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-emerald-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
                                       );
@@ -1965,18 +1969,22 @@ export default function App() {
                           <div className="flex flex-col gap-1 max-w-[220px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'R',i);
-                              const allowedMin = range ? range[0] : 5;
-                              const allowedMax = range ? range[1] : 100;
+                              const rawAllowedMin = range ? range[0] : 5;
+                              const rawAllowedMax = range ? range[1] : 100;
+                              // Clamp both ends to 95 domain
+                              const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
+                              const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
                               let actual = r.initR && r.initR>0 ? r.initR : null;
                               if (actual != null) {
-                                if (actual > allowedMax) actual = allowedMax;
+                                if (actual > allowedMax) actual = allowedMax; // clamp legacy 100
                                 if (actual < allowedMin) actual = allowedMin;
                               }
-                              const sliderMin = 5; const sliderMax = 100; // reversed visual
+                              const sliderMin = 5; const sliderMax = 95; // reversed visual
                               const displayVal = actual != null ? actual : 50;
-                              // Descending visual (100 -> 05). Grey left (values > allowedMax after reversal) and right (values < allowedMin).
-                              const leftStopPct = ((100 - allowedMax) / 95) * 100;
-                              const rightStartPct = ((100 - allowedMin) / 95) * 100;
+                              // Descending visual (95 -> 05). Grey left (values > allowedMax after reversal) and right (values < allowedMin).
+                              const span = 95 - 5; // 90
+                              const leftStopPct = ((95 - allowedMax) / span) * 100;
+                              const rightStartPct = ((95 - allowedMin) / span) * 100;
                               const trackBg = range ? `linear-gradient(to right,
                                 rgba(55,65,81,0.70) 0%,
                                 rgba(55,65,81,0.70) ${leftStopPct}%,
@@ -1987,7 +1995,7 @@ export default function App() {
                               return (
                                 <div className="flex flex-col gap-1">
                                   <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
-                                    <span>100</span><span>05</span>
+                                    <span>95</span><span>05</span>
                                   </div>
                                   <div className="relative">
                                     <input
@@ -2009,7 +2017,7 @@ export default function App() {
                                       }}
                                       style={{ background: trackBg }}
                                       className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
-                                    {range && !(allowedMin===5 && allowedMax===100) && (()=>{
+                                    {range && !(allowedMin===5 && allowedMax===95) && (()=>{
                                       return (
                                         <>
                                           <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: leftStopPct + '%' }}>{format2(allowedMax)}</div>
@@ -2018,7 +2026,7 @@ export default function App() {
                                       );
                                     })()}
                                     {actual!=null && range && (()=>{
-                                      const pct = ((100 - actual) / 95) * 100;
+                                      const pct = ((95 - actual) / span) * 100;
                                       return (
                                         <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
                                       );
@@ -2251,9 +2259,9 @@ export default function App() {
                 <button
                   onClick={() => {
                     setRows([
-                      newRow({ base: 'Ramp', location: 'Left', initL: 70, initR: 55 }, 0),
-                      newRow({ base: 'Ramp', location: 'Right', initL: 20, initR: 80 }, 1),
-                      newRow({ base: 'Orbit', location: 'Left', initL: 65, initR: 40 }, 2),
+                      newRow({ base: 'Orbit', location: 'Left', initL: 25, initR: 75 }, 0),
+                      newRow({ base: 'Ramp', location: 'Center', initL: 50, initR: 50 }, 1),
+                      newRow({ base: 'Orbit', location: 'Right', initL: 75, initR: 25 }, 2),
                     ]);
                   }}
                   className="px-4 py-2 rounded-2xl border"
