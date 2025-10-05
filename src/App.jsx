@@ -496,8 +496,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               {/* L/R values overlay moved to bottom */}
               {imgVisible && (
                 <div className="absolute left-0 right-0 flex justify-between text-[11px] font-medium text-white drop-shadow pointer-events-none bg-black/35 backdrop-blur-[1px] px-1 py-[1px]" style={{ bottom: '1px' }}>
-                  <span>L {r.initL != null ? format2(r.initL) : '—'}</span>
-                  <span>R {r.initR != null ? format2(r.initR) : '—'}</span>
+                  <span>L {r.initL === 0 ? 'NP' : (r.initL != null ? format2(r.initL) : '—')}</span>
+                  <span>R {r.initR === 0 ? 'NP' : (r.initR != null ? format2(r.initR) : '—')}</span>
                 </div>
               )}
               {/* Fallback original content if no image (or no type) */}
@@ -505,15 +505,15 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 <div className="absolute inset-0 flex flex-col p-1 text-[11px]">
                   <div className="font-medium truncate max-w-[70px] text-center mt-4 flex-1 flex items-start justify-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
                   <div className="mt-auto flex justify-between text-[11px]">
-                    <span className="px-1 rounded bg-slate-100">L {r.initL != null ? format2(r.initL) : '—'}</span>
-                    <span className="px-1 rounded bg-slate-100">R {r.initR != null ? format2(r.initR) : '—'}</span>
+                    <span className="px-1 rounded bg-slate-100">L {r.initL === 0 ? 'NP' : (r.initL != null ? format2(r.initL) : '—')}</span>
+                    <span className="px-1 rounded bg-slate-100">R {r.initR === 0 ? 'NP' : (r.initR != null ? format2(r.initR) : '—')}</span>
                   </div>
                 </div>
               )}
               {/* Restore X button for deleting shot */}
               <button
                 onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
-                className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] shadow-lg"
+                className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] shadow-lg cursor-pointer"
                 style={{ zIndex: 60 }}
                 title="Delete shot"
               >✕</button>
@@ -1931,7 +1931,7 @@ export default function App() {
                         <td className="p-2 text-right relative select-none">
                           <button
                             onClick={() => setRows((prev) => prev.filter((_, k) => k !== i))}
-                            className="text-slate-500 hover:text-red-600"
+                            className="text-slate-500 hover:text-red-600 cursor-pointer"
                             title="Remove"
                           >
                             ✕
@@ -2420,7 +2420,7 @@ export default function App() {
                       type="button"
                       onClick={()=> setPlayfieldFullscreen(true)}
                       title="Fullscreen"
-                      className="absolute top-2 right-2 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1"
+                      className="absolute top-1 right-1 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1"
                     >
                       {/* Enter fullscreen icon */}
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8H5V5"/><path d="M16 8h3V5"/><path d="M16 16h3v3"/><path d="M8 16H5v3"/></svg>
@@ -2430,29 +2430,36 @@ export default function App() {
                   <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
                 </div>
                 {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
-                <div className="mt-4">
+                <div>
                   {(() => {
                     const values = Array.from({length:19},(_,k)=> (k+1)*5); // 5..95
                     const ordered = selectedSide === 'L' ? values : [...values].reverse();
+                    // Evenly spaced circular chips (normal mode only). Use CSS grid for equal column widths.
+                    const chipFontPx = 24; // chosen for readability in normal mode
                     return (
-                      <div className="w-full select-none flex flex-col items-stretch gap-3">
-                        <div className="flex gap-1 w-full">
+                      <div className="w-full select-none flex flex-col items-stretch">
+                        <div
+                          className="grid w-full"
+                          style={{ gridTemplateColumns: `repeat(${ordered.length}, 1fr)`}}
+                        >
                           {ordered.map(v => (
-                            <div key={v} className="flex-1 min-w-0">
-                              <Chip
-                                className="w-full px-1 py-1"
-                                active={false}
-                                onClick={()=>submitAttempt(v)}
-                              >{format2(v)}</Chip>
-                            </div>
+                            <button
+                              key={v}
+                              type="button"
+                              onClick={()=>submitAttempt(v)}
+                              className="aspect-square rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-slate-700"
+                              style={{ fontSize: chipFontPx }}
+                              aria-label={`Recall ${format2(v)}`}
+                            ><span className="relative" style={{ top: '-1px' }}>{format2(v)}</span></button>
                           ))}
                         </div>
                         <div className="flex justify-center">
                           <button
                             type="button"
                             onClick={()=>submitAttempt(0)}
-                            className="px-5 py-2 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 text-xs font-medium"
-                          >Not Possible</button>
+                            className="px-2 py-0 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 active:scale-[0.95] transition-transform font-semibold text-slate-700"
+                            style={{ fontSize: chipFontPx}}
+                            ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                         </div>
                       </div>
                     );
@@ -2546,11 +2553,11 @@ export default function App() {
                   );
                 })()}
                 {/* Main fullscreen content column. Use overflow-hidden to avoid phantom scrollbar when content fits. */}
-                <div className="flex-1 flex flex-col items-stretch px-4 pb-4 gap-4 overflow-hidden">
+                <div className="flex-1 flex flex-col items-stretch overflow-hidden">
                     <div className="relative flex-1 flex flex-col min-h-0">
                       <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s=> setFullscreenScale(s)} />
                     </div>
-                    <div className="w-full mx-auto pt-2">
+                    <div className="w-full mx-auto]">
                     {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
                     {(() => {
                       // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
@@ -2614,16 +2621,16 @@ export default function App() {
                                 className="rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0"
                                 style={{ width: diameter, height: diameter, fontSize: chipFont, lineHeight: 1, fontWeight: 600 }}
                                 aria-label={`Recall ${format2(v)}`}
-                              >{format2(v)}</button>
+                              ><span className="relative" style={{ top: '-2px' }}>{format2(v)}</span></button>
                             ))}
                           </div>
-                          <div className="mt-4 flex justify-center">
+                          <div className="mt-[2px] flex justify-center">
                             <button
                               type="button"
                               onClick={()=>submitAttempt(0)}
-                              className="px-6 py-3 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.97] transition-transform text-sm font-medium"
+                              className="px-1 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.97] transition-transform text-sm font-medium"
                               style={{ fontSize: Math.max(12, Math.round(chipFont*0.75)) }}
-                            >Not Possible</button>
+                            ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                           </div>
                         </div>
                       );
