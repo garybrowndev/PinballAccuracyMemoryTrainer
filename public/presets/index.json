@@ -1,6 +1,10 @@
 [
   {
-    "name": "Attack from Mars",
-    "filename": "attack-from-mars.json"
+    "name": "Attack from Mars (Bally 1995)",
+    "filename": "attack-from-mars-bally-1995.json"
+  },
+  {
+    "name": "Godzilla (Stern 2021)",
+    "filename": "godzilla-stern-2021.json"
   }
 ]
