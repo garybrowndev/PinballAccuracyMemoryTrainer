@@ -1754,20 +1754,22 @@ export default function App() {
                       </th>
                       <th className="p-1 text-right align-bottom">
                         <div className="h-full flex items-end justify-end">
-                          <button
-                            type="button"
-                            onClick={exportPreset}
-                            className="cursor-copy -translate-y-[3px] text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                            title="Export shots as JSON"
-                            aria-label="Export shots"
-                          >
-                              {/* Standard export/upload icon: arrow up out of tray */}
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M7 10l5-5 5 5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M12 5v11" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                          </button>
+                          {rows.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={exportPreset}
+                              className="cursor-copy -translate-y-[3px] text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                              title="Export shots as JSON"
+                              aria-label="Export shots"
+                            >
+                                {/* Standard export/upload icon: arrow up out of tray */}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M7 10l5-5 5 5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M12 5v11" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </button>
+                          )}
                         </div>
                       </th>
                     </tr>
