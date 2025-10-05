@@ -476,7 +476,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               key={r.id}
               style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)', width: size, height: size }}
               onMouseDown={(e)=>handleMouseDown(e,r.id)}
-              className={`absolute z-30 select-none rounded-md shadow border overflow-hidden bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
+              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
             >
               {/* Background image layer */}
               {showImageAttempt && (
@@ -485,7 +485,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                   alt={r.type}
                   onLoad={()=> setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
                   onError={()=> setImageLoadedMap(m => { if (!m[r.id]) return m; const copy = { ...m }; delete copy[r.id]; return copy; })}
-                  className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
+                  className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md'}
                   draggable={false}
                 />
               )}
@@ -510,9 +510,11 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                   </div>
                 </div>
               )}
+              {/* Restore X button for deleting shot */}
               <button
                 onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
-                className="absolute -top-[18px] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]"
+                className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] shadow-lg"
+                style={{ zIndex: 60 }}
                 title="Delete shot"
               >✕</button>
             </div>
