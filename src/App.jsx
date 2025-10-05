@@ -2191,6 +2191,26 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
+              {!!rows.length && !initialized && (
+                <div className="flex justify-end mt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setRows([]); setCollapsedTypes([]); _pushToast('Cleared all shots'); }}
+                    className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer shadow-sm"
+                    title="Clear all shots"
+                    aria-label="Clear all shots"
+                  >
+                    {/* Trash / delete all icon */}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
+                      <path d="M3 6h18" strokeWidth="1.6" strokeLinecap="round" />
+                      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" strokeWidth="1.6" strokeLinecap="round" />
+                      <path d="M10 11v6" strokeWidth="1.6" strokeLinecap="round" />
+                      <path d="M14 11v6" strokeWidth="1.6" strokeLinecap="round" />
+                      <path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </Section>
 
             <Section title="2) Session parameters">
