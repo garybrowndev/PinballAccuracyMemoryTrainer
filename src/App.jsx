@@ -983,6 +983,9 @@ export default function App() {
   const [addCountAnchor, setAddCountAnchor] = useState(null); // {x,y} or null
   // Available presets loaded from /presets/index.json - array of {name, filename} objects
   const [availablePresets, setAvailablePresets] = useState([]);
+  // Compact preset popup state
+  const [presetOpen, setPresetOpen] = useState(false);
+  const [selectedPresetName, setSelectedPresetName] = useState(null);
   // Load available presets on mount
   useEffect(() => {
     // Fetch the index.json file which lists all available presets
@@ -1036,6 +1039,7 @@ export default function App() {
     const handler = ()=>{
       // Outside click closes all popups
       setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null); setAddCountAnchor(null);
+      setPresetOpen(false);
     };
     window.addEventListener('click', handler);
     return ()=> window.removeEventListener('click', handler);
@@ -1641,19 +1645,43 @@ export default function App() {
         {availablePresets.length > 0 && (
           <div className="mt-2 pt-2 border-t">
             <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
-            <div className="flex flex-col gap-1">
-              {availablePresets.map(preset => (
-                <button
-                  key={preset.filename}
-                  type="button"
-                  onClick={() => loadPreset(preset)}
-                  title={preset.name}
-                  aria-label={`Load preset ${preset.name}`}
-                  className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e)=>{ e.stopPropagation(); setPresetOpen(p => !p); }}
+                className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
+                aria-expanded={presetOpen}
+                aria-haspopup="listbox"
+                title={selectedPresetName || 'Select preset'}
+              >
+                <span className="truncate block" style={{ maxWidth: '80%' }}>{selectedPresetName || 'Choose preset...'}</span>
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="w-4 h-4 ml-2">
+                  <path d="M6 8l4 4 4-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              {presetOpen && (
+                <div
+                  role="listbox"
+                  aria-label="Available presets"
+                  className="absolute left-0 right-0 bottom-full mb-1 max-h-60 overflow-auto rounded-md border bg-white shadow-lg z-60"
+                  onClick={e=> e.stopPropagation()}
+                  style={{ display: 'block' }}
                 >
-                  <span className="truncate block" style={{ maxWidth: '100%' }}>{preset.name}</span>
-                </button>
-              ))}
+                  {availablePresets.map(preset => (
+                    <button
+                      key={preset.filename}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedPresetName === preset.name}
+                      onClick={() => { loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null); }}
+                      title={preset.name}
+                      className={(selectedPresetName === preset.name ? 'bg-emerald-200' : '') + ' w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-2 text-emerald-700 hover:bg-emerald-100'}
+                    >
+                      <span className="truncate block" style={{ maxWidth: '100%' }}>{preset.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
