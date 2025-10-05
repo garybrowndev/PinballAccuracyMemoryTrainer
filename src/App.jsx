@@ -1160,6 +1160,30 @@ export default function App() {
       _pushToast(`Failed to load preset: ${preset.name}`);
     }
   }, [setRows, _pushToast]);
+
+  // Export current rows as preset-compatible JSON and download file
+  const exportPreset = useCallback(() => {
+    try {
+      const data = rows.map(r => ({
+        shotType: r.type || buildType(r.base, r.location) || '',
+        leftFlipper: r.initL === 0 ? 'NP' : r.initL,
+        rightFlipper: r.initR === 0 ? 'NP' : r.initR
+      }));
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'shots-export.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      _pushToast('Exported shots to shots-export.json');
+    } catch (err) {
+      console.error('Export failed', err);
+      _pushToast('Export failed');
+    }
+  }, [rows, _pushToast]);
   
   // Initialize hidden matrix (wrapped so effects & handlers can depend on stable reference)
   const startSession = useCallback(() => {
@@ -1566,7 +1590,6 @@ export default function App() {
             />
           );
         })}
-        <div className="col-span-4 -mb-1 text-[10px] text-slate-400 text-center">Select shot element</div>
       </div>,
       document.body
     )}
@@ -1584,7 +1607,6 @@ export default function App() {
             className={(rows.find(r=>r.id===locMenuAnchor.id)?.location===loc?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
           >{loc}</button>
         ))}
-        <div className="col-span-2 mt-1 text-[10px] text-slate-400 text-center">Select location (optional)</div>
       </div>,
       document.body
     )}
@@ -1730,7 +1752,24 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className="p-2"></th>
+                      <th className="p-1 text-right align-bottom">
+                        <div className="h-full flex items-end justify-end">
+                          <button
+                            type="button"
+                            onClick={exportPreset}
+                            className="cursor-copy -translate-y-[3px] text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                            title="Export shots as JSON"
+                            aria-label="Export shots"
+                          >
+                              {/* Standard export/upload icon: arrow up out of tray */}
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M7 10l5-5 5 5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M12 5v11" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                          </button>
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1832,7 +1871,7 @@ export default function App() {
                                         }
                                       }
                                     }}
-                                  >{location || 'Select Location'}</Chip>
+                                  >{location || 'Location'}</Chip>
                                 )}
                                 {/* Popup menus rendered outside table to avoid layout shift */}
                               </div>
@@ -2021,7 +2060,7 @@ export default function App() {
                               draggable
                               onDragStart={(e)=>{ if(initialized) return; setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed='move'; }}
                               onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
-                              className="absolute right-1 bottom-1 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200 cursor-grab active:cursor-grabbing"
+                              className="absolute right-0.5 bottom-1 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200 cursor-grab active:cursor-grabbing"
                               title="Drag to reorder"
                             >
                               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
