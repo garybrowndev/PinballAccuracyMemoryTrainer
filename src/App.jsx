@@ -512,10 +512,17 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               {/* X button moved to bottom center of shot box */}
               <button
                 onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
-                className="absolute bottom-0 left-1/2 translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] shadow-lg cursor-pointer"
+                className="absolute bottom-0 left-1/2 translate-y-1/2 -translate-x-1/2 p-[3px] rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                 style={{ zIndex: 60 }}
                 title="Delete shot"
-              >✕</button>
+                aria-label="Delete shot"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9 9l6 6" />
+                  <path d="M15 9l-6 6" />
+                </svg>
+              </button>
             </div>
           );
         })}
@@ -1744,7 +1751,8 @@ export default function App() {
                     <col className="w-46-/100" />
                     <col className="w-35/100" />
                     <col className="w-35/100" />
-                    <col className="w-[20px]" />
+                    {/* Compact actions column for 3 stacked icons */}
+                    <col className="w-[30px]" />
                   </colgroup>
                   <thead>
                     <tr className="text-left text-slate-500 align-bottom">
@@ -1829,13 +1837,13 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className="p-1 text-right align-bottom">
-                        <div className="h-full flex items-end justify-end">
+                      <th className="p-2 text-left align-bottom">
+                        <div className="flex flex-col items-end">
                           {rows.length > 0 && (
                             <button
                               type="button"
                               onClick={exportPreset}
-                              className="cursor-copy -translate-y-[3px] text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                              className="cursor-copy text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                               title="Export shots as JSON"
                               aria-label="Export shots"
                             >
@@ -2139,7 +2147,8 @@ export default function App() {
                             </div>
                           </div>
                         </td>
-                        <td className="p-2 text-right relative select-none">
+                        <td className="p-0.5 text-left align-bottom">
+                          <div className="flex flex-col items-end">
                           <button
                             onClick={() => {
                               setRows(prev => {
@@ -2173,10 +2182,16 @@ export default function App() {
                                 return next;
                               });
                             }}
-                            className="text-slate-500 hover:text-red-600 cursor-pointer"
-                            title="Remove"
+                            className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer"
+                            title="Remove shot"
+                            aria-label="Remove shot"
                           >
-                            ✕
+                            {/* Circle X delete icon */}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="9" />
+                              <path d="M9 9l6 6" />
+                              <path d="M15 9l-6 6" />
+                            </svg>
                           </button>
                           {!initialized && (
                             <button
@@ -2185,11 +2200,18 @@ export default function App() {
                               draggable
                               onDragStart={(e)=>{ if(initialized) return; setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed='move'; }}
                               onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
-                              className="absolute right-0.5 bottom-1 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200 cursor-grab active:cursor-grabbing"
+                              className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100/60 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                               title="Drag to reorder"
                             >
-                              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                                <path d="M7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7 10a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7 15a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0" />
+                              {/* Circular dotted drag handle icon */}
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="9" />
+                                <circle cx="9" cy="9" r="0.9" fill="currentColor" stroke="none" />
+                                <circle cx="15" cy="9" r="0.9" fill="currentColor" stroke="none" />
+                                <circle cx="9" cy="15" r="0.9" fill="currentColor" stroke="none" />
+                                <circle cx="15" cy="15" r="0.9" fill="currentColor" stroke="none" />
+                                <circle cx="9" cy="12" r="0.9" fill="currentColor" stroke="none" />
+                                <circle cx="15" cy="12" r="0.9" fill="currentColor" stroke="none" />
                               </svg>
                             </button>
                           )}
@@ -2200,81 +2222,16 @@ export default function App() {
                                 const next=[...prev];
                                 const aboveIdx = i; // row above insertion point
                                 const belowIdx = i+1 < prev.length ? i+1 : null;
-                                // Compute insertion default per flipper. If adjacent (<=5 gap) auto set Not Possible (0) for that side.
                                 const computeInsertValue = (side) => {
-                                  if (side === 'L') { // ascending
-                                    // Find nearest positive above (strictly >0) scanning upward including immediate above
-                                    let upIdx = aboveIdx;
-                                    while (upIdx >= 0 && !(prev[upIdx].initL > 0)) upIdx--;
-                                    // Find nearest positive below scanning downward starting at belowIdx
-                                    let downIdx = belowIdx;
-                                    while (downIdx != null && downIdx < prev.length && !(prev[downIdx].initL > 0)) downIdx++;
-                                    const haveUpper = upIdx >= 0;
-                                    const haveLower = downIdx != null && downIdx < prev.length;
-                                    if (!haveUpper && !haveLower) return 0; // no usable bounds
-                                    // Phantom lower bound of 100 if inserting at bottom with only an upper bound.
-                                    if (haveUpper && !haveLower) {
-                                      const aboveVal = prev[upIdx].initL;
-                                      if (!(aboveVal > 0)) return 0;
-                                      // Special boundary cases:
-                                      // If above=95 and phantom=100 -> place 100 (allowed) instead of Not Possible.
-                                      if (aboveVal === 95) return 100;
-                                      // If above already at 100 -> Not Possible below.
-                                      if (aboveVal === 100) return 0;
-                                      const gap = 100 - aboveVal;
-                                      if (gap <= 5) return 0; // (covers aboveVal 96-100 except 95 handled earlier)
-                                      let mid = Math.round(((aboveVal + 100) / 2) / 5) * 5;
-                                      if (mid <= aboveVal) mid = aboveVal + 5;
-                                      if (mid >= 100) mid = 95; // keep strictly below phantom 100
-                                      if (!(mid > aboveVal && mid < 100)) return 0;
-                                      return clamp(mid, 5, 100);
-                                    }
-                                    if (!haveUpper && haveLower) return 0; // top insertion without upper bound -> Not Possible
-                                    const aboveVal = prev[upIdx].initL;
-                                    const belowVal = prev[downIdx].initL; // real lower bound
-                                    const gap = belowVal - aboveVal;
-                                    if (!(aboveVal > 0) || !(belowVal > 0) || gap <= 5) return 0;
-                                    let mid = Math.round(((aboveVal + belowVal) / 2) / 5) * 5;
-                                    if (mid <= aboveVal) mid = aboveVal + 5;
-                                    if (mid >= belowVal) mid = belowVal - 5;
-                                    if (!(mid > aboveVal && mid < belowVal)) return 0;
-                                    return clamp(mid, 5, 100);
-                                  } else { // Right descending (higher -> lower)
-                                    let upIdx = aboveIdx; // upIdx is the immediate above (should be higher value in descending sequence)
-                                    while (upIdx >= 0 && !(prev[upIdx].initR > 0)) upIdx--;
-                                    let downIdx = belowIdx;
-                                    while (downIdx != null && downIdx < prev.length && !(prev[downIdx].initR > 0)) downIdx++;
-                                    const haveUpper = upIdx >= 0;
-                                    const haveLower = downIdx != null && downIdx < prev.length;
+                                  if (side === 'L') {
+                                    let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initL > 0)) upIdx--;
+                                    let downIdx = belowIdx; while (downIdx != null && downIdx < prev.length && !(prev[downIdx].initL > 0)) downIdx++;
+                                    const haveUpper = upIdx >= 0; const haveLower = downIdx != null && downIdx < prev.length;
                                     if (!haveUpper && !haveLower) return 0;
-                                    // Phantom lower (smaller) bound of 5 if inserting at bottom with only upper bound in descending sequence
-                                    if (haveUpper && !haveLower) {
-                                      const aboveVal = prev[upIdx].initR;
-                                      if (!(aboveVal > 0)) return 0;
-                                      // Special boundary cases for descending side with phantom 5:
-                                      // If above=10 and phantom=5 -> set 5 (allowed) instead of Not Possible.
-                                      if (aboveVal === 10) return 5;
-                                      // If above=5 -> Not Possible (can't go below 5).
-                                      if (aboveVal === 5) return 0;
-                                      const gap = aboveVal - 5;
-                                      if (gap <= 5) return 0; // covers aboveVal 6-10 except 10 handled above
-                                      let mid = Math.round(((aboveVal + 5) / 2) / 5) * 5;
-                                      if (mid >= aboveVal) mid = aboveVal - 5;
-                                      if (mid <= 5) mid = 10; // keep strictly above phantom 5
-                                      if (!(mid < aboveVal && mid > 5)) return 0;
-                                      return clamp(mid, 5, 100);
-                                    }
-                                    if (!haveUpper && haveLower) return 0; // top insertion without upper bound
-                                    const aboveVal = prev[upIdx].initR; // higher
-                                    const belowVal = prev[downIdx].initR; // real lower
-                                    const gap = aboveVal - belowVal;
-                                    if (!(aboveVal > 0) || !(belowVal > 0) || gap <= 5) return 0;
-                                    let mid = Math.round(((aboveVal + belowVal) / 2) / 5) * 5;
-                                    if (mid >= aboveVal) mid = aboveVal - 5;
-                                    if (mid <= belowVal) mid = belowVal + 5;
-                                    if (!(mid < aboveVal && mid > belowVal)) return 0;
-                                    return clamp(mid, 5, 100);
-                                  }
+                                    if (haveUpper && !haveLower) { const aboveVal = prev[upIdx].initL; if (!(aboveVal > 0)) return 0; if (aboveVal === 95) return 100; if (aboveVal === 100) return 0; const gap = 100 - aboveVal; if (gap <= 5) return 0; let mid = Math.round(((aboveVal + 100)/2)/5)*5; if (mid <= aboveVal) mid=aboveVal+5; if (mid >= 100) mid=95; if (!(mid>aboveVal && mid<100)) return 0; return clamp(mid,5,100);}    
+                                    if (!haveUpper && haveLower) return 0; const aboveVal = prev[upIdx].initL; const belowVal = prev[downIdx].initL; const gap = belowVal - aboveVal; if (!(aboveVal>0)&&!(belowVal>0)||gap<=5) return 0; let mid = Math.round(((aboveVal+belowVal)/2)/5)*5; if (mid<=aboveVal) mid=aboveVal+5; if (mid>=belowVal) mid=belowVal-5; if (!(mid>aboveVal && mid<belowVal)) return 0; return clamp(mid,5,100);
+                                  } else {
+                                    let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initR > 0)) upIdx--; let downIdx = belowIdx; while (downIdx != null && downIdx < prev.length && !(prev[downIdx].initR > 0)) downIdx++; const haveUpper = upIdx >= 0; const haveLower = downIdx != null && downIdx < prev.length; if (!haveUpper && !haveLower) return 0; if (haveUpper && !haveLower) { const aboveVal = prev[upIdx].initR; if (!(aboveVal>0)) return 0; if (aboveVal===10) return 5; if (aboveVal===5) return 0; const gap = aboveVal - 5; if (gap <=5) return 0; let mid = Math.round(((aboveVal+5)/2)/5)*5; if (mid>=aboveVal) mid=aboveVal-5; if (mid<=5) mid=10; if (!(mid<aboveVal && mid>5)) return 0; return clamp(mid,5,100);} if (!haveUpper && haveLower) return 0; const aboveVal = prev[upIdx].initR; const belowVal = prev[downIdx].initR; const gap = aboveVal - belowVal; if (!(aboveVal>0)&&!(belowVal>0)||gap<=5) return 0; let mid = Math.round(((aboveVal+belowVal)/2)/5)*5; if (mid>=aboveVal) mid=aboveVal-5; if (mid<=belowVal) mid=belowVal+5; if (!(mid<aboveVal && mid>belowVal)) return 0; return clamp(mid,5,100); }
                                 };
                                 const midL = computeInsertValue('L');
                                 const midR = computeInsertValue('R');
@@ -2282,9 +2239,19 @@ export default function App() {
                                 next.splice(i+1,0,row);
                                 return next;
                               }) }}
-                              className="absolute right-8 bottom-1 px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-[11px] text-slate-700 whitespace-nowrap"
-                            >+ Insert Shot</button>
+                              className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 hover:bg-slate-100/60 cursor-copy"
+                              aria-label="Insert shot below"
+                              title="Insert shot below"
+                            >
+                              {/* Plus inside circle icon */}
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 8v8" />
+                                <path d="M8 12h8" />
+                              </svg>
+                            </button>
                           )}
+                          </div>
                         </td>
                         </tr>
                         {/* If dragging to end: show marker after last row */}
