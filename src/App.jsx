@@ -1844,7 +1844,8 @@ export default function App() {
                           </tr>
                         )}
                         <tr
-                          className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : ''}`}
+                          className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId===r.id ? 'bg-slate-200' : '')} hover:bg-slate-200 cursor-pointer`}
+                          onClick={(e)=>{ e.stopPropagation(); setSelectedIdx(i); setSelectedBlockId(r.id); }}
                           onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); setDragOverIdx(i); }}
                           onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
                         >
