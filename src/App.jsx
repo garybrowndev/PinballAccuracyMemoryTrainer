@@ -509,10 +509,10 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                   </div>
                 </div>
               )}
-              {/* Restore X button for deleting shot */}
+              {/* X button moved to bottom center of shot box */}
               <button
                 onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
-                className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] shadow-lg cursor-pointer"
+                className="absolute bottom-0 left-1/2 translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] shadow-lg cursor-pointer"
                 style={{ zIndex: 60 }}
                 title="Delete shot"
               >✕</button>
@@ -1098,7 +1098,11 @@ export default function App() {
 
   // Keep selectedIdx within bounds if rows shrink
   useEffect(() => {
-    setSelectedIdx((idx) => (idx >= rows.length ? Math.max(0, rows.length - 1) : idx));
+    setSelectedIdx((idx) => {
+      if (idx === -1) return -1; // preserve explicit no-selection state
+      if (rows.length === 0) return -1; // nothing to select
+      return idx >= rows.length ? Math.max(0, rows.length - 1) : idx;
+    });
     setSelectedSide(s => (s === 'L' || s === 'R') ? s : 'L');
     // No restore stacks to invalidate.
   }, [rows.length, setSelectedIdx, setSelectedSide]);
@@ -1844,7 +1848,7 @@ export default function App() {
                           </tr>
                         )}
                         <tr
-                          className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId===r.id ? 'bg-slate-200' : '')} hover:bg-slate-200 cursor-pointer`}
+                          className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId===r.id ? 'bg-slate-300' : '')} ${selectedBlockId===r.id ? '' : 'hover:bg-slate-100'} cursor-pointer`}
                           onClick={(e)=>{ e.stopPropagation(); setSelectedIdx(i); setSelectedBlockId(r.id); }}
                           onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); setDragOverIdx(i); }}
                           onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
@@ -1864,6 +1868,8 @@ export default function App() {
                                     selected={true}
                                     onClick={(e)=>{
                                       e.stopPropagation();
+                                      // Select this row in the playfield
+                                      setSelectedIdx(i); setSelectedBlockId(r.id);
                                       // Deselect and show menu directly
                                       setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:'', location:'', type:''}; return next; });
                                       // Open the shot selection menu using the same logic as the "Select Shot" chip
@@ -1879,6 +1885,8 @@ export default function App() {
                                     data-shot-chip={r.id}
                                     onClick={(e)=>{
                                       e.stopPropagation();
+                                      // Select this row in the playfield
+                                      setSelectedIdx(i); setSelectedBlockId(r.id);
                                       if (shotMenuOpen) {
                                         closeMenus();
                                       } else {
@@ -1896,6 +1904,8 @@ export default function App() {
                                     data-loc-chip={r.id}
                                     onClick={(e)=>{
                                       e.stopPropagation();
+                                      // Select this row in the playfield
+                                      setSelectedIdx(i); setSelectedBlockId(r.id);
                                       if (location) {
                                         // Deselect only location
                                         setRows(prev=>{ const next=[...prev]; next[i]={...next[i], location:'', type: buildType(base,'')}; return next; });
@@ -2095,7 +2105,38 @@ export default function App() {
                         </td>
                         <td className="p-2 text-right relative select-none">
                           <button
-                            onClick={() => setRows((prev) => prev.filter((_, k) => k !== i))}
+                            onClick={() => {
+                              setRows(prev => {
+                                const next = prev.filter((_, k) => k !== i);
+                                // Compute new selected index
+                                let newIdx = selectedIdx;
+                                if (selectedIdx === i) {
+                                  // Deleted currently selected row: clear selection entirely
+                                  newIdx = -1;
+                                } else if (i < selectedIdx) {
+                                  // A row above the current selection was removed; shift selection index left
+                                  newIdx = Math.max(0, selectedIdx - 1);
+                                }
+                                // Clamp when list becomes empty
+                                if (next.length === 0) {
+                                  newIdx = -1;
+                                  setSelectedBlockId(null);
+                                  setSelectedIdx(-1);
+                                  return next;
+                                }
+                                // Apply selection updates referencing the NEW array so ids align
+                                if (newIdx === -1) {
+                                  setSelectedIdx(-1);
+                                  setSelectedBlockId(null);
+                                } else {
+                                  if (newIdx < 0) newIdx = 0; // safety
+                                  if (newIdx >= next.length) newIdx = next.length - 1;
+                                  setSelectedIdx(newIdx);
+                                  setSelectedBlockId(next[newIdx]?.id ?? null);
+                                }
+                                return next;
+                              });
+                            }}
                             className="text-slate-500 hover:text-red-600 cursor-pointer"
                             title="Remove"
                           >
@@ -2119,7 +2160,7 @@ export default function App() {
                           {!initialized && (
                             <button
                               type="button"
-                              onClick={() => setRows(prev => {
+                              onClick={(e) => { e.stopPropagation(); setRows(prev => {
                                 const next=[...prev];
                                 const aboveIdx = i; // row above insertion point
                                 const belowIdx = i+1 < prev.length ? i+1 : null;
@@ -2204,7 +2245,7 @@ export default function App() {
                                 const row = newRow({ initL: midL, initR: midR }, prev.length);
                                 next.splice(i+1,0,row);
                                 return next;
-                              })}
+                              }) }}
                               className="absolute right-8 bottom-1 px-2 py-1 rounded-md bg-slate-200 hover:bg-slate-300 text-[11px] text-slate-700 whitespace-nowrap"
                             >+ Insert Shot</button>
                           )}
