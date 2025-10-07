@@ -1747,7 +1747,14 @@ export default function App() {
                       </th>
                       <th className="p-2">
                         <div className="flex items-center gap-2">
-                          <span>Left Flipper</span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); }}
+                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
+                            className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
+                            title="Select Left Flipper"
+                          >Left Flipper</span>
                           {!!rows.length && (
                             <button
                               type="button"
@@ -1755,11 +1762,8 @@ export default function App() {
                                 setRows(prev => {
                                   const n = prev.length;
                                   if (!n) return prev;
-                                  // Interior partition (i+1)/(n+1)*100 snapped to 5 yields centered spread; we now keep ascending directly.
                                   let asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
-                                  // Ensure strict ascending (dedupe by bumping forward)
                                   for (let k=1;k<asc.length;k++) if (asc[k] <= asc[k-1]) asc[k] = Math.min(100, asc[k-1] + 5);
-                                  // Clamp top if overflowed due to bumps - back-propagate if needed
                                   for (let k=asc.length-2;k>=0;k--) if (asc[k] >= asc[k+1]) asc[k] = Math.max(5, asc[k+1]-5);
                                   return prev.map((rw, idx)=> ({ ...rw, initL: asc[idx] }));
                                 });
@@ -1772,14 +1776,20 @@ export default function App() {
                       </th>
                       <th className="p-2">
                         <div className="flex items-center gap-2">
-                          <span>Right Flipper</span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); }}
+                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
+                            className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
+                            title="Select Right Flipper"
+                          >Right Flipper</span>
                           {!!rows.length && (
                             <button
                               type="button"
                               onClick={() => {
                                 setRows(prev => {
                                   const n = prev.length; if (!n) return prev;
-                                  // Generate ascending interior partition then reverse for descending constraint (high -> low)
                                   let asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
                                   for (let k=1;k<asc.length;k++) if (asc[k] <= asc[k-1]) asc[k] = Math.min(100, asc[k-1] + 5);
                                   for (let k=asc.length-2;k>=0;k--) if (asc[k] >= asc[k+1]) asc[k] = Math.max(5, asc[k+1]-5);
@@ -1848,7 +1858,7 @@ export default function App() {
                           </tr>
                         )}
                         <tr
-                          className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId===r.id ? 'bg-slate-300' : '')} ${selectedBlockId===r.id ? '' : 'hover:bg-slate-100'} cursor-pointer`}
+                          className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId===r.id ? 'bg-slate-300' : '')} ${selectedBlockId===r.id ? '' : 'hover:bg-slate-100'} cursor-default`}
                           onClick={(e)=>{ e.stopPropagation(); setSelectedIdx(i); setSelectedBlockId(r.id); }}
                           onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); setDragOverIdx(i); }}
                           onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
