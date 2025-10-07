@@ -1843,7 +1843,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={exportPreset}
-                              className="cursor-copy text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                              className="cursor-pointer text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                               title="Export shots as JSON"
                               aria-label="Export shots"
                             >
@@ -2041,7 +2041,7 @@ export default function App() {
                                 </div>
                               );
                             })()}
-                            <div className="flex flex-col items-center mt-1">
+                            <div className="flex flex-col items-center mt-[15px]">
                               <Chip
                                 active={r.initL===0}
                                 onClick={() => {
@@ -2129,7 +2129,7 @@ export default function App() {
                                 </div>
                               );
                             })()}
-                            <div className="flex flex-col items-center mt-1">
+                            <div className="flex flex-col items-center mt-[15px]">
                               <Chip
                                 active={r.initR===0}
                                 onClick={() => {
@@ -2284,11 +2284,11 @@ export default function App() {
                 </table>
               </div>
               {!!rows.length && !initialized && (
-                <div className="flex justify-end mt-2">
+                <div className="flex justify-start mt-2">
                   <button
                     type="button"
                     onClick={() => { setRows([]); setCollapsedTypes([]); _pushToast('Cleared all shots'); }}
-                    className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer shadow-sm"
+                    className="text-slate-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
                     title="Clear all shots"
                     aria-label="Clear all shots"
                   >

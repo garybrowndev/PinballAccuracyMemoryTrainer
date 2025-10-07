@@ -20,11 +20,27 @@
     "filename": "deadpool-stern-2018.json"
   },
   {
+    "name": "Indiana Jones The Pinball Adventure (Williams 1993)",
+    "filename": "indiana-jones-the-pinball-adventure-williams-1993.json"
+  },
+  {
+    "name": "Medieval Madness (Williams 1997)",
+    "filename": "medieval-madness-williams-1997.json"
+  },
+  {
+    "name": "Monster Bash (Williams 1998)",
+    "filename": "monster-bash-williams-1998.json"
+  },
+  {
     "name": "The Lord Of The Rings (Stern 2003)",
     "filename": "the-lord-of-the-rings-stern-2013.json"
   },
   {
     "name": "The Simpsons Pinball Party (Stern 2003)",
     "filename": "the-simpsons-pinball-party-stern-2003.json"
+  },
+  {
+    "name": "World Cup Soccer (Bally 1994)",
+    "filename": "world-cup-soccer-bally-1994.json"
   }
 ]

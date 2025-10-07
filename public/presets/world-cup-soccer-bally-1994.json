@@ -1,0 +1,37 @@
+[
+  {
+    "shotType": "Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 85
+  },
+  {
+    "shotType": "Ramp",
+    "leftFlipper": 20,
+    "rightFlipper": 70
+  },
+  {
+    "shotType": "Toy",
+    "leftFlipper": 40,
+    "rightFlipper": 45
+  },
+  {
+    "shotType": "Scoop",
+    "leftFlipper": 60,
+    "rightFlipper": 10
+  },
+  {
+    "shotType": "Scoop",
+    "leftFlipper": 75,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Ramp",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]
