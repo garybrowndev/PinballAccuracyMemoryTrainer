@@ -380,14 +380,33 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     const endpointY = 550; const apexY = 100; const chord = 1000; const sagitta = endpointY - apexY; // 450
     const R = (sagitta*sagitta + (chord/2)*(chord/2))/(2*sagitta);
     const centerY = apexY + R; const centerX = 500;
-    const vLeft = { x: 0 - centerX, y: endpointY - centerY }; const vRight = { x: 1000 - centerX, y: endpointY - centerY };
-    const startAngle = Math.atan2(vLeft.y, vLeft.x); const endAngle = Math.atan2(vRight.y, vRight.x);
     const n = rows.length;
-    const fracs = n === 1 ? [0.5] : Array.from({ length: n }, (_, i) => (i + 1) / (n + 1));
-    const angleDiff = endAngle - startAngle;
+    // Distribute evenly along horizontal span (x-axis) to ensure equal horizontal spacing
+    // Shot boxes are 80 units wide and centered, so need 40-unit margin on each side
+    const boxWidth = 80; // box size in 1000-unit coordinate system
+    const boxHalfWidth = boxWidth / 2;
+    const minGap = 20; // minimum desired gap between boxes
+    const minMargin = boxHalfWidth; // absolute minimum margin (40)
+    const comfortMargin = 120; // comfortable margin for small counts
+    // Calculate what margin we can afford: start with comfortable, reduce only if needed
+    const totalBoxWidth = n * boxWidth;
+    const neededGaps = (n - 1) * minGap;
+    const spaceNeeded = totalBoxWidth + neededGaps;
+    const maxMargin = Math.max(minMargin, (chord - spaceNeeded) / 2);
+    const margin = Math.min(comfortMargin, maxMargin);
+    const usableWidth = chord - (2 * margin);
+    const fracs = n === 1 ? [0.5] : Array.from({ length: n }, (_, i) => i / (n - 1));
     const newPositions = fracs.map(f => {
-      const ang = startAngle + angleDiff * f;
-      return { x: (centerX + R * Math.cos(ang)) / 1000, y: (centerY + R * Math.sin(ang)) / 1000 };
+      // Compute x-coordinate evenly spaced horizontally with adaptive margins
+      const xPos = margin + f * usableWidth;
+      // Project x onto the arc to find corresponding y: solve circle equation for y given x
+      // Circle: (x - centerX)^2 + (y - centerY)^2 = R^2
+      // Solve for y (taking the upper part of circle - negative sqrt since arc curves upward)
+      const dx = xPos - centerX;
+      const discriminant = R*R - dx*dx;
+      // Arc is on upper part of circle (y < centerY), so take negative sqrt
+      const yPos = discriminant >= 0 ? centerY - Math.sqrt(discriminant) : apexY;
+      return { x: xPos / 1000, y: yPos / 1000 };
     });
     // Only update state if at least one coordinate actually changed; avoids infinite render loop.
     let anyDiff = false;
