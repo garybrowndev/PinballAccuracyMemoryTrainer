@@ -542,23 +542,42 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           const rBaseConst = 27.5; const tipWidthConst = 22;
           const Lp = (p)=>{ const e=flipperTopEdge(L_BASE, L_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
           const Rp = (p)=>{ const e=flipperTopEdge(R_BASE, R_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
-          if (selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_R') {
-            const isLeft = selectedId === 'FLIPPER_L';
+          if (selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_R' || selectedId === 'FLIPPER_BOTH') {
+            const showLeft = selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_BOTH';
+            const showRight = selectedId === 'FLIPPER_R' || selectedId === 'FLIPPER_BOTH';
             const BOX_HALF = 15;
             return (
               <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
-                {rows.map(r=>{
-                  const val = isLeft ? r.initL : r.initR;
+                {showLeft && rows.map(r=>{
+                  const val = r.initL;
                   if (val == null || val <= 0) return null;
-                  const anchor = isLeft ? Lp(val) : Rp(val);
+                  const anchor = Lp(val);
                   const bx = r.x * w; const by = r.y * h + BOX_HALF;
-                  const color = isLeft ? '#0ea5e9' : '#dc2626';
+                  const color = '#0ea5e9';
                   const incomplete = !r.type; // no shot type chosen
                   const opacity = incomplete ? 0.3 : 1;
                   const label = format2(val);
                   const fs=11; const padX=5, padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=anchor.x; const cy=anchor.y; // position directly at flipper edge
                   return (
-                    <g key={r.id}>
+                    <g key={`L-${r.id}`}>
+                      <line x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={color} strokeWidth={4} strokeLinecap="round" opacity={opacity} />
+                      <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                      <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                    </g>
+                  );
+                })}
+                {showRight && rows.map(r=>{
+                  const val = r.initR;
+                  if (val == null || val <= 0) return null;
+                  const anchor = Rp(val);
+                  const bx = r.x * w; const by = r.y * h + BOX_HALF;
+                  const color = '#dc2626';
+                  const incomplete = !r.type; // no shot type chosen
+                  const opacity = incomplete ? 0.3 : 1;
+                  const label = format2(val);
+                  const fs=11; const padX=5, padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=anchor.x; const cy=anchor.y; // position directly at flipper edge
+                  return (
+                    <g key={`R-${r.id}`}>
                       <line x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={color} strokeWidth={4} strokeLinecap="round" opacity={opacity} />
                       <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
                       <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
@@ -1723,15 +1742,22 @@ export default function App() {
                 <table className="w-full text-sm table-fixed">
                   <colgroup>
                     <col className="w-46-/100" />
-                    <col className="w-28/100" />
-                    <col className="w-28/100" />
-                    <col className="w-[40px]" />
+                    <col className="w-35/100" />
+                    <col className="w-35/100" />
+                    <col className="w-[20px]" />
                   </colgroup>
                   <thead>
                     <tr className="text-left text-slate-500 align-bottom">
-                      <th className="p-2"> 
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_BOTH' ? 'bg-slate-50' : ''}`}> 
                         <div className="flex items-center gap-2">
-                          <span>Shot Type</span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => { if (selectedBlockId !== 'FLIPPER_BOTH') { setSelectedBlockId('FLIPPER_BOTH'); } }}
+                            onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_BOTH') { setSelectedBlockId('FLIPPER_BOTH'); } }}
+                            className="hover:bg-slate-50 rounded px-1 cursor-pointer select-none"
+                            title="Select Both Flippers"
+                          >Shot Type</span>
                           {!!rows.length && (
                             <button
                               type="button"
@@ -1745,7 +1771,7 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_L' ? 'bg-emerald-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' ? 'bg-emerald-50' : ''}`}> 
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
@@ -1774,7 +1800,7 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_R' ? 'bg-rose-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' ? 'bg-rose-50' : ''}`}> 
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
@@ -1938,8 +1964,8 @@ export default function App() {
                             );
                           })()}
                         </td>
-                        <td className={`p-2 ${selectedBlockId==='FLIPPER_L' ? 'bg-emerald-50' : ''}`}> 
-                          <div className="flex flex-col gap-1 max-w-[220px]">
+                        <td className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' ? 'bg-emerald-50' : ''}`}> 
+                          <div className="flex flex-col gap-1 w-full px-[10px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'L',i);
                               const rawAllowedMin = range ? range[0] : 5;
@@ -1961,8 +1987,8 @@ export default function App() {
                               const trackBg = range ? `linear-gradient(to right,
                                 rgba(55,65,81,0.70) 0%,
                                 rgba(55,65,81,0.70) ${leftGreyPct}%,
-                                rgba(16,185,129,0.35) ${leftGreyPct}%,
-                                rgba(16,185,129,0.35) ${rightGreyStartPct}%,
+                                rgba(14,165,233,0.35) ${leftGreyPct}%,
+                                rgba(14,165,233,0.35) ${rightGreyStartPct}%,
                                 rgba(55,65,81,0.70) ${rightGreyStartPct}%,
                                 rgba(55,65,81,0.70) 100%)` : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
                               return (
@@ -1992,22 +2018,22 @@ export default function App() {
                                     {range && !(allowedMin===5 && allowedMax===95) && (()=>{
                                       return (
                                         <>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: leftGreyPct + '%' }}>{format2(allowedMin)}</div>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-emerald-700" style={{ left: rightGreyStartPct + '%' }}>{format2(allowedMax)}</div>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: leftGreyPct + '%' }}>{format2(allowedMin)}</div>
+                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: rightGreyStartPct + '%' }}>{format2(allowedMax)}</div>
                                         </>
                                       );
                                     })()}
                                     {actual!=null && range && (()=>{
                                       const pct = ((actual - 5) / span) * 100;
                                       return (
-                                        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-emerald-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
+                                        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
                                       );
                                     })()}
                                   </div>
                                 </div>
                               );
                             })()}
-                            <div className="mt-5">
+                            <div className="flex flex-col items-center mt-1">
                               <Chip
                                 active={r.initL===0}
                                 onClick={() => {
@@ -2025,8 +2051,8 @@ export default function App() {
                             </div>
                           </div>
                         </td>
-                        <td className={`p-2 ${selectedBlockId==='FLIPPER_R' ? 'bg-rose-50' : ''}`}> 
-                          <div className="flex flex-col gap-1 max-w-[220px]">
+                        <td className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' ? 'bg-rose-50' : ''}`}> 
+                          <div className="flex flex-col gap-1 w-full px-[10px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'R',i);
                               const rawAllowedMin = range ? range[0] : 5;
@@ -2095,7 +2121,7 @@ export default function App() {
                                 </div>
                               );
                             })()}
-                            <div className="mt-5">
+                            <div className="flex flex-col items-center mt-1">
                               <Chip
                                 active={r.initR===0}
                                 onClick={() => {
