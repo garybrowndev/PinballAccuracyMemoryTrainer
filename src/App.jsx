@@ -402,7 +402,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
 
   // Drag removed; no clamping helper needed.
 
-  const handleMouseDown = (e, id) => { setSelectedId(id); };
+  const handleMouseDown = (e, id) => { e.stopPropagation(); setSelectedId(id); };
 
   // Drag logic removed.
 
@@ -412,7 +412,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout</h3>
       <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
-  <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden">
+  <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden" onMouseDown={()=> setSelectedId(null)}>
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
   <PlayfieldScenery />
         {/* Precise clickable flipper paths (no visible outline when selected) */}
@@ -447,14 +447,14 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 <path
                   d={leftD}
                   fill="transparent"
-                  onMouseDown={(e)=>{ e.stopPropagation(); setSelectedId(selectedId==='FLIPPER_L'? null : 'FLIPPER_L'); }}
-                  title="Toggle Left flipper shot lines"
+                  onMouseDown={(e)=>{ e.stopPropagation(); if (selectedId !== 'FLIPPER_L') setSelectedId('FLIPPER_L'); }}
+                  title="Select Left flipper shot lines"
                 />
                 <path
                   d={rightD}
                   fill="transparent"
-                  onMouseDown={(e)=>{ e.stopPropagation(); setSelectedId(selectedId==='FLIPPER_R'? null : 'FLIPPER_R'); }}
-                  title="Toggle Right flipper shot lines"
+                  onMouseDown={(e)=>{ e.stopPropagation(); if (selectedId !== 'FLIPPER_R') setSelectedId('FLIPPER_R'); }}
+                  title="Select Right flipper shot lines"
                 />
               </g>
             );
@@ -1729,7 +1729,7 @@ export default function App() {
                   </colgroup>
                   <thead>
                     <tr className="text-left text-slate-500 align-bottom">
-                      <th className="p-2">
+                      <th className="p-2"> 
                         <div className="flex items-center gap-2">
                           <span>Shot Type</span>
                           {!!rows.length && (
@@ -1745,13 +1745,13 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className="p-2">
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_L' ? 'bg-emerald-50' : ''}`}> 
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
                             tabIndex={0}
-                            onClick={() => { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); }}
-                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
+                            onClick={() => { if (selectedBlockId !== 'FLIPPER_L') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
+                            onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_L') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
                             className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
                             title="Select Left Flipper"
                           >Left Flipper</span>
@@ -1774,13 +1774,13 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className="p-2">
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_R' ? 'bg-rose-50' : ''}`}> 
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
                             tabIndex={0}
-                            onClick={() => { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); }}
-                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
+                            onClick={() => { if (selectedBlockId !== 'FLIPPER_R') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
+                            onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_R') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
                             className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
                             title="Select Right Flipper"
                           >Right Flipper</span>
@@ -1938,7 +1938,7 @@ export default function App() {
                             );
                           })()}
                         </td>
-                        <td className="p-2">
+                        <td className={`p-2 ${selectedBlockId==='FLIPPER_L' ? 'bg-emerald-50' : ''}`}> 
                           <div className="flex flex-col gap-1 max-w-[220px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'L',i);
@@ -2025,7 +2025,7 @@ export default function App() {
                             </div>
                           </div>
                         </td>
-                        <td className="p-2">
+                        <td className={`p-2 ${selectedBlockId==='FLIPPER_R' ? 'bg-rose-50' : ''}`}> 
                           <div className="flex flex-col gap-1 max-w-[220px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'R',i);
