@@ -1663,9 +1663,9 @@ export default function App() {
                 <div
                   role="listbox"
                   aria-label="Available presets"
-                  className="absolute left-0 right-0 bottom-full mb-1 max-h-60 overflow-auto rounded-md border bg-white shadow-lg z-60"
+                  className="absolute left-0 bottom-full mb-1 overflow-visible rounded-md border bg-white shadow-lg z-60 w-fit"
                   onClick={e=> e.stopPropagation()}
-                  style={{ display: 'block' }}
+                  style={{ display: 'block', maxWidth: 'calc(100vw - 2rem)' }}
                 >
                   {availablePresets.map(preset => (
                     <button
@@ -1675,9 +1675,9 @@ export default function App() {
                       aria-selected={selectedPresetName === preset.name}
                       onClick={() => { loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null); }}
                       title={preset.name}
-                      className={(selectedPresetName === preset.name ? 'bg-emerald-200' : '') + ' w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-2 text-emerald-700 hover:bg-emerald-100'}
+                      className={(selectedPresetName === preset.name ? 'bg-emerald-200' : '') + ' w-full text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100'}
                     >
-                      <span className="truncate block" style={{ maxWidth: '100%' }}>{preset.name}</span>
+                      <span>{preset.name}</span>
                     </button>
                   ))}
                 </div>
