@@ -463,7 +463,6 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
         {rows.map(r=>{
           const sel = r.id === selectedId;
           const misordered = misorderedIds?.has(r.id);
-          const hasType = !!r.type;
           const basePart = r.base || '';
           const slug = basePart ? elementSlug(basePart) : null;
           const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
@@ -683,6 +682,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  // Track which images have loaded (reused across shot tiles) keyed by row.id
+  const [imageLoadedMap, setImageLoadedMap] = useState({});
   useEffect(()=>{ setMounted(true); }, []);
   useEffect(()=>{
     if (!fullscreen) return; // only track for fullscreen scaling
@@ -733,7 +734,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           const basePart = r.base || '';
           const slug = basePart ? elementSlug(basePart) : null;
           const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
-          const [imgVisible, setImgVisible] = React.useState(false);
+          // Image visibility tracked in parent map (imageLoadedMap) to avoid per-iteration hook misuse.
+          const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
           const showImageAttempt = !!imgSrc;
           const size = 80; // match setup tile size when image
           if (showImageAttempt) {
@@ -748,8 +750,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 <img
                   src={imgSrc}
                   alt={r.type}
-                  onLoad={()=> setImgVisible(true)}
-                  onError={()=> setImgVisible(false)}
+                  onLoad={()=> setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
+                  onError={()=> setImageLoadedMap(m => { if (!m[r.id]) return m; const copy = { ...m }; delete copy[r.id]; return copy; })}
                   className={(imgVisible?'opacity-100':'opacity-0')+ ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
                   draggable={false}
                 />
@@ -830,7 +832,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               // Measure actual shot box width (after scaling) for proportional offsets
               let boxW = 120;
               const shotEl = canvasRef.current?.querySelector(`[data-shot-box="${prevRow.id}"]`);
-              if (shotEl) { try { const br = shotEl.getBoundingClientRect(); if (br?.width) boxW = br.width; } catch {} }
+              if (shotEl) { try { const br = shotEl.getBoundingClientRect(); if (br?.width) boxW = br.width; } catch { /* swallow measurement errors (layout shifts) intentionally */ } }
               const boxH = 30; // heuristic height only for vertical anchor reference
               // Direction: Right flipper early-> +x, late-> -x; Left flipper mirrored
               const dirLate = lastRecall.delta > 0 ? 1 : (lastRecall.delta < 0 ? -1 : 0);
@@ -970,10 +972,10 @@ export default function App() {
   // Setup state
   // Start with no shots by default; user must explicitly add via + Add shot.
   const [rowsRaw, setRowsRaw] = useLocalStorage("pinball_rows_v1", []);
-  const rows = rowsRaw; // direct;
-  const setRows = (updater) => {
+  const rows = rowsRaw; // direct
+  const setRows = useCallback((updater) => {
     setRowsRaw(prev => (typeof updater === 'function' ? updater(prev) : updater));
-  };
+  }, [setRowsRaw]);
   // Popup menus for new shot/location selector
   const [openShotMenuId, setOpenShotMenuId] = useState(null); // row id currently showing shot list
   const [openLocMenuId, setOpenLocMenuId] = useState(null);  // row id currently showing location list
@@ -1129,8 +1131,7 @@ export default function App() {
       // Parse preset data and create rows
       const newRows = presetData.map((shot, idx) => {
         // Parse shot type to extract base and location
-        const typeStr = shot.shotType || '';
-        const words = typeStr.split(' ');
+  const typeStr = shot.shotType || '';
         let base = '';
         let location = '';
         
@@ -1273,6 +1274,8 @@ export default function App() {
     setHiddenL(prev => {
       if (!prev.length || !baseL.length) return prev;
       const drifted = prev.map((v,i) => {
+        // If "Not Possible" (0), it should not drift and remain 0
+        if (v === 0) return 0;
         const b = baseL[i];
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
@@ -1285,6 +1288,8 @@ export default function App() {
     setHiddenR(prev => {
       if (!prev.length || !baseR.length) return prev;
       const drifted = prev.map((v,i) => {
+        // If "Not Possible" (0), it should not drift and remain 0
+        if (v === 0) return 0;
         const b = baseR[i];
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
