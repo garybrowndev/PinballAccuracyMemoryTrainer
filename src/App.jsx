@@ -370,7 +370,7 @@ const Chip = ({ active, children, onClick, className = "", disabled = false }) =
 };
 
 // Simple playfield editor for arranging shots spatially & adjusting flipper percentages
-function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedIds }) {
+function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedIds, onClear }) {
   const canvasRef = React.useRef(null);
   // Track which shot images have successfully loaded (id -> true). Avoid per-item hooks inside map.
   const [imageLoadedMap, setImageLoadedMap] = useState({});
@@ -460,6 +460,25 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
       <h3 className="font-medium mb-2">Playfield Layout</h3>
       <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
   <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden" onMouseDown={()=> setSelectedId(null)}>
+        {/* Clear all shots button placed inside playfield (bottom-left) when provided */}
+        {onClear && (
+          <button
+            type="button"
+            onClick={(e)=>{ e.stopPropagation(); onClear(); }}
+            className="absolute left-3 bottom-3 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
+            title="Clear all shots"
+            aria-label="Clear all shots"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18" />
+              <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+              <path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14" />
+            </svg>
+            <span className="hidden md:inline">Clear</span>
+          </button>
+        )}
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
   <PlayfieldScenery />
         {/* Precise clickable flipper paths (no visible outline when selected) */}
@@ -1793,7 +1812,7 @@ export default function App() {
                   for (let i=0;i<rows.length;i++) if (rows[i].id !== byX[i]) mis.add(rows[i].id);
                   return mis;
                 })();
-                return <PlayfieldEditor rows={rows} setRows={setRows} selectedId={selectedBlockId} setSelectedId={setSelectedBlockId} misorderedIds={misorderedIds} />;
+                return <PlayfieldEditor rows={rows} setRows={setRows} selectedId={selectedBlockId} setSelectedId={setSelectedBlockId} misorderedIds={misorderedIds} onClear={() => { setRows([]); setCollapsedTypes([]); _pushToast('Cleared all shots'); }} />;
               })()}
               <div className="overflow-auto">
                 <table className="w-full text-sm table-fixed">
@@ -2333,26 +2352,7 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-              {!!rows.length && !initialized && (
-                <div className="flex justify-start mt-2">
-                  <button
-                    type="button"
-                    onClick={() => { setRows([]); setCollapsedTypes([]); _pushToast('Cleared all shots'); }}
-                    className="text-slate-500 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
-                    title="Clear all shots"
-                    aria-label="Clear all shots"
-                  >
-                    {/* Trash / delete all icon */}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
-                      <path d="M3 6h18" strokeWidth="1.6" strokeLinecap="round" />
-                      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" strokeWidth="1.6" strokeLinecap="round" />
-                      <path d="M10 11v6" strokeWidth="1.6" strokeLinecap="round" />
-                      <path d="M14 11v6" strokeWidth="1.6" strokeLinecap="round" />
-                      <path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                </div>
-              )}
+              {/* Clear all shots button below table removed; only in-canvas button remains */}
             </Section>
 
             <Section title="2) Session parameters">
