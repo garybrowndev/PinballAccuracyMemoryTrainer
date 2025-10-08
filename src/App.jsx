@@ -1177,6 +1177,8 @@ export default function App() {
   // Playfield editor is always visible now; toggle removed
   // const [showPlayfield, setShowPlayfield] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
+  // Temporary hover state for flipper column headers ("L" or "R") to preview column highlight
+  const [hoverFlipperColumn, setHoverFlipperColumn] = useState(null);
   // One-time auto-collapse so pre-selected values (from persisted state or defaults) show as single chips, not full option lists on first load.
   const didInitCollapse = useRef(false);
   useEffect(() => {
@@ -1848,13 +1850,15 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' ? 'bg-emerald-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' ? 'bg-emerald-50' : ''}`}> 
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
                             tabIndex={0}
                             onClick={() => { if (selectedBlockId !== 'FLIPPER_L') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
                             onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_L') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
+                            onMouseEnter={()=> setHoverFlipperColumn('L')}
+                            onMouseLeave={()=> setHoverFlipperColumn(null)}
                             className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
                             title="Select Left Flipper"
                           >Left Flipper</span>
@@ -1877,13 +1881,15 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' ? 'bg-rose-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' ? 'bg-rose-50' : ''}`}> 
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
                             tabIndex={0}
                             onClick={() => { if (selectedBlockId !== 'FLIPPER_R') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
                             onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_R') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
+                            onMouseEnter={()=> setHoverFlipperColumn('R')}
+                            onMouseLeave={()=> setHoverFlipperColumn(null)}
                             className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
                             title="Select Right Flipper"
                           >Right Flipper</span>
@@ -2041,7 +2047,7 @@ export default function App() {
                             );
                           })()}
                         </td>
-                        <td className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' ? 'bg-emerald-50' : ''}`}> 
+                        <td className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' ? 'bg-emerald-50' : ''}`}> 
                           <div className="flex flex-col gap-1 w-full px-[10px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'L',i);
@@ -2128,7 +2134,7 @@ export default function App() {
                             </div>
                           </div>
                         </td>
-                        <td className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' ? 'bg-rose-50' : ''}`}> 
+                        <td className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' ? 'bg-rose-50' : ''}`}> 
                           <div className="flex flex-col gap-1 w-full px-[10px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'R',i);
