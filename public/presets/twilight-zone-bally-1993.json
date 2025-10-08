@@ -1,0 +1,37 @@
+[
+  {
+    "shotType": "Bumper",
+    "leftFlipper": "NP",
+    "rightFlipper": 90
+  },
+  {
+    "shotType": "Lane",
+    "leftFlipper": "NP",
+    "rightFlipper": 75
+  },
+  {
+    "shotType": "Ramp",
+    "leftFlipper": 30,
+    "rightFlipper": 65
+  },
+  {
+    "shotType": "Ramp",
+    "leftFlipper": 60,
+    "rightFlipper": 50
+  },
+  {
+    "shotType": "Lane",
+    "leftFlipper": 75,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Scoop",
+    "leftFlipper": 80,
+    "rightFlipper": 15
+  },
+  {
+    "shotType": "Orbit",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]

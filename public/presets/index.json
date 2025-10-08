@@ -1,7 +1,15 @@
 [
   {
+    "name": "Addams Family (Bally 1992), The",
+    "filename": "the-addams-family-bally-1992.json"
+  },
+  {
     "name": "Attack from Mars (Bally 1995)",
     "filename": "attack-from-mars-bally-1995.json"
+  },
+  {
+    "name": "Diner (Williams 1990)",
+    "filename": "diner-williams-1990.json"
   },
   {
     "name": "Godzilla (Stern 2021)",
@@ -24,6 +32,10 @@
     "filename": "indiana-jones-the-pinball-adventure-williams-1993.json"
   },
   {
+    "name": "Lord Of The Rings (Stern 2003), The",
+    "filename": "the-lord-of-the-rings-stern-2013.json"
+  },
+  {
     "name": "Medieval Madness (Williams 1997)",
     "filename": "medieval-madness-williams-1997.json"
   },
@@ -32,12 +44,20 @@
     "filename": "monster-bash-williams-1998.json"
   },
   {
-    "name": "The Lord Of The Rings (Stern 2003)",
-    "filename": "the-lord-of-the-rings-stern-2013.json"
+    "name": "Simpsons Pinball Party (Stern 2003), The",
+    "filename": "the-simpsons-pinball-party-stern-2003.json"
   },
   {
-    "name": "The Simpsons Pinball Party (Stern 2003)",
-    "filename": "the-simpsons-pinball-party-stern-2003.json"
+    "name": "Star Trek - The Next Generation (Williams 1993)",
+    "filename": "star-trek-the-next-generation-williams-1993.json"
+  },
+  {
+    "name": "Theatre Of Magic (Bally 1995)",
+    "filename": "theatre-of-magic-bally-1995.json"
+  },
+  {
+    "name": "White Water (Williams 1993)",
+    "filename": "white-water-williams-1993.json"
   },
   {
     "name": "World Cup Soccer (Bally 1994)",

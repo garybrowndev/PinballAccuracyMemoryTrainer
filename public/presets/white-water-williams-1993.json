@@ -1,0 +1,32 @@
+[
+  {
+    "shotType": "Left Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Left Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 90
+  },
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": "NP",
+    "rightFlipper": 80
+  },
+  {
+    "shotType": "Center Lock",
+    "leftFlipper": 30,
+    "rightFlipper": 55
+  },
+  {
+    "shotType": "Center Ramp",
+    "leftFlipper": 60,
+    "rightFlipper": 25
+  },
+  {
+    "shotType": "Right Orbit",
+    "leftFlipper": 85,
+    "rightFlipper": "NP"
+  }
+]

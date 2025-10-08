@@ -1834,6 +1834,8 @@ export default function App() {
                             tabIndex={0}
                             onClick={() => { if (selectedBlockId !== 'FLIPPER_BOTH') { setSelectedBlockId('FLIPPER_BOTH'); } }}
                             onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_BOTH') { setSelectedBlockId('FLIPPER_BOTH'); } }}
+                            onMouseEnter={()=> setHoverFlipperColumn('BOTH')}
+                            onMouseLeave={()=> setHoverFlipperColumn(null)}
                             className="hover:bg-slate-50 rounded px-1 cursor-pointer select-none"
                             title="Select Both Flippers"
                           >Shot Type</span>
@@ -1850,7 +1852,7 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' ? 'bg-emerald-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' || hoverFlipperColumn==='BOTH' ? 'bg-emerald-50' : ''}`}> 
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
@@ -1881,7 +1883,7 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' ? 'bg-rose-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' || hoverFlipperColumn==='BOTH' ? 'bg-rose-50' : ''}`}> 
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
@@ -2047,7 +2049,7 @@ export default function App() {
                             );
                           })()}
                         </td>
-                        <td className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' ? 'bg-emerald-50' : ''}`}> 
+                        <td className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' || hoverFlipperColumn==='BOTH' ? 'bg-emerald-50' : ''}`}> 
                           <div className="flex flex-col gap-1 w-full px-[10px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'L',i);
@@ -2134,7 +2136,7 @@ export default function App() {
                             </div>
                           </div>
                         </td>
-                        <td className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' ? 'bg-rose-50' : ''}`}> 
+                        <td className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' || hoverFlipperColumn==='BOTH' ? 'bg-rose-50' : ''}`}> 
                           <div className="flex flex-col gap-1 w-full px-[10px]">
                             {(() => {
                               const range = computeAllowedRange(rows,'R',i);

@@ -1,0 +1,37 @@
+[
+  {
+    "shotType": "Left Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 85
+  },
+  {
+    "shotType": "Left Scoop",
+    "leftFlipper": 15,
+    "rightFlipper": 75
+  },
+  {
+    "shotType": "Center Ramp",
+    "leftFlipper": "NP",
+    "rightFlipper": 65
+  },
+  {
+    "shotType": "Right Ramp",
+    "leftFlipper": 40,
+    "rightFlipper": 45
+  },
+  {
+    "shotType": "Right Toy",
+    "leftFlipper": 65,
+    "rightFlipper": 25
+  },
+  {
+    "shotType": "Right Orbit",
+    "leftFlipper": 85,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Scoop",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]
