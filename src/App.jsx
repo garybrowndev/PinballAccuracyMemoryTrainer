@@ -374,6 +374,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
   const canvasRef = React.useRef(null);
   // Track which shot images have successfully loaded (id -> true). Avoid per-item hooks inside map.
   const [imageLoadedMap, setImageLoadedMap] = useState({});
+  // Track computed scale for rendering
+  const [boxScale, setBoxScale] = useState(1);
   // Auto-arrange rows along arc; effect recomputes when rows array changes length or order.
   useEffect(() => {
     if (!rows.length) return;
@@ -382,18 +384,38 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     const centerY = apexY + R; const centerX = 500;
     const n = rows.length;
     // Distribute evenly along horizontal span (x-axis) to ensure equal horizontal spacing
-    // Shot boxes are 80 units wide and centered, so need 40-unit margin on each side
-    const boxWidth = 80; // box size in 1000-unit coordinate system
-    const boxHalfWidth = boxWidth / 2;
-    const minGap = 20; // minimum desired gap between boxes
-    const minMargin = boxHalfWidth; // absolute minimum margin (40)
+    const baseBoxWidth = 80; // base box size in 1000-unit coordinate system
+    const minGap = 20; // minimum desired gap between boxes at full scale
+    const minMargin = baseBoxWidth / 2; // absolute minimum margin at full scale (40)
     const comfortMargin = 120; // comfortable margin for small counts
-    // Calculate what margin we can afford: start with comfortable, reduce only if needed
-    const totalBoxWidth = n * boxWidth;
+    
+    // Step 1: Calculate if we can fit at full scale (1.0) with comfortable spacing
+    const totalBoxWidthAtFullScale = n * baseBoxWidth;
     const neededGaps = (n - 1) * minGap;
-    const spaceNeeded = totalBoxWidth + neededGaps;
-    const maxMargin = Math.max(minMargin, (chord - spaceNeeded) / 2);
-    const margin = Math.min(comfortMargin, maxMargin);
+    const spaceNeededComfort = totalBoxWidthAtFullScale + neededGaps;
+    const maxMarginAtFullScale = Math.max(minMargin, (chord - spaceNeededComfort) / 2);
+    
+    let scale = 1.0;
+    let margin = Math.min(comfortMargin, maxMarginAtFullScale);
+    
+    // Step 2: If comfortable margin isn't achievable, check if we fit with minimum margin
+    if (margin < minMargin) {
+      // Try to fit at full scale with minimum margins
+      const spaceNeededMin = totalBoxWidthAtFullScale + (n - 1) * minGap + 2 * minMargin;
+      if (spaceNeededMin > chord) {
+        // Need to scale down - calculate scale where boxes touch (zero gap) with minimum margins
+        // Available space: chord - 2*minMargin (scaled)
+        // Need to fit: n * boxWidth (scaled)
+        // Scale equation: n * (baseBoxWidth * scale) = chord - 2 * (minMargin * scale)
+        // n * baseBoxWidth * scale + 2 * minMargin * scale = chord
+        // scale * (n * baseBoxWidth + 2 * minMargin) = chord
+        scale = chord / (n * baseBoxWidth + 2 * minMargin);
+        margin = minMargin * scale;
+      } else {
+        margin = minMargin;
+      }
+    }
+    
     const usableWidth = chord - (2 * margin);
     const fracs = n === 1 ? [0.5] : Array.from({ length: n }, (_, i) => i / (n - 1));
     const newPositions = fracs.map(f => {
@@ -408,16 +430,22 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
       const yPos = discriminant >= 0 ? centerY - Math.sqrt(discriminant) : apexY;
       return { x: xPos / 1000, y: yPos / 1000 };
     });
-    // Only update state if at least one coordinate actually changed; avoids infinite render loop.
+    // Check if positions or scale changed
     let anyDiff = false;
     for (let i = 0; i < rows.length; i++) {
       const np = newPositions[i];
       const r = rows[i];
       if (r.x !== np.x || r.y !== np.y) { anyDiff = true; break; }
     }
-    if (!anyDiff) return; // positions already correct
-    setRows(prev => prev.map((r, i) => ({ ...r, x: newPositions[i].x, y: newPositions[i].y })));
-  }, [rows, setRows]);
+    // Update scale if changed (compare with small epsilon for float precision)
+    if (Math.abs(scale - boxScale) > 0.001) {
+      setBoxScale(scale);
+    }
+    // Update positions if changed
+    if (anyDiff) {
+      setRows(prev => prev.map((r, i) => ({ ...r, x: newPositions[i].x, y: newPositions[i].y })));
+    }
+  }, [rows, setRows, boxScale]);
 
   // Drag removed; no clamping helper needed.
 
@@ -488,11 +516,12 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
           // Decide if we try to show image (only when base present)
           const showImageAttempt = !!imgSrc;
-          const size = 80; // tile size to match selector
+          const baseSize = 80; // base tile size
+          const renderedSize = baseSize * boxScale;
           return (
             <div
               key={r.id}
-              style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)', width: size, height: size }}
+              style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:`translate(-50%, -50%)`, width: renderedSize, height: renderedSize }}
               onMouseDown={(e)=>handleMouseDown(e,r.id)}
               className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
             >
@@ -528,18 +557,20 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                   </div>
                 </div>
               )}
-              {/* X button moved to bottom center of shot box */}
+              {/* X button moved to bottom center of shot box - filled red circle with gray X to match row remove icon style */}
               <button
                 onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
-                className="absolute bottom-0 left-1/2 translate-y-1/2 -translate-x-1/2 p-[3px] rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                className="absolute bottom-0 left-1/2 translate-y-1/2 -translate-x-1/2 p-0.5 rounded-md text-slate-500 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer"
                 style={{ zIndex: 60 }}
                 title="Delete shot"
                 aria-label="Delete shot"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M9 9l6 6" />
-                  <path d="M15 9l-6 6" />
+                {/* Circle filled red, outline and X use black per request */}
+                <svg viewBox="0 0 24 24" className="w-5 h-5" stroke="#000" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none">
+                  {/* Filled red circle with no outline */}
+                  <circle cx="12" cy="12" r="9" fill="#dc2626" stroke="none" />
+                  <path d="M9 9l6 6" stroke="#000" />
+                  <path d="M15 9l-6 6" stroke="#000" />
                 </svg>
               </button>
             </div>
