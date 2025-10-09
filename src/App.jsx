@@ -1727,14 +1727,27 @@ export default function App() {
         style={{ left: Math.max(8, locMenuAnchor.x) + 'px', top: locMenuAnchor.y + 'px' }}
         onClick={e=> e.stopPropagation()}
       >
-        {LOCATIONS.map(loc => (
-          <button
-            key={loc}
-            type="button"
-            onClick={()=>{ setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:loc, type: buildType(base,loc)}; } return next; }); setOpenLocMenuId(null); setLocMenuAnchor(null); }}
-            className={(rows.find(r=>r.id===locMenuAnchor.id)?.location===loc?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
-          >{loc}</button>
-        ))}
+        {LOCATIONS.map(loc => {
+          const currentRow = rows.find(r=>r.id===locMenuAnchor.id);
+          const isSel = currentRow?.location===loc;
+          return (
+            <button
+              key={loc}
+              type="button"
+              onClick={()=>{
+                if (isSel) {
+                  // Clicking the currently selected location deselects it; keep menu open
+                  setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:'', type: buildType(base,'')}; } return next; });
+                } else {
+                  // Selecting a new location; close menu
+                  setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:loc, type: buildType(base,loc)}; } return next; });
+                  setOpenLocMenuId(null); setLocMenuAnchor(null);
+                }
+              }}
+              className={(isSel?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
+            >{loc}</button>
+          );
+        })}
       </div>,
       document.body
     )}
@@ -1988,7 +2001,16 @@ export default function App() {
                         )}
                         <tr
                           className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId===r.id ? 'bg-slate-300' : '')} ${selectedBlockId===r.id ? '' : 'hover:bg-slate-100'} cursor-default`}
-                          onClick={(e)=>{ e.stopPropagation(); setSelectedIdx(i); setSelectedBlockId(r.id); }}
+                          onClick={(e)=>{ 
+                            e.stopPropagation(); 
+                            setSelectedIdx(i); 
+                            setSelectedBlockId(r.id);
+                            // Close any open menus when clicking the row
+                            setOpenShotMenuId(null); 
+                            setOpenLocMenuId(null); 
+                            setShotMenuAnchor(null); 
+                            setLocMenuAnchor(null);
+                          }}
                           onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); setDragOverIdx(i); }}
                           onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
                         >
@@ -2044,18 +2066,14 @@ export default function App() {
                                   onClick={(e)=>{
                                     e.stopPropagation();
                                     setSelectedIdx(i); setSelectedBlockId(r.id);
-                                    if (location) {
-                                      setRows(prev=>{ const next=[...prev]; next[i]={...next[i], location:'', type: buildType(base,'')}; return next; });
+                                    // Always open menu, don't clear location on click
+                                    if (locMenuOpen) {
                                       closeMenus();
                                     } else {
-                                      if (locMenuOpen) {
-                                        closeMenus();
-                                      } else {
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        setLocMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
-                                        setOpenLocMenuId(r.id);
-                                        setOpenShotMenuId(null);
-                                      }
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      setLocMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
+                                      setOpenLocMenuId(r.id);
+                                      setOpenShotMenuId(null);
                                     }
                                   }}
                                 >{location || 'Location'}</Chip>
