@@ -16,24 +16,12 @@
     "filename": "cyclone-williams-1988.json"
   },
   {
-    "name": "Diner (Williams 1990)",
-    "filename": "diner-williams-1990.json"
-  },
-  {
-    "name": "Godzilla (Stern 2021)",
-    "filename": "godzilla-stern-2021.json"
-  },
-  {
-    "name": "Jaws (Stern 2024)",
-    "filename": "jaws-stern-2024.json"
-  },
-  {
-    "name": "Jurassic Park (Stern 2019)",
-    "filename": "jurassic-park-stern-2019.json"
-  },
-  {
     "name": "Deadpool (Stern 2018)",
     "filename": "deadpool-stern-2018.json"
+  },
+  {
+    "name": "Diner (Williams 1990)",
+    "filename": "diner-williams-1990.json"
   },
   {
     "name": "Eight Ball Deluxe (Bally 1981)",
@@ -44,8 +32,20 @@
     "filename": "flash-gordon-bally-1981.json"
   },
   {
+    "name": "Godzilla (Stern 2021)",
+    "filename": "godzilla-stern-2021.json"
+  },
+  {
     "name": "Indiana Jones The Pinball Adventure (Williams 1993)",
     "filename": "indiana-jones-the-pinball-adventure-williams-1993.json"
+  },
+  {
+    "name": "Jaws (Stern 2024)",
+    "filename": "jaws-stern-2024.json"
+  },
+  {
+    "name": "Jurassic Park (Stern 2019)",
+    "filename": "jurassic-park-stern-2019.json"
   },
   {
     "name": "Lord Of The Rings (Stern 2003), The",
@@ -78,6 +78,10 @@
   {
     "name": "Theatre Of Magic (Bally 1995)",
     "filename": "theatre-of-magic-bally-1995.json"
+  },
+  {
+    "name": "Twilight Zone (Bally 1993)",
+    "filename": "twilight-zone-bally-1993.json"
   },
   {
     "name": "White Water (Williams 1993)",
