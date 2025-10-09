@@ -1,0 +1,32 @@
+[
+  {
+    "shotType": "Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 90
+  },
+  {
+    "shotType": "Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 80
+  },
+  {
+    "shotType": "Spinner",
+    "leftFlipper": 40,
+    "rightFlipper": 60
+  },
+  {
+    "shotType": "Spinner",
+    "leftFlipper": 60,
+    "rightFlipper": 40
+  },
+  {
+    "shotType": "Drops",
+    "leftFlipper": 80,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Standups",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]

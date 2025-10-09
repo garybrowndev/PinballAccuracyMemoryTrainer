@@ -8,6 +8,10 @@
     "filename": "attack-from-mars-bally-1995.json"
   },
   {
+    "name": "Blackout (Williams 1980)",
+    "filename": "blackout-williams-1980.json"
+  },
+  {
     "name": "Centaur (Bally 1981)",
     "filename": "centaur-bally-1981.json"
   },
@@ -32,8 +36,16 @@
     "filename": "flash-gordon-bally-1981.json"
   },
   {
+    "name": "Fathom (Bally 1981)",
+    "filename": "fathom-bally-1981.json"
+  },
+  {
     "name": "Godzilla (Stern 2021)",
     "filename": "godzilla-stern-2021.json"
+  },
+  {
+    "name": "Harlem Globetrotters On Tour (Bally 1979)",
+    "filename": "harlem-globetrotters-on-tour-bally-1979.json"
   },
   {
     "name": "Indiana Jones The Pinball Adventure (Williams 1993)",
@@ -68,8 +80,16 @@
     "filename": "sorcerer-williams-1985.json"
   },
   {
+    "name": "Star Gazer (Stern 1980)",
+    "filename": "star-gazer-Stern-1980.json"
+  },
+  {
     "name": "Star Trek - The Next Generation (Williams 1993)",
     "filename": "star-trek-the-next-generation-williams-1993.json"
+  },
+  {
+    "name": "Stars (Stern 1978)",
+    "filename": "stars-stern-1978.json"
   },
   {
     "name": "Taxi (Williams 1988)",

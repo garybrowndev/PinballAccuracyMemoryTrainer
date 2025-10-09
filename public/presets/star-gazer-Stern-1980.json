@@ -1,0 +1,32 @@
+[
+  {
+    "shotType": "Left Drops",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Left Spinner",
+    "leftFlipper": "NP",
+    "rightFlipper": 85
+  },
+  {
+    "shotType": "Top Spinner",
+    "leftFlipper": "NP",
+    "rightFlipper": 55
+  },
+  {
+    "shotType": "Center Drops",
+    "leftFlipper": 25,
+    "rightFlipper": 45
+  },
+  {
+    "shotType": "Right Drops",
+    "leftFlipper": 55,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Spinner",
+    "leftFlipper": 85,
+    "rightFlipper": "NP"
+  }
+]

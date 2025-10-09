@@ -1,0 +1,37 @@
+[
+  {
+    "shotType": "Left Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 90
+  },
+  {
+    "shotType": "Left Spinner",
+    "leftFlipper": "NP",
+    "rightFlipper": 80
+  },
+  {
+    "shotType": "Center Drops",
+    "leftFlipper": 35,
+    "rightFlipper": 50
+  },
+  {
+    "shotType": "Top Drops",
+    "leftFlipper": 65,
+    "rightFlipper": 25
+  },
+  {
+    "shotType": "Top Spinner",
+    "leftFlipper": 75,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Spinner",
+    "leftFlipper": 85,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Saucer",
+    "leftFlipper": 95,
+    "rightFlipper": "NP"
+  }
+]
