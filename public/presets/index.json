@@ -1,7 +1,7 @@
 [
   {
     "name": "Addams Family (Bally 1992), The",
-    "filename": "the-addams-family-bally-1992.json"
+    "filename": "addams-family-bally-the-1992.json"
   },
   {
     "name": "Attack from Mars (Bally 1995)",
@@ -12,12 +12,20 @@
     "filename": "blackout-williams-1980.json"
   },
   {
+    "name": "Bram Stoker's Dracula (Williams 1993)",
+    "filename": "bram-stokers-dracula-williams-1993.json"
+  },
+  {
     "name": "Cactus Canyon (Bally 1998)",
     "filename": "cactus-canyon-bally-1998.json"
   },
   {
     "name": "Centaur (Bally 1981)",
     "filename": "centaur-bally-1981.json"
+  },
+  {
+    "name": "Congo (Williams 1995)",
+    "filename": "congo-williams-1995.json"
   },
   {
     "name": "Cyclone (Williams 1988)",
@@ -65,7 +73,7 @@
   },
   {
     "name": "Lord Of The Rings (Stern 2003), The",
-    "filename": "the-lord-of-the-rings-stern-2013.json"
+    "filename": "lord-of-the-rings-stern-the-2013.json"
   },
   {
     "name": "Medieval Madness (Williams 1997)",
@@ -81,7 +89,7 @@
   },
   {
     "name": "Simpsons Pinball Party (Stern 2003), The",
-    "filename": "the-simpsons-pinball-party-stern-2003.json"
+    "filename": "simpsons-pinball-party-stern-the-2003.json"
   },
   {
     "name": "Sorcerer (Williams 1985)",

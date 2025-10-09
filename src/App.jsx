@@ -1131,10 +1131,29 @@ export default function App() {
     window.addEventListener('click', handler);
     return ()=> window.removeEventListener('click', handler);
   },[]);
-  const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 5);
+  // Close menus on Escape key
+  useEffect(()=>{
+    const handler = (e)=>{
+      if (e.key === 'Escape') {
+        // Check if any menu is open before preventing default (to allow other Escape handlers like fullscreen)
+        if (openShotMenuId !== null || openLocMenuId !== null || addCountAnchor !== null || presetOpen) {
+          e.preventDefault();
+          setOpenShotMenuId(null);
+          setOpenLocMenuId(null);
+          setShotMenuAnchor(null);
+          setLocMenuAnchor(null);
+          setAddCountAnchor(null);
+          setPresetOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return ()=> window.removeEventListener('keydown', handler);
+  }, [openShotMenuId, openLocMenuId, addCountAnchor, presetOpen]);
+  const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 4);
   const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2); // magnitude in 5% steps
   // Initial hidden truth randomization steps (each step = 5 percentage points). Previously fixed at 4 (±20).
-  const [initRandSteps, setInitRandSteps] = useLocalStorage("pinball_initRandSteps_v1", 4);
+  const [initRandSteps, setInitRandSteps] = useLocalStorage("pinball_initRandSteps_v1", 2);
 
   const [initialized, setInitialized] = useLocalStorage("pinball_initialized_v1", false);
   // Hidden & mental per side
