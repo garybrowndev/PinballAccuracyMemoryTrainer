@@ -1,0 +1,37 @@
+[
+  {
+    "shotType": "Left Spinner",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": "NP",
+    "rightFlipper": 80
+  },
+  {
+    "shotType": "Top Lane",
+    "leftFlipper": "NP",
+    "rightFlipper": 75
+  },
+  {
+    "shotType": "Left Standups",
+    "leftFlipper": 20,
+    "rightFlipper": 60
+  },
+  {
+    "shotType": "Right Standups",
+    "leftFlipper": 40,
+    "rightFlipper": 35
+  },
+  {
+    "shotType": "Top Drops",
+    "leftFlipper": 60,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Spinner",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "shotType": "Left Lane",
+    "leftFlipper": "NP",
+    "rightFlipper": 90
+  },
+  {
+    "shotType": "Left Captive Ball",
+    "leftFlipper": "NP",
+    "rightFlipper": 80
+  },
+  {
+    "shotType": "Top Lane",
+    "leftFlipper": "NP",
+    "rightFlipper": 70
+  },
+  {
+    "shotType": "Left Drops",
+    "leftFlipper": 30,
+    "rightFlipper": 55
+  },
+  {
+    "shotType": "Right Drops",
+    "leftFlipper": 50,
+    "rightFlipper": 35
+  },
+  {
+    "shotType": "Top Standups",
+    "leftFlipper": 60,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Lane",
+    "leftFlipper": 80,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Side Drops",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]

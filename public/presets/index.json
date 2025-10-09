@@ -8,6 +8,14 @@
     "filename": "attack-from-mars-bally-1995.json"
   },
   {
+    "name": "Centaur (Bally 1981)",
+    "filename": "centaur-bally-1981.json"
+  },
+  {
+    "name": "Cyclone (Williams 1988)",
+    "filename": "cyclone-williams-1988.json"
+  },
+  {
     "name": "Diner (Williams 1990)",
     "filename": "diner-williams-1990.json"
   },
@@ -26,6 +34,14 @@
   {
     "name": "Deadpool (Stern 2018)",
     "filename": "deadpool-stern-2018.json"
+  },
+  {
+    "name": "Eight Ball Deluxe (Bally 1981)",
+    "filename": "eight-ball-deluxe-bally-1981.json"
+  },
+  {
+    "name": "Flash Gordon (Bally 1981)",
+    "filename": "flash-gordon-bally-1981.json"
   },
   {
     "name": "Indiana Jones The Pinball Adventure (Williams 1993)",
@@ -48,8 +64,16 @@
     "filename": "the-simpsons-pinball-party-stern-2003.json"
   },
   {
+    "name": "Sorcerer (Williams 1985)",
+    "filename": "sorcerer-williams-1985.json"
+  },
+  {
     "name": "Star Trek - The Next Generation (Williams 1993)",
     "filename": "star-trek-the-next-generation-williams-1993.json"
+  },
+  {
+    "name": "Taxi (Williams 1988)",
+    "filename": "taxi-williams-1988.json"
   },
   {
     "name": "Theatre Of Magic (Bally 1995)",

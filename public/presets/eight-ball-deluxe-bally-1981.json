@@ -1,0 +1,27 @@
+[
+  {
+    "shotType": "Left Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 85
+  },
+  {
+    "shotType": "Left Drops",
+    "leftFlipper": 10,
+    "rightFlipper": 65
+  },
+  {
+    "shotType": "Top Drops",
+    "leftFlipper": 70,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Upper Drops",
+    "leftFlipper": 80,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Lower Drops",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]
