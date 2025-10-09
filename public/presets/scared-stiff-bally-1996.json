@@ -1,0 +1,42 @@
+[
+  {
+    "shotType": "Left Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Left Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 85
+  },
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": "NP",
+    "rightFlipper": 75
+  },
+  {
+    "shotType": "Top Toy",
+    "leftFlipper": 50,
+    "rightFlipper": 50
+  },
+  {
+    "shotType": "Top Lane",
+    "leftFlipper": 65,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Ramp",
+    "leftFlipper": 75,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Scoop",
+    "leftFlipper": 85,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Orbit",
+    "leftFlipper": 95,
+    "rightFlipper": "NP"
+  }
+]

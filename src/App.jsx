@@ -123,28 +123,15 @@ function InlineElementThumb({ name, selected, onClick }) {
 //  2. Relative frequency buckets (Very Common, Common, Regular, Occasional, Rare, Novelty) scored 6..1 then sorted.
 //  3. Cross-checked against feature descriptions & prevalence implied in Wikipedia "Components" section (Bumpers, Targets, Ramps, Spinners, Holes/Saucers, etc.).
 //  4. Combined multi-target groupings: 'Standups' (spot targets) and 'Drops' treated separately due to distinct strategic behavior.
-// Notes:
-//  - "Orbit" (aka loop around top) appears on nearly every modern game; often two orbits feed lanes/upper area.
-//  - "Ramp" shots (wireform or plastic) are central to mode advancement/scoring in most 1986+ titles.
-//  - "Spinner" frequently integrated into orbits/lanes; ranked high but below structural shots.
-//  - "Standups" (spot targets) near-universal; grouped rather than individual letter targets.
-//  - "Drops" widespread but not universal (many games have banks, some have none) -> below standups.
-//  - "Bumper" (pop bumper set) nearly universal historically but sometimes reduced/omitted in a few recent designs; placed after major shot geometry elements.
-//  - "Lane" refers to in/outlanes or upper lanes; retained though many are implicit rather than discrete selectable shots.
-//  - "Scoop" (vertical hole) and "Saucer" (shallow kick-out) both common; scoop slightly edges due to modern rule integration.
-//  - Mid-prevalence specialty/mech shots: VUK (Vertical Up Kicker), Captive Ball, Kickback (earned feature), Magnet (playfield control) placed mid/low.
-//  - Rarer/mechanical or era-specific: Horseshoe, Rollover (distinct rollover lane target group), Vari Target, Waterfall, Roto Target, Toy (unique mechs), Capture, Deadend, Gate.
-//  - "Toy" is conceptually common but each is unique; as a generic category it's lower for selection granularity here.
-//  - Ordering trades absolute statistical rigor for practical training relevance: earlier entries likely anchor a player's memory model.
 const BASE_ELEMENTS = [
   // Very Common / Core geometry & ubiquitous scoring surfaces
-  'Orbit','Ramp','Standups','Lane','Bumper','Spinner',
+  'Ramp','Standups','Orbit','Drops','Spinner','Scoop','Lane',
   // Common but slightly more situational or not on every single game
-  'Drops','Scoop','Saucer','VUK','Lock','Captive Ball',
+  'Toy','Captive Ball','Saucer','Loop',
   // Regular specialty / feature mechs & control elements
-  'Magnet','Loop','Rollover','Gate',
+  'Lock','VUK','Bumper','Deadend','Gate','Magnet',
   // Occasional (era or design style dependent)
-  'Vari Target','Deadend','Toy','Roto Target'
+  'Rollover','Vari Target','Roto Target'
 ];
 // Added extended location variants to support richer spatial descriptors in practice:
 // Previous: Left, Center, Right. New additions: Bottom, Top, Upper, Lower, Side.
@@ -1781,9 +1768,9 @@ export default function App() {
                 <div
                   role="listbox"
                   aria-label="Available presets"
-                  className="absolute left-0 bottom-full mb-1 overflow-visible rounded-md border bg-white shadow-lg z-60 w-fit"
+                  className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
                   onClick={e=> e.stopPropagation()}
-                  style={{ display: 'block', maxWidth: 'calc(100vw - 2rem)' }}
+                  style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
                 >
                   {availablePresets.map(preset => (
                     <button
@@ -1793,7 +1780,7 @@ export default function App() {
                       aria-selected={selectedPresetName === preset.name}
                       onClick={() => { loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null); }}
                       title={preset.name}
-                      className={(selectedPresetName === preset.name ? 'bg-emerald-200' : '') + ' w-full text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100'}
+                      className={(selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200') + ' text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition'}
                     >
                       <span>{preset.name}</span>
                     </button>
@@ -2010,8 +1997,8 @@ export default function App() {
                                     }}
                                   />
                                 ) : (
-                                  <Chip
-                                    active={false}
+                                  <button
+                                    type="button"
                                     data-shot-chip={r.id}
                                     onClick={(e)=>{
                                       e.stopPropagation();
@@ -2025,7 +2012,12 @@ export default function App() {
                                         setOpenLocMenuId(null);
                                       }
                                     }}
-                                  >Select Shot</Chip>
+                                    className="relative rounded-md bg-white shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex items-center justify-center"
+                                    style={{ width: 80, height: 98 }}
+                                    aria-label="Select Shot"
+                                  >
+                                    <span className="text-[13px] font-semibold text-slate-500 select-none">Select Shot</span>
+                                  </button>
                                 )}
                                 <Chip
                                   active={!!location}

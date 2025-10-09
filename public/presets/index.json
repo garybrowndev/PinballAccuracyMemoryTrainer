@@ -12,6 +12,10 @@
     "filename": "blackout-williams-1980.json"
   },
   {
+    "name": "Cactus Canyon (Bally 1998)",
+    "filename": "cactus-canyon-bally-1998.json"
+  },
+  {
     "name": "Centaur (Bally 1981)",
     "filename": "centaur-bally-1981.json"
   },
@@ -72,6 +76,10 @@
     "filename": "monster-bash-williams-1998.json"
   },
   {
+    "name": "Scared Stiff (Bally 1996)",
+    "filename": "scared-stiff-bally-1996.json"
+  },
+  {
     "name": "Simpsons Pinball Party (Stern 2003), The",
     "filename": "the-simpsons-pinball-party-stern-2003.json"
   },
@@ -90,6 +98,10 @@
   {
     "name": "Stars (Stern 1978)",
     "filename": "stars-stern-1978.json"
+  },
+  {
+    "name": "Tales Of The Arabian Nights (Williams 1996)",
+    "filename": "tales-of-the-arabian-nights-williams-1996.json"
   },
   {
     "name": "Taxi (Williams 1988)",

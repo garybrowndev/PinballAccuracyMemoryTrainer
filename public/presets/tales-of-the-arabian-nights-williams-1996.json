@@ -1,0 +1,47 @@
+[
+  {
+    "shotType": "Left Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Left Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 85
+  },
+  {
+    "shotType": "Left Captive Ball",
+    "leftFlipper": 15,
+    "rightFlipper": 75
+  },
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": "NP",
+    "rightFlipper": 70
+  },
+  {
+    "shotType": "Top Toy",
+    "leftFlipper": 40,
+    "rightFlipper": 50
+  },
+  {
+    "shotType": "Right Lane",
+    "leftFlipper": 65,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Scoop",
+    "leftFlipper": 75,
+    "rightFlipper": 15
+  },
+  {
+    "shotType": "Right Orbit",
+    "leftFlipper": 85,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Captive Ball",
+    "leftFlipper": 95,
+    "rightFlipper": "NP"
+  }
+]
