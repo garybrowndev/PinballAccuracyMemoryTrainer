@@ -36,7 +36,7 @@ function elementSlug(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-')
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
 // Square selectable tile for base element selection (replaces textual chips in popup)
-function ElementTile({ name, selected, onSelect }) {
+function ElementTile({ name, selected, onSelect, hasSelection = true }) {
   const slug = elementSlug(name);
   const imgSrc = `${IMAGE_BASE_URL}/${slug}.jpg`;
   const [imgVisible, setImgVisible] = React.useState(false); // show only after successful load
@@ -45,8 +45,11 @@ function ElementTile({ name, selected, onSelect }) {
     <button
       type="button"
       onClick={onSelect}
-      className={(selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500') + ' relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible'}
-      style={{ width: size, height: size + 18 }}
+      className={
+        'relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ' +
+        (selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500')
+      }
+      style={{ width: size, height: size + 18, opacity: hasSelection ? (selected ? 1 : 0.45) : 1 }}
       aria-pressed={selected}
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
@@ -67,7 +70,7 @@ function ElementTile({ name, selected, onSelect }) {
       <div className="absolute left-0" style={{ top: size, width: size }}>
         <div className="bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center rounded-b-md select-none truncate">{name}</div>
       </div>
-      {selected && <div className="absolute inset-0 ring-4 ring-offset-2 ring-slate-900 pointer-events-none" />}
+      {/* No black rectangle for selected */}
     </button>
   );
 }
@@ -1687,15 +1690,24 @@ export default function App() {
         onClick={e=> e.stopPropagation()}
       >
         {BASE_ELEMENTS.map(b => {
-          const isSel = rows.find(r=>r.id===shotMenuAnchor.id)?.base===b;
+          const currentRow = rows.find(r=>r.id===shotMenuAnchor.id);
+          const isSel = currentRow?.base===b;
+          const hasSelection = !!currentRow?.base;
           return (
             <ElementTile
               key={b}
               name={b}
               selected={isSel}
+              hasSelection={hasSelection}
               onSelect={()=>{
-                setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:b, location:'', type: buildType(b,'')}; } return next; });
-                setOpenShotMenuId(null); setShotMenuAnchor(null);
+                if (isSel) {
+                  // Clicking the currently selected shot deselects it; keep menu open
+                  setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:'', type: ''}; } return next; });
+                } else {
+                  // Selecting a new shot; close menu
+                  setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:b, type: buildType(b, next[idx].location || '')}; } return next; });
+                  setOpenShotMenuId(null); setShotMenuAnchor(null);
+                }
               }}
             />
           );
@@ -1989,11 +2001,8 @@ export default function App() {
                                     selected={true}
                                     onClick={(e)=>{
                                       e.stopPropagation();
-                                      // Select this row in the playfield
                                       setSelectedIdx(i); setSelectedBlockId(r.id);
-                                      // Deselect and show menu directly
-                                      setRows(prev=>{ const next=[...prev]; next[i]={...next[i], base:'', location:'', type:''}; return next; });
-                                      // Open the shot selection menu using the same logic as the "Select Shot" chip
+                                      // Only open the shot menu, do not clear selection
                                       const rect = e.currentTarget.getBoundingClientRect();
                                       setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY - ((rect.bottom - rect.top) * 0.7)});
                                       setOpenShotMenuId(r.id);
@@ -2006,7 +2015,6 @@ export default function App() {
                                     data-shot-chip={r.id}
                                     onClick={(e)=>{
                                       e.stopPropagation();
-                                      // Select this row in the playfield
                                       setSelectedIdx(i); setSelectedBlockId(r.id);
                                       if (shotMenuOpen) {
                                         closeMenus();
@@ -2019,31 +2027,27 @@ export default function App() {
                                     }}
                                   >Select Shot</Chip>
                                 )}
-                                {base && (
-                                  <Chip
-                                    active={!!location}
-                                    data-loc-chip={r.id}
-                                    onClick={(e)=>{
-                                      e.stopPropagation();
-                                      // Select this row in the playfield
-                                      setSelectedIdx(i); setSelectedBlockId(r.id);
-                                      if (location) {
-                                        // Deselect only location
-                                        setRows(prev=>{ const next=[...prev]; next[i]={...next[i], location:'', type: buildType(base,'')}; return next; });
+                                <Chip
+                                  active={!!location}
+                                  data-loc-chip={r.id}
+                                  onClick={(e)=>{
+                                    e.stopPropagation();
+                                    setSelectedIdx(i); setSelectedBlockId(r.id);
+                                    if (location) {
+                                      setRows(prev=>{ const next=[...prev]; next[i]={...next[i], location:'', type: buildType(base,'')}; return next; });
+                                      closeMenus();
+                                    } else {
+                                      if (locMenuOpen) {
                                         closeMenus();
                                       } else {
-                                        if (locMenuOpen) {
-                                          closeMenus();
-                                        } else {
-                                          const rect = e.currentTarget.getBoundingClientRect();
-                                          setLocMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
-                                          setOpenLocMenuId(r.id);
-                                          setOpenShotMenuId(null);
-                                        }
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        setLocMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
+                                        setOpenLocMenuId(r.id);
+                                        setOpenShotMenuId(null);
                                       }
-                                    }}
-                                  >{location || 'Location'}</Chip>
-                                )}
+                                    }
+                                  }}
+                                >{location || 'Location'}</Chip>
                                 {/* Popup menus rendered outside table to avoid layout shift */}
                               </div>
                             );
