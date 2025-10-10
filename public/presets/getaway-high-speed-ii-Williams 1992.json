@@ -1,0 +1,37 @@
+[
+  {
+    "shotType": "Left Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Left Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 85
+  },
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": 15,
+    "rightFlipper": 75
+  },
+  {
+    "shotType": "Center Standups",
+    "leftFlipper": 50,
+    "rightFlipper": 45
+  },
+  {
+    "shotType": "Right Saucer",
+    "leftFlipper": 75,
+    "rightFlipper": 20
+  },
+  {
+    "shotType": "Right Orbit",
+    "leftFlipper": 85,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Standups",
+    "leftFlipper": 95,
+    "rightFlipper": "NP"
+  }
+]

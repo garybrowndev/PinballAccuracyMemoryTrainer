@@ -28,6 +28,10 @@
     "filename": "congo-williams-1995.json"
   },
   {
+    "name": "Creature From The Black Lagoon (Bally 1992)",
+    "filename": "creature-from-the-black-lagoon-Bally 1992.json"
+  },
+  {
     "name": "Cyclone (Williams 1988)",
     "filename": "cyclone-williams-1988.json"
   },
@@ -50,6 +54,18 @@
   {
     "name": "Fathom (Bally 1981)",
     "filename": "fathom-bally-1981.json"
+  },
+  {
+    "name": "Fish Tales (Williams 1992)",
+    "filename": "fish-tales-williams-1992.json"
+  },
+  {
+    "name": "Funhouse (Williams 1990)",
+    "filename": "funhouse-williams-1990.json"
+  },
+  {
+    "name": "Getaway - High Speed II, The (Williams 1992)",
+    "filename": "getaway-high-speed-ii-Williams 1992.json"
   },
   {
     "name": "Godzilla (Stern 2021)",
@@ -114,6 +130,10 @@
   {
     "name": "Taxi (Williams 1988)",
     "filename": "taxi-williams-1988.json"
+  },
+  {
+    "name": "Terminator 2 - Judgment Day (Williams 1991)",
+    "filename": "terminator-2-judgment-day-williams-1991.json"
   },
   {
     "name": "Theatre Of Magic (Bally 1995)",

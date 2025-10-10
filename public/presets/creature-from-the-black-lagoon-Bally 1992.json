@@ -1,0 +1,42 @@
+[
+  {
+    "shotType": "Left Saucer",
+    "leftFlipper": "NP",
+    "rightFlipper": 95
+  },
+  {
+    "shotType": "Left Standups",
+    "leftFlipper": "NP",
+    "rightFlipper": 80
+  },
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": "NP",
+    "rightFlipper": 75
+  },
+  {
+    "shotType": "Center Lane",
+    "leftFlipper": 35,
+    "rightFlipper": 50
+  },
+  {
+    "shotType": "Center Scoop",
+    "leftFlipper": 60,
+    "rightFlipper": 35
+  },
+  {
+    "shotType": "Right Standups",
+    "leftFlipper": 65,
+    "rightFlipper": 15
+  },
+  {
+    "shotType": "Right Ramp",
+    "leftFlipper": 80,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Saucer",
+    "leftFlipper": 95,
+    "rightFlipper": "NP"
+  }
+]

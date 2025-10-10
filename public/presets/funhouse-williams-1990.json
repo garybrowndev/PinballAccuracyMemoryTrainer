@@ -1,0 +1,32 @@
+[
+  {
+    "shotType": "Left Orbit",
+    "leftFlipper": "NP",
+    "rightFlipper": 90
+  },
+  {
+    "shotType": "Left Ramp",
+    "leftFlipper": "NP",
+    "rightFlipper": 80
+  },
+  {
+    "shotType": "Top Scoop",
+    "leftFlipper": 35,
+    "rightFlipper": 65
+  },
+  {
+    "shotType": "Center Lane",
+    "leftFlipper": 60,
+    "rightFlipper": 30
+  },
+  {
+    "shotType": "Right Orbit",
+    "leftFlipper": 80,
+    "rightFlipper": "NP"
+  },
+  {
+    "shotType": "Right Scoop",
+    "leftFlipper": 90,
+    "rightFlipper": "NP"
+  }
+]
