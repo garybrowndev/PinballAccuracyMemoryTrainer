@@ -8,8 +8,12 @@
       "url": "http://localhost:5173",
       "webRoot": "${workspaceFolder}",
       "runtimeExecutable": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+      "userDataDir": "${workspaceFolder}/.vscode/brave-debug-profile",
       "runtimeArgs": [
-        "--remote-debugging-port=9222"
+        "--disable-extensions",
+        "--disable-background-networking",
+        "--no-first-run",
+        "--no-default-browser-check"
       ],
       "sourceMaps": true,
       "sourceMapPathOverrides": {
