@@ -23,11 +23,6 @@
         "/*": "*",
         "/./~/*": "${webRoot}/node_modules/*"
       },
-      "serverReadyAction": {
-        "pattern": "Local:.*http://localhost:([0-9]+)",
-        "uriFormat": "http://localhost:%s",
-        "action": "debugWithChrome"
-      },
       "preLaunchTask": "npm: dev",
       "postDebugTask": "Stop npm dev server"
     }
