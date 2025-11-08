@@ -2,20 +2,27 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Brave: Vite React",
+      "name": "Brave: Vite React (Single Tab)",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:5173",
       "webRoot": "${workspaceFolder}",
       "runtimeExecutable": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
-      "userDataDir": "${workspaceFolder}/.vscode/brave-debug-profile",
+      // Use a fresh ephemeral profile each run to avoid restored tabs stacking.
+      "userDataDir": "${workspaceFolder}/.vscode/brave-debug-ephemeral",
       "runtimeArgs": [
+        "--app=http://localhost:5173",            
+        "--new-window",                           
         "--disable-extensions",
         "--disable-background-networking",
         "--no-first-run",
-        "--no-default-browser-check"
+        "--no-default-browser-check",
+        "--disable-session-crashed-bubble",
+        "--disable-restore-session-state",
+        "--no-restore-session-state",
+        "--disable-features=TabRestore,SessionRestore,BackgroundNetworking"
       ],
       "sourceMaps": true,
+      "cleanUp": "wholeBrowser",
       "sourceMapPathOverrides": {
         "webpack:///src/*": "${webRoot}/src/*",
         "/./*": "${webRoot}/*",

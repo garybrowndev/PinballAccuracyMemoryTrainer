@@ -37,7 +37,7 @@
     {
       "label": "Stop npm dev server",
       "type": "shell",
-      "command": "Stop-Process -Name node -Force -ErrorAction SilentlyContinue",
+      "command": "Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'node.exe' -and ($_.CommandLine -like '*vite*' -or $_.CommandLine -like '*npm*dev*') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
       "presentation": {
         "reveal": "never",
         "panel": "shared"
