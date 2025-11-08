@@ -2,11 +2,22 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Install Dependencies",
+      "type": "npm",
+      "script": "install",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
       "type": "npm",
       "script": "dev",
       "label": "npm: dev",
       "detail": "vite",
       "isBackground": true,
+      "dependsOn": ["Install Dependencies"],
       "problemMatcher": {
         "owner": "custom",
         "pattern": {
