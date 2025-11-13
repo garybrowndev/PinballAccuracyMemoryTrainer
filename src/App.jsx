@@ -1152,14 +1152,14 @@ export default function App() {
   }, [openShotMenuId, openLocMenuId, addCountAnchor, presetOpen]);
   const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 4);
   const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2); // magnitude in 5% steps
-  // Initial hidden truth randomization steps (each step = 5 percentage points). Previously fixed at 4 (±20).
+  // Initial correct values randomization steps (each step = 5 percentage points). Previously fixed at 4 (±20).
   const [initRandSteps, setInitRandSteps] = useLocalStorage("pinball_initRandSteps_v1", 2);
 
   const [initialized, setInitialized] = useLocalStorage("pinball_initialized_v1", false);
   // Hidden & mental per side
   const [hiddenL, setHiddenL] = useLocalStorage("pinball_hiddenL_v1", []);
   const [hiddenR, setHiddenR] = useLocalStorage("pinball_hiddenR_v1", []);
-  // Base (anchor) values captured at session start to constrain hidden truth drift (±20 max, i.e. 4*5 steps)
+  // Starting (anchor) values captured at session start to constrain correct values drift (±20 max, i.e. 4*5 steps)
   const [baseL, setBaseL] = useLocalStorage("pinball_baseL_v1", []);
   const [baseR, setBaseR] = useLocalStorage("pinball_baseR_v1", []);
   const [mentalL, setMentalL] = useLocalStorage("pinball_mentalL_v1", []);
@@ -1177,7 +1177,8 @@ export default function App() {
   const [finalPhase, setFinalPhase] = useLocalStorage("pinball_finalPhase_v1", false);
   const [finalRecallL, setFinalRecallL] = useLocalStorage("pinball_finalRecallL_v1", []);
   const [finalRecallR, setFinalRecallR] = useLocalStorage("pinball_finalRecallR_v1", []);
-  const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle
+  const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle for guess values
+  const [showBaseValues, setShowBaseValues] = useLocalStorage("pinball_showBaseValues_v1", true); // visibility toggle for starting/original values
   const [showAttemptHistory, setShowAttemptHistory] = useLocalStorage("pinball_showAttemptHistory_v1", false);
   const [showFeedbackPanel, setShowFeedbackPanel] = useLocalStorage("pinball_showFeedback_v1", false); // new toggle for Feedback table
   // Restore stacks removed (Not Possible is neutral now)
@@ -1307,7 +1308,7 @@ export default function App() {
     const bL = rows.map(r=>snap5(r.initL));
     const bR = rows.map(r=>snap5(r.initR));
     setBaseL(bL); setBaseR(bR);
-    // Determine original ordering by base values
+    // Determine original ordering by starting values
   const ascL = rows.map((r,i)=>({i,v:r.initL})).sort((a,b)=>a.v-b.v).map(x=>x.i);
   const ascR = rows.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
     // Candidate random offsets (independent) within allowed band using configurable steps
@@ -1319,9 +1320,13 @@ export default function App() {
     //   steps = Math.min(steps, Math.floor(Number(driftMag)||0));
     // if consistent bands are preferred.
     const candL = bL.map(v => {
+      // If "Not Possible" (0), keep it at 0 - no randomization
+      if (v === 0) return 0;
       const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
     const candR = bR.map(v => {
+      // If "Not Possible" (0), keep it at 0 - no randomization
+      if (v === 0) return 0;
       const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
     // Enforce ordering via bounded isotonic regression
@@ -1337,8 +1342,6 @@ export default function App() {
   setFinalRecallL(rows.map(r=>r.initL));
   setFinalRecallR(rows.map(r=>r.initR));
     setInitialized(true);
-    // Hide mental model by default when a session starts
-    setShowMentalModel(false);
     // Pick a random starting shot & flipper for both modes so manual mode doesn't always start at first row
     if (rows.length) {
       const randIdx = rndInt(0, rows.length - 1);
@@ -1384,13 +1387,15 @@ export default function App() {
     setHiddenL(prev => {
       if (!prev.length || !baseL.length) return prev;
       const drifted = prev.map((v,i) => {
-        // If "Not Possible" (0), it should not drift and remain 0
+        // If already "Not Possible" (0), it should not drift and remain 0
         if (v === 0) return 0;
         const b = baseL[i];
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
         const candidate = snap5(v + stepDrift());
-        return Math.min(hi, Math.max(lo, candidate));
+        const clamped = Math.min(hi, Math.max(lo, candidate));
+        // If drift brings value to 0, it becomes "Not Possible" and will stay 0
+        return clamped;
       });
       const ordered = isotonicWithBounds(drifted, baseL, orderAscL);
       return strictlyIncrease(ordered, baseL, orderAscL);
@@ -1398,13 +1403,15 @@ export default function App() {
     setHiddenR(prev => {
       if (!prev.length || !baseR.length) return prev;
       const drifted = prev.map((v,i) => {
-        // If "Not Possible" (0), it should not drift and remain 0
+        // If already "Not Possible" (0), it should not drift and remain 0
         if (v === 0) return 0;
         const b = baseR[i];
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
         const candidate = snap5(v + stepDrift());
-        return Math.min(hi, Math.max(lo, candidate));
+        const clamped = Math.min(hi, Math.max(lo, candidate));
+        // If drift brings value to 0, it becomes "Not Possible" and will stay 0
+        return clamped;
       });
       const ordered = isotonicWithBounds(drifted, baseR, orderAscR);
       return strictlyIncrease(ordered, baseR, orderAscR);
@@ -1489,7 +1496,7 @@ export default function App() {
       const rec = { t: Date.now(), idx, side: selectedSide, input: val, truth, delta, label, severity, points, basePoints, prevInput, adjustRequired, requiredDir, adjustCorrect, adjustPenalty };
       setAttempts((a) => [rec, ...a].slice(0, 200));
       setAttemptCount((c) => c + 1);
-      // Update mental model toward the input guess (still adjusts background model)
+      // Update guess values toward the input guess (still adjusts background values)
       if (selectedSide === 'L') {
         setMentalL(m => { const n=[...m]; n[idx]=val; return n; });
       } else {
@@ -1519,7 +1526,6 @@ export default function App() {
     setAttemptCount(0);
     setFinalPhase(false);
     setFinalRecallL([]); setFinalRecallR([]);
-    setShowTruth(false);
     // Clear any stale selection so overlay lines don't render before canvas measures
     setSelectedBlockId(null);
   }
@@ -2399,7 +2405,7 @@ export default function App() {
             <Section title="2) Session parameters">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={"How far each hidden truth can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75."} >Initial random steps</label>
+                  <label className="w-48" title={"How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75."} >Initial random steps</label>
                   <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
@@ -2455,7 +2461,7 @@ export default function App() {
               title="Practice"
               right={
                 <div className="flex items-center gap-3">
-                  {/* Mental model & hidden truth toggles moved into feedback panel */}
+                  {/* Guess values & correct values toggles moved into feedback panel */}
                   <label className="flex items-center gap-2 text-xs text-slate-600">
                     <input
                       type="checkbox"
@@ -2579,7 +2585,7 @@ export default function App() {
                     Submit
                   </button>
 
-                  {/* Mental model moved into feedback panel */}
+                  {/* Guess values moved into feedback panel */}
                 </div>
 
                 {/* Right: feedback and stats (toggleable) */}
@@ -2604,24 +2610,22 @@ export default function App() {
                                     <>
                                       {a.label} <span className="text-slate-500">(</span>
                                       <span style={{color: SEVERITY_COLORS[a.severity] || '#334155'}}>{a.severity}</span>{' '}
-                                      <span className="text-slate-500">{a.delta > 0 ? '+' : ''}{a.delta})</span>
+                                      <span className="text-slate-500">{a.delta > 0 ? '+' : ''}{format2(Math.abs(a.delta))}%)</span>
                                     </>
                                   ) : 'N/A'}
                                 </div>
                               </div>
                               <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Recall</div>
-                                <div>{has ? format2(a.input) : '—'}</div>
+                                <div className="text-slate-600">Guess</div>
+                                <div>{has ? formatPct(a.input) : '—'}</div>
                               </div>
-                              {showMentalModel && has && a.prevInput != null && (
-                                <div className="flex justify-between mb-1">
-                                  <div className="text-slate-600">Prev recall</div>
-                                  <div>{formatPct(a.prevInput)}</div>
-                                </div>
-                              )}
                               <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Recall delta</div>
-                                <div>{has ? (a.prevInput != null ? (()=>{ const diff = Math.round((a.input ?? 0)-(a.prevInput ?? 0)); return (diff>0?'+':'')+diff; })() : 'N/A') : 'N/A'}</div>
+                                <div className="text-slate-600">Prev guess</div>
+                                <div>{showMentalModel ? (has && a.prevInput != null ? formatPct(a.prevInput) : '—') : '—'}</div>
+                              </div>
+                              <div className="flex justify-between mb-1">
+                                <div className="text-slate-600">Guess delta</div>
+                                <div>{has ? (a.prevInput != null ? (()=>{ const diff = Math.round((a.input ?? 0)-(a.prevInput ?? 0)); return (diff>0?'+':'')+format2(Math.abs(diff))+'%'; })() : 'N/A') : 'N/A'}</div>
                               </div>
                               <div className="flex justify-between mb-1">
                                 <div className="text-slate-600">Adjustment needed</div>
@@ -2634,7 +2638,11 @@ export default function App() {
                                 </div>
                               </div>
                               <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Hidden truth</div>
+                                <div className="text-slate-600">Starting</div>
+                                <div>{showBaseValues ? (has ? formatPct((a.side === 'L' ? baseL[a.idx] : baseR[a.idx]) ?? 0) : '—') : '—'}</div>
+                              </div>
+                              <div className="flex justify-between mb-1">
+                                <div className="text-slate-600">Correct</div>
                                 <div>{showTruth ? (has ? formatPct(a.truth) : '—') : '—'}</div>
                               </div>
                               <div className="flex justify-between mt-2 pt-2 border-t">
@@ -2656,7 +2664,15 @@ export default function App() {
                                       checked={showMentalModel}
                                       onChange={(e)=>{ const v=e.target.checked; setShowMentalModel(v); }}
                                     />
-                                    Mental model
+                                    Guess values
+                                  </label>
+                                  <label className="flex items-center gap-2 text-[11px] text-slate-600">
+                                    <input
+                                      type="checkbox"
+                                      checked={showBaseValues}
+                                      onChange={(e)=> setShowBaseValues(e.target.checked)}
+                                    />
+                                    Starting values
                                   </label>
                                   <label className="flex items-center gap-2 text-[11px] text-slate-600">
                                     <input
@@ -2664,30 +2680,45 @@ export default function App() {
                                       checked={showTruth}
                                       onChange={(e)=> setShowTruth(e.target.checked)}
                                     />
-                                    Hidden truth
+                                    Correct values
                                   </label>
                                 </div>
-                                {showMentalModel && (
+                                {(showMentalModel || showBaseValues || showTruth) && (
                                   <div>
-                                    <h4 className="font-medium mb-2 text-sm">Your mental model</h4>
                                     <div className="rounded-xl border overflow-hidden">
                                       <table className="w-full text-[11px] md:text-xs">
                                         <thead>
+                                          <tr className="bg-slate-100 text-slate-700 font-semibold">
+                                            <th className="p-1.5 text-left" rowSpan="2">Shot</th>
+                                            {(() => {
+                                              const leftCols = [showMentalModel, showBaseValues, showTruth].filter(Boolean).length;
+                                              const rightCols = leftCols; // same columns for right
+                                              return (
+                                                <>
+                                                  {leftCols > 0 && <th className="p-1.5 text-center border-r border-slate-300" colSpan={leftCols}>Left Flipper</th>}
+                                                  {rightCols > 0 && <th className="p-1.5 text-center" colSpan={rightCols}>Right Flipper</th>}
+                                                </>
+                                              );
+                                            })()}
+                                          </tr>
                                           <tr className="bg-slate-50 text-slate-600">
-                                            <th className="p-1.5 text-left">Shot</th>
-                                            <th className="p-1.5 text-right">ML</th>
-                                            {showTruth && <th className="p-1.5 text-right">HL</th>}
-                                            <th className="p-1.5 text-right">MR</th>
-                                            {showTruth && <th className="p-1.5 text-right">HR</th>}
+                                            {showBaseValues && <th className="p-1.5 text-right">Str</th>}
+                                            {showMentalModel && <th className="p-1.5 text-right">Gss</th>}
+                                            {showTruth && <th className="p-1.5 text-right border-r border-slate-300">Cor</th>}
+                                            {showBaseValues && <th className="p-1.5 text-right">Str</th>}
+                                            {showMentalModel && <th className="p-1.5 text-right">Gss</th>}
+                                            {showTruth && <th className="p-1.5 text-right">Cor</th>}
                                           </tr>
                                         </thead>
                                         <tbody>
                                           {rows.map((r, i) => (
                                             <tr key={r.id} className="border-t">
                                               <td className="p-1.5 whitespace-nowrap max-w-[120px] truncate" title={r.type}>{r.type}</td>
-                                              <td className="p-1.5 text-right">{formatPct(mentalL[i] ?? 0)}</td>
-                                              {showTruth && <td className="p-1.5 text-right text-slate-600">{formatPct(hiddenL[i] ?? 0)}</td>}
-                                              <td className="p-1.5 text-right">{formatPct(mentalR[i] ?? 0)}</td>
+                                              {showBaseValues && <td className="p-1.5 text-right text-slate-500">{formatPct(baseL[i] ?? 0)}</td>}
+                                              {showMentalModel && <td className="p-1.5 text-right">{formatPct(mentalL[i] ?? 0)}</td>}
+                                              {showTruth && <td className="p-1.5 text-right text-slate-600 border-r border-slate-300">{formatPct(hiddenL[i] ?? 0)}</td>}
+                                              {showBaseValues && <td className="p-1.5 text-right text-slate-500">{formatPct(baseR[i] ?? 0)}</td>}
+                                              {showMentalModel && <td className="p-1.5 text-right">{formatPct(mentalR[i] ?? 0)}</td>}
                                               {showTruth && <td className="p-1.5 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td>}
                                             </tr>
                                           ))}
@@ -2975,14 +3006,14 @@ export default function App() {
                 </div>
               }
             >
-              <p className="text-sm text-slate-600 mb-4">Enter your best recall for each shot. Higher score means closer to the hidden truth.</p>
+              <p className="text-sm text-slate-600 mb-4">Enter your best recall for each shot. Higher score means closer to the correct values.</p>
               <div className="overflow-auto border rounded-2xl">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50 text-slate-600">
                       <th className="p-2 text-left">Shot</th>
                       <th className="p-2 text-right">Your final recall</th>
-                      <th className="p-2 text-right">Hidden truth</th>
+                      <th className="p-2 text-right">Correct values</th>
                       <th className="p-2 text-right">Abs error</th>
                     </tr>
                   </thead>
