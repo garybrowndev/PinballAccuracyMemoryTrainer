@@ -493,8 +493,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 'Z'
               ].join(' ');
             }
-            const L_BASE = { x: 285, y: 835 }; const L_TIP = { x: 415, y: 970 };
-            const R_BASE = { x: 715, y: 835 }; const R_TIP = { x: 585, y: 970 };
+            const L_BASE = { x: 285, y: 785 }; const L_TIP = { x: 415, y: 920 };
+            const R_BASE = { x: 715, y: 785 }; const R_TIP = { x: 585, y: 920 };
             const rBase = 27.5; const tipWidth = 22;
             const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth);
             const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth);
@@ -590,8 +590,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           const rect = canvasRef.current?.getBoundingClientRect();
           if (!rect || !rect.width || !rect.height) return null;
           const w = rect.width; const h = rect.height;
-          const L_TIP = { x: 415, y: 970 }, L_BASE = { x: 285, y: 835 };
-          const R_TIP = { x: 585, y: 970 }, R_BASE = { x: 715, y: 835 };
+          const L_TIP = { x: 415, y: 920 }, L_BASE = { x: 285, y: 785 };
+          const R_TIP = { x: 585, y: 920 }, R_BASE = { x: 715, y: 785 };
           // Reuse geometry: compute top edge anchor for percentage along flipper length.
           function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
             const t = Math.min(1, Math.max(0, (percent||0)/100));
@@ -745,16 +745,130 @@ function PlayfieldScenery(){
               'Z'
             ].join(' ');
           }
-          const L_BASE = { x: 285, y: 835 }; const L_TIP = { x: 415, y: 970 };
-          const R_BASE = { x: 715, y: 835 }; const R_TIP = { x: 585, y: 970 };
+          const L_BASE = { x: 285, y: 785 }; const L_TIP = { x: 415, y: 920 };
+          const R_BASE = { x: 715, y: 785 }; const R_TIP = { x: 585, y: 920 };
           const rBase = 27.5; // full circle radius now at outer/high base side
           const tipWidth = 22; // narrow tip (pivot) width toward center drain
           const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth, 0.6);
           const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth, 0.6);
+          
+          // Helper to compute point along flipper centerline at given percentage (0=base, 100=tip)
+          const pointAlong = (base, tip, pct) => {
+            const t = pct / 100;
+            return { x: base.x + (tip.x - base.x) * t, y: base.y + (tip.y - base.y) * t };
+          };
+          
+          // Add "9" and "0" labels for each flipper
+          // "9" at the tip (inner end toward center) and "0" at the base (outer end)
+          const labels = [];
+          const canvasBottom = 1000;
+          const gapToBottom = canvasBottom - L_TIP.y; // Distance from tip to bottom edge
+          const labelOffset = gapToBottom / 2.1;
+          
+          // Calculate the position for "0" labels at the outer end of each flipper
+          // The base is a circle with center at L_BASE/R_BASE and radius rBase
+          // For horizontal position: use the point furthest from tip (opposite direction)
+          // For vertical position: add the same labelOffset as the "9" labels use
+          const leftDx = L_TIP.x - L_BASE.x;
+          const leftDy = L_TIP.y - L_BASE.y;
+          const leftLen = Math.sqrt(leftDx * leftDx + leftDy * leftDy);
+          const leftUx = leftDx / leftLen; // unit x component along flipper
+          const leftUy = leftDy / leftLen; // unit y component along flipper
+          
+          const rightDx = R_TIP.x - R_BASE.x;
+          const rightDy = R_TIP.y - R_BASE.y;
+          const rightLen = Math.sqrt(rightDx * rightDx + rightDy * rightDy);
+          const rightUx = rightDx / rightLen; // unit x component along flipper
+          const rightUy = rightDy / rightLen; // unit y component along flipper
+          
+          // Horizontal position: point on circle perimeter opposite to flipper direction
+          // Vertical position: the bottom of the circle at that x position + same offset as "9"
+          const leftBaseOuterX = L_BASE.x - leftUx * rBase;
+          const rightBaseOuterX = R_BASE.x - rightUx * rBase;
+          
+          // For vertical: the circle extends from center.y - rBase to center.y + rBase
+          // The bottom of the circle (largest y) is at center.y + rBase
+          const leftBaseBottom = { 
+            x: leftBaseOuterX,
+            y: L_BASE.y + rBase
+          };
+          const rightBaseBottom = { 
+            x: rightBaseOuterX,
+            y: R_BASE.y + rBase
+          };
+          
+          // Position for "9" labels (at tip)
+          const leftTipPos = { x: L_TIP.x, y: L_TIP.y + labelOffset };
+          const rightTipPos = { x: R_TIP.x, y: R_TIP.y + labelOffset };
+          
+          // Position for "0" labels (at base outer edge)
+          const leftBasePos = { x: leftBaseBottom.x, y: leftBaseBottom.y + labelOffset };
+          const rightBasePos = { x: rightBaseBottom.x, y: rightBaseBottom.y + labelOffset };
+          
+          // Offset for diagonal shift: left flipper goes up-left, right flipper goes up-right
+          const horizontalShift = 10; // pixels to move left/right
+          const verticalShift = -10;  // pixels to move up (negative y)
+          
+          // Gradient vertical adjustment: numbers closer to 0 get pushed up more than numbers closer to 9
+          const verticalGradientMax = 20; // Maximum additional upward shift for "0" (tweakable)
+          
+          // Generate all numbers 0-9 evenly spaced along the line from "0" to "9" for each flipper
+          for (let i = 0; i <= 9; i++) {
+            const t = i / 9; // interpolation factor (0 for "0", 1 for "9")
+            
+            // Calculate gradient adjustment: linearly decreases from verticalGradientMax (at i=0) to 0 (at i=9)
+            const gradientAdjustment = verticalGradientMax * (1 - i / 9);
+            
+            // Left flipper number - shifted up and to the left
+            const leftBaseX = leftBasePos.x + (leftTipPos.x - leftBasePos.x) * t;
+            const leftBaseY = leftBasePos.y + (leftTipPos.y - leftBasePos.y) * t;
+            const leftX = leftBaseX - horizontalShift; // move left (negative x)
+            const leftY = leftBaseY + verticalShift - gradientAdjustment; // move up with gradient adjustment
+            labels.push(
+              <text
+                key={`L${i}`}
+                x={leftX}
+                y={leftY}
+                fontSize="28"
+                fill="#0ea5e9"
+                fontFamily="ui-sans-serif"
+                fontWeight="700"
+                textAnchor="middle"
+                dominantBaseline="hanging"
+                opacity="0.9"
+              >
+                {i}
+              </text>
+            );
+            
+            // Right flipper number - shifted up and to the right
+            const rightBaseX = rightBasePos.x + (rightTipPos.x - rightBasePos.x) * t;
+            const rightBaseY = rightBasePos.y + (rightTipPos.y - rightBasePos.y) * t;
+            const rightX = rightBaseX + horizontalShift; // move right (positive x)
+            const rightY = rightBaseY + verticalShift - gradientAdjustment; // move up with gradient adjustment
+            labels.push(
+              <text
+                key={`R${i}`}
+                x={rightX}
+                y={rightY}
+                fontSize="28"
+                fill="#dc2626"
+                fontFamily="ui-sans-serif"
+                fontWeight="700"
+                textAnchor="middle"
+                dominantBaseline="hanging"
+                opacity="0.9"
+              >
+                {i}
+              </text>
+            );
+          }
+          
           return (
             <g /* Flipper styling: individual stroke colors per flipper */ fill="#ffffff" strokeLinecap="round" strokeLinejoin="round">
               <path d={leftD} stroke="#0ea5e9" strokeWidth={8} />
               <path d={rightD} stroke="#dc2626" strokeWidth={8} />
+              {labels}
             </g>
           );
         })()}
@@ -870,8 +984,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           const BOX_HALF = 15 * scale; // approximate half-height scaled
           const bx = selectedRow.x * w; const by = selectedRow.y * h + BOX_HALF; // bottom center of shot box
           // Coordinate anchors (note mapping: 0=base,100=tip in editor, but we now need both extremes).
-          const L_TIP = { x: 415, y: 970 }, L_BASE = { x: 285, y: 835 };
-          const R_TIP = { x: 585, y: 970 }, R_BASE = { x: 715, y: 835 };
+          const L_TIP = { x: 415, y: 920 }, L_BASE = { x: 285, y: 785 };
+          const R_TIP = { x: 585, y: 920 }, R_BASE = { x: 715, y: 785 };
           const Lp = (p)=>({
             x: (L_BASE.x + (L_TIP.x - L_BASE.x)*(p/100))/1000*w,
             y: (L_BASE.y + (L_TIP.y - L_BASE.y)*(p/100))/1000*h
@@ -902,8 +1016,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 return cand1.y < cand2.y ? cand1 : cand2;
               }
               const rawEdge = lastRecall.side === 'L'
-                ? flipperTopEdge({ x:285, y:835 }, { x:415, y:970 }, 27.5, 22, lastRecall.input)
-                : flipperTopEdge({ x:715, y:835 }, { x:585, y:970 }, 27.5, 22, lastRecall.input);
+                ? flipperTopEdge({ x:285, y:785 }, { x:415, y:920 }, 27.5, 22, lastRecall.input)
+                : flipperTopEdge({ x:715, y:785 }, { x:585, y:920 }, 27.5, 22, lastRecall.input);
               const anchor = { x: rawEdge.x/1000*w, y: rawEdge.y/1000*h };
               const label = `${format2(lastRecall.input)}`;
               const textScale = scale;
@@ -1013,10 +1127,10 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             }
             const rBaseConst = 27.5; const tipWidthConst = 22;
             if (side === 'L') {
-              const edge = flipperTopEdge({ x:285, y:835 }, { x:415, y:970 }, rBaseConst, tipWidthConst, percent);
+              const edge = flipperTopEdge({ x:285, y:785 }, { x:415, y:920 }, rBaseConst, tipWidthConst, percent);
               return { x: edge.x/1000*w, y: edge.y/1000*h };
             } else {
-              const edge = flipperTopEdge({ x:715, y:835 }, { x:585, y:970 }, rBaseConst, tipWidthConst, percent);
+              const edge = flipperTopEdge({ x:715, y:785 }, { x:585, y:920 }, rBaseConst, tipWidthConst, percent);
               return { x: edge.x/1000*w, y: edge.y/1000*h };
             }
           }
@@ -2214,13 +2328,13 @@ export default function App() {
                                       min={sliderMin}
                                       max={sliderMax}
                                       step={5}
-                                      value={Math.min(Math.max(105 - (actual != null ? actual : displayVal), sliderMin), sliderMax)}
+                                      value={Math.min(Math.max(100 - (actual != null ? actual : displayVal), sliderMin), sliderMax)}
                                       onMouseDown={e=>{ e.stopPropagation(); }}
                                       onPointerDown={e=>{ e.stopPropagation(); }}
                                       onDragStart={e=>{ e.preventDefault(); e.stopPropagation(); }}
                                       onChange={e=>{
                                         const raw = Number(e.target.value);
-                                        let newActual = 105 - raw;
+                                        let newActual = 100 - raw;
                                         if (newActual > allowedMax) newActual = allowedMax;
                                         if (newActual < allowedMin) newActual = allowedMin;
                                         setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initR: newActual}; return next; });
