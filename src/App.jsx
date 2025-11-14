@@ -30,7 +30,7 @@ const SEVERITY_COLORS = {
 // Convention: filename derived from element slug (lowercase, spaces -> dashes): e.g. "Left Ramp" -> "left-ramp.jpg".
 // If an image 404s the browser will show the fallback text layer (we keep text absolutely positioned).
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
-const IMAGE_BASE_URL = './images/elements'; // relative path for Electron compatibility
+const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
 function elementSlug(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
 // Helper to get image src - checks for embedded images first (standalone mode), falls back to path
 function getImageSrc(name) {
