@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 // Pinball Accuracy Memory Trainer — single-file React app
@@ -54,8 +54,8 @@ function ElementTile({ name, selected, onSelect, hasSelection = true }) {
       type="button"
       onClick={onSelect}
       className={
-        'relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ' +
-        (selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500')
+        `relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ${ 
+          selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'}`
       }
       style={{ width: size, height: size + 18, opacity: hasSelection ? (selected ? 1 : 0.45) : 1 }}
       aria-pressed={selected}
@@ -69,9 +69,9 @@ function ElementTile({ name, selected, onSelect, hasSelection = true }) {
         <img
           src={imgSrc}
           alt={name}
-          onLoad={()=> setImgVisible(true)}
-          onError={()=> setImgVisible(false)}
-          className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md'}
+          onLoad={() => setImgVisible(true)}
+          onError={() => setImgVisible(false)}
+          className={`${imgVisible ? 'opacity-100' : 'opacity-0'  } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
           draggable={false}
         />
       </div>
@@ -88,13 +88,13 @@ function InlineElementThumb({ name, selected, onClick }) {
   const imgSrc = name ? getImageSrc(name) : null;
   const [imgVisible, setImgVisible] = React.useState(false);
   const size = 80; // square image area
-  if (!name) return null;
+  if (!name) {return null;}
   return (
     <button
       type="button"
       onClick={onClick}
       data-shot-chip-thumb
-      className={(selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500') + ' relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible'}
+      className={`${selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'  } relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible`}
       style={{ width: size, height: size + 18 }} // extra space for hanging label
       aria-pressed={selected}
     >
@@ -108,9 +108,9 @@ function InlineElementThumb({ name, selected, onClick }) {
           <img
             src={imgSrc}
             alt={name}
-            onLoad={()=> setImgVisible(true)}
-            onError={()=> setImgVisible(false)}
-            className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md'}
+            onLoad={() => setImgVisible(true)}
+            onError={() => setImgVisible(false)}
+            className={`${imgVisible ? 'opacity-100' : 'opacity-0'  } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
             draggable={false}
           />
         )}
@@ -138,7 +138,7 @@ const BASE_ELEMENTS = [
   // Regular specialty / feature mechs & control elements
   'Lock','VUK','Bumper','Deadend','Gate','Magnet',
   // Occasional (era or design style dependent)
-  'Rollover','Vari Target','Roto Target'
+  'Rollover','Vari Target','Roto Target',
 ];
 // Added extended location variants to support richer spatial descriptors in practice:
 // Previous: Left, Center, Right. New additions: Bottom, Top, Upper, Lower, Side.
@@ -146,11 +146,11 @@ const BASE_ELEMENTS = [
 const LOCATIONS = ['Left','Right','Center','Side','Top','Upper','Bottom','Lower'];
 
 function buildType(base, location) {
-  if (!base) return '';
+  if (!base) {return '';}
   // If no location specified, return base unsuffixed
-  if (!location) return base;
+  if (!location) {return base;}
   // 'Base' sentinel or empty string both mean unsuffixed
-  if (location === 'Base') return base;
+  if (location === 'Base') {return base;}
   return `${location} ${base}`;
 }
 const FLIPPERS = ['L','R']; // left/right flippers
@@ -166,8 +166,8 @@ const newRow = (over = {}, indexHint = 0) => {
     base,
     location,
     type,
-    initL: over.initL != null ? over.initL : 50,
-    initR: over.initR != null ? over.initR : 50,
+    initL: over.initL !== null ? over.initL : 50,
+    initR: over.initR !== null ? over.initR : 50,
     // Provide a basic fan-out pattern: stagger horizontally & vertically based on index.
     x: 0.2 + ((indexHint % 6) * 0.12), // wraps every 6
     y: 0.15 + Math.floor(indexHint / 6) * 0.18,
@@ -183,15 +183,15 @@ function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flippe
 // Left flipper: strictly INCREASING top->bottom (low -> high)
 // Right flipper: strictly DECREASING top->bottom (high -> low)
 function computeAllowedRange(rows, side, index) {
-  const vals = side==='L' ? rows.map(r=>r.initL) : rows.map(r=>r.initR);
-  const earlierPos = vals.slice(0,index).filter(v=>v!=null && v>0);
-  const laterPos = vals.slice(index+1).filter(v=>v!=null && v>0);
+  const vals = side==='L' ? rows.map(r => r.initL) : rows.map(r => r.initR);
+  const earlierPos = vals.slice(0,index).filter(v => v!==null && v>0);
+  const laterPos = vals.slice(index+1).filter(v => v!==null && v>0);
   if (side === 'L') {
     let minAllowed = earlierPos.length ? Math.max(...earlierPos) + 5 : 5; // greater than largest earlier
     let maxAllowed = laterPos.length ? Math.min(...laterPos) - 5 : 100;   // less than smallest later
     minAllowed = Math.max(5, minAllowed);
     maxAllowed = Math.min(100, maxAllowed);
-    if (minAllowed > maxAllowed) return null;
+    if (minAllowed > maxAllowed) {return null;}
     return [minAllowed, maxAllowed];
   } else { // Right: descending
     // For descending: value[i] < all earlier positives AND value[i] > all later positives.
@@ -199,7 +199,7 @@ function computeAllowedRange(rows, side, index) {
     let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5;       // greater than largest later
     maxAllowed = Math.min(100, maxAllowed);
     minAllowed = Math.max(5, minAllowed);
-    if (minAllowed > maxAllowed) return null;
+    if (minAllowed > maxAllowed) {return null;}
     return [minAllowed, maxAllowed];
   }
 }
@@ -208,7 +208,7 @@ function computeAllowedRange(rows, side, index) {
 // Bounded isotonic regression preserving initial ordering defined by orderAsc.
 // Each point i constrained within base[i] ± 20 and 0..100; values snapped to 5.
 function isotonicWithBounds(current, base, orderAsc) {
-  if (!current.length) return current;
+  if (!current.length) {return current;}
   const lower = base.map(v => Math.max(0, v - 20));
   const upper = base.map(v => Math.min(100, v + 20));
   const inOrderIdx = orderAsc;
@@ -217,32 +217,32 @@ function isotonicWithBounds(current, base, orderAsc) {
   const uppers = inOrderIdx.map(i => upper[i]);
   const blocks = [];
   for (let i=0;i<values.length;i++) {
-    let sum = values[i];
-    let count = 1;
-    let lb = lowers[i];
-    let ub = uppers[i];
-    let mean = sum / count; if (mean < lb) mean = lb; else if (mean > ub) mean = ub;
-    let val = snap5(mean);
+    const sum = values[i];
+    const count = 1;
+    const lb = lowers[i];
+    const ub = uppers[i];
+    let mean = sum / count; if (mean < lb) {mean = lb;} else if (mean > ub) {mean = ub;}
+    const val = snap5(mean);
     blocks.push({sum,count,lb,ub,value:val});
     while (blocks.length >=2 && blocks[blocks.length-2].value > blocks[blocks.length-1].value) {
       const b = blocks.pop();
       const a = blocks.pop();
       const merged = { sum: a.sum + b.sum, count: a.count + b.count, lb: Math.max(a.lb,b.lb), ub: Math.min(a.ub,b.ub), value:0 };
-      let m = merged.sum / merged.count; if (m < merged.lb) m = merged.lb; else if (m > merged.ub) m = merged.ub;
+      let m = merged.sum / merged.count; if (m < merged.lb) {m = merged.lb;} else if (m > merged.ub) {m = merged.ub;}
       merged.value = snap5(m);
       blocks.push(merged);
     }
   }
   const adjusted = new Array(values.length);
-  let k=0; for (const bl of blocks) { for (let j=0;j<bl.count;j++) adjusted[k++] = snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value))); }
+  let k=0; for (const bl of blocks) { for (let j=0;j<bl.count;j++) {adjusted[k++] = snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value)));} }
   const next = [...current];
-  for (let i=0;i<inOrderIdx.length;i++) next[inOrderIdx[i]] = adjusted[i];
+  for (let i=0;i<inOrderIdx.length;i++) {next[inOrderIdx[i]] = adjusted[i];}
   return next;
 }
 
 // Ensure strict increasing / decreasing ordering (depending on provided index order) within ±20 bounds and snapping to 5.
 function strictlyIncrease(values, base, orderAsc) {
-  if (!values.length) return values;
+  if (!values.length) {return values;}
   const idxs = orderAsc;
   const arr = idxs.map(i => values[i]);
   const bases = idxs.map(i => base[i]);
@@ -255,20 +255,20 @@ function strictlyIncrease(values, base, orderAsc) {
         let j=i-1;
         while (j>=0 && candidate>hi) {
           const bj = bases[j];
-            const loPrev = Math.max(0, bj - 20);
-            const lowered = snap5(arr[j] - 5);
-            if (lowered >= loPrev && (j===0 || lowered > arr[j-1])) { arr[j] = lowered; } else break;
-            candidate = snap5(arr[i-1] + 5);
-            j--;
+          const loPrev = Math.max(0, bj - 20);
+          const lowered = snap5(arr[j] - 5);
+          if (lowered >= loPrev && (j===0 || lowered > arr[j-1])) { arr[j] = lowered; } else {break;}
+          candidate = snap5(arr[i-1] + 5);
+          j--;
         }
         candidate = Math.min(hi, candidate);
       }
-      if (candidate <= arr[i-1]) candidate = arr[i-1] + 5;
+      if (candidate <= arr[i-1]) {candidate = arr[i-1] + 5;}
       arr[i] = candidate;
     }
   }
   const out = [...values];
-  for (let k=0;k<idxs.length;k++) out[idxs[k]] = arr[k];
+  for (let k=0;k<idxs.length;k++) {out[idxs[k]] = arr[k];}
   for (let k=0;k<idxs.length;k++) {
     const i = idxs[k];
     const b = base[i];
@@ -278,7 +278,7 @@ function strictlyIncrease(values, base, orderAsc) {
       const prevIdx = idxs[k-1];
       if (out[i] <= out[prevIdx]) {
         let nv = snap5(out[prevIdx] + 5);
-        if (nv > hi) nv = hi;
+        if (nv > hi) {nv = hi;}
         out[i] = nv;
       }
     }
@@ -315,7 +315,7 @@ const Section = ({ title, children, right }) => (
   </div>
 );
 
-const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, step = 1, className = "", onKeyDown }, ref) => (
+const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, step = 1, className = '', onKeyDown }, ref) => (
   <input
     ref={ref}
     type="number"
@@ -326,15 +326,15 @@ const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, ste
     onChange={(e) => onChange(e.target.value)}
     onKeyDown={onKeyDown}
     className={
-      "w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring " +
-      (className || "")
+      `w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${ 
+        className || ''}`
     }
   />
 ));
 NumberInput.displayName = 'NumberInput';
 
 // Simple chip button (auto multi-line for 3+ word shot type labels)
-const Chip = ({ active, children, onClick, className = "", disabled = false }) => {
+const Chip = ({ active, children, onClick, className = '', disabled = false }) => {
   let content = children;
   if (typeof children === 'string') {
     const words = children.split(' ').filter(Boolean);
@@ -353,12 +353,12 @@ const Chip = ({ active, children, onClick, className = "", disabled = false }) =
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       className={
-        `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center inline-flex items-center justify-center ` +
-        (active
-          ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-          : "bg-white hover:bg-slate-100 text-slate-700 border-slate-300") +
-        (disabled ? " opacity-60 cursor-not-allowed" : "") +
-        (className ? " " + className : "")
+        `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center inline-flex items-center justify-center ${ 
+          active
+            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300' 
+        }${disabled ? ' opacity-60 cursor-not-allowed' : '' 
+        }${className ? ` ${  className}` : ''}`
       }
     >
       {content}
@@ -375,7 +375,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
   const [boxScale, setBoxScale] = useState(1);
   // Auto-arrange rows along arc; effect recomputes when rows array changes length or order.
   useEffect(() => {
-    if (!rows.length) return;
+    if (!rows.length) {return;}
     const endpointY = 550; const apexY = 100; const chord = 1000; const sagitta = endpointY - apexY; // 450
     const R = (sagitta*sagitta + (chord/2)*(chord/2))/(2*sagitta);
     const centerY = apexY + R; const centerX = 500;
@@ -456,12 +456,12 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout</h3>
       <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
-  <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden" onMouseDown={()=> setSelectedId(null)}>
+      <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden" onMouseDown={() => setSelectedId(null)}>
         {/* Clear all shots button placed inside playfield (bottom-left) when provided */}
         {onClear && (
           <button
             type="button"
-            onClick={(e)=>{ e.stopPropagation(); onClear(); }}
+            onClick={(e) => { e.stopPropagation(); onClear(); }}
             className="absolute left-3 bottom-3 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
             title="Clear all shots"
             aria-label="Clear all shots"
@@ -477,7 +477,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           </button>
         )}
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
-  <PlayfieldScenery />
+        <PlayfieldScenery />
         {/* Precise clickable flipper paths (no visible outline when selected) */}
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 1000" preserveAspectRatio="none">
           {(() => {
@@ -497,7 +497,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 `A ${rBase} ${rBase} 0 1 1 ${bR.x} ${bR.y}`,
                 `L ${tR.x} ${tR.y}`,
                 `Q ${ctrlTip.x} ${ctrlTip.y} ${tL.x} ${tL.y}`,
-                'Z'
+                'Z',
               ].join(' ');
             }
             const L_BASE = { x: 285, y: 785 }; const L_TIP = { x: 415, y: 920 };
@@ -510,20 +510,20 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 <path
                   d={leftD}
                   fill="transparent"
-                  onMouseDown={(e)=>{ e.stopPropagation(); if (selectedId !== 'FLIPPER_L') setSelectedId('FLIPPER_L'); }}
+                  onMouseDown={(e) => { e.stopPropagation(); if (selectedId !== 'FLIPPER_L') {setSelectedId('FLIPPER_L');} }}
                   title="Select Left flipper shot lines"
                 />
                 <path
                   d={rightD}
                   fill="transparent"
-                  onMouseDown={(e)=>{ e.stopPropagation(); if (selectedId !== 'FLIPPER_R') setSelectedId('FLIPPER_R'); }}
+                  onMouseDown={(e) => { e.stopPropagation(); if (selectedId !== 'FLIPPER_R') {setSelectedId('FLIPPER_R');} }}
                   title="Select Right flipper shot lines"
                 />
               </g>
             );
           })()}
         </svg>
-        {rows.map(r=>{
+        {rows.map(r => {
           const sel = r.id === selectedId;
           const misordered = misorderedIds?.has(r.id);
           const basePart = r.base || '';
@@ -536,8 +536,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           return (
             <div
               key={r.id}
-              style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:`translate(-50%, -50%)`, width: renderedSize, height: renderedSize }}
-              onMouseDown={(e)=>handleMouseDown(e,r.id)}
+              style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)', width: renderedSize, height: renderedSize }}
+              onMouseDown={(e) => handleMouseDown(e,r.id)}
               className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
             >
               {/* Background image layer */}
@@ -545,9 +545,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 <img
                   src={imgSrc}
                   alt={r.type}
-                  onLoad={()=> setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
-                  onError={()=> setImageLoadedMap(m => { if (!m[r.id]) return m; const copy = { ...m }; delete copy[r.id]; return copy; })}
-                  className={(imgVisible ? 'opacity-100' : 'opacity-0') + ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md'}
+                  onLoad={() => setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
+                  onError={() => setImageLoadedMap(m => { if (!m[r.id]) {return m;} const copy = { ...m }; delete copy[r.id]; return copy; })}
+                  className={`${imgVisible ? 'opacity-100' : 'opacity-0'  } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
                   draggable={false}
                 />
               )}
@@ -558,8 +558,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               {/* L/R values overlay moved to bottom */}
               {imgVisible && (
                 <div className="absolute left-0 right-0 flex justify-between text-[11px] font-medium text-white drop-shadow pointer-events-none bg-black/35 backdrop-blur-[1px] px-1 py-[1px]" style={{ bottom: '1px' }}>
-                  <span>L {r.initL === 0 ? 'NP' : (r.initL != null ? format2(r.initL) : '—')}</span>
-                  <span>R {r.initR === 0 ? 'NP' : (r.initR != null ? format2(r.initR) : '—')}</span>
+                  <span>L {r.initL === 0 ? 'NP' : (r.initL !== null ? format2(r.initL) : '—')}</span>
+                  <span>R {r.initR === 0 ? 'NP' : (r.initR !== null ? format2(r.initR) : '—')}</span>
                 </div>
               )}
               {/* Fallback original content if no image (or no type) */}
@@ -567,14 +567,14 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 <div className="absolute inset-0 flex flex-col p-1 text-[11px]">
                   <div className="font-medium truncate max-w-[70px] text-center mt-4 flex-1 flex items-start justify-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
                   <div className="mt-auto flex justify-between text-[11px]">
-                    <span className="px-1 rounded bg-slate-100">L {r.initL === 0 ? 'NP' : (r.initL != null ? format2(r.initL) : '—')}</span>
-                    <span className="px-1 rounded bg-slate-100">R {r.initR === 0 ? 'NP' : (r.initR != null ? format2(r.initR) : '—')}</span>
+                    <span className="px-1 rounded bg-slate-100">L {r.initL === 0 ? 'NP' : (r.initL !== null ? format2(r.initL) : '—')}</span>
+                    <span className="px-1 rounded bg-slate-100">R {r.initR === 0 ? 'NP' : (r.initR !== null ? format2(r.initR) : '—')}</span>
                   </div>
                 </div>
               )}
               {/* X button moved to bottom center of shot box - filled red circle with gray X to match row remove icon style */}
               <button
-                onClick={(e)=>{ e.stopPropagation(); setRows(prev=>prev.filter(x=>x.id!==r.id)); }}
+                onClick={(e) => { e.stopPropagation(); setRows(prev => prev.filter(x => x.id!==r.id)); }}
                 className="absolute bottom-0 left-1/2 translate-y-1/2 -translate-x-1/2 p-0.5 rounded-md text-slate-500 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer"
                 style={{ zIndex: 60 }}
                 title="Delete shot"
@@ -592,9 +592,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           );
         })}
         {/* Lines visualization: either single-shot selection or flipper-wide selection */}
-        {selectedId && (()=>{
+        {selectedId && (() => {
           const rect = canvasRef.current?.getBoundingClientRect();
-          if (!rect || !rect.width || !rect.height) return null;
+          if (!rect || !rect.width || !rect.height) {return null;}
           const w = rect.width; const h = rect.height;
           const L_TIP = { x: 415, y: 920 }, L_BASE = { x: 285, y: 785 };
           const R_TIP = { x: 585, y: 920 }, R_BASE = { x: 715, y: 785 };
@@ -612,17 +612,17 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
             return edge;
           }
           const rBaseConst = 27.5; const tipWidthConst = 22;
-          const Lp = (p)=>{ const e=flipperTopEdge(L_BASE, L_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
-          const Rp = (p)=>{ const e=flipperTopEdge(R_BASE, R_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
+          const Lp = (p) => { const e=flipperTopEdge(L_BASE, L_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
+          const Rp = (p) => { const e=flipperTopEdge(R_BASE, R_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
           if (selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_R' || selectedId === 'FLIPPER_BOTH') {
             const showLeft = selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_BOTH';
             const showRight = selectedId === 'FLIPPER_R' || selectedId === 'FLIPPER_BOTH';
             const BOX_HALF = 15;
             return (
               <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
-                {showLeft && rows.map(r=>{
+                {showLeft && rows.map(r => {
                   const val = r.initL;
-                  if (val == null || val <= 0) return null;
+                  if (val === null || val <= 0) {return null;}
                   const anchor = Lp(val);
                   const bx = r.x * w; const by = r.y * h + BOX_HALF;
                   const color = '#0ea5e9';
@@ -638,9 +638,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                     </g>
                   );
                 })}
-                {showRight && rows.map(r=>{
+                {showRight && rows.map(r => {
                   const val = r.initR;
-                  if (val == null || val <= 0) return null;
+                  if (val === null || val <= 0) {return null;}
                   const anchor = Rp(val);
                   const bx = r.x * w; const by = r.y * h + BOX_HALF;
                   const color = '#dc2626';
@@ -660,14 +660,14 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
             );
           }
           // Otherwise a single shot is selected
-          const r = rows.find(x=>x.id===selectedId); if(!r) return null;
+          const r = rows.find(x => x.id===selectedId); if(!r) {return null;}
           const BOX_HALF = 15;
           const bx = r.x * w; const by = r.y * h + BOX_HALF; // bottom center of box
           const leftAnchor = Lp(r.initL ?? 50);
           const rightAnchor = Rp(r.initR ?? 50);
           return (
             <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
-              {(r.initL ?? 0) > 0 && (()=>{
+              {(r.initL ?? 0) > 0 && (() => {
                 const label = `${format2(r.initL)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=leftAnchor.x; const cy=leftAnchor.y; const incomplete=!r.type; const opacity=incomplete?0.3:1; // direct edge
                 return (
                   <g>
@@ -677,7 +677,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                   </g>
                 );
               })()}
-              {(r.initR ?? 0) > 0 && (()=>{
+              {(r.initR ?? 0) > 0 && (() => {
                 const label = `${format2(r.initR)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=rightAnchor.x; const cy=rightAnchor.y; const incomplete=!r.type; const opacity=incomplete?0.3:1; // direct edge
                 return (
                   <g>
@@ -711,8 +711,8 @@ function PlayfieldScenery(){
   return (
     <div className="absolute inset-0 pointer-events-none z-0">
       <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 1000">
-  {/* Arc moved up ~10%: endpoints (0,550)->(1000,550); apex now at y=100 (still 450 sagitta, same radius ≈502.78). */}
-  <path d="M 0 550 A 502.78 502.78 0 0 1 1000 550" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
+        {/* Arc moved up ~10%: endpoints (0,550)->(1000,550); apex now at y=100 (still 450 sagitta, same radius ≈502.78). */}
+        <path d="M 0 550 A 502.78 502.78 0 0 1 1000 550" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
         {/**
          * Flippers: single capsule/tapered objects with rounded circular ends.
          * We approximate each flipper by a constant-width capsule along the base->tip vector.
@@ -748,7 +748,7 @@ function PlayfieldScenery(){
               `A ${rBase} ${rBase} 0 1 1 ${bR.x} ${bR.y}`,
               `L ${tR.x} ${tR.y}`,
               `Q ${ctrlTip.x} ${ctrlTip.y} ${tL.x} ${tL.y}`,
-              'Z'
+              'Z',
             ].join(' ');
           }
           const L_BASE = { x: 285, y: 785 }; const L_TIP = { x: 415, y: 920 };
@@ -788,11 +788,11 @@ function PlayfieldScenery(){
           // The bottom of the circle (largest y) is at center.y + rBase
           const leftBaseBottom = { 
             x: leftBaseOuterX,
-            y: L_BASE.y + rBase
+            y: L_BASE.y + rBase,
           };
           const rightBaseBottom = { 
             x: rightBaseOuterX,
-            y: R_BASE.y + rBase
+            y: R_BASE.y + rBase,
           };
           
           // Position for "9" labels (at tip)
@@ -836,7 +836,7 @@ function PlayfieldScenery(){
                 opacity="0.9"
               >
                 {i}
-              </text>
+              </text>,
             );
             
             // Right flipper number - shifted up and to the right
@@ -858,7 +858,7 @@ function PlayfieldScenery(){
                 opacity="0.9"
               >
                 {i}
-              </text>
+              </text>,
             );
           }
           
@@ -881,10 +881,15 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   const [size, setSize] = useState({ w: 0, h: 0 });
   // Track which images have loaded (reused across shot tiles) keyed by row.id
   const [imageLoadedMap, setImageLoadedMap] = useState({});
-  useEffect(()=>{ setMounted(true); }, []);
-  useEffect(()=>{
-    if (!fullscreen) return; // only track for fullscreen scaling
-    const el = canvasRef.current; if (!el) return;
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    if (!fullscreen) {
+      return () => {}; // empty cleanup
+    }
+    const el = canvasRef.current;
+    if (!el) {
+      return () => {}; // empty cleanup
+    }
     // Immediate measurement so first render already scales
     const first = el.getBoundingClientRect();
     setSize({ w: first.width, h: first.height });
@@ -894,7 +899,9 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
       }
     });
     ro.observe(el);
-    return ()=> ro.disconnect();
+    return () => {
+      ro.disconnect();
+    };
   }, [fullscreen]);
   const selectedRow = rows[selectedIdx] || null;
   // Default (non-fullscreen) canvas height is h-96 => 384px (24rem at 16px). Typical width in layout around ~800px.
@@ -904,19 +911,19 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
     const baseH = 384; // baseline small-mode height
     const baseW = 800; // approximate mid-size width used in standard layout
     scale = Math.min(size.h / baseH, size.w / baseW);
-    if (scale < 1) scale = 1; // never shrink below normal size
-    if (scale > 2.6) scale = 2.6; // prevent comically large boxes
+    if (scale < 1) {scale = 1;} // never shrink below normal size
+    if (scale > 2.6) {scale = 2.6;} // prevent comically large boxes
   }
   // Notify parent of scale when in fullscreen so ancillary UI (chips) can track size.
-  useEffect(()=>{ if (fullscreen && typeof onScale === 'function') onScale(scale); }, [scale, fullscreen, onScale]);
+  useEffect(() => { if (fullscreen && typeof onScale === 'function') {onScale(scale);} }, [scale, fullscreen, onScale]);
   return (
     <div className={fullscreen ? 'w-full h-full flex flex-col' : 'mt-8'}>
       {!fullscreen && <h3 className="font-medium mb-2">Playfield</h3>}
-  <div ref={canvasRef} className={
-        'relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden ' +
-        (fullscreen ? 'flex-1 min-h-0' : 'h-96')
+      <div ref={canvasRef} className={
+        `relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden ${ 
+          fullscreen ? 'flex-1 min-h-0' : 'h-96'}`
       }>
-  <PlayfieldScenery />
+        <PlayfieldScenery />
         {rows.map(r => {
           // Practice playfield: NO L/R values. Show image tile if available (square 80x80), else fallback text box.
           const styleBase = fullscreen ? {
@@ -926,29 +933,29 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           } : {
             left: `${r.x*100}%`,
             top: `${r.y*100}%`,
-            transform: 'translate(-50%, -50%)'
+            transform: 'translate(-50%, -50%)',
           };
           const basePart = r.base || '';
           const imgSrc = basePart ? getImageSrc(basePart) : null;
           // Image visibility tracked in parent map (imageLoadedMap) to avoid per-iteration hook misuse.
           const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
           const showImageAttempt = !!imgSrc;
-          const size = 80; // match setup tile size when image
+          const boxSize = 80; // match setup tile size when image
           if (showImageAttempt) {
             return (
               <div
                 key={r.id}
                 data-shot-box={r.id}
-                style={{ ...styleBase, width: size, height: size }}
+                style={{ ...styleBase, width: boxSize, height: boxSize }}
                 className={`absolute z-20 select-none rounded-md shadow border overflow-hidden bg-white border-slate-300 origin-center ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
                 title={r.type}
               >
                 <img
                   src={imgSrc}
                   alt={r.type}
-                  onLoad={()=> setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
-                  onError={()=> setImageLoadedMap(m => { if (!m[r.id]) return m; const copy = { ...m }; delete copy[r.id]; return copy; })}
-                  className={(imgVisible?'opacity-100':'opacity-0')+ ' absolute inset-0 w-full h-full object-cover transition-opacity duration-150'}
+                  onLoad={() => setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
+                  onError={() => setImageLoadedMap(m => { if (!m[r.id]) {return m;} const copy = { ...m }; delete copy[r.id]; return copy; })}
+                  className={`${imgVisible?'opacity-100':'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150`}
                   draggable={false}
                 />
                 {imgVisible && (
@@ -973,23 +980,23 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             </div>
           );
         })}
-  {mounted && selectedRow && selectedSide && (()=>{
+        {mounted && selectedRow && selectedSide && (() => {
           // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
           const rect = canvasRef.current?.getBoundingClientRect();
-          if (!rect || !rect.width || !rect.height) return null;
+          if (!rect || !rect.width || !rect.height) {return null;}
           const w = rect.width; const h = rect.height;
           const BOX_HALF = 15 * scale; // approximate half-height scaled
           const bx = selectedRow.x * w; const by = selectedRow.y * h + BOX_HALF; // bottom center of shot box
           // Coordinate anchors (note mapping: 0=base,100=tip in editor, but we now need both extremes).
           const L_TIP = { x: 415, y: 920 }, L_BASE = { x: 285, y: 785 };
           const R_TIP = { x: 585, y: 920 }, R_BASE = { x: 715, y: 785 };
-          const Lp = (p)=>({
+          const Lp = (p) => ({
             x: (L_BASE.x + (L_TIP.x - L_BASE.x)*(p/100))/1000*w,
-            y: (L_BASE.y + (L_TIP.y - L_BASE.y)*(p/100))/1000*h
+            y: (L_BASE.y + (L_TIP.y - L_BASE.y)*(p/100))/1000*h,
           });
-          const Rp = (p)=>({
+          const Rp = (p) => ({
             x: (R_BASE.x + (R_TIP.x - R_BASE.x)*(p/100))/1000*w,
-            y: (R_BASE.y + (R_TIP.y - R_BASE.y)*(p/100))/1000*h
+            y: (R_BASE.y + (R_TIP.y - R_BASE.y)*(p/100))/1000*h,
           });
           // Unified green guide color for both flippers during practice
           const stroke = '#10b981'; // emerald-500
@@ -1028,19 +1035,19 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               // Measure actual shot box width (after scaling) for proportional offsets
               let boxW = 120;
               const shotEl = canvasRef.current?.querySelector(`[data-shot-box="${prevRow.id}"]`);
-              if (shotEl) { try { const br = shotEl.getBoundingClientRect(); if (br?.width) boxW = br.width; } catch { /* swallow measurement errors (layout shifts) intentionally */ } }
+              if (shotEl) { try { const br = shotEl.getBoundingClientRect(); if (br?.width) {boxW = br.width;} } catch { /* swallow measurement errors (layout shifts) intentionally */ } }
               const boxH = 30; // heuristic height only for vertical anchor reference
               // Direction: Right flipper early-> +x, late-> -x; Left flipper mirrored
               const dirLate = lastRecall.delta > 0 ? 1 : (lastRecall.delta < 0 ? -1 : 0);
               let shiftSign = 0;
               if (dirLate !== 0) {
-                if (lastRecall.side === 'R') shiftSign = dirLate === -1 ? 1 : -1; else shiftSign = dirLate === -1 ? -1 : 1;
+                if (lastRecall.side === 'R') {shiftSign = dirLate === -1 ? 1 : -1;} else {shiftSign = dirLate === -1 ? -1 : 1;}
               }
               // Proportional factor (of half shot box width): perfect 0, slight 0.50, fairly 1.00, very 1.65
               let factor = 0;
-              if (lastRecall.severity === 'slight') factor = 0.50;
-              else if (lastRecall.severity === 'fairly') factor = 1.00;
-              else if (lastRecall.severity === 'very') factor = 1.65;
+              if (lastRecall.severity === 'slight') {factor = 0.50;}
+              else if (lastRecall.severity === 'fairly') {factor = 1.00;}
+              else if (lastRecall.severity === 'very') {factor = 1.65;}
               const endX = boxCX + shiftSign * (factor * (boxW / 2));
               const endY = boxCY + boxH/2;
               // Feedback text content
@@ -1048,7 +1055,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               if (lastRecall.severity === 'perfect') {
                 word1 = 'Perfect';
               } else {
-                const cap = (s)=> s.charAt(0).toUpperCase() + s.slice(1);
+                const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
                 word1 = cap(lastRecall.severity);
                 word2 = cap(lastRecall.label);
               }
@@ -1160,14 +1167,14 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
 // ---------- main component ----------
 export default function App() {
   const [toasts, setToasts] = useState([]); // {id,msg}
-  const _pushToast = useCallback((msg)=>{
+  const _pushToast = useCallback((msg) => {
     const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random());
-    setToasts(t=>[...t,{id,msg}]);
-    setTimeout(()=> setToasts(t=> t.filter(x=>x.id!==id)), 3200);
+    setToasts(t => [...t,{id,msg}]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id!==id)), 3200);
   },[]);
   // Setup state
   // Start with no shots by default; user must explicitly add via + Add shot.
-  const [rowsRaw, setRowsRaw] = useLocalStorage("pinball_rows_v1", []);
+  const [rowsRaw, setRowsRaw] = useLocalStorage('pinball_rows_v1', []);
   const rows = rowsRaw; // direct
   const setRows = useCallback((updater) => {
     setRowsRaw(prev => (typeof updater === 'function' ? updater(prev) : updater));
@@ -1209,32 +1216,33 @@ export default function App() {
         .then(presets => {
           setAvailablePresets(presets);
         })
-        .catch(error => {
-          console.error('Failed to load preset index:', error);
+        .catch(() => {
           setAvailablePresets([]);
         });
     }
   }, []);
   // Keep popup anchored to triggering chip while scrolling/resizing
-  useEffect(()=>{
-    if (openShotMenuId==null && openLocMenuId==null && !addCountAnchor) return;
+  useEffect(() => {
+    if (openShotMenuId===null && openLocMenuId===null && !addCountAnchor) {
+      return () => {}; // empty cleanup
+    }
     let raf = null;
-    const update = ()=>{
-      if (raf) return;
-      raf = requestAnimationFrame(()=>{
+    const update = () => {
+      if (raf) {return;}
+      raf = requestAnimationFrame(() => {
         raf = null;
-        if (openShotMenuId!=null) {
+        if (openShotMenuId!==null) {
           const el = document.querySelector(`[data-shot-chip="${openShotMenuId}"]`);
           if (el) {
             const r = el.getBoundingClientRect();
-            setShotMenuAnchor(a=> a && a.id===openShotMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
+            setShotMenuAnchor(a => a && a.id===openShotMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
           }
         }
-        if (openLocMenuId!=null) {
+        if (openLocMenuId!==null) {
           const el = document.querySelector(`[data-loc-chip="${openLocMenuId}"]`);
           if (el) {
             const r = el.getBoundingClientRect();
-            setLocMenuAnchor(a=> a && a.id===openLocMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
+            setLocMenuAnchor(a => a && a.id===openLocMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
           }
         }
         if (addCountAnchor) {
@@ -1248,21 +1256,27 @@ export default function App() {
     };
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
-    return ()=>{ window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); if(raf) cancelAnimationFrame(raf); };
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+      if(raf) {
+        cancelAnimationFrame(raf);
+      }
+    };
   }, [openShotMenuId, openLocMenuId, addCountAnchor]);
   // Close menus on outside click
-  useEffect(()=>{
-    const handler = ()=>{
+  useEffect(() => {
+    const handler = () => {
       // Outside click closes all popups
       setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null); setAddCountAnchor(null);
       setPresetOpen(false);
     };
     window.addEventListener('click', handler);
-    return ()=> window.removeEventListener('click', handler);
+    return () => window.removeEventListener('click', handler);
   },[]);
   // Close menus on Escape key
-  useEffect(()=>{
-    const handler = (e)=>{
+  useEffect(() => {
+    const handler = (e) => {
       if (e.key === 'Escape') {
         // Check if any menu is open before preventing default (to allow other Escape handlers like fullscreen)
         if (openShotMenuId !== null || openLocMenuId !== null || addCountAnchor !== null || presetOpen) {
@@ -1277,39 +1291,39 @@ export default function App() {
       }
     };
     window.addEventListener('keydown', handler);
-    return ()=> window.removeEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [openShotMenuId, openLocMenuId, addCountAnchor, presetOpen]);
-  const [driftEvery, setDriftEvery] = useLocalStorage("pinball_driftEvery_v1", 4);
-  const [driftMag, setDriftMag] = useLocalStorage("pinball_driftMag_v1", 2); // magnitude in 5% steps
+  const [driftEvery, setDriftEvery] = useLocalStorage('pinball_driftEvery_v1', 4);
+  const [driftMag, setDriftMag] = useLocalStorage('pinball_driftMag_v1', 2); // magnitude in 5% steps
   // Initial correct values randomization steps (each step = 5 percentage points). Previously fixed at 4 (±20).
-  const [initRandSteps, setInitRandSteps] = useLocalStorage("pinball_initRandSteps_v1", 2);
+  const [initRandSteps, setInitRandSteps] = useLocalStorage('pinball_initRandSteps_v1', 2);
 
-  const [initialized, setInitialized] = useLocalStorage("pinball_initialized_v1", false);
+  const [initialized, setInitialized] = useLocalStorage('pinball_initialized_v1', false);
   // Hidden & mental per side
-  const [hiddenL, setHiddenL] = useLocalStorage("pinball_hiddenL_v1", []);
-  const [hiddenR, setHiddenR] = useLocalStorage("pinball_hiddenR_v1", []);
+  const [hiddenL, setHiddenL] = useLocalStorage('pinball_hiddenL_v1', []);
+  const [hiddenR, setHiddenR] = useLocalStorage('pinball_hiddenR_v1', []);
   // Starting (anchor) values captured at session start to constrain correct values drift (±20 max, i.e. 4*5 steps)
-  const [baseL, setBaseL] = useLocalStorage("pinball_baseL_v1", []);
-  const [baseR, setBaseR] = useLocalStorage("pinball_baseR_v1", []);
-  const [mentalL, setMentalL] = useLocalStorage("pinball_mentalL_v1", []);
-  const [mentalR, setMentalR] = useLocalStorage("pinball_mentalR_v1", []);
-  const [orderAscL, setOrderAscL] = useLocalStorage("pinball_initialOrderL_v1", []);
-  const [orderAscR, setOrderAscR] = useLocalStorage("pinball_initialOrderR_v1", []);
+  const [baseL, setBaseL] = useLocalStorage('pinball_baseL_v1', []);
+  const [baseR, setBaseR] = useLocalStorage('pinball_baseR_v1', []);
+  const [mentalL, setMentalL] = useLocalStorage('pinball_mentalL_v1', []);
+  const [mentalR, setMentalR] = useLocalStorage('pinball_mentalR_v1', []);
+  const [orderAscL, setOrderAscL] = useLocalStorage('pinball_initialOrderL_v1', []);
+  const [orderAscR, setOrderAscR] = useLocalStorage('pinball_initialOrderR_v1', []);
 
-  const [mode, setMode] = useLocalStorage("pinball_mode_v1", "random"); // 'manual' | 'random'
-  const [selectedIdx, setSelectedIdx] = useLocalStorage("pinball_sel_v1", 0);
-  const [guess, setGuess] = useLocalStorage("pinball_guess_v1", "");
-  const [selectedSide, setSelectedSide] = useLocalStorage("pinball_selSide_v1", 'L');
-  const [attempts, setAttempts] = useLocalStorage("pinball_attempts_v1", []);
-  const [attemptCount, setAttemptCount] = useLocalStorage("pinball_attemptCount_v1", 0);
-  const [showTruth, setShowTruth] = useLocalStorage("pinball_showTruth_v1", false);
-  const [finalPhase, setFinalPhase] = useLocalStorage("pinball_finalPhase_v1", false);
-  const [finalRecallL, setFinalRecallL] = useLocalStorage("pinball_finalRecallL_v1", []);
-  const [finalRecallR, setFinalRecallR] = useLocalStorage("pinball_finalRecallR_v1", []);
-  const [showMentalModel, setShowMentalModel] = useLocalStorage("pinball_showMentalModel_v1", false); // visibility toggle for guess values
-  const [showBaseValues, setShowBaseValues] = useLocalStorage("pinball_showBaseValues_v1", true); // visibility toggle for starting/original values
-  const [showAttemptHistory, setShowAttemptHistory] = useLocalStorage("pinball_showAttemptHistory_v1", false);
-  const [showFeedbackPanel, setShowFeedbackPanel] = useLocalStorage("pinball_showFeedback_v1", false); // new toggle for Feedback table
+  const [mode, setMode] = useLocalStorage('pinball_mode_v1', 'random'); // 'manual' | 'random'
+  const [selectedIdx, setSelectedIdx] = useLocalStorage('pinball_sel_v1', 0);
+  const [guess, setGuess] = useLocalStorage('pinball_guess_v1', '');
+  const [selectedSide, setSelectedSide] = useLocalStorage('pinball_selSide_v1', 'L');
+  const [attempts, setAttempts] = useLocalStorage('pinball_attempts_v1', []);
+  const [attemptCount, setAttemptCount] = useLocalStorage('pinball_attemptCount_v1', 0);
+  const [showTruth, setShowTruth] = useLocalStorage('pinball_showTruth_v1', false);
+  const [finalPhase, setFinalPhase] = useLocalStorage('pinball_finalPhase_v1', false);
+  const [finalRecallL, setFinalRecallL] = useLocalStorage('pinball_finalRecallL_v1', []);
+  const [finalRecallR, setFinalRecallR] = useLocalStorage('pinball_finalRecallR_v1', []);
+  const [showMentalModel, setShowMentalModel] = useLocalStorage('pinball_showMentalModel_v1', false); // visibility toggle for guess values
+  const [showBaseValues, setShowBaseValues] = useLocalStorage('pinball_showBaseValues_v1', true); // visibility toggle for starting/original values
+  const [showAttemptHistory, setShowAttemptHistory] = useLocalStorage('pinball_showAttemptHistory_v1', false);
+  const [showFeedbackPanel, setShowFeedbackPanel] = useLocalStorage('pinball_showFeedback_v1', false); // new toggle for Feedback table
   // Restore stacks removed (Not Possible is neutral now)
   // UI local (non-persisted) state: collapsed shot type rows (store ids)
   const [collapsedTypes, setCollapsedTypes] = useState([]); // Only shot type collapsing retained; flipper collapsing removed.
@@ -1321,22 +1335,22 @@ export default function App() {
   // One-time auto-collapse so pre-selected values (from persisted state or defaults) show as single chips, not full option lists on first load.
   const didInitCollapse = useRef(false);
   useEffect(() => {
-    if (didInitCollapse.current) return;
-    if (!rows || !rows.length) return; // nothing yet
+    if (didInitCollapse.current) {return;}
+    if (!rows || !rows.length) {return;} // nothing yet
     // Only initialize if user hasn't interacted (arrays still empty)
-  if (collapsedTypes.length) { didInitCollapse.current = true; return; }
+    if (collapsedTypes.length) { didInitCollapse.current = true; return; }
     const typeIds = rows.filter(r => !!r.type).map(r => r.id);
-  // Flipper collapse removed (left/right arrays no longer tracked)
-    if (typeIds.length) setCollapsedTypes(typeIds);
-  // (No flipper collapse initialization)
+    // Flipper collapse removed (left/right arrays no longer tracked)
+    if (typeIds.length) {setCollapsedTypes(typeIds);}
+    // (No flipper collapse initialization)
     didInitCollapse.current = true;
   }, [rows, collapsedTypes.length]);
 
   // Keep selectedIdx within bounds if rows shrink
   useEffect(() => {
     setSelectedIdx((idx) => {
-      if (idx === -1) return -1; // preserve explicit no-selection state
-      if (rows.length === 0) return -1; // nothing to select
+      if (idx === -1) {return -1;} // preserve explicit no-selection state
+      if (rows.length === 0) {return -1;} // nothing to select
       return idx >= rows.length ? Math.max(0, rows.length - 1) : idx;
     });
     setSelectedSide(s => (s === 'L' || s === 'R') ? s : 'L');
@@ -1346,19 +1360,19 @@ export default function App() {
   // Derived
   const totalPoints = useMemo(
     () => attempts.reduce((sum, a) => sum + a.points, 0),
-    [attempts]
+    [attempts],
   );
 
   const avgAbsErr = useMemo(() => {
-    if (!attempts.length) return 0;
+    if (!attempts.length) {return 0;}
     const m = attempts.reduce((s, a) => s + Math.abs(a.delta), 0) / attempts.length;
     return m;
   }, [attempts]);
 
   // Session can start only if every row has a shot type (base chosen) and both flipper values
   const canStart = useMemo(() => {
-    if (!rows.length) return false;
-    return rows.every(r => r.base && r.base.length > 0 && r.initL != null && r.initR != null);
+    if (!rows.length) {return false;}
+    return rows.every(r => r.base && r.base.length > 0 && r.initL !== null && r.initR !== null);
   }, [rows]);
 
   // Load a preset from /presets/ folder
@@ -1372,14 +1386,14 @@ export default function App() {
       } else {
         // Fetch from server
         const response = await fetch(`./presets/${preset.filename}`);
-        if (!response.ok) throw new Error('Preset not found');
+        if (!response.ok) {throw new Error('Preset not found');}
         presetData = await response.json();
       }
       
       // Parse preset data and create rows
       const newRows = presetData.map((shot, idx) => {
         // Parse shot type to extract base and location
-  const typeStr = shot.shotType || '';
+        const typeStr = shot.shotType || '';
         let base = '';
         let location = '';
         
@@ -1401,15 +1415,14 @@ export default function App() {
           base,
           location,
           initL: leftVal,
-          initR: rightVal
+          initR: rightVal,
         }, idx);
       });
       
       setRows(newRows);
       setAddCountAnchor(null);
       _pushToast(`Loaded preset: ${preset.name}`);
-    } catch (error) {
-      console.error('Failed to load preset:', error);
+    } catch {
       _pushToast(`Failed to load preset: ${preset.name}`);
     }
   }, [setRows, _pushToast]);
@@ -1420,7 +1433,7 @@ export default function App() {
       const data = rows.map(r => ({
         shotType: r.type || buildType(r.base, r.location) || '',
         leftFlipper: r.initL === 0 ? 'NP' : r.initL,
-        rightFlipper: r.initR === 0 ? 'NP' : r.initR
+        rightFlipper: r.initR === 0 ? 'NP' : r.initR,
       }));
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -1432,24 +1445,23 @@ export default function App() {
       a.remove();
       URL.revokeObjectURL(url);
       _pushToast('Exported shots to shots-export.json');
-    } catch (err) {
-      console.error('Export failed', err);
+    } catch {
       _pushToast('Export failed');
     }
   }, [rows, _pushToast]);
   
   // Initialize hidden matrix (wrapped so effects & handlers can depend on stable reference)
   const startSession = useCallback(() => {
-    if (!rows.length) return;
+    if (!rows.length) {return;}
     // Capture bases directly
-    const bL = rows.map(r=>snap5(r.initL));
-    const bR = rows.map(r=>snap5(r.initR));
+    const bL = rows.map(r => snap5(r.initL));
+    const bR = rows.map(r => snap5(r.initR));
     setBaseL(bL); setBaseR(bR);
     // Determine original ordering by starting values
-  const ascL = rows.map((r,i)=>({i,v:r.initL})).sort((a,b)=>a.v-b.v).map(x=>x.i);
-  const ascR = rows.map((r,i)=>({i,v:r.initR})).sort((a,b)=>a.v-b.v).map(x=>x.i);
+    const ascL = rows.map((r,i) => ({i,v:r.initL})).sort((a,b) => a.v-b.v).map(x => x.i);
+    const ascR = rows.map((r,i) => ({i,v:r.initR})).sort((a,b) => a.v-b.v).map(x => x.i);
     // Candidate random offsets (independent) within allowed band using configurable steps
-  const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // still capped at 4 for initial randomization.
+    const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // still capped at 4 for initial randomization.
     // Edge case note: if initRandSteps exceeds the eventual drift usableSteps (floor(driftMag)) then
     // the initial hidden offsets may land outside the subsequent drift band, making early large
     // deviations unreachable until drift magnitude increases. For now we allow this (gives a
@@ -1458,26 +1470,26 @@ export default function App() {
     // if consistent bands are preferred.
     const candL = bL.map(v => {
       // If "Not Possible" (0), keep it at 0 - no randomization
-      if (v === 0) return 0;
+      if (v === 0) {return 0;}
       const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
     const candR = bR.map(v => {
       // If "Not Possible" (0), keep it at 0 - no randomization
-      if (v === 0) return 0;
+      if (v === 0) {return 0;}
       const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
     // Enforce ordering via bounded isotonic regression
-  const hiddenInitL = strictlyIncrease(isotonicWithBounds(candL, bL, ascL).map(v=>snap5(v)), bL, ascL);
-  const hiddenInitR = strictlyIncrease(isotonicWithBounds(candR, bR, ascR).map(v=>snap5(v)), bR, ascR);
+    const hiddenInitL = strictlyIncrease(isotonicWithBounds(candL, bL, ascL).map(v => snap5(v)), bL, ascL);
+    const hiddenInitR = strictlyIncrease(isotonicWithBounds(candR, bR, ascR).map(v => snap5(v)), bR, ascR);
     setHiddenL(hiddenInitL); setHiddenR(hiddenInitR);
     setOrderAscL(ascL); setOrderAscR(ascR);
-  setMentalL(rows.map(r=>r.initL));
-  setMentalR(rows.map(r=>r.initR));
+    setMentalL(rows.map(r => r.initL));
+    setMentalR(rows.map(r => r.initR));
     setAttempts([]);
     setAttemptCount(0);
     setFinalPhase(false);
-  setFinalRecallL(rows.map(r=>r.initL));
-  setFinalRecallR(rows.map(r=>r.initR));
+    setFinalRecallL(rows.map(r => r.initL));
+    setFinalRecallR(rows.map(r => r.initR));
     setInitialized(true);
     // Pick a random starting shot & flipper for both modes so manual mode doesn't always start at first row
     if (rows.length) {
@@ -1489,43 +1501,55 @@ export default function App() {
 
   // Allow pressing Enter anywhere on setup screen to start the session (if valid)
   useEffect(() => {
-    if (initialized) return; // only before session starts
+    if (initialized) {
+      return () => {}; // empty cleanup
+    }
     function handleKey(e) {
       if (e.key === 'Enter' && !initialized && canStart) {
-        if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) return;
+        if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) {return;}
         e.preventDefault();
         startSession();
       }
     }
     window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+    };
   }, [initialized, canStart, startSession]);
 
   // Apply drift every N attempts
   useEffect(() => {
-    if (!initialized) return;
-    if (attemptCount === 0) return;
-    if (driftEvery <= 0) return;
-    if (attemptCount % driftEvery !== 0) return;
-  // Drift logic:
-  // New rule: The drift band around each base value is dynamic: ± (driftMag * 5) percentage points.
-  // We still preserve ordering via isotonic regression after applying random steps.
-  // driftMag itself can be fractional (step input 0.5); we interpret usable integer steps as floor(driftMag),
-  // which determines both the maximum random step distance and the per-attempt clamp band.
-  const driftMagNum = Number(driftMag);
-  const usableSteps = Math.max(0, Math.min(4, Math.floor(Number.isFinite(driftMagNum) ? driftMagNum : 0))); // retain legacy overall hard ceiling of 4 steps (±20)
-  const stepDrift = () => {
-    if (usableSteps === 0) return 0;
-    const k = rndInt(0, usableSteps);
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    return dir * k * 5;
-  };
+    if (!initialized) {
+      return () => {}; // empty cleanup
+    }
+    if (attemptCount === 0) {
+      return () => {}; // empty cleanup
+    }
+    if (driftEvery <= 0) {
+      return () => {}; // empty cleanup
+    }
+    if (attemptCount % driftEvery !== 0) {
+      return () => {}; // empty cleanup
+    }
+    // Drift logic:
+    // New rule: The drift band around each base value is dynamic: ± (driftMag * 5) percentage points.
+    // We still preserve ordering via isotonic regression after applying random steps.
+    // driftMag itself can be fractional (step input 0.5); we interpret usable integer steps as floor(driftMag),
+    // which determines both the maximum random step distance and the per-attempt clamp band.
+    const driftMagNum = Number(driftMag);
+    const usableSteps = Math.max(0, Math.min(4, Math.floor(Number.isFinite(driftMagNum) ? driftMagNum : 0))); // retain legacy overall hard ceiling of 4 steps (±20)
+    const stepDrift = () => {
+      if (usableSteps === 0) {return 0;}
+      const k = rndInt(0, usableSteps);
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      return dir * k * 5;
+    };
 
     setHiddenL(prev => {
-      if (!prev.length || !baseL.length) return prev;
+      if (!prev.length || !baseL.length) {return prev;}
       const drifted = prev.map((v,i) => {
         // If already "Not Possible" (0), it should not drift and remain 0
-        if (v === 0) return 0;
+        if (v === 0) {return 0;}
         const b = baseL[i];
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
@@ -1538,10 +1562,10 @@ export default function App() {
       return strictlyIncrease(ordered, baseL, orderAscL);
     });
     setHiddenR(prev => {
-      if (!prev.length || !baseR.length) return prev;
+      if (!prev.length || !baseR.length) {return prev;}
       const drifted = prev.map((v,i) => {
         // If already "Not Possible" (0), it should not drift and remain 0
-        if (v === 0) return 0;
+        if (v === 0) {return 0;}
         const b = baseR[i];
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
@@ -1553,17 +1577,18 @@ export default function App() {
       const ordered = isotonicWithBounds(drifted, baseR, orderAscR);
       return strictlyIncrease(ordered, baseR, orderAscR);
     });
+    return () => {}; // cleanup function to satisfy consistent-return
   }, [attemptCount, driftEvery, driftMag, orderAscL, orderAscR, initialized, baseL, baseR, setHiddenL, setHiddenR]);
 
   function validatePercent(numLike) {
     const x = Number(numLike);
-    if (!Number.isFinite(x)) return null;
+    if (!Number.isFinite(x)) {return null;}
     return snap5(Math.max(0, Math.min(100, x)));
   }
 
   function pickRandomIdx() {
-    if (!rows.length) return 0;
-    if (rows.length === 1) return 0;
+    if (!rows.length) {return 0;}
+    if (rows.length === 1) {return 0;}
     let idx = rndInt(0, rows.length - 1);
     // avoid immediate repeats
     let tries = 0;
@@ -1575,80 +1600,80 @@ export default function App() {
   }
 
   function submitAttempt(overrideVal) {
-    if (!initialized) return;
-    const idx = mode === "random" ? selectedIdx : selectedIdx;
-    const usingOverride = overrideVal != null;
+    if (!initialized) {return;}
+    const idx = mode === 'random' ? selectedIdx : selectedIdx;
+    const usingOverride = overrideVal !== null;
     const val = validatePercent(usingOverride ? overrideVal : guess);
-    if (!usingOverride && (guess === "" || val === null)) {
-      setRecallError("0–100 (0 - Not Possible)");
-      setTimeout(()=>{ recallInputRef.current?.focus(); recallInputRef.current?.select(); },0);
+    if (!usingOverride && (guess === '' || val === null)) {
+      setRecallError('0–100 (0 - Not Possible)');
+      setTimeout(() => { recallInputRef.current?.focus(); recallInputRef.current?.select(); },0);
       return;
     }
-    if (usingOverride && val == null) return; // ignore invalid override silently
-    setRecallError("");
-      const truth = (selectedSide === 'L' ? hiddenL[idx] : hiddenR[idx]) ?? 0;
-      // Determine previous attempt for same shot & side to assess adjustment quality
-      const prevSame = attempts.find(a => a.idx === idx && a.side === selectedSide);
-      const prevInput = prevSame ? prevSame.input : null;
-      const delta = Math.round(val - truth);
-      const abs = Math.abs(delta);
-      // Classification now fixed to 5% increments:
-      // 0 => perfect, 5 => slight, 10 => fairly, >=15 => very (early/late determined by sign)
-      let label;
-      if (abs === 0) {
-        label = "perfect";
-      } else {
-        label = delta < 0 ? "early" : "late";
+    if (usingOverride && val === null) {return;} // ignore invalid override silently
+    setRecallError('');
+    const truth = (selectedSide === 'L' ? hiddenL[idx] : hiddenR[idx]) ?? 0;
+    // Determine previous attempt for same shot & side to assess adjustment quality
+    const prevSame = attempts.find(a => a.idx === idx && a.side === selectedSide);
+    const prevInput = prevSame ? prevSame.input : null;
+    const delta = Math.round(val - truth);
+    const abs = Math.abs(delta);
+    // Classification now fixed to 5% increments:
+    // 0 => perfect, 5 => slight, 10 => fairly, >=15 => very (early/late determined by sign)
+    let label;
+    if (abs === 0) {
+      label = 'perfect';
+    } else {
+      label = delta < 0 ? 'early' : 'late';
+    }
+    let severity;
+    if (abs === 0) {severity = 'perfect';}
+    else if (abs === 5) {severity = 'slight';}
+    else if (abs === 10) {severity = 'fairly';}
+    else {severity = 'very';} // abs >= 15
+    const basePoints = Math.max(0, Math.round(100 - abs));
+    // Adjustment logic:
+    // If previous attempt existed and was 'late' (prev delta > 0), user should decrease number this time.
+    // If previous attempt existed and was 'early' (prev delta < 0), user should increase number.
+    // If previous attempt was within tolerance, no adjustment required.
+    let adjustRequired = false;
+    let requiredDir = 0; // -1 means should go lower, +1 higher, 0 none
+    let adjustCorrect = true; // default true if no requirement
+    if (prevSame) {
+      const prevDelta = prevSame.delta;
+      if (prevDelta > 0) { adjustRequired = true; requiredDir = -1; }
+      else if (prevDelta < 0) { adjustRequired = true; requiredDir = 1; }
+      if (adjustRequired) {
+        if (requiredDir === -1 && !(val < prevSame.input)) {adjustCorrect = false;}
+        if (requiredDir === 1 && !(val > prevSame.input)) {adjustCorrect = false;}
       }
-      let severity;
-      if (abs === 0) severity = "perfect";
-      else if (abs === 5) severity = "slight";
-      else if (abs === 10) severity = "fairly";
-      else severity = "very"; // abs >= 15
-      const basePoints = Math.max(0, Math.round(100 - abs));
-      // Adjustment logic:
-  // If previous attempt existed and was 'late' (prev delta > 0), user should decrease number this time.
-  // If previous attempt existed and was 'early' (prev delta < 0), user should increase number.
-      // If previous attempt was within tolerance, no adjustment required.
-      let adjustRequired = false;
-      let requiredDir = 0; // -1 means should go lower, +1 higher, 0 none
-      let adjustCorrect = true; // default true if no requirement
-      if (prevSame) {
-        const prevDelta = prevSame.delta;
-  if (prevDelta > 0) { adjustRequired = true; requiredDir = -1; }
-  else if (prevDelta < 0) { adjustRequired = true; requiredDir = 1; }
-        if (adjustRequired) {
-          if (requiredDir === -1 && !(val < prevSame.input)) adjustCorrect = false;
-          if (requiredDir === 1 && !(val > prevSame.input)) adjustCorrect = false;
-        }
-      }
-      // Adjustment penalty only if required and incorrect. Penalty magnitude scaled by how strongly you went the wrong way or failed to move.
-      let adjustPenalty = 0;
-      if (adjustRequired && !adjustCorrect && prevInput != null) {
-        const diff = Math.abs(val - prevInput); // wrong direction or zero movement
-        // 5 points base penalty + 1 per 5% of (wrong or zero) adjustment up to 25
-        adjustPenalty = Math.min(25, 5 + Math.round(diff / 5));
-      }
-      const points = Math.max(0, basePoints - adjustPenalty);
-      const rec = { t: Date.now(), idx, side: selectedSide, input: val, truth, delta, label, severity, points, basePoints, prevInput, adjustRequired, requiredDir, adjustCorrect, adjustPenalty };
-      setAttempts((a) => [rec, ...a].slice(0, 200));
-      setAttemptCount((c) => c + 1);
-      // Update guess values toward the input guess (still adjusts background values)
-      if (selectedSide === 'L') {
-        setMentalL(m => { const n=[...m]; n[idx]=val; return n; });
-      } else {
-        setMentalR(m => { const n=[...m]; n[idx]=val; return n; });
-      }
+    }
+    // Adjustment penalty only if required and incorrect. Penalty magnitude scaled by how strongly you went the wrong way or failed to move.
+    let adjustPenalty = 0;
+    if (adjustRequired && !adjustCorrect && prevInput !== null) {
+      const diff = Math.abs(val - prevInput); // wrong direction or zero movement
+      // 5 points base penalty + 1 per 5% of (wrong or zero) adjustment up to 25
+      adjustPenalty = Math.min(25, 5 + Math.round(diff / 5));
+    }
+    const points = Math.max(0, basePoints - adjustPenalty);
+    const rec = { t: Date.now(), idx, side: selectedSide, input: val, truth, delta, label, severity, points, basePoints, prevInput, adjustRequired, requiredDir, adjustCorrect, adjustPenalty };
+    setAttempts((a) => [rec, ...a].slice(0, 200));
+    setAttemptCount((c) => c + 1);
+    // Update guess values toward the input guess (still adjusts background values)
+    if (selectedSide === 'L') {
+      setMentalL(m => { const n=[...m]; n[idx]=val; return n; });
+    } else {
+      setMentalR(m => { const n=[...m]; n[idx]=val; return n; });
+    }
 
     // Prepare next random shot and flipper if in random mode
-    if (mode === "random") {
+    if (mode === 'random') {
       setSelectedIdx(pickRandomIdx());
       setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
     }
 
     // Clear guess so input resets for next attempt
-    setGuess("");
-    setRecallError("");
+    setGuess('');
+    setRecallError('');
   }
 
   function endSession() {
@@ -1669,7 +1694,7 @@ export default function App() {
 
   // Final grading
   const finalScore = useMemo(() => {
-    if (!finalPhase || !rows.length || !hiddenL.length || !hiddenR.length || !finalRecallL.length || !finalRecallR.length) return 0;
+    if (!finalPhase || !rows.length || !hiddenL.length || !hiddenR.length || !finalRecallL.length || !finalRecallR.length) {return 0;}
     let total = 0; let count = 0;
     for (let i=0;i<rows.length;i++) {
       const tL = hiddenL[i] ?? 0; const tR = hiddenR[i] ?? 0;
@@ -1677,7 +1702,7 @@ export default function App() {
       total += Math.abs(gL - tL); count++;
       total += Math.abs(gR - tR); count++;
     }
-    if (!count) return 0;
+    if (!count) {return 0;}
     const mae = total / count;
     return Math.max(0, Math.round(100 - mae));
   }, [finalPhase, rows, hiddenL, hiddenR, finalRecallL, finalRecallR]);
@@ -1686,15 +1711,15 @@ export default function App() {
   useEffect(() => {
     setRows(prev => prev.map(r => ({
       ...r,
-      initL: r.initL == null ? null : snap5(r.initL),
-      initR: r.initR == null ? null : snap5(r.initR)
+      initL: r.initL === null ? null : snap5(r.initL),
+      initR: r.initR === null ? null : snap5(r.initR),
     })));
-    setMentalL(m => m.map(v=>snap5(v ?? 0)));
-    setMentalR(m => m.map(v=>snap5(v ?? 0)));
-    setHiddenL(h => h.map(v=>snap5(v ?? 0)));
-    setHiddenR(h => h.map(v=>snap5(v ?? 0)));
-    setFinalRecallL(r => r.map(v=>snap5(v ?? 0)));
-    setFinalRecallR(r => r.map(v=>snap5(v ?? 0)));
+    setMentalL(m => m.map(v => snap5(v ?? 0)));
+    setMentalR(m => m.map(v => snap5(v ?? 0)));
+    setHiddenL(h => h.map(v => snap5(v ?? 0)));
+    setHiddenR(h => h.map(v => snap5(v ?? 0)));
+    setFinalRecallL(r => r.map(v => snap5(v ?? 0)));
+    setFinalRecallR(r => r.map(v => snap5(v ?? 0)));
     // Update ROW_ID_SEED to avoid ID conflicts with loaded rows
     if (rows.length > 0) {
       const maxId = Math.max(...rows.map(r => r.id));
@@ -1713,48 +1738,48 @@ export default function App() {
     let lastNonZero = 0;
     const out = rowsArr.map(r => ({...r}));
     for (let i=0;i<out.length;i++) {
-      let raw = out[i].initL;
-      if (raw == null) continue; // leave nulls untouched
+      const raw = out[i].initL;
+      if (raw === null) {continue;} // leave nulls untouched
       let v = snap5(raw);
-      if (v < 0) v = 0;
+      if (v < 0) {v = 0;}
       if (lastNonZero === 0) {
         // zeros allowed; any positive establishes lastNonZero
       } else {
-        if (v === 0 || v <= lastNonZero) v = Math.min(100, lastNonZero + 5);
+        if (v === 0 || v <= lastNonZero) {v = Math.min(100, lastNonZero + 5);}
       }
       out[i].initL = v;
-      if (v > 0) lastNonZero = v;
+      if (v > 0) {lastNonZero = v;}
     }
     // Right side normalization: strictly decreasing top -> bottom.
     let prevR = 105; // greater than max
     for (let i=0;i<out.length;i++) {
-      let raw = out[i].initR;
-      if (raw == null) continue; // leave nulls untouched
+      const raw = out[i].initR;
+      if (raw === null) {continue;} // leave nulls untouched
       let v = snap5(raw);
-      if (v >= prevR) v = prevR - 5;
-      if (v < 0) v = 0;
+      if (v >= prevR) {v = prevR - 5;}
+      if (v < 0) {v = 0;}
       out[i].initR = v;
       prevR = v;
     }
     return out;
   }
   function handleRowReorder(fromIdx, toIdx) {
-    if (fromIdx == null || toIdx == null || fromIdx === toIdx) { setDragRowIdx(null); return; }
+    if (fromIdx === null || toIdx === null || fromIdx === toIdx) { setDragRowIdx(null); return; }
     setRows(prev => {
       // Helper: align current spatial left->right order to current top->bottom order if out of sync.
       function alignPositions(list) {
-        const sortedPositions = [...list].sort((a,b)=>a.x-b.x).map(r=>({x:r.x,y:r.y}));
-        return list.map((r,i)=> ({...r, x: sortedPositions[i].x, y: sortedPositions[i].y }));
+        const sortedPositions = [...list].sort((a,b) => a.x-b.x).map(r => ({x:r.x,y:r.y}));
+        return list.map((r,i) => ({...r, x: sortedPositions[i].x, y: sortedPositions[i].y }));
       }
       // Start from a deep-ish copy (shallow objects cloned so we can mutate x,y safely)
-      let arr = prev.map(r=>({...r}));
+      let arr = prev.map(r => ({...r}));
       // Pre-align if previous operations left them mismatched.
-      const misaligned = (()=>{
-        const orderByX = [...arr].sort((a,b)=>a.x-b.x);
-        for (let i=0;i<arr.length;i++) if (orderByX[i].id !== arr[i].id) return true;
+      const misaligned = (() => {
+        const orderByX = [...arr].sort((a,b) => a.x-b.x);
+        for (let i=0;i<arr.length;i++) {if (orderByX[i].id !== arr[i].id) {return true;}}
         return false;
       })();
-      if (misaligned) arr = alignPositions(arr);
+      if (misaligned) {arr = alignPositions(arr);}
       // Perform adjacent swaps to move fromIdx to toIdx while swapping spatial coordinates with each neighbor.
       if (fromIdx < toIdx) {
         for (let i = fromIdx; i < toIdx; i++) {
@@ -1774,8 +1799,8 @@ export default function App() {
         }
       }
       // Final guarantee: enforce left->right strictly increasing relative order to index sequence (minimal reassignment if needed)
-      const outOfOrder = arr.some((r,i)=> i>0 && arr[i-1].x > r.x);
-      if (outOfOrder) arr = alignPositions(arr);
+      const outOfOrder = arr.some((r,i) => i>0 && arr[i-1].x > r.x);
+      if (outOfOrder) {arr = alignPositions(arr);}
       // Normalize percentage constraints after reorder.
       return normalizeRowPercents(arr);
     });
@@ -1786,13 +1811,15 @@ export default function App() {
   // Recall input ref for auto-focus
   const recallInputRef = useRef(null);
   // Validation error message for recall input
-  const [recallError, setRecallError] = useState("");
+  const [recallError, setRecallError] = useState('');
   // Fullscreen playfield state
   const [playfieldFullscreen, setPlayfieldFullscreen] = useState(false);
   const [fullscreenScale, setFullscreenScale] = useState(1); // current scale reported by fullscreen playfield
   // Prevent body/document scrolling when fullscreen overlay is active (removes stray window scrollbar)
   useEffect(() => {
-    if (!playfieldFullscreen) return; // only lock when entering fullscreen
+    if (!playfieldFullscreen) {
+      return () => {};
+    }
     const prevBodyOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -1804,7 +1831,9 @@ export default function App() {
   }, [playfieldFullscreen]);
   // Allow pressing Escape to exit fullscreen (mirrors clicking Exit button)
   useEffect(() => {
-    if (!playfieldFullscreen) return;
+    if (!playfieldFullscreen) {
+      return () => {};
+    }
     function handleEsc(e) {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -1812,163 +1841,165 @@ export default function App() {
       }
     }
     window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
   }, [playfieldFullscreen]);
   // Focus recall input when session starts (initialized true and not final phase)
-  useEffect(()=>{
+  useEffect(() => {
     if (initialized && !finalPhase) {
       // small timeout ensures element mounted after conditional render
-      setTimeout(()=>{ recallInputRef.current?.focus(); recallInputRef.current?.select(); }, 0);
+      setTimeout(() => { recallInputRef.current?.focus(); recallInputRef.current?.select(); }, 0);
     }
   }, [initialized, finalPhase]);
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
-    {/* Toast notifications */}
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-      {toasts.map(t=> (
-        <div key={t.id} className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein">
-          {t.msg}
-        </div>
-      ))}
-    </div>
-    {/* Detached popups (portals) for shot & location selection */}
-    {shotMenuAnchor && openShotMenuId!=null && createPortal(
-      <div
-        className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
-        style={{ left: Math.max(8, shotMenuAnchor.x) + 'px', top: shotMenuAnchor.y + 'px' }}
-        onClick={e=> e.stopPropagation()}
-      >
-        {BASE_ELEMENTS.map(b => {
-          const currentRow = rows.find(r=>r.id===shotMenuAnchor.id);
-          const isSel = currentRow?.base===b;
-          const hasSelection = !!currentRow?.base;
-          return (
-            <ElementTile
-              key={b}
-              name={b}
-              selected={isSel}
-              hasSelection={hasSelection}
-              onSelect={()=>{
-                if (isSel) {
-                  // Clicking the currently selected shot deselects it; keep menu open
-                  setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:'', type: ''}; } return next; });
-                } else {
-                  // Selecting a new shot; close menu
-                  setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:b, type: buildType(b, next[idx].location || '')}; } return next; });
-                  setOpenShotMenuId(null); setShotMenuAnchor(null);
-                }
-              }}
-            />
-          );
-        })}
-      </div>,
-      document.body
-    )}
-    {locMenuAnchor && openLocMenuId!=null && createPortal(
-      <div
-        className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
-        style={{ left: Math.max(8, locMenuAnchor.x) + 'px', top: locMenuAnchor.y + 'px' }}
-        onClick={e=> e.stopPropagation()}
-      >
-        {LOCATIONS.map(loc => {
-          const currentRow = rows.find(r=>r.id===locMenuAnchor.id);
-          const isSel = currentRow?.location===loc;
-          return (
-            <button
-              key={loc}
-              type="button"
-              onClick={()=>{
-                if (isSel) {
-                  // Clicking the currently selected location deselects it; keep menu open
-                  setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:'', type: buildType(base,'')}; } return next; });
-                } else {
-                  // Selecting a new location; close menu
-                  setRows(prev=>{ const next=[...prev]; const idx = prev.findIndex(r=>r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:loc, type: buildType(base,loc)}; } return next; });
-                  setOpenLocMenuId(null); setLocMenuAnchor(null);
-                }
-              }}
-              className={(isSel?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700') + ' text-[11px] px-2 py-1 rounded-md text-left'}
-            >{loc}</button>
-          );
-        })}
-      </div>,
-      document.body
-    )}
-    {addCountAnchor && rows.length===0 && createPortal(
-      <div
-        className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
-        style={{ left: Math.max(8, addCountAnchor.x) + 'px', top: addCountAnchor.y + 'px' }}
-        onClick={e=> e.stopPropagation()}
-      >
-        <div className="grid grid-cols-4 gap-1">
-          {Array.from({length:20},(_,k)=>k+1).map(n => (
-            <button
-              key={n}
-              type="button"
-              className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-              onClick={()=>{
-                const count = n;
-                const buildRows = (cnt)=>{
-                  const asc = Array.from({length:cnt},(_,i)=> snap5(((i+1)/(cnt+1))*100));
-                  for (let i=1;i<asc.length;i++) if (asc[i] <= asc[i-1]) asc[i] = Math.min(100, asc[i-1]+5);
-                  for (let i=asc.length-2;i>=0;i--) if (asc[i] >= asc[i+1]) asc[i] = Math.max(5, asc[i+1]-5);
-                  const desc = [...asc].reverse();
-                  return asc.map((v,i)=> newRow({ initL: v, initR: desc[i] }, i));
-                };
-                setRows(buildRows(count));
-                setAddCountAnchor(null);
-              }}
-            >{n}</button>
-          ))}
-          <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
-        </div>
-        {availablePresets.length > 0 && (
-          <div className="mt-2 pt-2 border-t">
-            <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={(e)=>{ e.stopPropagation(); setPresetOpen(p => !p); }}
-                className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
-                aria-expanded={presetOpen}
-                aria-haspopup="listbox"
-                title={selectedPresetName || 'Select preset'}
-              >
-                <span className="truncate block" style={{ maxWidth: '80%' }}>{selectedPresetName || 'Choose preset...'}</span>
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="w-4 h-4 ml-2">
-                  <path d="M6 8l4 4 4-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              {presetOpen && (
-                <div
-                  role="listbox"
-                  aria-label="Available presets"
-                  className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
-                  onClick={e=> e.stopPropagation()}
-                  style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
-                >
-                  {availablePresets.map(preset => (
-                    <button
-                      key={preset.filename}
-                      type="button"
-                      role="option"
-                      aria-selected={selectedPresetName === preset.name}
-                      onClick={() => { loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null); }}
-                      title={preset.name}
-                      className={(selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200') + ' text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition'}
-                    >
-                      <span>{preset.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+      {/* Toast notifications */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+        {toasts.map(t => (
+          <div key={t.id} className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein">
+            {t.msg}
           </div>
-        )}
-      </div>,
-      document.body
-    )}
-  <div className="max-w-4xl mx-auto p-4 md:p-8">
+        ))}
+      </div>
+      {/* Detached popups (portals) for shot & location selection */}
+      {shotMenuAnchor && openShotMenuId!==null && createPortal(
+        <div
+          className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
+          style={{ left: `${Math.max(8, shotMenuAnchor.x)  }px`, top: `${shotMenuAnchor.y  }px` }}
+          onClick={e => e.stopPropagation()}
+        >
+          {BASE_ELEMENTS.map(b => {
+            const currentRow = rows.find(r => r.id===shotMenuAnchor.id);
+            const isSel = currentRow?.base===b;
+            const hasSelection = !!currentRow?.base;
+            return (
+              <ElementTile
+                key={b}
+                name={b}
+                selected={isSel}
+                hasSelection={hasSelection}
+                onSelect={() => {
+                  if (isSel) {
+                  // Clicking the currently selected shot deselects it; keep menu open
+                    setRows(prev => { const next=[...prev]; const idx = prev.findIndex(r => r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:'', type: ''}; } return next; });
+                  } else {
+                  // Selecting a new shot; close menu
+                    setRows(prev => { const next=[...prev]; const idx = prev.findIndex(r => r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:b, type: buildType(b, next[idx].location || '')}; } return next; });
+                    setOpenShotMenuId(null); setShotMenuAnchor(null);
+                  }
+                }}
+              />
+            );
+          })}
+        </div>,
+        document.body,
+      )}
+      {locMenuAnchor && openLocMenuId!==null && createPortal(
+        <div
+          className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
+          style={{ left: `${Math.max(8, locMenuAnchor.x)  }px`, top: `${locMenuAnchor.y  }px` }}
+          onClick={e => e.stopPropagation()}
+        >
+          {LOCATIONS.map(loc => {
+            const currentRow = rows.find(r => r.id===locMenuAnchor.id);
+            const isSel = currentRow?.location===loc;
+            return (
+              <button
+                key={loc}
+                type="button"
+                onClick={() => {
+                  if (isSel) {
+                  // Clicking the currently selected location deselects it; keep menu open
+                    setRows(prev => { const next=[...prev]; const idx = prev.findIndex(r => r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:'', type: buildType(base,'')}; } return next; });
+                  } else {
+                  // Selecting a new location; close menu
+                    setRows(prev => { const next=[...prev]; const idx = prev.findIndex(r => r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:loc, type: buildType(base,loc)}; } return next; });
+                    setOpenLocMenuId(null); setLocMenuAnchor(null);
+                  }
+                }}
+                className={`${isSel?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700'  } text-[11px] px-2 py-1 rounded-md text-left`}
+              >{loc}</button>
+            );
+          })}
+        </div>,
+        document.body,
+      )}
+      {addCountAnchor && rows.length===0 && createPortal(
+        <div
+          className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
+          style={{ left: `${Math.max(8, addCountAnchor.x)  }px`, top: `${addCountAnchor.y  }px` }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="grid grid-cols-4 gap-1">
+            {Array.from({length:20},(_,k) => k+1).map(n => (
+              <button
+                key={n}
+                type="button"
+                className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
+                onClick={() => {
+                  const count = n;
+                  const buildRows = (cnt) => {
+                    const asc = Array.from({length:cnt},(_,i) => snap5(((i+1)/(cnt+1))*100));
+                    for (let i=1;i<asc.length;i++) {if (asc[i] <= asc[i-1]) {asc[i] = Math.min(100, asc[i-1]+5);}}
+                    for (let i=asc.length-2;i>=0;i--) {if (asc[i] >= asc[i+1]) {asc[i] = Math.max(5, asc[i+1]-5);}}
+                    const desc = [...asc].reverse();
+                    return asc.map((v,i) => newRow({ initL: v, initR: desc[i] }, i));
+                  };
+                  setRows(buildRows(count));
+                  setAddCountAnchor(null);
+                }}
+              >{n}</button>
+            ))}
+            <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
+          </div>
+          {availablePresets.length > 0 && (
+            <div className="mt-2 pt-2 border-t">
+              <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setPresetOpen(p => !p); }}
+                  className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
+                  aria-expanded={presetOpen}
+                  aria-haspopup="listbox"
+                  title={selectedPresetName || 'Select preset'}
+                >
+                  <span className="truncate block" style={{ maxWidth: '80%' }}>{selectedPresetName || 'Choose preset...'}</span>
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="w-4 h-4 ml-2">
+                    <path d="M6 8l4 4 4-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                {presetOpen && (
+                  <div
+                    role="listbox"
+                    aria-label="Available presets"
+                    className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
+                    onClick={e => e.stopPropagation()}
+                    style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
+                  >
+                    {availablePresets.map(preset => (
+                      <button
+                        key={preset.filename}
+                        type="button"
+                        role="option"
+                        aria-selected={selectedPresetName === preset.name}
+                        onClick={() => { loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null); }}
+                        title={preset.name}
+                        className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200'  } text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
+                      >
+                        <span>{preset.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>,
+        document.body,
+      )}
+      <div className="max-w-4xl mx-auto p-4 md:p-8">
         {/* Setup */}
         {!initialized && (
           <>
@@ -1982,10 +2013,10 @@ export default function App() {
               <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
                 const misorderedIds = (() => {
-                  if (!rows.length) return new Set();
-                  const byX = [...rows].sort((a,b)=>a.x-b.x).map(r=>r.id);
+                  if (!rows.length) {return new Set();}
+                  const byX = [...rows].sort((a,b) => a.x-b.x).map(r => r.id);
                   const mis = new Set();
-                  for (let i=0;i<rows.length;i++) if (rows[i].id !== byX[i]) mis.add(rows[i].id);
+                  for (let i=0;i<rows.length;i++) {if (rows[i].id !== byX[i]) {mis.add(rows[i].id);}}
                   return mis;
                 })();
                 return <PlayfieldEditor rows={rows} setRows={setRows} selectedId={selectedBlockId} setSelectedId={setSelectedBlockId} misorderedIds={misorderedIds} onClear={() => { setRows([]); setCollapsedTypes([]); _pushToast('Cleared all shots'); }} />;
@@ -2008,8 +2039,8 @@ export default function App() {
                             tabIndex={0}
                             onClick={() => { if (selectedBlockId !== 'FLIPPER_BOTH') { setSelectedBlockId('FLIPPER_BOTH'); } }}
                             onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_BOTH') { setSelectedBlockId('FLIPPER_BOTH'); } }}
-                            onMouseEnter={()=> setHoverFlipperColumn('BOTH')}
-                            onMouseLeave={()=> setHoverFlipperColumn(null)}
+                            onMouseEnter={() => setHoverFlipperColumn('BOTH')}
+                            onMouseLeave={() => setHoverFlipperColumn(null)}
                             className="hover:bg-slate-50 rounded px-1 cursor-pointer select-none"
                             title="Select Both Flippers"
                           >Shot Type</span>
@@ -2033,8 +2064,8 @@ export default function App() {
                             tabIndex={0}
                             onClick={() => { if (selectedBlockId !== 'FLIPPER_L') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
                             onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_L') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
-                            onMouseEnter={()=> setHoverFlipperColumn('L')}
-                            onMouseLeave={()=> setHoverFlipperColumn(null)}
+                            onMouseEnter={() => setHoverFlipperColumn('L')}
+                            onMouseLeave={() => setHoverFlipperColumn(null)}
                             className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
                             title="Select Left Flipper"
                           >Left Flipper</span>
@@ -2044,11 +2075,11 @@ export default function App() {
                               onClick={() => {
                                 setRows(prev => {
                                   const n = prev.length;
-                                  if (!n) return prev;
-                                  let asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
-                                  for (let k=1;k<asc.length;k++) if (asc[k] <= asc[k-1]) asc[k] = Math.min(100, asc[k-1] + 5);
-                                  for (let k=asc.length-2;k>=0;k--) if (asc[k] >= asc[k+1]) asc[k] = Math.max(5, asc[k+1]-5);
-                                  return prev.map((rw, idx)=> ({ ...rw, initL: asc[idx] }));
+                                  if (!n) {return prev;}
+                                  const asc = Array.from({length:n}, (_,i) => snap5(((i+1)/(n+1))*100));
+                                  for (let k=1;k<asc.length;k++) {if (asc[k] <= asc[k-1]) {asc[k] = Math.min(100, asc[k-1] + 5);}}
+                                  for (let k=asc.length-2;k>=0;k--) {if (asc[k] >= asc[k+1]) {asc[k] = Math.max(5, asc[k+1]-5);}}
+                                  return prev.map((rw, idx) => ({ ...rw, initL: asc[idx] }));
                                 });
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
@@ -2064,8 +2095,8 @@ export default function App() {
                             tabIndex={0}
                             onClick={() => { if (selectedBlockId !== 'FLIPPER_R') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
                             onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_R') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
-                            onMouseEnter={()=> setHoverFlipperColumn('R')}
-                            onMouseLeave={()=> setHoverFlipperColumn(null)}
+                            onMouseEnter={() => setHoverFlipperColumn('R')}
+                            onMouseLeave={() => setHoverFlipperColumn(null)}
                             className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
                             title="Select Right Flipper"
                           >Right Flipper</span>
@@ -2074,12 +2105,12 @@ export default function App() {
                               type="button"
                               onClick={() => {
                                 setRows(prev => {
-                                  const n = prev.length; if (!n) return prev;
-                                  let asc = Array.from({length:n}, (_,i)=> snap5(((i+1)/(n+1))*100));
-                                  for (let k=1;k<asc.length;k++) if (asc[k] <= asc[k-1]) asc[k] = Math.min(100, asc[k-1] + 5);
-                                  for (let k=asc.length-2;k>=0;k--) if (asc[k] >= asc[k+1]) asc[k] = Math.max(5, asc[k+1]-5);
+                                  const n = prev.length; if (!n) {return prev;}
+                                  const asc = Array.from({length:n}, (_,i) => snap5(((i+1)/(n+1))*100));
+                                  for (let k=1;k<asc.length;k++) {if (asc[k] <= asc[k-1]) {asc[k] = Math.min(100, asc[k-1] + 5);}}
+                                  for (let k=asc.length-2;k>=0;k--) {if (asc[k] >= asc[k+1]) {asc[k] = Math.max(5, asc[k+1]-5);}}
                                   const desc = [...asc].reverse();
-                                  return prev.map((rw, idx)=> ({ ...rw, initR: desc[idx] }));
+                                  return prev.map((rw, idx) => ({ ...rw, initR: desc[idx] }));
                                 });
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
@@ -2098,12 +2129,12 @@ export default function App() {
                               title="Export shots as JSON"
                               aria-label="Export shots"
                             >
-                                {/* Standard export/upload icon: arrow up out of tray */}
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
-                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M7 10l5-5 5 5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M12 5v11" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
+                              {/* Standard export/upload icon: arrow up out of tray */}
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M7 10l5-5 5 5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M12 5v11" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
                             </button>
                           )}
                         </div>
@@ -2117,7 +2148,7 @@ export default function App() {
                           <button
                             type="button"
                             data-add-multi
-                            onClick={(e)=>{
+                            onClick={(e) => {
                               e.stopPropagation();
                               if (addCountAnchor) { setAddCountAnchor(null); return; }
                               const r = e.currentTarget.getBoundingClientRect();
@@ -2131,7 +2162,7 @@ export default function App() {
                     {rows.map((r, i) => (
                       <React.Fragment key={r.id}>
                         {/* Insertion marker BEFORE row i (visible when dragging and target is i) */}
-                        {dragRowIdx != null && dragOverIdx === i && (
+                        {dragRowIdx !== null && dragOverIdx === i && (
                           <tr aria-hidden className="pointer-events-none">
                             <td colSpan={4} className="p-0">
                               <div className="h-2 relative">
@@ -2144,7 +2175,7 @@ export default function App() {
                         )}
                         <tr
                           className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId===r.id ? 'bg-slate-300' : '')} ${selectedBlockId===r.id ? '' : 'hover:bg-slate-100'} cursor-default`}
-                          onClick={(e)=>{ 
+                          onClick={(e) => { 
                             e.stopPropagation(); 
                             setSelectedIdx(i); 
                             setSelectedBlockId(r.id);
@@ -2154,361 +2185,361 @@ export default function App() {
                             setShotMenuAnchor(null); 
                             setLocMenuAnchor(null);
                           }}
-                          onDragOver={(e)=>{ if(initialized) return; e.preventDefault(); setDragOverIdx(i); }}
-                          onDrop={(e)=>{ if(initialized) return; e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
+                          onDragOver={(e) => { if(initialized) {return;} e.preventDefault(); setDragOverIdx(i); }}
+                          onDrop={(e) => { if(initialized) {return;} e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
                         >
-                        <td className="pt-2 pr-2 pl-2 pb-2 align-top relative">
-                          {(() => {
-                            const base = r.base || '';
-                            const location = r.location || '';
-                            const shotMenuOpen = openShotMenuId === r.id;
-                            const locMenuOpen = openLocMenuId === r.id;
-                            const closeMenus = () => { setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null); };
-                            return (
-                              <div className="flex items-center gap-2 relative">
-                                {base ? (
-                                  <InlineElementThumb
-                                    name={base}
-                                    selected={true}
-                                    onClick={(e)=>{
+                          <td className="pt-2 pr-2 pl-2 pb-2 align-top relative">
+                            {(() => {
+                              const base = r.base || '';
+                              const location = r.location || '';
+                              const shotMenuOpen = openShotMenuId === r.id;
+                              const locMenuOpen = openLocMenuId === r.id;
+                              const closeMenus = () => { setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null); };
+                              return (
+                                <div className="flex items-center gap-2 relative">
+                                  {base ? (
+                                    <InlineElementThumb
+                                      name={base}
+                                      selected={true}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedIdx(i); setSelectedBlockId(r.id);
+                                        // Only open the shot menu, do not clear selection
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY - ((rect.bottom - rect.top) * 0.7)});
+                                        setOpenShotMenuId(r.id);
+                                        setOpenLocMenuId(null);
+                                      }}
+                                    />
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      data-shot-chip={r.id}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedIdx(i); setSelectedBlockId(r.id);
+                                        if (shotMenuOpen) {
+                                          closeMenus();
+                                        } else {
+                                          const rect = e.currentTarget.getBoundingClientRect();
+                                          setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
+                                          setOpenShotMenuId(r.id);
+                                          setOpenLocMenuId(null);
+                                        }
+                                      }}
+                                      className="relative rounded-md bg-white shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex items-center justify-center"
+                                      style={{ width: 80, height: 98 }}
+                                      aria-label="Select Shot"
+                                    >
+                                      <span className="text-[13px] font-semibold text-slate-500 select-none">Select Shot</span>
+                                    </button>
+                                  )}
+                                  <Chip
+                                    active={!!location}
+                                    data-loc-chip={r.id}
+                                    onClick={(e) => {
                                       e.stopPropagation();
                                       setSelectedIdx(i); setSelectedBlockId(r.id);
-                                      // Only open the shot menu, do not clear selection
-                                      const rect = e.currentTarget.getBoundingClientRect();
-                                      setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY - ((rect.bottom - rect.top) * 0.7)});
-                                      setOpenShotMenuId(r.id);
-                                      setOpenLocMenuId(null);
-                                    }}
-                                  />
-                                ) : (
-                                  <button
-                                    type="button"
-                                    data-shot-chip={r.id}
-                                    onClick={(e)=>{
-                                      e.stopPropagation();
-                                      setSelectedIdx(i); setSelectedBlockId(r.id);
-                                      if (shotMenuOpen) {
+                                      // Always open menu, don't clear location on click
+                                      if (locMenuOpen) {
                                         closeMenus();
                                       } else {
                                         const rect = e.currentTarget.getBoundingClientRect();
-                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
-                                        setOpenShotMenuId(r.id);
-                                        setOpenLocMenuId(null);
+                                        setLocMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
+                                        setOpenLocMenuId(r.id);
+                                        setOpenShotMenuId(null);
                                       }
                                     }}
-                                    className="relative rounded-md bg-white shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex items-center justify-center"
-                                    style={{ width: 80, height: 98 }}
-                                    aria-label="Select Shot"
-                                  >
-                                    <span className="text-[13px] font-semibold text-slate-500 select-none">Select Shot</span>
-                                  </button>
-                                )}
-                                <Chip
-                                  active={!!location}
-                                  data-loc-chip={r.id}
-                                  onClick={(e)=>{
-                                    e.stopPropagation();
-                                    setSelectedIdx(i); setSelectedBlockId(r.id);
-                                    // Always open menu, don't clear location on click
-                                    if (locMenuOpen) {
-                                      closeMenus();
-                                    } else {
-                                      const rect = e.currentTarget.getBoundingClientRect();
-                                      setLocMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
-                                      setOpenLocMenuId(r.id);
-                                      setOpenShotMenuId(null);
-                                    }
-                                  }}
-                                >{location || 'Location'}</Chip>
-                                {/* Popup menus rendered outside table to avoid layout shift */}
-                              </div>
-                            );
-                          })()}
-                        </td>
-                        <td className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' || hoverFlipperColumn==='BOTH' ? 'bg-emerald-50' : ''}`}> 
-                          <div className="flex flex-col gap-1 w-full px-[10px]">
-                            {(() => {
-                              const range = computeAllowedRange(rows,'L',i);
-                              const rawAllowedMin = range ? range[0] : 5;
-                              const rawAllowedMax = range ? range[1] : 100;
-                              // Clamp to new visual/domain max of 95
-                              const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
-                              const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
-                              let actual = r.initL && r.initL>0 ? r.initL : null;
-                              if (actual != null) {
-                                if (actual > allowedMax) actual = allowedMax; // clamp any legacy 100s down to 95 visually
-                                if (actual < allowedMin) actual = allowedMin;
-                              }
-                              const sliderMin = 5; const sliderMax = 95;
-                              const displayVal = actual != null ? actual : 50;
-                              // Ascending visual (05 -> 95). Grey before allowedMin and after allowedMax.
-                              const span = 95 - 5; // 90
-                              const leftGreyPct = ((allowedMin - 5) / span) * 100;
-                              const rightGreyStartPct = ((allowedMax - 5) / span) * 100;
-                              const trackBg = range ? `linear-gradient(to right,
+                                  >{location || 'Location'}</Chip>
+                                  {/* Popup menus rendered outside table to avoid layout shift */}
+                                </div>
+                              );
+                            })()}
+                          </td>
+                          <td className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' || hoverFlipperColumn==='BOTH' ? 'bg-emerald-50' : ''}`}> 
+                            <div className="flex flex-col gap-1 w-full px-[10px]">
+                              {(() => {
+                                const range = computeAllowedRange(rows,'L',i);
+                                const rawAllowedMin = range ? range[0] : 5;
+                                const rawAllowedMax = range ? range[1] : 100;
+                                // Clamp to new visual/domain max of 95
+                                const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
+                                const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
+                                let actual = r.initL && r.initL>0 ? r.initL : null;
+                                if (actual !== null) {
+                                  if (actual > allowedMax) {actual = allowedMax;} // clamp any legacy 100s down to 95 visually
+                                  if (actual < allowedMin) {actual = allowedMin;}
+                                }
+                                const sliderMin = 5; const sliderMax = 95;
+                                const displayVal = actual !== null ? actual : 50;
+                                // Ascending visual (05 -> 95). Grey before allowedMin and after allowedMax.
+                                const span = 95 - 5; // 90
+                                const leftGreyPct = ((allowedMin - 5) / span) * 100;
+                                const rightGreyStartPct = ((allowedMax - 5) / span) * 100;
+                                const trackBg = range ? `linear-gradient(to right,
                                 rgba(55,65,81,0.70) 0%,
                                 rgba(55,65,81,0.70) ${leftGreyPct}%,
                                 rgba(14,165,233,0.35) ${leftGreyPct}%,
                                 rgba(14,165,233,0.35) ${rightGreyStartPct}%,
                                 rgba(55,65,81,0.70) ${rightGreyStartPct}%,
                                 rgba(55,65,81,0.70) 100%)` : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
-                              return (
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
-                                    <span>05</span><span>95</span>
+                                return (
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
+                                      <span>05</span><span>95</span>
+                                    </div>
+                                    <div className="relative">
+                                      <input
+                                        data-slider
+                                        type="range"
+                                        min={sliderMin}
+                                        max={sliderMax}
+                                        step={5}
+                                        value={Math.min(Math.max(actual !== null ? actual : displayVal, sliderMin), sliderMax)}
+                                        onMouseDown={e => { e.stopPropagation(); }}
+                                        onPointerDown={e => { e.stopPropagation(); }}
+                                        onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                                        onChange={e => {
+                                          let newActual = Number(e.target.value);
+                                          if (newActual > allowedMax) {newActual = allowedMax;}
+                                          if (newActual < allowedMin) {newActual = allowedMin;}
+                                          setRows(prev => { const next=[...prev]; next[i]={...next[i], initL: newActual}; return next; });
+                                        }}
+                                        style={{ background: trackBg }}
+                                        className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
+                                      {range && !(allowedMin===5 && allowedMax===95) && (() => {
+                                        return (
+                                          <>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${leftGreyPct  }%` }}>{format2(allowedMin)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${rightGreyStartPct  }%` }}>{format2(allowedMax)}</div>
+                                          </>
+                                        );
+                                      })()}
+                                      {actual!==null && range && (() => {
+                                        const pct = ((actual - 5) / span) * 100;
+                                        return (
+                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct  }%` }}>{format2(actual)}</div>
+                                        );
+                                      })()}
+                                    </div>
                                   </div>
-                                  <div className="relative">
-                                    <input
-                                      data-slider
-                                      type="range"
-                                      min={sliderMin}
-                                      max={sliderMax}
-                                      step={5}
-                                      value={Math.min(Math.max(actual != null ? actual : displayVal, sliderMin), sliderMax)}
-                                      onMouseDown={e=>{ e.stopPropagation(); }}
-                                      onPointerDown={e=>{ e.stopPropagation(); }}
-                                      onDragStart={e=>{ e.preventDefault(); e.stopPropagation(); }}
-                                      onChange={e=>{
-                                        let newActual = Number(e.target.value);
-                                        if (newActual > allowedMax) newActual = allowedMax;
-                                        if (newActual < allowedMin) newActual = allowedMin;
-                                        setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initL: newActual}; return next; });
-                                      }}
-                                      style={{ background: trackBg }}
-                                      className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
-                                    {range && !(allowedMin===5 && allowedMax===95) && (()=>{
-                                      return (
-                                        <>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: leftGreyPct + '%' }}>{format2(allowedMin)}</div>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: rightGreyStartPct + '%' }}>{format2(allowedMax)}</div>
-                                        </>
-                                      );
-                                    })()}
-                                    {actual!=null && range && (()=>{
-                                      const pct = ((actual - 5) / span) * 100;
-                                      return (
-                                        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
-                                      );
-                                    })()}
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                            <div className="flex flex-col items-center mt-[15px]">
-                              <Chip
-                                active={r.initL===0}
-                                onClick={() => {
-                                  const range = computeAllowedRange(rows, 'L', i);
-                                  if (r.initL === 0) {
-                                    if (range) {
-                                      const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
-                                      setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initL: mid }; return next; });
+                                );
+                              })()}
+                              <div className="flex flex-col items-center mt-[15px]">
+                                <Chip
+                                  active={r.initL===0}
+                                  onClick={() => {
+                                    const range = computeAllowedRange(rows, 'L', i);
+                                    if (r.initL === 0) {
+                                      if (range) {
+                                        const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
+                                        setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initL: mid }; return next; });
+                                      }
+                                    } else {
+                                      setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initL: 0 }; return next; });
                                     }
-                                  } else {
-                                    setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initL: 0 }; return next; });
-                                  }
-                                }}
-                              >Not Possible</Chip>
+                                  }}
+                                >Not Possible</Chip>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' || hoverFlipperColumn==='BOTH' ? 'bg-rose-50' : ''}`}> 
-                          <div className="flex flex-col gap-1 w-full px-[10px]">
-                            {(() => {
-                              const range = computeAllowedRange(rows,'R',i);
-                              const rawAllowedMin = range ? range[0] : 5;
-                              const rawAllowedMax = range ? range[1] : 100;
-                              // Clamp both ends to 95 domain
-                              const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
-                              const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
-                              let actual = r.initR && r.initR>0 ? r.initR : null;
-                              if (actual != null) {
-                                if (actual > allowedMax) actual = allowedMax; // clamp legacy 100
-                                if (actual < allowedMin) actual = allowedMin;
-                              }
-                              const sliderMin = 5; const sliderMax = 95; // reversed visual
-                              const displayVal = actual != null ? actual : 50;
-                              // Descending visual (95 -> 05). Grey left (values > allowedMax after reversal) and right (values < allowedMin).
-                              const span = 95 - 5; // 90
-                              const leftStopPct = ((95 - allowedMax) / span) * 100;
-                              const rightStartPct = ((95 - allowedMin) / span) * 100;
-                              const trackBg = range ? `linear-gradient(to right,
+                          </td>
+                          <td className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' || hoverFlipperColumn==='BOTH' ? 'bg-rose-50' : ''}`}> 
+                            <div className="flex flex-col gap-1 w-full px-[10px]">
+                              {(() => {
+                                const range = computeAllowedRange(rows,'R',i);
+                                const rawAllowedMin = range ? range[0] : 5;
+                                const rawAllowedMax = range ? range[1] : 100;
+                                // Clamp both ends to 95 domain
+                                const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
+                                const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
+                                let actual = r.initR && r.initR>0 ? r.initR : null;
+                                if (actual !== null) {
+                                  if (actual > allowedMax) {actual = allowedMax;} // clamp legacy 100
+                                  if (actual < allowedMin) {actual = allowedMin;}
+                                }
+                                const sliderMin = 5; const sliderMax = 95; // reversed visual
+                                const displayVal = actual !== null ? actual : 50;
+                                // Descending visual (95 -> 05). Grey left (values > allowedMax after reversal) and right (values < allowedMin).
+                                const span = 95 - 5; // 90
+                                const leftStopPct = ((95 - allowedMax) / span) * 100;
+                                const rightStartPct = ((95 - allowedMin) / span) * 100;
+                                const trackBg = range ? `linear-gradient(to right,
                                 rgba(55,65,81,0.70) 0%,
                                 rgba(55,65,81,0.70) ${leftStopPct}%,
                                 rgba(244,63,94,0.35) ${leftStopPct}%,
                                 rgba(244,63,94,0.35) ${rightStartPct}%,
                                 rgba(55,65,81,0.70) ${rightStartPct}%,
                                 rgba(55,65,81,0.70) 100%)` : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
-                              return (
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
-                                    <span>95</span><span>05</span>
+                                return (
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
+                                      <span>95</span><span>05</span>
+                                    </div>
+                                    <div className="relative">
+                                      <input
+                                        data-slider
+                                        type="range"
+                                        min={sliderMin}
+                                        max={sliderMax}
+                                        step={5}
+                                        value={Math.min(Math.max(100 - (actual !== null ? actual : displayVal), sliderMin), sliderMax)}
+                                        onMouseDown={e => { e.stopPropagation(); }}
+                                        onPointerDown={e => { e.stopPropagation(); }}
+                                        onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                                        onChange={e => {
+                                          const raw = Number(e.target.value);
+                                          let newActual = 100 - raw;
+                                          if (newActual > allowedMax) {newActual = allowedMax;}
+                                          if (newActual < allowedMin) {newActual = allowedMin;}
+                                          setRows(prev => { const next=[...prev]; next[i]={...next[i], initR: newActual}; return next; });
+                                        }}
+                                        style={{ background: trackBg }}
+                                        className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
+                                      {range && !(allowedMin===5 && allowedMax===95) && (() => {
+                                        return (
+                                          <>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${leftStopPct  }%` }}>{format2(allowedMax)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${rightStartPct  }%` }}>{format2(allowedMin)}</div>
+                                          </>
+                                        );
+                                      })()}
+                                      {actual!==null && range && (() => {
+                                        const pct = ((95 - actual) / span) * 100;
+                                        return (
+                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct  }%` }}>{format2(actual)}</div>
+                                        );
+                                      })()}
+                                    </div>
                                   </div>
-                                  <div className="relative">
-                                    <input
-                                      data-slider
-                                      type="range"
-                                      min={sliderMin}
-                                      max={sliderMax}
-                                      step={5}
-                                      value={Math.min(Math.max(100 - (actual != null ? actual : displayVal), sliderMin), sliderMax)}
-                                      onMouseDown={e=>{ e.stopPropagation(); }}
-                                      onPointerDown={e=>{ e.stopPropagation(); }}
-                                      onDragStart={e=>{ e.preventDefault(); e.stopPropagation(); }}
-                                      onChange={e=>{
-                                        const raw = Number(e.target.value);
-                                        let newActual = 100 - raw;
-                                        if (newActual > allowedMax) newActual = allowedMax;
-                                        if (newActual < allowedMin) newActual = allowedMin;
-                                        setRows(prev=>{ const next=[...prev]; next[i]={...next[i], initR: newActual}; return next; });
-                                      }}
-                                      style={{ background: trackBg }}
-                                      className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
-                                    {range && !(allowedMin===5 && allowedMax===95) && (()=>{
-                                      return (
-                                        <>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: leftStopPct + '%' }}>{format2(allowedMax)}</div>
-                                          <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: rightStartPct + '%' }}>{format2(allowedMin)}</div>
-                                        </>
-                                      );
-                                    })()}
-                                    {actual!=null && range && (()=>{
-                                      const pct = ((95 - actual) / span) * 100;
-                                      return (
-                                        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: pct + '%' }}>{format2(actual)}</div>
-                                      );
-                                    })()}
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                            <div className="flex flex-col items-center mt-[15px]">
-                              <Chip
-                                active={r.initR===0}
-                                onClick={() => {
-                                  const range = computeAllowedRange(rows, 'R', i);
-                                  if (r.initR === 0) {
-                                    if (range) {
-                                      const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
-                                      setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initR: mid }; return next; });
+                                );
+                              })()}
+                              <div className="flex flex-col items-center mt-[15px]">
+                                <Chip
+                                  active={r.initR===0}
+                                  onClick={() => {
+                                    const range = computeAllowedRange(rows, 'R', i);
+                                    if (r.initR === 0) {
+                                      if (range) {
+                                        const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
+                                        setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initR: mid }; return next; });
+                                      }
+                                    } else {
+                                      setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initR: 0 }; return next; });
                                     }
-                                  } else {
-                                    setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initR: 0 }; return next; });
-                                  }
-                                }}
-                              >Not Possible</Chip>
+                                  }}
+                                >Not Possible</Chip>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="p-0.5 text-left align-bottom">
-                          <div className="flex flex-col items-end">
-                          <button
-                            onClick={() => {
-                              setRows(prev => {
-                                const next = prev.filter((_, k) => k !== i);
-                                // Compute new selected index
-                                let newIdx = selectedIdx;
-                                if (selectedIdx === i) {
-                                  // Deleted currently selected row: clear selection entirely
-                                  newIdx = -1;
-                                } else if (i < selectedIdx) {
-                                  // A row above the current selection was removed; shift selection index left
-                                  newIdx = Math.max(0, selectedIdx - 1);
-                                }
-                                // Clamp when list becomes empty
-                                if (next.length === 0) {
-                                  newIdx = -1;
-                                  setSelectedBlockId(null);
-                                  setSelectedIdx(-1);
-                                  return next;
-                                }
-                                // Apply selection updates referencing the NEW array so ids align
-                                if (newIdx === -1) {
-                                  setSelectedIdx(-1);
-                                  setSelectedBlockId(null);
-                                } else {
-                                  if (newIdx < 0) newIdx = 0; // safety
-                                  if (newIdx >= next.length) newIdx = next.length - 1;
-                                  setSelectedIdx(newIdx);
-                                  setSelectedBlockId(next[newIdx]?.id ?? null);
-                                }
-                                return next;
-                              });
-                            }}
-                            className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer"
-                            title="Remove shot"
-                            aria-label="Remove shot"
-                          >
-                            {/* Circle X delete icon */}
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="9" />
-                              <path d="M9 9l6 6" />
-                              <path d="M15 9l-6 6" />
-                            </svg>
-                          </button>
-                          {!initialized && (
-                            <button
-                              type="button"
-                              aria-label="Drag to reorder"
-                              draggable
-                              onDragStart={(e)=>{ if(initialized) return; setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed='move'; }}
-                              onDragEnd={()=> { setDragRowIdx(null); setDragOverIdx(null); }}
-                              className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100/60 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-                              title="Drag to reorder"
-                            >
-                              {/* Circular dotted drag handle icon */}
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="9" />
-                                <circle cx="9" cy="9" r="0.9" fill="currentColor" stroke="none" />
-                                <circle cx="15" cy="9" r="0.9" fill="currentColor" stroke="none" />
-                                <circle cx="9" cy="15" r="0.9" fill="currentColor" stroke="none" />
-                                <circle cx="15" cy="15" r="0.9" fill="currentColor" stroke="none" />
-                                <circle cx="9" cy="12" r="0.9" fill="currentColor" stroke="none" />
-                                <circle cx="15" cy="12" r="0.9" fill="currentColor" stroke="none" />
-                              </svg>
-                            </button>
-                          )}
-                          {!initialized && (
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setRows(prev => {
-                                const next=[...prev];
-                                const aboveIdx = i; // row above insertion point
-                                const belowIdx = i+1 < prev.length ? i+1 : null;
-                                const computeInsertValue = (side) => {
-                                  if (side === 'L') {
-                                    let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initL > 0)) upIdx--;
-                                    let downIdx = belowIdx; while (downIdx != null && downIdx < prev.length && !(prev[downIdx].initL > 0)) downIdx++;
-                                    const haveUpper = upIdx >= 0; const haveLower = downIdx != null && downIdx < prev.length;
-                                    if (!haveUpper && !haveLower) return 0;
-                                    if (haveUpper && !haveLower) { const aboveVal = prev[upIdx].initL; if (!(aboveVal > 0)) return 0; if (aboveVal === 95) return 100; if (aboveVal === 100) return 0; const gap = 100 - aboveVal; if (gap <= 5) return 0; let mid = Math.round(((aboveVal + 100)/2)/5)*5; if (mid <= aboveVal) mid=aboveVal+5; if (mid >= 100) mid=95; if (!(mid>aboveVal && mid<100)) return 0; return clamp(mid,5,100);}    
-                                    if (!haveUpper && haveLower) return 0; const aboveVal = prev[upIdx].initL; const belowVal = prev[downIdx].initL; const gap = belowVal - aboveVal; if (!(aboveVal>0)&&!(belowVal>0)||gap<=5) return 0; let mid = Math.round(((aboveVal+belowVal)/2)/5)*5; if (mid<=aboveVal) mid=aboveVal+5; if (mid>=belowVal) mid=belowVal-5; if (!(mid>aboveVal && mid<belowVal)) return 0; return clamp(mid,5,100);
-                                  } else {
-                                    let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initR > 0)) upIdx--; let downIdx = belowIdx; while (downIdx != null && downIdx < prev.length && !(prev[downIdx].initR > 0)) downIdx++; const haveUpper = upIdx >= 0; const haveLower = downIdx != null && downIdx < prev.length; if (!haveUpper && !haveLower) return 0; if (haveUpper && !haveLower) { const aboveVal = prev[upIdx].initR; if (!(aboveVal>0)) return 0; if (aboveVal===10) return 5; if (aboveVal===5) return 0; const gap = aboveVal - 5; if (gap <=5) return 0; let mid = Math.round(((aboveVal+5)/2)/5)*5; if (mid>=aboveVal) mid=aboveVal-5; if (mid<=5) mid=10; if (!(mid<aboveVal && mid>5)) return 0; return clamp(mid,5,100);} if (!haveUpper && haveLower) return 0; const aboveVal = prev[upIdx].initR; const belowVal = prev[downIdx].initR; const gap = aboveVal - belowVal; if (!(aboveVal>0)&&!(belowVal>0)||gap<=5) return 0; let mid = Math.round(((aboveVal+belowVal)/2)/5)*5; if (mid>=aboveVal) mid=aboveVal-5; if (mid<=belowVal) mid=belowVal+5; if (!(mid<aboveVal && mid>belowVal)) return 0; return clamp(mid,5,100); }
-                                };
-                                const midL = computeInsertValue('L');
-                                const midR = computeInsertValue('R');
-                                const row = newRow({ initL: midL, initR: midR }, prev.length);
-                                next.splice(i+1,0,row);
-                                return next;
-                              }) }}
-                              className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 hover:bg-slate-100/60 cursor-copy"
-                              aria-label="Insert shot below"
-                              title="Insert shot below"
-                            >
-                              {/* Plus inside circle icon */}
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 8v8" />
-                                <path d="M8 12h8" />
-                              </svg>
-                            </button>
-                          )}
-                          </div>
-                        </td>
+                          </td>
+                          <td className="p-0.5 text-left align-bottom">
+                            <div className="flex flex-col items-end">
+                              <button
+                                onClick={() => {
+                                  setRows(prev => {
+                                    const next = prev.filter((_, k) => k !== i);
+                                    // Compute new selected index
+                                    let newIdx = selectedIdx;
+                                    if (selectedIdx === i) {
+                                      // Deleted currently selected row: clear selection entirely
+                                      newIdx = -1;
+                                    } else if (i < selectedIdx) {
+                                      // A row above the current selection was removed; shift selection index left
+                                      newIdx = Math.max(0, selectedIdx - 1);
+                                    }
+                                    // Clamp when list becomes empty
+                                    if (next.length === 0) {
+                                      newIdx = -1;
+                                      setSelectedBlockId(null);
+                                      setSelectedIdx(-1);
+                                      return next;
+                                    }
+                                    // Apply selection updates referencing the NEW array so ids align
+                                    if (newIdx === -1) {
+                                      setSelectedIdx(-1);
+                                      setSelectedBlockId(null);
+                                    } else {
+                                      if (newIdx < 0) {newIdx = 0;} // safety
+                                      if (newIdx >= next.length) {newIdx = next.length - 1;}
+                                      setSelectedIdx(newIdx);
+                                      setSelectedBlockId(next[newIdx]?.id ?? null);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer"
+                                title="Remove shot"
+                                aria-label="Remove shot"
+                              >
+                                {/* Circle X delete icon */}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="9" />
+                                  <path d="M9 9l6 6" />
+                                  <path d="M15 9l-6 6" />
+                                </svg>
+                              </button>
+                              {!initialized && (
+                                <button
+                                  type="button"
+                                  aria-label="Drag to reorder"
+                                  draggable
+                                  onDragStart={(e) => { if(initialized) {return;} setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed='move'; }}
+                                  onDragEnd={() => { setDragRowIdx(null); setDragOverIdx(null); }}
+                                  className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100/60 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                  title="Drag to reorder"
+                                >
+                                  {/* Circular dotted drag handle icon */}
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="9" />
+                                    <circle cx="9" cy="9" r="0.9" fill="currentColor" stroke="none" />
+                                    <circle cx="15" cy="9" r="0.9" fill="currentColor" stroke="none" />
+                                    <circle cx="9" cy="15" r="0.9" fill="currentColor" stroke="none" />
+                                    <circle cx="15" cy="15" r="0.9" fill="currentColor" stroke="none" />
+                                    <circle cx="9" cy="12" r="0.9" fill="currentColor" stroke="none" />
+                                    <circle cx="15" cy="12" r="0.9" fill="currentColor" stroke="none" />
+                                  </svg>
+                                </button>
+                              )}
+                              {!initialized && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setRows(prev => {
+                                    const next=[...prev];
+                                    const aboveIdx = i; // row above insertion point
+                                    const belowIdx = i+1 < prev.length ? i+1 : null;
+                                    const computeInsertValue = (side) => {
+                                      if (side === 'L') {
+                                        let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initL > 0)) {upIdx--;}
+                                        let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && !(prev[downIdx].initL > 0)) {downIdx++;}
+                                        const haveUpper = upIdx >= 0; const haveLower = downIdx !== null && downIdx < prev.length;
+                                        if (!haveUpper && !haveLower) {return 0;}
+                                        if (haveUpper && !haveLower) { const aboveVal = prev[upIdx].initL; if (!(aboveVal > 0)) {return 0;} if (aboveVal === 95) {return 100;} if (aboveVal === 100) {return 0;} const gap = 100 - aboveVal; if (gap <= 5) {return 0;} let mid = Math.round(((aboveVal + 100)/2)/5)*5; if (mid <= aboveVal) {mid=aboveVal+5;} if (mid >= 100) {mid=95;} if (!(mid>aboveVal && mid<100)) {return 0;} return clamp(mid,5,100);}    
+                                        if (!haveUpper && haveLower) {return 0;} const aboveVal = prev[upIdx].initL; const belowVal = prev[downIdx].initL; const gap = belowVal - aboveVal; if (!(aboveVal>0)&&!(belowVal>0)||gap<=5) {return 0;} let mid = Math.round(((aboveVal+belowVal)/2)/5)*5; if (mid<=aboveVal) {mid=aboveVal+5;} if (mid>=belowVal) {mid=belowVal-5;} if (!(mid>aboveVal && mid<belowVal)) {return 0;} return clamp(mid,5,100);
+                                      } else {
+                                        let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initR > 0)) {upIdx--;} let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && !(prev[downIdx].initR > 0)) {downIdx++;} const haveUpper = upIdx >= 0; const haveLower = downIdx !== null && downIdx < prev.length; if (!haveUpper && !haveLower) {return 0;} if (haveUpper && !haveLower) { const aboveVal = prev[upIdx].initR; if (!(aboveVal>0)) {return 0;} if (aboveVal===10) {return 5;} if (aboveVal===5) {return 0;} const gap = aboveVal - 5; if (gap <=5) {return 0;} let mid = Math.round(((aboveVal+5)/2)/5)*5; if (mid>=aboveVal) {mid=aboveVal-5;} if (mid<=5) {mid=10;} if (!(mid<aboveVal && mid>5)) {return 0;} return clamp(mid,5,100);} if (!haveUpper && haveLower) {return 0;} const aboveVal = prev[upIdx].initR; const belowVal = prev[downIdx].initR; const gap = aboveVal - belowVal; if (!(aboveVal>0)&&!(belowVal>0)||gap<=5) {return 0;} let mid = Math.round(((aboveVal+belowVal)/2)/5)*5; if (mid>=aboveVal) {mid=aboveVal-5;} if (mid<=belowVal) {mid=belowVal+5;} if (!(mid<aboveVal && mid>belowVal)) {return 0;} return clamp(mid,5,100); }
+                                    };
+                                    const midL = computeInsertValue('L');
+                                    const midR = computeInsertValue('R');
+                                    const row = newRow({ initL: midL, initR: midR }, prev.length);
+                                    next.splice(i+1,0,row);
+                                    return next;
+                                  }); }}
+                                  className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 hover:bg-slate-100/60 cursor-copy"
+                                  aria-label="Insert shot below"
+                                  title="Insert shot below"
+                                >
+                                  {/* Plus inside circle icon */}
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 8v8" />
+                                    <path d="M8 12h8" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                         {/* If dragging to end: show marker after last row */}
-                        {dragRowIdx != null && i === rows.length-1 && dragOverIdx === rows.length && (
+                        {dragRowIdx !== null && i === rows.length-1 && dragOverIdx === rows.length && (
                           <tr aria-hidden className="pointer-events-none">
                             <td colSpan={4} className="p-0">
                               <div className="h-2 relative">
@@ -2522,7 +2553,7 @@ export default function App() {
                       </React.Fragment>
                     ))}
                     {/* Standalone insertion marker at list end when dragging over empty space below */}
-                    {dragRowIdx != null && dragOverIdx === rows.length && (
+                    {dragRowIdx !== null && dragOverIdx === rows.length && (
                       <tr aria-hidden className="pointer-events-none">
                         <td colSpan={4} className="p-0">
                           <div className="h-2 relative">
@@ -2542,23 +2573,23 @@ export default function App() {
             <Section title="2) Session parameters">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={"How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75."} >Initial random steps</label>
+                  <label className="w-48" title={'How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75.'} >Initial random steps</label>
                   <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={"How often hidden values shift after attempts.\nExample: 5 means every 5th attempt triggers a drift."} >Drift every</label>
+                  <label className="w-48" title={'How often hidden values shift after attempts.\nExample: 5 means every 5th attempt triggers a drift.'} >Drift every</label>
                   <NumberInput value={driftEvery} onChange={setDriftEvery} min={0} max={50} />
                   <span>attempts</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={"Maximum distance (in 5% steps) a value can wander from its base during drift.\nExample: 2 means each shot stays within ±10 of its starting value."} >Drift magnitude</label>
+                  <label className="w-48" title={'Maximum distance (in 5% steps) a value can wander from its base during drift.\nExample: 2 means each shot stays within ±10 of its starting value.'} >Drift magnitude</label>
                   <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
                 {/* Drift bias removed: drift band now directly based on magnitude (usable integer steps = floor(mag)) */}
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={"Manual lets you pick any shot & flipper; Random picks one for you each attempt to reduce bias.\nExample: Random may jump Ramp Left → Orbit Right."} >Mode</label>
+                  <label className="w-48" title={'Manual lets you pick any shot & flipper; Random picks one for you each attempt to reduce bias.\nExample: Random may jump Ramp Left → Orbit Right.'} >Mode</label>
                   <div className="flex gap-2 flex-wrap">
                     <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
                     <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
@@ -2570,7 +2601,7 @@ export default function App() {
                   onClick={canStart ? startSession : undefined}
                   disabled={!canStart}
                   title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
-                  className={"px-4 py-2 rounded-2xl text-white " + (canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed')}
+                  className={`px-4 py-2 rounded-2xl text-white ${  canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
                 >
                   Start Session
                 </button>
@@ -2663,12 +2694,12 @@ export default function App() {
                     <div className="flex gap-2">
                       <Chip
                         active={selectedSide==='L'}
-                        onClick={()=> mode==='manual' ? setSelectedSide('L') : undefined}
+                        onClick={() => mode==='manual' ? setSelectedSide('L') : undefined}
                         disabled={mode==='random'}
                       >Left</Chip>
                       <Chip
                         active={selectedSide==='R'}
-                        onClick={()=> mode==='manual' ? setSelectedSide('R') : undefined}
+                        onClick={() => mode==='manual' ? setSelectedSide('R') : undefined}
                         disabled={mode==='random'}
                       >Right</Chip>
                     </div>
@@ -2686,16 +2717,16 @@ export default function App() {
                             max={100}
                             className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
                             onChange={(v) => {
-                              if (v === "" || v === null || v === undefined) {
-                                setGuess("");
-                                if (recallError) setRecallError("");
+                              if (v === '' || v === null || v === undefined) {
+                                setGuess('');
+                                if (recallError) {setRecallError('');}
                                 return;
                               }
                               const n = Number(v);
-                              if (!Number.isFinite(n)) return;
+                              if (!Number.isFinite(n)) {return;}
                               const clamped = Math.max(0, Math.min(100, n));
                               setGuess(clamped);
-                              if (recallError) setRecallError("");
+                              if (recallError) {setRecallError('');}
                             }}
                             step={5}
                             onKeyDown={(e) => {
@@ -2716,7 +2747,7 @@ export default function App() {
                   </div>
 
                   <button
-                    onClick={() => { submitAttempt(); /* keep focus for rapid entry */ setTimeout(()=>{recallInputRef.current?.focus(); recallInputRef.current?.select();},0); }}
+                    onClick={() => { submitAttempt(); /* keep focus for rapid entry */ setTimeout(() => {recallInputRef.current?.focus(); recallInputRef.current?.select();},0); }}
                     className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
                   >
                     Submit
@@ -2758,11 +2789,11 @@ export default function App() {
                               </div>
                               <div className="flex justify-between mb-1">
                                 <div className="text-slate-600">Prev guess</div>
-                                <div>{showMentalModel ? (has && a.prevInput != null ? formatPct(a.prevInput) : '—') : '—'}</div>
+                                <div>{showMentalModel ? (has && a.prevInput !== null ? formatPct(a.prevInput) : '—') : '—'}</div>
                               </div>
                               <div className="flex justify-between mb-1">
                                 <div className="text-slate-600">Guess delta</div>
-                                <div>{has ? (a.prevInput != null ? (()=>{ const diff = Math.round((a.input ?? 0)-(a.prevInput ?? 0)); return (diff>0?'+':'')+format2(Math.abs(diff))+'%'; })() : 'N/A') : 'N/A'}</div>
+                                <div>{has ? (a.prevInput !== null ? (() => { const diff = Math.round((a.input ?? 0)-(a.prevInput ?? 0)); return `${(diff>0?'+':'')+format2(Math.abs(diff))}%`; })() : 'N/A') : 'N/A'}</div>
                               </div>
                               <div className="flex justify-between mb-1">
                                 <div className="text-slate-600">Adjustment needed</div>
@@ -2786,7 +2817,7 @@ export default function App() {
                                 <div className="text-slate-600">Points</div>
                                 <div className="text-right">
                                   <div>{has ? `${a.points} pts` : '—'}</div>
-                                  {has && a.basePoints != null ? (
+                                  {has && a.basePoints !== null ? (
                                     <div className="text-[11px] text-slate-500">Base {a.basePoints}{a.adjustPenalty ? ` − Adj Penalty ${a.adjustPenalty}` : ''}</div>
                                   ) : (
                                     <div className="text-[11px] text-slate-400">Awaiting first attempt</div>
@@ -2799,7 +2830,7 @@ export default function App() {
                                     <input
                                       type="checkbox"
                                       checked={showMentalModel}
-                                      onChange={(e)=>{ const v=e.target.checked; setShowMentalModel(v); }}
+                                      onChange={(e) => { const v=e.target.checked; setShowMentalModel(v); }}
                                     />
                                     Guess values
                                   </label>
@@ -2807,7 +2838,7 @@ export default function App() {
                                     <input
                                       type="checkbox"
                                       checked={showBaseValues}
-                                      onChange={(e)=> setShowBaseValues(e.target.checked)}
+                                      onChange={(e) => setShowBaseValues(e.target.checked)}
                                     />
                                     Starting values
                                   </label>
@@ -2815,7 +2846,7 @@ export default function App() {
                                     <input
                                       type="checkbox"
                                       checked={showTruth}
-                                      onChange={(e)=> setShowTruth(e.target.checked)}
+                                      onChange={(e) => setShowTruth(e.target.checked)}
                                     />
                                     Correct values
                                   </label>
@@ -2879,7 +2910,7 @@ export default function App() {
                 <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
                   <div className="text-slate-600 mb-1">Last attempt</div>
                   <div className="text-2xl font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
-                  <div className={"text-[11px] mt-1 text-center min-h-[14px] " + (attempts[0] ? 'text-slate-500' : 'text-slate-400')}>
+                  <div className={`text-[11px] mt-1 text-center min-h-[14px] ${  attempts[0] ? 'text-slate-500' : 'text-slate-400'}`}>
                     {attempts[0]
                       ? `Base ${attempts[0].basePoints}${attempts[0].adjustPenalty ? ` − Penalty ${attempts[0].adjustPenalty}` : ''}`
                       : 'Base —'}
@@ -2906,7 +2937,7 @@ export default function App() {
                   {!playfieldFullscreen && (
                     <button
                       type="button"
-                      onClick={()=> setPlayfieldFullscreen(true)}
+                      onClick={() => setPlayfieldFullscreen(true)}
                       title="Fullscreen"
                       className="absolute top-1 right-1 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1"
                     >
@@ -2920,7 +2951,7 @@ export default function App() {
                 {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
                 <div>
                   {(() => {
-                    const values = Array.from({length:19},(_,k)=> (k+1)*5); // 5..95
+                    const values = Array.from({length:19},(_,k) => (k+1)*5); // 5..95
                     const ordered = selectedSide === 'L' ? values : [...values].reverse();
                     // Evenly spaced circular chips (normal mode only). Use CSS grid for equal column widths.
                     const chipFontPx = 24; // chosen for readability in normal mode
@@ -2934,7 +2965,7 @@ export default function App() {
                             <button
                               key={v}
                               type="button"
-                              onClick={()=>submitAttempt(v)}
+                              onClick={() => submitAttempt(v)}
                               className="aspect-square rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-slate-700"
                               style={{ fontSize: chipFontPx }}
                               aria-label={`Recall ${format2(v)}`}
@@ -2944,10 +2975,10 @@ export default function App() {
                         <div className="flex justify-center">
                           <button
                             type="button"
-                            onClick={()=>submitAttempt(0)}
+                            onClick={() => submitAttempt(0)}
                             className="px-2 py-0 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 active:scale-[0.95] transition-transform font-semibold text-slate-700"
                             style={{ fontSize: chipFontPx}}
-                            ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
+                          ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                         </div>
                       </div>
                     );
@@ -2975,14 +3006,14 @@ export default function App() {
                           </tr>
                         </thead>
                         <tbody>
-                          {attempts.map((a, i) => (
-                            <tr key={a.t + ":" + i} className="border-t">
+                          {attempts.map(a => (
+                            <tr key={a.t} className="border-t">
                               <td className="p-2">{new Date(a.t).toLocaleTimeString()}</td>
                               <td className="p-2">{rowDisplayWithSide(rows[a.idx], a.side)}</td>
                               <td className="p-2 text-right">{formatPct(a.input)}</td>
                               <td className="p-2 text-right">{formatPct(a.truth)}</td>
-                              <td className="p-2 text-right">{a.prevInput != null ? formatPct(a.prevInput) : '—'}</td>
-                              <td className="p-2 text-right">{a.delta > 0 ? "+" : ""}{a.delta}</td>
+                              <td className="p-2 text-right">{a.prevInput !== null ? formatPct(a.prevInput) : '—'}</td>
+                              <td className="p-2 text-right">{a.delta > 0 ? '+' : ''}{a.delta}</td>
                               <td className="p-2 text-right">{a.adjustRequired ? (a.adjustCorrect ? '✔' : '✖') : '—'}</td>
                               <td className="p-2 text-right">{a.adjustRequired ? (a.requiredDir === -1 ? '↓' : a.requiredDir === 1 ? '↑' : '') : '—'}</td>
                               <td className="p-2 text-right">{a.adjustPenalty ? a.adjustPenalty : 0}</td>
@@ -3012,7 +3043,7 @@ export default function App() {
                       <div className="flex items-center" style={{gap}}>
                         <button
                           type="button"
-                          onClick={()=> setPlayfieldFullscreen(false)}
+                          onClick={() => setPlayfieldFullscreen(false)}
                           title="Exit fullscreen (Esc)"
                           style={{
                             padding: `${padY}px ${padX*8}px`,
@@ -3042,10 +3073,10 @@ export default function App() {
                 })()}
                 {/* Main fullscreen content column. Use overflow-hidden to avoid phantom scrollbar when content fits. */}
                 <div className="flex-1 flex flex-col items-stretch overflow-hidden">
-                    <div className="relative flex-1 flex flex-col min-h-0">
-                      <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s=> setFullscreenScale(s)} />
-                    </div>
-                    <div className="w-full mx-auto]">
+                  <div className="relative flex-1 flex flex-col min-h-0">
+                    <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} />
+                  </div>
+                  <div className="w-full mx-auto]">
                     {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
                     {(() => {
                       // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
@@ -3054,7 +3085,7 @@ export default function App() {
                       // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
                       //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
                       // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
-                      const values = Array.from({length:19},(_,k)=> (k+1)*5); // 5..95
+                      const values = Array.from({length:19},(_,k) => (k+1)*5); // 5..95
                       const ordered = selectedSide === 'L' ? values : [...values].reverse();
                       const totalChips = 19; // numeric chips only (NP below)
                       // Estimate inner horizontal padding (px). Container uses px-4 on parent (16px each side).
@@ -3076,7 +3107,7 @@ export default function App() {
                         // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
                         gap = 4; // minimal aesthetic gap
                         d = (avail - (totalChips - 1) * gap) / totalChips;
-                        if (d < 20) d = 20; // absolute floor
+                        if (d < 20) {d = 20;} // absolute floor
                       }
                       // Final safety clamp
                       d = Math.max(20, Math.min(maxDiameter, d));
@@ -3105,7 +3136,7 @@ export default function App() {
                               <button
                                 key={v}
                                 type="button"
-                                onClick={()=>submitAttempt(v)}
+                                onClick={() => submitAttempt(v)}
                                 className="rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0"
                                 style={{ width: diameter, height: diameter, fontSize: chipFont, lineHeight: 1, fontWeight: 600 }}
                                 aria-label={`Recall ${format2(v)}`}
@@ -3115,7 +3146,7 @@ export default function App() {
                           <div className="mt-[2px] flex justify-center">
                             <button
                               type="button"
-                              onClick={()=>submitAttempt(0)}
+                              onClick={() => submitAttempt(0)}
                               className="px-1 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.97] transition-transform text-sm font-medium"
                               style={{ fontSize: Math.max(12, Math.round(chipFont*0.75)) }}
                             ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
@@ -3126,7 +3157,7 @@ export default function App() {
                   </div>
                 </div>
               </div>,
-              document.body
+              document.body,
             )}
           </>
         )}
@@ -3159,10 +3190,10 @@ export default function App() {
                       <tr key={r.id} className="border-t">
                         <td className="p-2">{r.type}</td>
                         <td className="p-2 text-right">
-                          <NumberInput value={finalRecallL[i] ?? 0} onChange={(v)=>setFinalRecallL(arr=>{const next=[...arr]; next[i]=validatePercent(v) ?? next[i] ?? 0; return next;})} />
+                          <NumberInput value={finalRecallL[i] ?? 0} onChange={(v) => setFinalRecallL(arr => {const next=[...arr]; next[i]=validatePercent(v) ?? next[i] ?? 0; return next;})} />
                         </td>
                         <td className="p-2 text-right">
-                          <NumberInput value={finalRecallR[i] ?? 0} onChange={(v)=>setFinalRecallR(arr=>{const next=[...arr]; next[i]=validatePercent(v) ?? next[i] ?? 0; return next;})} />
+                          <NumberInput value={finalRecallR[i] ?? 0} onChange={(v) => setFinalRecallR(arr => {const next=[...arr]; next[i]=validatePercent(v) ?? next[i] ?? 0; return next;})} />
                         </td>
                         <td className="p-2 text-right">{formatPct(hiddenL[i] ?? 0)} / {formatPct(hiddenR[i] ?? 0)}</td>
                         <td className="p-2 text-right">{(Math.abs(clamp(finalRecallL[i] ?? 0)-(hiddenL[i] ?? 0)) + Math.abs(clamp(finalRecallR[i] ?? 0)-(hiddenR[i] ?? 0))).toFixed(0)} pts</td>
@@ -3192,3 +3223,4 @@ export default function App() {
     </div>
   );
 }
+

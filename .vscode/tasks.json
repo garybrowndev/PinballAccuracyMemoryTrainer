@@ -36,8 +36,8 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "VITE.*ready in",
-          "endsPattern": "(Local|Network):.*http://localhost:[0-9]+"
+          "beginsPattern": ".*VITE.*",
+          "endsPattern": ".*Local:.*http://localhost:[0-9]+.*"
         }
       },
       "presentation": {

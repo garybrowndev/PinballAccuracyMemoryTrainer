@@ -8,16 +8,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function buildStandaloneWithAssets() {
+  // eslint-disable-next-line no-console
   console.log('Running lint check...');
   try {
     execSync('npm run lint', { stdio: 'inherit', cwd: __dirname });
+    // eslint-disable-next-line no-console
     console.log('Lint check passed!\n');
   } catch {
+    // eslint-disable-next-line no-console
     console.error('Lint check failed. Please fix linting errors before building.');
     // eslint-disable-next-line no-undef
     process.exit(1);
   }
 
+  // eslint-disable-next-line no-console
   console.log('Building Vite bundle first...');
   
   // Build with Vite
@@ -64,6 +68,7 @@ async function buildStandaloneWithAssets() {
   const imageFiles = fs.readdirSync(elementsDir).filter(f => f.endsWith('.jpg'));
   const imageMap = {};
 
+  // eslint-disable-next-line no-console
   console.log(`Embedding ${imageFiles.length} images...`);
   imageFiles.forEach(file => {
     const imagePath = path.join(elementsDir, file);
@@ -78,6 +83,7 @@ async function buildStandaloneWithAssets() {
   const presets = {};
   let presetIndex = [];
 
+  // eslint-disable-next-line no-console
   console.log(`Embedding ${presetFiles.length} presets...`);
   presetFiles.forEach(file => {
     const presetPath = path.join(presetsDir, file);
@@ -99,27 +105,27 @@ window.EMBEDDED_PRESETS = ${JSON.stringify(presets)};
 window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 `;
   
-  js = embeddedAssets + '\n' + js;
+  js = `${embeddedAssets  }\n${  js}`;
   
   // Replace all image source references to use EMBEDDED_IMAGES
   // Match various patterns for imgSrc construction
   js = js.replace(
     /const\s+imgSrc\s*=\s*`\$\{IMAGE_BASE_URL\}\/\$\{slug\}\.jpg`/g,
-    'const imgSrc = EMBEDDED_IMAGES[slug] || ""'
+    'const imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
   js = js.replace(
     /const\s+imgSrc\s*=\s*slug\s*\?\s*`\$\{IMAGE_BASE_URL\}\/\$\{slug\}\.jpg`\s*:\s*null/g,
-    'const imgSrc = slug ? (EMBEDDED_IMAGES[slug] || "") : null'
+    'const imgSrc = slug ? (EMBEDDED_IMAGES[slug] || "") : null',
   );
   js = js.replace(
     /imgSrc\s*=\s*`\$\{IMAGE_BASE_URL\}\/\$\{slug\}\.jpg`/g,
-    'imgSrc = EMBEDDED_IMAGES[slug] || ""'
+    'imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
   
   // Also replace IMAGE_BASE_URL definition to empty string so it doesn't interfere
   js = js.replace(
     /const\s+IMAGE_BASE_URL\s*=\s*['"][^'"]*['"]/g,
-    'const IMAGE_BASE_URL = ""'
+    'const IMAGE_BASE_URL = ""',
   );
 
   // Create standalone HTML
@@ -145,12 +151,16 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   fs.rmSync(distDir, { recursive: true, force: true });
 
   const stats = fs.statSync(outputPath);
+  // eslint-disable-next-line no-console
   console.log(`\nStandalone HTML with embedded assets created: ${outputPath}`);
+  // eslint-disable-next-line no-console
   console.log(`File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
+  // eslint-disable-next-line no-console
   console.log(`Embedded ${imageFiles.length} images and ${presetFiles.length} presets`);
 }
 
 buildStandaloneWithAssets().catch(err => {
+  // eslint-disable-next-line no-console
   console.error('Build failed:', err);
   // eslint-disable-next-line no-undef
   process.exit(1);
