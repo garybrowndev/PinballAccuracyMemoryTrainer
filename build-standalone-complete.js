@@ -1,12 +1,23 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 import { build } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function buildStandaloneWithAssets() {
+  console.log('Running lint check...');
+  try {
+    execSync('npm run lint', { stdio: 'inherit', cwd: __dirname });
+    console.log('Lint check passed!\n');
+  } catch {
+    console.error('Lint check failed. Please fix linting errors before building.');
+    // eslint-disable-next-line no-undef
+    process.exit(1);
+  }
+
   console.log('Building Vite bundle first...');
   
   // Build with Vite
@@ -22,7 +33,7 @@ async function buildStandaloneWithAssets() {
   // Read built files
   const distDir = path.join(__dirname, 'dist-standalone-temp');
   const htmlPath = path.join(distDir, 'index.html');
-  let html = fs.readFileSync(htmlPath, 'utf8');
+  fs.readFileSync(htmlPath, 'utf8'); // Verify file exists
 
   // Read CSS and JS
   const assetsDir = path.join(distDir, 'assets');
@@ -141,5 +152,6 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 
 buildStandaloneWithAssets().catch(err => {
   console.error('Build failed:', err);
+  // eslint-disable-next-line no-undef
   process.exit(1);
 });

@@ -46,7 +46,6 @@ function getImageSrc(name) {
 let ROW_ID_SEED = 1;
 // Square selectable tile for base element selection (replaces textual chips in popup)
 function ElementTile({ name, selected, onSelect, hasSelection = true }) {
-  const slug = elementSlug(name);
   const imgSrc = getImageSrc(name);
   const [imgVisible, setImgVisible] = React.useState(false); // show only after successful load
   const size = 80; // consistent square image size
@@ -86,7 +85,6 @@ function ElementTile({ name, selected, onSelect, hasSelection = true }) {
 
 // Inline thumbnail used inside table cell (smaller API: no selection ring offset, but clickable area opens menu / toggles)
 function InlineElementThumb({ name, selected, onClick }) {
-  const slug = name ? elementSlug(name) : null;
   const imgSrc = name ? getImageSrc(name) : null;
   const [imgVisible, setImgVisible] = React.useState(false);
   const size = 80; // square image area
@@ -529,7 +527,6 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           const sel = r.id === selectedId;
           const misordered = misorderedIds?.has(r.id);
           const basePart = r.base || '';
-          const slug = basePart ? elementSlug(basePart) : null;
           const imgSrc = basePart ? getImageSrc(basePart) : null;
           const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
           // Decide if we try to show image (only when base present)
@@ -761,12 +758,6 @@ function PlayfieldScenery(){
           const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth, 0.6);
           const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth, 0.6);
           
-          // Helper to compute point along flipper centerline at given percentage (0=base, 100=tip)
-          const pointAlong = (base, tip, pct) => {
-            const t = pct / 100;
-            return { x: base.x + (tip.x - base.x) * t, y: base.y + (tip.y - base.y) * t };
-          };
-          
           // Add "9" and "0" labels for each flipper
           // "9" at the tip (inner end toward center) and "0" at the base (outer end)
           const labels = [];
@@ -782,13 +773,11 @@ function PlayfieldScenery(){
           const leftDy = L_TIP.y - L_BASE.y;
           const leftLen = Math.sqrt(leftDx * leftDx + leftDy * leftDy);
           const leftUx = leftDx / leftLen; // unit x component along flipper
-          const leftUy = leftDy / leftLen; // unit y component along flipper
           
           const rightDx = R_TIP.x - R_BASE.x;
           const rightDy = R_TIP.y - R_BASE.y;
           const rightLen = Math.sqrt(rightDx * rightDx + rightDy * rightDy);
           const rightUx = rightDx / rightLen; // unit x component along flipper
-          const rightUy = rightDy / rightLen; // unit y component along flipper
           
           // Horizontal position: point on circle perimeter opposite to flipper direction
           // Vertical position: the bottom of the circle at that x position + same offset as "9"
@@ -940,7 +929,6 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             transform: 'translate(-50%, -50%)'
           };
           const basePart = r.base || '';
-          const slug = basePart ? elementSlug(basePart) : null;
           const imgSrc = basePart ? getImageSrc(basePart) : null;
           // Image visibility tracked in parent map (imageLoadedMap) to avoid per-iteration hook misuse.
           const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
@@ -1497,7 +1485,7 @@ export default function App() {
       setSelectedIdx(randIdx);
       setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
     }
-  }, [rows, initRandSteps, setBaseL, setBaseR, setHiddenL, setHiddenR, setOrderAscL, setOrderAscR, setMentalL, setMentalR, setAttempts, setAttemptCount, setFinalPhase, setFinalRecallL, setFinalRecallR, setInitialized, setShowMentalModel, setSelectedIdx, setSelectedSide]);
+  }, [rows, initRandSteps, setBaseL, setBaseR, setHiddenL, setHiddenR, setOrderAscL, setOrderAscR, setMentalL, setMentalR, setAttempts, setAttemptCount, setFinalPhase, setFinalRecallL, setFinalRecallR, setInitialized, setSelectedIdx, setSelectedSide]);
 
   // Allow pressing Enter anywhere on setup screen to start the session (if valid)
   useEffect(() => {

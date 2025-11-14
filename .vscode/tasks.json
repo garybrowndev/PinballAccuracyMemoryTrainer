@@ -12,12 +12,23 @@
       }
     },
     {
+      "label": "Lint",
+      "type": "npm",
+      "script": "lint",
+      "problemMatcher": ["$eslint-stylish"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      }
+    },
+    {
       "type": "npm",
       "script": "dev",
       "label": "npm: dev",
       "detail": "vite",
       "isBackground": true,
-      "dependsOn": ["Install Dependencies"],
+      "dependsOn": ["Install Dependencies", "Lint"],
       "problemMatcher": {
         "owner": "custom",
         "pattern": {
