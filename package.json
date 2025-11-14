@@ -1,13 +1,37 @@
 {
   "name": "pinball-trainer",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "vite --mode electron",
+    "electron:build": "vite build && electron-builder"
+  },
+  "build": {
+    "appId": "com.pinball.accuracytrainer",
+    "productName": "Pinball Accuracy Memory Trainer",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/icon.ico",
+      "signAndEditExecutable": false
+    }
   },
   "dependencies": {
     "react": "^19.1.1",
@@ -19,11 +43,15 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.2",
+    "electron": "^39.1.2",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.35.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
     "tailwindcss": "^4.1.13",
-    "vite": "^7.1.6"
+    "vite": "^7.1.6",
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6"
   }
 }

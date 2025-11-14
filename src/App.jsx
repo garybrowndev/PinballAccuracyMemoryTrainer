@@ -30,7 +30,7 @@ const SEVERITY_COLORS = {
 // Convention: filename derived from element slug (lowercase, spaces -> dashes): e.g. "Left Ramp" -> "left-ramp.jpg".
 // If an image 404s the browser will show the fallback text layer (we keep text absolutely positioned).
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
-const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
+const IMAGE_BASE_URL = './images/elements'; // relative path for Electron compatibility
 function elementSlug(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
 
 // Stable id generator for rows to prevent input remount/focus loss
@@ -1190,7 +1190,7 @@ export default function App() {
   // Load available presets on mount
   useEffect(() => {
     // Fetch the index.json file which lists all available presets
-    fetch('/presets/index.json')
+    fetch('./presets/index.json')
       .then(response => response.json())
       .then(presets => {
         setAvailablePresets(presets);
@@ -1349,7 +1349,7 @@ export default function App() {
   // Load a preset from /presets/ folder
   const loadPreset = useCallback(async (preset) => {
     try {
-      const response = await fetch(`/presets/${preset.filename}`);
+      const response = await fetch(`./presets/${preset.filename}`);
       if (!response.ok) throw new Error('Preset not found');
       const presetData = await response.json();
       

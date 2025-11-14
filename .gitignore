@@ -10,7 +10,14 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-electron
 *.local
+
+# Electron build output
+release
+*.exe
+*.blockmap
+*.yml
 
 # Editor directories and files
 .vscode/*
