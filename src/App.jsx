@@ -32,13 +32,22 @@ const SEVERITY_COLORS = {
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
 const IMAGE_BASE_URL = './images/elements'; // relative path for Electron compatibility
 function elementSlug(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+// Helper to get image src - checks for embedded images first (standalone mode), falls back to path
+function getImageSrc(name) {
+  const slug = elementSlug(name);
+  // Check if EMBEDDED_IMAGES exists (set by standalone build)
+  if (typeof window !== 'undefined' && window.EMBEDDED_IMAGES && window.EMBEDDED_IMAGES[slug]) {
+    return window.EMBEDDED_IMAGES[slug];
+  }
+  return `${IMAGE_BASE_URL}/${slug}.jpg`;
+}
 
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
 // Square selectable tile for base element selection (replaces textual chips in popup)
 function ElementTile({ name, selected, onSelect, hasSelection = true }) {
   const slug = elementSlug(name);
-  const imgSrc = `${IMAGE_BASE_URL}/${slug}.jpg`;
+  const imgSrc = getImageSrc(name);
   const [imgVisible, setImgVisible] = React.useState(false); // show only after successful load
   const size = 80; // consistent square image size
   return (
@@ -78,7 +87,7 @@ function ElementTile({ name, selected, onSelect, hasSelection = true }) {
 // Inline thumbnail used inside table cell (smaller API: no selection ring offset, but clickable area opens menu / toggles)
 function InlineElementThumb({ name, selected, onClick }) {
   const slug = name ? elementSlug(name) : null;
-  const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
+  const imgSrc = name ? getImageSrc(name) : null;
   const [imgVisible, setImgVisible] = React.useState(false);
   const size = 80; // square image area
   if (!name) return null;
@@ -521,7 +530,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           const misordered = misorderedIds?.has(r.id);
           const basePart = r.base || '';
           const slug = basePart ? elementSlug(basePart) : null;
-          const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
+          const imgSrc = basePart ? getImageSrc(basePart) : null;
           const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
           // Decide if we try to show image (only when base present)
           const showImageAttempt = !!imgSrc;
@@ -932,7 +941,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           };
           const basePart = r.base || '';
           const slug = basePart ? elementSlug(basePart) : null;
-          const imgSrc = slug ? `${IMAGE_BASE_URL}/${slug}.jpg` : null;
+          const imgSrc = basePart ? getImageSrc(basePart) : null;
           // Image visibility tracked in parent map (imageLoadedMap) to avoid per-iteration hook misuse.
           const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
           const showImageAttempt = !!imgSrc;
@@ -1189,16 +1198,34 @@ export default function App() {
   const [selectedPresetName, setSelectedPresetName] = useState(null);
   // Load available presets on mount
   useEffect(() => {
-    // Fetch the index.json file which lists all available presets
-    fetch('./presets/index.json')
-      .then(response => response.json())
-      .then(presets => {
-        setAvailablePresets(presets);
-      })
-      .catch(error => {
-        console.error('Failed to load preset index:', error);
-        setAvailablePresets([]);
+    // Check if we have embedded presets (standalone mode)
+    if (typeof window !== 'undefined' && window.EMBEDDED_PRESET_INDEX) {
+      // Use the embedded preset index
+      setAvailablePresets(window.EMBEDDED_PRESET_INDEX);
+    } else if (typeof window !== 'undefined' && window.EMBEDDED_PRESETS) {
+      // Fallback: generate index from embedded preset filenames
+      const presetList = Object.keys(window.EMBEDDED_PRESETS).map(filename => {
+        // Generate display name from filename
+        const name = filename
+          .replace('.json', '')
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        return { name, filename };
       });
+      setAvailablePresets(presetList);
+    } else {
+      // Fetch the index.json file which lists all available presets
+      fetch('./presets/index.json')
+        .then(response => response.json())
+        .then(presets => {
+          setAvailablePresets(presets);
+        })
+        .catch(error => {
+          console.error('Failed to load preset index:', error);
+          setAvailablePresets([]);
+        });
+    }
   }, []);
   // Keep popup anchored to triggering chip while scrolling/resizing
   useEffect(()=>{
@@ -1349,9 +1376,17 @@ export default function App() {
   // Load a preset from /presets/ folder
   const loadPreset = useCallback(async (preset) => {
     try {
-      const response = await fetch(`./presets/${preset.filename}`);
-      if (!response.ok) throw new Error('Preset not found');
-      const presetData = await response.json();
+      let presetData;
+      
+      // Check if we have embedded presets (standalone mode)
+      if (typeof window !== 'undefined' && window.EMBEDDED_PRESETS && window.EMBEDDED_PRESETS[preset.filename]) {
+        presetData = window.EMBEDDED_PRESETS[preset.filename];
+      } else {
+        // Fetch from server
+        const response = await fetch(`./presets/${preset.filename}`);
+        if (!response.ok) throw new Error('Preset not found');
+        presetData = await response.json();
+      }
       
       // Parse preset data and create rows
       const newRows = presetData.map((shot, idx) => {
