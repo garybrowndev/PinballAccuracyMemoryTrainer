@@ -50,6 +50,19 @@
       }
     },
     {
+      "type": "npm",
+      "script": "build:standalone",
+      "label": "npm: build:standalone",
+      "detail": "Builds a single self-contained HTML file with all assets embedded for offline use",
+      "dependsOn": ["Lint"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
       "label": "Stop npm dev server",
       "detail": "Terminates all running Node.js processes for Vite dev server",
       "type": "shell",

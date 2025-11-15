@@ -1123,7 +1123,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           }
           const w = rect.width; const h = rect.height;
           const BOX_HALF = 15 * scale; // approximate half-height scaled
-          const bx = selectedRow.x * w; const by = selectedRow.y * h + BOX_HALF; // bottom center of shot box
+          const _bx = selectedRow.x * w; const _by = selectedRow.y * h + BOX_HALF; // bottom center of shot box
           // Coordinate anchors (note mapping: 0=base,100=tip in editor, but we now need both extremes).
           const L_TIP = { x: 415, y: 920 }, L_BASE = { x: 285, y: 785 };
           const R_TIP = { x: 585, y: 920 }, R_BASE = { x: 715, y: 785 };

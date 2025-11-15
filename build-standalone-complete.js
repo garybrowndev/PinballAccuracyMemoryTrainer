@@ -144,8 +144,14 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 </body>
 </html>`;
 
+  // Create output directory if it doesn't exist
+  const outputDir = path.join(__dirname, 'dist-standalone');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
   // Write output
-  const outputPath = path.join(__dirname, 'pinball-trainer-standalone.html');
+  const outputPath = path.join(outputDir, 'pinball-trainer-standalone.html');
   fs.writeFileSync(outputPath, standaloneHtml, 'utf8');
 
   // Clean up temp directory
