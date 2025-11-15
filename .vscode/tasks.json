@@ -28,7 +28,6 @@
       "label": "npm: dev",
       "detail": "vite",
       "isBackground": true,
-      "dependsOn": ["Install Dependencies", "Lint"],
       "problemMatcher": {
         "owner": "custom",
         "pattern": {

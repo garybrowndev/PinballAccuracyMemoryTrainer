@@ -17,6 +17,16 @@ const format2 = (n) => {
   return String(v).padStart(2, '0');
 };
 const formatPct = (n) => `${format2(n)}%`;
+// Helper to format initL/initR values (0 -> 'NP', null -> '—', otherwise format)
+const formatInitValue = (val) => {
+  if (val === 0) {
+    return 'NP';
+  }
+  if (val === null) {
+    return '—';
+  }
+  return format2(val);
+};
 // Severity color mapping (Perfect, Slight, Fairly, Very)
 // Updated per request: perfect bright green, slight darker green, fairly yellow, very bright red
 // Chosen accessible hues (WCAG contrast vs white/black text considered). Adjust if future theme changes.
@@ -61,7 +71,11 @@ function ElementTile({ name, selected, onSelect, hasSelection = true }) {
         `relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ${
           selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'}`
       }
-      style={{ width: size, height: size + 18, opacity: hasSelection ? (selected ? 1 : 0.45) : 1 }}
+      style={{
+        width: size,
+        height: size + 18,
+        opacity: hasSelection && !selected ? 0.45 : 1,
+      }}
       aria-pressed={selected}
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
@@ -110,7 +124,7 @@ function InlineElementThumb({ name, selected, onClick }) {
             {name}
           </div>
         )}
-        {imgSrc && (
+        {Boolean(imgSrc) && (
           <img
             src={imgSrc}
             alt={name}
@@ -178,8 +192,8 @@ const newRow = (over = {}, indexHint = 0) => {
     base,
     location,
     type,
-    initL: over.initL !== null ? over.initL : 50,
-    initR: over.initR !== null ? over.initR : 50,
+    initL: over.initL === null ? 50 : over.initL,
+    initR: over.initR === null ? 50 : over.initR,
     // Provide a basic fan-out pattern: stagger horizontally & vertically based on index.
     x: 0.2 + ((indexHint % 6) * 0.12), // wraps every 6
     y: 0.15 + Math.floor(indexHint / 6) * 0.18,
@@ -203,8 +217,8 @@ function computeAllowedRange(rows, side, index) {
   const earlierPos = vals.slice(0, index).filter(v => v !== null && v > 0);
   const laterPos = vals.slice(index + 1).filter(v => v !== null && v > 0);
   if (side === 'L') {
-    let minAllowed = earlierPos.length ? Math.max(...earlierPos) + 5 : 5; // greater than largest earlier
-    let maxAllowed = laterPos.length ? Math.min(...laterPos) - 5 : 100; // less than smallest later
+    let minAllowed = earlierPos.length > 0 ? Math.max(...earlierPos) + 5 : 5; // greater than largest earlier
+    let maxAllowed = laterPos.length > 0 ? Math.min(...laterPos) - 5 : 100; // less than smallest later
     minAllowed = Math.max(5, minAllowed);
     maxAllowed = Math.min(100, maxAllowed);
     if (minAllowed > maxAllowed) {
@@ -213,8 +227,8 @@ function computeAllowedRange(rows, side, index) {
     return [minAllowed, maxAllowed];
   } else { // Right: descending
     // For descending: value[i] < all earlier positives AND value[i] > all later positives.
-    let maxAllowed = earlierPos.length ? Math.min(...earlierPos) - 5 : 100; // smaller than smallest earlier
-    let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5; // greater than largest later
+    let maxAllowed = earlierPos.length > 0 ? Math.min(...earlierPos) - 5 : 100; // smaller than smallest earlier
+    let minAllowed = laterPos.length > 0 ? Math.max(...laterPos) + 5 : 5; // greater than largest later
     maxAllowed = Math.min(100, maxAllowed);
     minAllowed = Math.max(5, minAllowed);
     if (minAllowed > maxAllowed) {
@@ -510,9 +524,14 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout</h3>
       <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
-      <div ref={canvasRef} className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden" onMouseDown={() => setSelectedId(null)}>
+      <div
+        ref={canvasRef}
+        className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden"
+        role="region"
+        aria-label="Playfield layout"
+      >
         {/* Clear all shots button placed inside playfield (bottom-left) when provided */}
-        {onClear && (
+        {Boolean(onClear) && (
           <button
             type="button"
             onClick={(e) => {
@@ -592,9 +611,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           const misordered = misorderedIds?.has(r.id);
           const basePart = r.base || '';
           const imgSrc = basePart ? getImageSrc(basePart) : null;
-          const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
+          const imgVisible = Boolean(imgSrc && imageLoadedMap[r.id]);
           // Decide if we try to show image (only when base present)
-          const showImageAttempt = !!imgSrc;
+          const showImageAttempt = Boolean(imgSrc);
           const baseSize = 80; // base tile size
           const renderedSize = baseSize * boxScale;
           return (
@@ -603,9 +622,18 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               style={{ left: `${r.x * 100}%`, top: `${r.y * 100}%`, transform: 'translate(-50%, -50%)', width: renderedSize, height: renderedSize }}
               onMouseDown={(e) => handleMouseDown(e, r.id)}
               className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel ? 'ring-2 ring-emerald-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300'}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Shot ${r.type || 'element'}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleMouseDown(e, r.id);
+                }
+              }}
             >
               {/* Background image layer */}
-              {showImageAttempt && (
+              {showImageAttempt ? (
                 <img
                   src={imgSrc}
                   alt={r.type}
@@ -618,28 +646,38 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                   className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
                   draggable={false}
                 />
-              )}
+              ) : null}
               {/* Top overlay with type text when image present */}
-              {imgVisible && (
-                <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>{r.type}</div>
-              )}
+              {imgVisible ? (
+                <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>
+                  {r.type}
+                </div>
+              ) : null}
               {/* L/R values overlay moved to bottom */}
-              {imgVisible && (
-                <div className="absolute left-0 right-0 flex justify-between text-[11px] font-medium text-white drop-shadow pointer-events-none bg-black/35 backdrop-blur-[1px] px-1 py-[1px]" style={{ bottom: '1px' }}>
-                  <span>L {r.initL === 0 ? 'NP' : (r.initL !== null ? format2(r.initL) : '—')}</span>
-                  <span>R {r.initR === 0 ? 'NP' : (r.initR !== null ? format2(r.initR) : '—')}</span>
-                </div>
-              )}
-              {/* Fallback original content if no image (or no type) */}
-              {!imgVisible && (
-                <div className="absolute inset-0 flex flex-col p-1 text-[11px]">
-                  <div className="font-medium truncate max-w-[70px] text-center mt-4 flex-1 flex items-start justify-center" title={r.type || 'Select type'}>{r.type || '— Type —'}</div>
-                  <div className="mt-auto flex justify-between text-[11px]">
-                    <span className="px-1 rounded bg-slate-100">L {r.initL === 0 ? 'NP' : (r.initL !== null ? format2(r.initL) : '—')}</span>
-                    <span className="px-1 rounded bg-slate-100">R {r.initR === 0 ? 'NP' : (r.initR !== null ? format2(r.initR) : '—')}</span>
+              {imgVisible ? (() => {
+                const leftValue = formatInitValue(r.initL);
+                const rightValue = formatInitValue(r.initR);
+                return (
+                  <div className="absolute left-0 right-0 flex justify-between text-[11px] font-medium text-white drop-shadow pointer-events-none bg-black/35 backdrop-blur-[1px] px-1 py-[1px]" style={{ bottom: '1px' }}>
+                    <span>L {leftValue}</span>
+                    <span>R {rightValue}</span>
                   </div>
-                </div>
-              )}
+                );
+              })() : null}
+              {/* Fallback original content if no image (or no type) */}
+              {!imgVisible && (() => {
+                const leftValue = formatInitValue(r.initL);
+                const rightValue = formatInitValue(r.initR);
+                return (
+                  <div className="absolute inset-0 flex flex-col p-1 text-[11px]">
+                    <div className="font-medium truncate max-w-[70px] text-center mt-4 flex-1 flex items-start justify-center" title={r.type || 'Select type'}>{r.type || '— Type —'}</div>
+                    <div className="mt-auto flex justify-between text-[11px]">
+                      <span className="px-1 rounded bg-slate-100">L {leftValue}</span>
+                      <span className="px-1 rounded bg-slate-100">R {rightValue}</span>
+                    </div>
+                  </div>
+                );
+              })()}
               {/* X button moved to bottom center of shot box - filled red circle with gray X to match row remove icon style */}
               <button
                 onClick={(e) => {
@@ -662,7 +700,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           );
         })}
         {/* Lines visualization: either single-shot selection or flipper-wide selection */}
-        {selectedId && (() => {
+        {selectedId ? (() => {
           const rect = canvasRef.current?.getBoundingClientRect();
           if (!rect || !rect.width || !rect.height) {
             return null;
@@ -696,7 +734,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
             const BOX_HALF = 15;
             return (
               <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
-                {showLeft && rows.map(r => {
+                {showLeft ? rows.map(r => {
                   const val = r.initL;
                   if (val === null || val <= 0) {
                     return null;
@@ -715,8 +753,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                       <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                     </g>
                   );
-                })}
-                {showRight && rows.map(r => {
+                }) : null}
+                {showRight ? rows.map(r => {
                   const val = r.initR;
                   if (val === null || val <= 0) {
                     return null;
@@ -735,7 +773,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                       <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                     </g>
                   );
-                })}
+                }) : null}
               </svg>
             );
           }
@@ -771,7 +809,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               })()}
             </svg>
           );
-        })()}
+        })() : null}
       </div>
       {/* Footer controls removed: editing now solely via table; additions via + Add shot button above. */}
     </div>
@@ -1033,8 +1071,8 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           const basePart = r.base || '';
           const imgSrc = basePart ? getImageSrc(basePart) : null;
           // Image visibility tracked in parent map (imageLoadedMap) to avoid per-iteration hook misuse.
-          const imgVisible = !!(imgSrc && imageLoadedMap[r.id]);
-          const showImageAttempt = !!imgSrc;
+          const imgVisible = Boolean(imgSrc && imageLoadedMap[r.id]);
+          const showImageAttempt = Boolean(imgSrc);
           const boxSize = 80; // match setup tile size when image
           if (showImageAttempt) {
             return (
@@ -1057,9 +1095,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                   className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150`}
                   draggable={false}
                 />
-                {imgVisible && (
-                  <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>{r.type || '—'}</div>
-                )}
+                {imgVisible ? <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>{r.type || '—'}</div> : null}
                 {!imgVisible && (
                   <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium px-1 text-center" title={r.type || '—'}>{r.type || '—'}</div>
                 )}
@@ -1079,7 +1115,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             </div>
           );
         })}
-        {mounted && selectedRow && selectedSide && (() => {
+        {mounted && selectedRow && selectedSide ? (() => {
           // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
           const rect = canvasRef.current?.getBoundingClientRect();
           if (!rect || !rect.width || !rect.height) {
@@ -1125,7 +1161,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 : flipperTopEdge({ x: 715, y: 785 }, { x: 585, y: 920 }, 27.5, 22, lastRecall.input);
               const anchor = { x: rawEdge.x / 1000 * w, y: rawEdge.y / 1000 * h };
               const label = `${format2(lastRecall.input)}`;
-              const textScale = scale;
+              const textScale = Number(scale);
               // Recall value label sizing (50% larger)
               const baseFs = 11 * 1.5; const rPadXBase = 5; const rPadYBase = 2;
               const fs = baseFs * textScale; const rPadX = rPadXBase * textScale; const rPadY = rPadYBase * textScale;
@@ -1145,7 +1181,12 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               }
               const boxH = 30; // heuristic height only for vertical anchor reference
               // Direction: Right flipper early-> +x, late-> -x; Left flipper mirrored
-              const dirLate = lastRecall.delta > 0 ? 1 : (lastRecall.delta < 0 ? -1 : 0);
+              let dirLate = 0;
+              if (lastRecall.delta > 0) {
+                dirLate = 1;
+              } else if (lastRecall.delta < 0) {
+                dirLate = -1;
+              }
               let shiftSign = 0;
               if (dirLate !== 0) {
                 if (lastRecall.side === 'R') {
@@ -1175,7 +1216,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 word2 = cap(lastRecall.label);
               }
               // Feedback box sizing
-              const tScale = scale; const fontSize = 10 * 1.5 * tScale; const lineGap = 2 * tScale;
+              const tScale = Number(scale); const fontSize = 10 * 1.5 * tScale; const lineGap = 2 * tScale;
               const fbPadX = 6 * tScale; const fbPadY = 4 * tScale;
               const longest = word2 ? Math.max(word1.length, word2.length) : word1.length;
               const approxCharW = fontSize * 0.6;
@@ -1202,7 +1243,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                     ry={6 * tScale}
                     fill={SEVERITY_COLORS[lastRecall.severity] || '#eab308'}
                     stroke={SEVERITY_COLORS[lastRecall.severity] || '#eab308'}
-                    strokeWidth={1 * tScale}
+                    strokeWidth={Number(tScale)}
                   />
                   <text
                     x={boxCenterX}
@@ -1214,16 +1255,16 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                     fill="#000"
                   >
                     <tspan x={boxCenterX}>{word1}</tspan>
-                    {word2 && <tspan x={boxCenterX} dy={lineGap + lineHeight}>{word2}</tspan>}
+                    {word2 ? <tspan x={boxCenterX} dy={lineGap + lineHeight}>{word2}</tspan> : null}
                   </text>
                 </g>
               );
               recallNode = (
                 <g>
                   {lineEl}
-                  <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6 * textScale} ry={6 * textScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * textScale} />
+                  <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6 * Number(textScale)} ry={6 * Number(textScale)} fill="#ffffff" stroke="#cbd5e1" strokeWidth={Number(textScale)} />
                   {/* Display 'NP' (Not Possible) instead of '00' when the recalled value is 0 */}
-                  <text x={cx} y={cy - rectH / 2 + fs / 2 - 1 * textScale} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label === '00' ? 'NP' : label}</text>
+                  <text x={cx} y={cy - rectH / 2 + fs / 2 - Number(textScale)} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label === '00' ? 'NP' : label}</text>
                 </g>
               );
             }
@@ -1273,7 +1314,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             </svg>
           );
           return <>{greenLayer}{yellowLayer}</>;
-        })()}
+        })() : null}
       </div>
     </div>
   );
@@ -1463,7 +1504,7 @@ export default function App() {
     if (collapsedTypes.length) {
       didInitCollapse.current = true; return;
     }
-    const typeIds = rows.filter(r => !!r.type).map(r => r.id);
+    const typeIds = rows.filter(r => Boolean(r.type)).map(r => r.id);
     // Flipper collapse removed (left/right arrays no longer tracked)
     if (typeIds.length) {
       setCollapsedTypes(typeIds);
@@ -1940,10 +1981,8 @@ export default function App() {
       }
       if (lastNonZero === 0) {
         // zeros allowed; any positive establishes lastNonZero
-      } else {
-        if (v === 0 || v <= lastNonZero) {
-          v = Math.min(100, lastNonZero + 5);
-        }
+      } else if (v === 0 || v <= lastNonZero) {
+        v = Math.min(100, lastNonZero + 5);
       }
       out[i].initL = v;
       if (v > 0) {
@@ -2083,16 +2122,17 @@ export default function App() {
         ))}
       </div>
       {/* Detached popups (portals) for shot & location selection */}
-      {shotMenuAnchor && openShotMenuId !== null && createPortal(
+      {shotMenuAnchor && openShotMenuId !== null ? createPortal(
         <div
           className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
           style={{ left: `${Math.max(8, shotMenuAnchor.x) }px`, top: `${shotMenuAnchor.y }px` }}
-          onClick={e => e.stopPropagation()}
+          role="dialog"
+          aria-label="Select shot type"
         >
           {BASE_ELEMENTS.map(b => {
             const currentRow = rows.find(r => r.id === shotMenuAnchor.id);
             const isSel = currentRow?.base === b;
-            const hasSelection = !!currentRow?.base;
+            const hasSelection = Boolean(currentRow?.base);
             return (
               <ElementTile
                 key={b}
@@ -2122,12 +2162,13 @@ export default function App() {
           })}
         </div>,
         document.body,
-      )}
-      {locMenuAnchor && openLocMenuId !== null && createPortal(
+      ) : null}
+      {locMenuAnchor && openLocMenuId !== null ? createPortal(
         <div
           className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
           style={{ left: `${Math.max(8, locMenuAnchor.x) }px`, top: `${locMenuAnchor.y }px` }}
-          onClick={e => e.stopPropagation()}
+          role="dialog"
+          aria-label="Select location"
         >
           {LOCATIONS.map(loc => {
             const currentRow = rows.find(r => r.id === locMenuAnchor.id);
@@ -2160,12 +2201,13 @@ export default function App() {
           })}
         </div>,
         document.body,
-      )}
-      {addCountAnchor && rows.length === 0 && createPortal(
+      ) : null}
+      {addCountAnchor && rows.length === 0 ? createPortal(
         <div
           className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
           style={{ left: `${Math.max(8, addCountAnchor.x) }px`, top: `${addCountAnchor.y }px` }}
-          onClick={e => e.stopPropagation()}
+          role="dialog"
+          aria-label="How many shots to add"
         >
           <div className="grid grid-cols-4 gap-1">
             {Array.from({length: 20}, (_, k) => k + 1).map(n => (
@@ -2216,12 +2258,14 @@ export default function App() {
                     <path d="M6 8l4 4 4-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                {presetOpen && (
+                {presetOpen ? (
                   <div
                     role="listbox"
                     aria-label="Available presets"
+                    tabIndex={-1}
                     className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
                     onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
                     style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
                   >
                     {availablePresets.map(preset => (
@@ -2240,13 +2284,13 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           )}
         </div>,
         document.body,
-      )}
+      ) : null}
       <div className="max-w-4xl mx-auto p-4 md:p-8">
         {/* Setup */}
         {!initialized && (
@@ -2319,7 +2363,7 @@ export default function App() {
                             className="hover:bg-slate-50 rounded px-1 cursor-pointer select-none"
                             title="Select Both Flippers"
                           >Shot Type</span>
-                          {!!rows.length && (
+                          {Boolean(rows.length) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -2352,7 +2396,7 @@ export default function App() {
                             className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
                             title="Select Left Flipper"
                           >Left Flipper</span>
-                          {!!rows.length && (
+                          {Boolean(rows.length) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -2401,7 +2445,7 @@ export default function App() {
                             className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
                             title="Select Right Flipper"
                           >Right Flipper</span>
-                          {!!rows.length && (
+                          {Boolean(rows.length) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -2487,7 +2531,13 @@ export default function App() {
                           </tr>
                         )}
                         <tr
-                          className={`border-t align-top ${dragRowIdx === i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId === r.id ? 'bg-slate-300' : '')} ${selectedBlockId === r.id ? '' : 'hover:bg-slate-100'} cursor-default`}
+                          className={(() => {
+                            const baseClasses = 'border-t align-top cursor-default';
+                            const dragClass = dragRowIdx === i ? 'bg-emerald-50 ring-1 ring-emerald-300' : '';
+                            const selectedClass = selectedBlockId === r.id && dragRowIdx !== i ? 'bg-slate-300' : '';
+                            const hoverClass = selectedBlockId === r.id ? '' : 'hover:bg-slate-100';
+                            return `${baseClasses} ${dragClass} ${selectedClass} ${hoverClass}`;
+                          })()}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedIdx(i);
@@ -2558,7 +2608,7 @@ export default function App() {
                                     </button>
                                   )}
                                   <Chip
-                                    active={!!location}
+                                    active={Boolean(location)}
                                     data-loc-chip={r.id}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -2589,7 +2639,9 @@ export default function App() {
                                 const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
                                 const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
                                 let actual = r.initL && r.initL > 0 ? r.initL : null;
-                                if (actual !== null) {
+                                if (actual === null) {
+                                  // No value set
+                                } else {
                                   if (actual > allowedMax) {
                                     actual = allowedMax;
                                   } // clamp any legacy 100s down to 95 visually
@@ -2598,7 +2650,7 @@ export default function App() {
                                   }
                                 }
                                 const sliderMin = 5; const sliderMax = 95;
-                                const displayVal = actual !== null ? actual : 50;
+                                const displayVal = actual === null ? 50 : actual;
                                 // Ascending visual (05 -> 95). Grey before allowedMin and after allowedMax.
                                 const span = 95 - 5; // 90
                                 const leftGreyPct = ((allowedMin - 5) / span) * 100;
@@ -2622,7 +2674,7 @@ export default function App() {
                                         min={sliderMin}
                                         max={sliderMax}
                                         step={5}
-                                        value={Math.min(Math.max(actual !== null ? actual : displayVal, sliderMin), sliderMax)}
+                                        value={Math.min(Math.max(actual === null ? displayVal : actual, sliderMin), sliderMax)}
                                         onMouseDown={e => {
                                           e.stopPropagation();
                                         }}
@@ -2647,20 +2699,20 @@ export default function App() {
                                         style={{ background: trackBg }}
                                         className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"
                                       />
-                                      {range && !(allowedMin === 5 && allowedMax === 95) && (() => {
+                                      {range && !(allowedMin === 5 && allowedMax === 95) ? (() => {
                                         return (
                                           <>
                                             <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${leftGreyPct }%` }}>{format2(allowedMin)}</div>
                                             <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${rightGreyStartPct }%` }}>{format2(allowedMax)}</div>
                                           </>
                                         );
-                                      })()}
-                                      {actual !== null && range && (() => {
+                                      })() : null}
+                                      {actual !== null && range ? (() => {
                                         const pct = ((actual - 5) / span) * 100;
                                         return (
                                           <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct }%` }}>{format2(actual)}</div>
                                         );
-                                      })()}
+                                      })() : null}
                                     </div>
                                   </div>
                                 );
@@ -2697,7 +2749,9 @@ export default function App() {
                                 const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
                                 const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
                                 let actual = r.initR && r.initR > 0 ? r.initR : null;
-                                if (actual !== null) {
+                                if (actual === null) {
+                                  // No value set
+                                } else {
                                   if (actual > allowedMax) {
                                     actual = allowedMax;
                                   } // clamp legacy 100
@@ -2706,7 +2760,7 @@ export default function App() {
                                   }
                                 }
                                 const sliderMin = 5; const sliderMax = 95; // reversed visual
-                                const displayVal = actual !== null ? actual : 50;
+                                const displayVal = actual === null ? 50 : actual;
                                 // Descending visual (95 -> 05). Grey left (values > allowedMax after reversal) and right (values < allowedMin).
                                 const span = 95 - 5; // 90
                                 const leftStopPct = ((95 - allowedMax) / span) * 100;
@@ -2730,7 +2784,7 @@ export default function App() {
                                         min={sliderMin}
                                         max={sliderMax}
                                         step={5}
-                                        value={Math.min(Math.max(100 - (actual !== null ? actual : displayVal), sliderMin), sliderMax)}
+                                        value={Math.min(Math.max(100 - (actual === null ? displayVal : actual), sliderMin), sliderMax)}
                                         onMouseDown={e => {
                                           e.stopPropagation();
                                         }}
@@ -2756,20 +2810,20 @@ export default function App() {
                                         style={{ background: trackBg }}
                                         className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"
                                       />
-                                      {range && !(allowedMin === 5 && allowedMax === 95) && (() => {
+                                      {range && !(allowedMin === 5 && allowedMax === 95) ? (() => {
                                         return (
                                           <>
                                             <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${leftStopPct }%` }}>{format2(allowedMax)}</div>
                                             <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${rightStartPct }%` }}>{format2(allowedMin)}</div>
                                           </>
                                         );
-                                      })()}
-                                      {actual !== null && range && (() => {
+                                      })() : null}
+                                      {actual !== null && range ? (() => {
                                         const pct = ((95 - actual) / span) * 100;
                                         return (
                                           <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct }%` }}>{format2(actual)}</div>
                                         );
-                                      })()}
+                                      })() : null}
                                     </div>
                                   </div>
                                 );
@@ -3015,23 +3069,23 @@ export default function App() {
             <Section title="2) Session parameters">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={'How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75.'} >Initial random steps</label>
+                  <span className="w-48" title={'How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75.'}>Initial random steps</span>
                   <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={'How often hidden values shift after attempts.\nExample: 5 means every 5th attempt triggers a drift.'} >Drift every</label>
+                  <span className="w-48" title={'How often hidden values shift after attempts.\nExample: 5 means every 5th attempt triggers a drift.'}>Drift every</span>
                   <NumberInput value={driftEvery} onChange={setDriftEvery} min={0} max={50} />
                   <span>attempts</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={'Maximum distance (in 5% steps) a value can wander from its base during drift.\nExample: 2 means each shot stays within ±10 of its starting value.'} >Drift magnitude</label>
+                  <span className="w-48" title={'Maximum distance (in 5% steps) a value can wander from its base during drift.\nExample: 2 means each shot stays within ±10 of its starting value.'}>Drift magnitude</span>
                   <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
                 {/* Drift bias removed: drift band now directly based on magnitude (usable integer steps = floor(mag)) */}
                 <div className="flex items-center gap-3">
-                  <label className="w-48" title={'Manual lets you pick any shot & flipper; Random picks one for you each attempt to reduce bias.\nExample: Random may jump Ramp Left → Orbit Right.'} >Mode</label>
+                  <span className="w-48" title={'Manual lets you pick any shot & flipper; Random picks one for you each attempt to reduce bias.\nExample: Random may jump Ramp Left → Orbit Right.'}>Mode</span>
                   <div className="flex gap-2 flex-wrap">
                     <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
                     <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
@@ -3065,565 +3119,630 @@ export default function App() {
         )}
 
         {/* Practice */}
-        {initialized && !finalPhase && (
-          <>
-            <Section
-              title="Practice"
-              right={
-                <div className="flex items-center gap-3">
-                  {/* Guess values & correct values toggles moved into feedback panel */}
-                  <label className="flex items-center gap-2 text-xs text-slate-600">
-                    <input
-                      type="checkbox"
-                      checked={showAttemptHistory}
-                      onChange={(e) => setShowAttemptHistory(e.target.checked)}
-                    />
-                    Attempt history
-                  </label>
-                  <label className="flex items-center gap-2 text-xs text-slate-600">
-                    <input
-                      type="checkbox"
-                      checked={showFeedbackPanel}
-                      onChange={(e) => setShowFeedbackPanel(e.target.checked)}
-                    />
-                    Feedback
-                  </label>
-                  <button onClick={endSession} className="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-sm">End session</button>
-                  <button onClick={resetAll} className="px-3 py-1.5 rounded-xl border text-sm">Full reset</button>
+        {initialized && !finalPhase ? <>
+          <Section
+            title="Practice"
+            right={
+              <div className="flex items-center gap-3">
+                {/* Guess values & correct values toggles moved into feedback panel */}
+                <label className="flex items-center gap-2 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={showAttemptHistory}
+                    onChange={(e) => setShowAttemptHistory(e.target.checked)}
+                  />
+                  Attempt history
+                </label>
+                <label className="flex items-center gap-2 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={showFeedbackPanel}
+                    onChange={(e) => setShowFeedbackPanel(e.target.checked)}
+                  />
+                  Feedback
+                </label>
+                <button onClick={endSession} className="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-sm">End session</button>
+                <button onClick={resetAll} className="px-3 py-1.5 rounded-xl border text-sm">Full reset</button>
+              </div>
+            }
+          >
+            <div className={`grid grid-cols-1 ${showFeedbackPanel ? 'lg:[grid-template-columns:1.2fr_1fr]' : ''} gap-4`}>
+              {/* Left: selection and input */}
+              <div className="lg:col-span-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="w-28 text-sm text-slate-600">Mode</span>
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
+                    <div className="flex items-center gap-2">
+                      <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                      {mode === 'random' && (
+                        <button
+                          onClick={() => {
+                            setSelectedIdx(pickRandomIdx()); setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
+                          }}
+                          className="px-3 py-1.5 rounded-xl border text-sm"
+                          title="Random new shot & flipper"
+                        >↻ New</button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              }
-            >
-              <div className={`grid grid-cols-1 ${showFeedbackPanel ? 'lg:[grid-template-columns:1.2fr_1fr]' : ''} gap-4`}>
-                {/* Left: selection and input */}
-                <div className="lg:col-span-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <label className="w-28 text-sm text-slate-600">Mode</label>
-                    <div className="flex gap-2 flex-wrap items-center">
-                      <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
+
+                <div className="mb-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="w-28 text-sm text-slate-600 mt-1">Shot</span>
+                    <div className="flex gap-2 flex-wrap">
+                      {rows.map((r, i) => (
+                        <Chip
+                          key={r.id}
+                          active={selectedIdx === i}
+                          onClick={() => mode === 'manual' ? setSelectedIdx(i) : undefined}
+                          disabled={mode === 'random'}
+                        >
+                          {r.type}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="w-28 text-sm text-slate-600">Flipper</span>
+                  <div className="flex gap-2">
+                    <Chip
+                      active={selectedSide === 'L'}
+                      onClick={() => mode === 'manual' ? setSelectedSide('L') : undefined}
+                      disabled={mode === 'random'}
+                    >Left</Chip>
+                    <Chip
+                      active={selectedSide === 'R'}
+                      onClick={() => mode === 'manual' ? setSelectedSide('R') : undefined}
+                      disabled={mode === 'random'}
+                    >Right</Chip>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex items-start gap-3">
+                    <span className="w-28 text-sm text-slate-600 mt-1">Recall</span>
+                    <div className="flex flex-col items-stretch">
                       <div className="flex items-center gap-2">
-                        <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
-                        {mode === 'random' && (
-                          <button
-                            onClick={() => {
-                              setSelectedIdx(pickRandomIdx()); setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
-                            }}
-                            className="px-3 py-1.5 rounded-xl border text-sm"
-                            title="Random new shot & flipper"
-                          >↻ New</button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="flex items-center gap-3 mb-2">
-                      <label className="w-28 text-sm text-slate-600 mt-1">Shot</label>
-                      <div className="flex gap-2 flex-wrap">
-                        {rows.map((r, i) => (
-                          <Chip
-                            key={r.id}
-                            active={selectedIdx === i}
-                            onClick={() => mode === 'manual' ? setSelectedIdx(i) : undefined}
-                            disabled={mode === 'random'}
-                          >
-                            {r.type}
-                          </Chip>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 mb-4">
-                    <label className="w-28 text-sm text-slate-600">Flipper</label>
-                    <div className="flex gap-2">
-                      <Chip
-                        active={selectedSide === 'L'}
-                        onClick={() => mode === 'manual' ? setSelectedSide('L') : undefined}
-                        disabled={mode === 'random'}
-                      >Left</Chip>
-                      <Chip
-                        active={selectedSide === 'R'}
-                        onClick={() => mode === 'manual' ? setSelectedSide('R') : undefined}
-                        disabled={mode === 'random'}
-                      >Right</Chip>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="flex items-start gap-3">
-                      <label className="w-28 text-sm text-slate-600 mt-1">Recall</label>
-                      <div className="flex flex-col items-stretch">
-                        <div className="flex items-center gap-2">
-                          <NumberInput
-                            ref={recallInputRef}
-                            value={guess}
-                            min={0}
-                            max={100}
-                            className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
-                            onChange={(v) => {
-                              if (v === '' || v === null || v === undefined) {
-                                setGuess('');
-                                if (recallError) {
-                                  setRecallError('');
-                                }
-                                return;
-                              }
-                              const n = Number(v);
-                              if (!Number.isFinite(n)) {
-                                return;
-                              }
-                              const clamped = Math.max(0, Math.min(100, n));
-                              setGuess(clamped);
+                        <NumberInput
+                          ref={recallInputRef}
+                          value={guess}
+                          min={0}
+                          max={100}
+                          className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
+                          onChange={(v) => {
+                            if (v === '' || v === null || v === undefined) {
+                              setGuess('');
                               if (recallError) {
                                 setRecallError('');
                               }
-                            }}
-                            step={5}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                submitAttempt();
-                              }
-                            }}
-                          />
-                        </div>
-                        {recallError && (
-                          <div className="mt-1 text-center text-[11px] leading-snug whitespace-pre-line text-red-600">
-                            {recallError}
+                              return;
+                            }
+                            const n = Number(v);
+                            if (!Number.isFinite(n)) {
+                              return;
+                            }
+                            const clamped = Math.max(0, Math.min(100, n));
+                            setGuess(clamped);
+                            if (recallError) {
+                              setRecallError('');
+                            }
+                          }}
+                          step={5}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              submitAttempt();
+                            }
+                          }}
+                        />
+                      </div>
+                      {recallError ? <div className="mt-1 text-center text-[11px] leading-snug whitespace-pre-line text-red-600">
+                        {recallError}
+                      </div> : null}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    submitAttempt(); /* keep focus for rapid entry */ setTimeout(() => {
+                      recallInputRef.current?.focus(); recallInputRef.current?.select();
+                    }, 0);
+                  }}
+                  className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
+                >
+                  Submit
+                </button>
+
+                {/* Guess values moved into feedback panel */}
+              </div>
+
+              {/* Right: feedback and stats (toggleable) */}
+              {showFeedbackPanel ? <div className="lg:col-span-1">
+                <h3 className="font-medium mb-2">Feedback</h3>
+                <div className="border rounded-2xl p-3">
+                  <div className="text-sm">
+                    {(() => {
+                      const a = attempts[0];
+                      const has = Boolean(a);
+                      return (
+                        <>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Last shot</div>
+                            <div className="font-medium">{has ? rowDisplayWithSide(rows[a.idx], a.side) : '—'}</div>
                           </div>
-                        )}
-                      </div>
-                    </div>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Result</div>
+                            <div className="font-medium capitalize">
+                              {has ? (
+                                <>
+                                  {a.label} <span className="text-slate-500">(</span>
+                                  <span style={{color: SEVERITY_COLORS[a.severity] || '#334155'}}>{a.severity}</span>{' '}
+                                  <span className="text-slate-500">{a.delta > 0 ? '+' : ''}{format2(Math.abs(a.delta))}%)</span>
+                                </>
+                              ) : 'N/A'}
+                            </div>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Guess</div>
+                            <div>{has ? formatPct(a.input) : '—'}</div>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Prev guess</div>
+                            <div>{(() => {
+                              if (!showMentalModel) {
+                                return '—';
+                              }
+                              if (!has || a.prevInput === null) {
+                                return '—';
+                              }
+                              return formatPct(a.prevInput);
+                            })()}</div>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Guess delta</div>
+                            <div>{(() => {
+                              if (!has) {
+                                return 'N/A';
+                              }
+                              if (a.prevInput === null) {
+                                return 'N/A';
+                              }
+                              const diff = Math.round((a.input ?? 0) - (a.prevInput ?? 0));
+                              return `${diff > 0 ? '+' : ''}${format2(Math.abs(diff))}%`;
+                            })()}</div>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Adjustment needed</div>
+                            <div className="capitalize">{(() => {
+                              if (!has) {
+                                return 'N/A';
+                              }
+                              if (!a.adjustRequired) {
+                                return 'N/A';
+                              }
+                              if (a.requiredDir === -1) {
+                                return 'Lower';
+                              }
+                              if (a.requiredDir === 1) {
+                                return 'Higher';
+                              }
+                              return 'None';
+                            })()}</div>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Adjustment result</div>
+                            <div className={(() => {
+                              if (!has || !a.adjustRequired) {
+                                return 'text-slate-400';
+                              }
+                              return a.adjustCorrect ? 'text-emerald-600' : 'text-red-600';
+                            })()}
+                            >
+                              {(() => {
+                                if (!has) {
+                                  return 'N/A';
+                                }
+                                if (!a.adjustRequired) {
+                                  return 'N/A';
+                                }
+                                return a.adjustCorrect ? 'Correct' : 'Missed';
+                              })()}
+                            </div>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Starting</div>
+                            <div>{(() => {
+                              if (!showBaseValues) {
+                                return '—';
+                              }
+                              if (!has) {
+                                return '—';
+                              }
+                              return formatPct((a.side === 'L' ? baseL[a.idx] : baseR[a.idx]) ?? 0);
+                            })()}</div>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <div className="text-slate-600">Correct</div>
+                            <div>{(() => {
+                              if (!showTruth) {
+                                return '—';
+                              }
+                              if (!has) {
+                                return '—';
+                              }
+                              return formatPct(a.truth);
+                            })()}</div>
+                          </div>
+                          <div className="flex justify-between mt-2 pt-2 border-t">
+                            <div className="text-slate-600">Points</div>
+                            <div className="text-right">
+                              <div>{has ? `${a.points} pts` : '—'}</div>
+                              {has && a.basePoints !== null ? (
+                                <div className="text-[11px] text-slate-500">Base {a.basePoints}{a.adjustPenalty ? ` − Adj Penalty ${a.adjustPenalty}` : ''}</div>
+                              ) : (
+                                <div className="text-[11px] text-slate-400">Awaiting first attempt</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t">
+                            <div className="flex flex-wrap gap-4 items-center mb-3">
+                              <label className="flex items-center gap-2 text-[11px] text-slate-600">
+                                <input
+                                  type="checkbox"
+                                  checked={showMentalModel}
+                                  onChange={(e) => {
+                                    const v = e.target.checked; setShowMentalModel(v);
+                                  }}
+                                />
+                                Guess values
+                              </label>
+                              <label className="flex items-center gap-2 text-[11px] text-slate-600">
+                                <input
+                                  type="checkbox"
+                                  checked={showBaseValues}
+                                  onChange={(e) => setShowBaseValues(e.target.checked)}
+                                />
+                                Starting values
+                              </label>
+                              <label className="flex items-center gap-2 text-[11px] text-slate-600">
+                                <input
+                                  type="checkbox"
+                                  checked={showTruth}
+                                  onChange={(e) => setShowTruth(e.target.checked)}
+                                />
+                                Correct values
+                              </label>
+                            </div>
+                            {(showMentalModel || showBaseValues || showTruth) ? <div>
+                              <div className="rounded-xl border overflow-hidden">
+                                <table className="w-full text-[11px] md:text-xs">
+                                  <thead>
+                                    <tr className="bg-slate-100 text-slate-700 font-semibold">
+                                      <th className="p-1.5 text-left" rowSpan="2">Shot</th>
+                                      {(() => {
+                                        const leftCols = [showMentalModel, showBaseValues, showTruth].filter(Boolean).length;
+                                        const rightCols = leftCols; // same columns for right
+                                        return (
+                                          <>
+                                            {leftCols > 0 && <th className="p-1.5 text-center border-r border-slate-300" colSpan={leftCols}>Left Flipper</th>}
+                                            {rightCols > 0 && <th className="p-1.5 text-center" colSpan={rightCols}>Right Flipper</th>}
+                                          </>
+                                        );
+                                      })()}
+                                    </tr>
+                                    <tr className="bg-slate-50 text-slate-600">
+                                      {showBaseValues ? <th className="p-1.5 text-right">Str</th> : null}
+                                      {showMentalModel ? <th className="p-1.5 text-right">Gss</th> : null}
+                                      {showTruth ? <th className="p-1.5 text-right border-r border-slate-300">Cor</th> : null}
+                                      {showBaseValues ? <th className="p-1.5 text-right">Str</th> : null}
+                                      {showMentalModel ? <th className="p-1.5 text-right">Gss</th> : null}
+                                      {showTruth ? <th className="p-1.5 text-right">Cor</th> : null}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {rows.map((r, i) => (
+                                      <tr key={r.id} className="border-t">
+                                        <td className="p-1.5 whitespace-nowrap max-w-[120px] truncate" title={r.type}>{r.type}</td>
+                                        {showBaseValues ? <td className="p-1.5 text-right text-slate-500">{formatPct(baseL[i] ?? 0)}</td> : null}
+                                        {showMentalModel ? <td className="p-1.5 text-right">{formatPct(mentalL[i] ?? 0)}</td> : null}
+                                        {showTruth ? <td className="p-1.5 text-right text-slate-600 border-r border-slate-300">{formatPct(hiddenL[i] ?? 0)}</td> : null}
+                                        {showBaseValues ? <td className="p-1.5 text-right text-slate-500">{formatPct(baseR[i] ?? 0)}</td> : null}
+                                        {showMentalModel ? <td className="p-1.5 text-right">{formatPct(mentalR[i] ?? 0)}</td> : null}
+                                        {showTruth ? <td className="p-1.5 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td> : null}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div> : null}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
+                </div>
+              </div> : null}
+            </div>
 
+            {/* Consolidated metrics row above playfield */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+              <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
+                <div className="text-slate-600 mb-1">Last attempt</div>
+                <div className="text-2xl font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
+                <div className={`text-[11px] mt-1 text-center min-h-[14px] ${ attempts[0] ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {attempts[0]
+                    ? `Base ${attempts[0].basePoints}${attempts[0].adjustPenalty ? ` − Penalty ${attempts[0].adjustPenalty}` : ''}`
+                    : 'Base —'}
+                </div>
+              </div>
+              <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
+                <div className="text-slate-600 mb-1">Attempts</div>
+                <div className="text-2xl font-semibold">{attemptCount}</div>
+              </div>
+              <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
+                <div className="text-slate-600 mb-1">Total points</div>
+                <div className="text-2xl font-semibold">{totalPoints}</div>
+              </div>
+              <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
+                <div className="text-slate-600 mb-1">Avg abs error</div>
+                <div className="text-2xl font-semibold">{avgAbsErr.toFixed(1)} pts</div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              {/* Practice playfield (read-only visual) */}
+              <div className="relative">
+                {/* Fullscreen toggle button (enter) */}
+                {!playfieldFullscreen && (
                   <button
-                    onClick={() => {
-                      submitAttempt(); /* keep focus for rapid entry */ setTimeout(() => {
-                        recallInputRef.current?.focus(); recallInputRef.current?.select();
-                      }, 0);
-                    }}
-                    className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
+                    type="button"
+                    onClick={() => setPlayfieldFullscreen(true)}
+                    title="Fullscreen"
+                    className="absolute top-1 right-1 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1"
                   >
-                    Submit
+                    {/* Enter fullscreen icon */}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M16 3h3a2 2 0 0 1 2 2v3" /><path d="M21 16v3a2 2 0 0 1-2 2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M8 8H5V5" /><path d="M16 8h3V5" /><path d="M16 16h3v3" /><path d="M8 16H5v3" /></svg>
+                    Fullscreen
                   </button>
-
-                  {/* Guess values moved into feedback panel */}
-                </div>
-
-                {/* Right: feedback and stats (toggleable) */}
-                {showFeedbackPanel && (
-                  <div className="lg:col-span-1">
-                    <h3 className="font-medium mb-2">Feedback</h3>
-                    <div className="border rounded-2xl p-3">
-                      <div className="text-sm">
-                        {(() => {
-                          const a = attempts[0];
-                          const has = !!a;
-                          return (
-                            <>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Last shot</div>
-                                <div className="font-medium">{has ? rowDisplayWithSide(rows[a.idx], a.side) : '—'}</div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Result</div>
-                                <div className="font-medium capitalize">
-                                  {has ? (
-                                    <>
-                                      {a.label} <span className="text-slate-500">(</span>
-                                      <span style={{color: SEVERITY_COLORS[a.severity] || '#334155'}}>{a.severity}</span>{' '}
-                                      <span className="text-slate-500">{a.delta > 0 ? '+' : ''}{format2(Math.abs(a.delta))}%)</span>
-                                    </>
-                                  ) : 'N/A'}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Guess</div>
-                                <div>{has ? formatPct(a.input) : '—'}</div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Prev guess</div>
-                                <div>{showMentalModel ? (has && a.prevInput !== null ? formatPct(a.prevInput) : '—') : '—'}</div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Guess delta</div>
-                                <div>{has ? (a.prevInput !== null ? (() => {
-                                  const diff = Math.round((a.input ?? 0) - (a.prevInput ?? 0)); return `${(diff > 0 ? '+' : '') + format2(Math.abs(diff))}%`;
-                                })() : 'N/A') : 'N/A'}</div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Adjustment needed</div>
-                                <div className="capitalize">{has ? (a.adjustRequired ? (a.requiredDir === -1 ? 'Lower' : a.requiredDir === 1 ? 'Higher' : 'None') : 'N/A') : 'N/A'}</div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Adjustment result</div>
-                                <div className={has && a.adjustRequired ? (a.adjustCorrect ? 'text-emerald-600' : 'text-red-600') : 'text-slate-400'}>
-                                  {has ? (a.adjustRequired ? (a.adjustCorrect ? 'Correct' : 'Missed') : 'N/A') : 'N/A'}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Starting</div>
-                                <div>{showBaseValues ? (has ? formatPct((a.side === 'L' ? baseL[a.idx] : baseR[a.idx]) ?? 0) : '—') : '—'}</div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div className="text-slate-600">Correct</div>
-                                <div>{showTruth ? (has ? formatPct(a.truth) : '—') : '—'}</div>
-                              </div>
-                              <div className="flex justify-between mt-2 pt-2 border-t">
-                                <div className="text-slate-600">Points</div>
-                                <div className="text-right">
-                                  <div>{has ? `${a.points} pts` : '—'}</div>
-                                  {has && a.basePoints !== null ? (
-                                    <div className="text-[11px] text-slate-500">Base {a.basePoints}{a.adjustPenalty ? ` − Adj Penalty ${a.adjustPenalty}` : ''}</div>
-                                  ) : (
-                                    <div className="text-[11px] text-slate-400">Awaiting first attempt</div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="mt-4 pt-4 border-t">
-                                <div className="flex flex-wrap gap-4 items-center mb-3">
-                                  <label className="flex items-center gap-2 text-[11px] text-slate-600">
-                                    <input
-                                      type="checkbox"
-                                      checked={showMentalModel}
-                                      onChange={(e) => {
-                                        const v = e.target.checked; setShowMentalModel(v);
-                                      }}
-                                    />
-                                    Guess values
-                                  </label>
-                                  <label className="flex items-center gap-2 text-[11px] text-slate-600">
-                                    <input
-                                      type="checkbox"
-                                      checked={showBaseValues}
-                                      onChange={(e) => setShowBaseValues(e.target.checked)}
-                                    />
-                                    Starting values
-                                  </label>
-                                  <label className="flex items-center gap-2 text-[11px] text-slate-600">
-                                    <input
-                                      type="checkbox"
-                                      checked={showTruth}
-                                      onChange={(e) => setShowTruth(e.target.checked)}
-                                    />
-                                    Correct values
-                                  </label>
-                                </div>
-                                {(showMentalModel || showBaseValues || showTruth) && (
-                                  <div>
-                                    <div className="rounded-xl border overflow-hidden">
-                                      <table className="w-full text-[11px] md:text-xs">
-                                        <thead>
-                                          <tr className="bg-slate-100 text-slate-700 font-semibold">
-                                            <th className="p-1.5 text-left" rowSpan="2">Shot</th>
-                                            {(() => {
-                                              const leftCols = [showMentalModel, showBaseValues, showTruth].filter(Boolean).length;
-                                              const rightCols = leftCols; // same columns for right
-                                              return (
-                                                <>
-                                                  {leftCols > 0 && <th className="p-1.5 text-center border-r border-slate-300" colSpan={leftCols}>Left Flipper</th>}
-                                                  {rightCols > 0 && <th className="p-1.5 text-center" colSpan={rightCols}>Right Flipper</th>}
-                                                </>
-                                              );
-                                            })()}
-                                          </tr>
-                                          <tr className="bg-slate-50 text-slate-600">
-                                            {showBaseValues && <th className="p-1.5 text-right">Str</th>}
-                                            {showMentalModel && <th className="p-1.5 text-right">Gss</th>}
-                                            {showTruth && <th className="p-1.5 text-right border-r border-slate-300">Cor</th>}
-                                            {showBaseValues && <th className="p-1.5 text-right">Str</th>}
-                                            {showMentalModel && <th className="p-1.5 text-right">Gss</th>}
-                                            {showTruth && <th className="p-1.5 text-right">Cor</th>}
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {rows.map((r, i) => (
-                                            <tr key={r.id} className="border-t">
-                                              <td className="p-1.5 whitespace-nowrap max-w-[120px] truncate" title={r.type}>{r.type}</td>
-                                              {showBaseValues && <td className="p-1.5 text-right text-slate-500">{formatPct(baseL[i] ?? 0)}</td>}
-                                              {showMentalModel && <td className="p-1.5 text-right">{formatPct(mentalL[i] ?? 0)}</td>}
-                                              {showTruth && <td className="p-1.5 text-right text-slate-600 border-r border-slate-300">{formatPct(hiddenL[i] ?? 0)}</td>}
-                                              {showBaseValues && <td className="p-1.5 text-right text-slate-500">{formatPct(baseR[i] ?? 0)}</td>}
-                                              {showMentalModel && <td className="p-1.5 text-right">{formatPct(mentalR[i] ?? 0)}</td>}
-                                              {showTruth && <td className="p-1.5 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td>}
-                                            </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </>
-                          );
-                        })()}
+                )}
+                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
+              </div>
+              {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
+              <div>
+                {(() => {
+                  const values = Array.from({length: 19}, (_, k) => (k + 1) * 5); // 5..95
+                  const ordered = selectedSide === 'L' ? values : [...values].reverse();
+                  // Evenly spaced circular chips (normal mode only). Use CSS grid for equal column widths.
+                  const chipFontPx = 24; // chosen for readability in normal mode
+                  return (
+                    <div className="w-full select-none flex flex-col items-stretch">
+                      <div
+                        className="grid w-full"
+                        style={{ gridTemplateColumns: `repeat(${ordered.length}, 1fr)`}}
+                      >
+                        {ordered.map(v => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => submitAttempt(v)}
+                            className="aspect-square rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-slate-700"
+                            style={{ fontSize: chipFontPx }}
+                            aria-label={`Recall ${format2(v)}`}
+                          ><span className="relative" style={{ top: '-1px' }}>{format2(v)}</span></button>
+                        ))}
+                      </div>
+                      <div className="flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => submitAttempt(0)}
+                          className="px-2 py-0 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 active:scale-[0.95] transition-transform font-semibold text-slate-700"
+                          style={{ fontSize: chipFontPx}}
+                        ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
-
-              {/* Consolidated metrics row above playfield */}
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
-                  <div className="text-slate-600 mb-1">Last attempt</div>
-                  <div className="text-2xl font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
-                  <div className={`text-[11px] mt-1 text-center min-h-[14px] ${ attempts[0] ? 'text-slate-500' : 'text-slate-400'}`}>
-                    {attempts[0]
-                      ? `Base ${attempts[0].basePoints}${attempts[0].adjustPenalty ? ` − Penalty ${attempts[0].adjustPenalty}` : ''}`
-                      : 'Base —'}
+              {showAttemptHistory ? <>
+                {/* Attempt history below playfield */}
+                <h3 className="font-medium mb-2">Attempt history</h3>
+                <div className="overflow-auto border rounded-2xl">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-600">
+                        <th className="p-2 text-left">Time</th>
+                        <th className="p-2 text-left">Shot</th>
+                        <th className="p-2 text-right">Recall</th>
+                        <th className="p-2 text-right">Truth</th>
+                        <th className="p-2 text-right">Prev</th>
+                        <th className="p-2 text-right">Delta</th>
+                        <th className="p-2 text-right">Adj?</th>
+                        <th className="p-2 text-right">Dir</th>
+                        <th className="p-2 text-right">AdjPen</th>
+                        <th className="p-2 text-right">Label</th>
+                        <th className="p-2 text-right">Points</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attempts.map(a => (
+                        <tr key={a.t} className="border-t">
+                          <td className="p-2">{new Date(a.t).toLocaleTimeString()}</td>
+                          <td className="p-2">{rowDisplayWithSide(rows[a.idx], a.side)}</td>
+                          <td className="p-2 text-right">{formatPct(a.input)}</td>
+                          <td className="p-2 text-right">{formatPct(a.truth)}</td>
+                          <td className="p-2 text-right">{a.prevInput === null ? '—' : formatPct(a.prevInput)}</td>
+                          <td className="p-2 text-right">{a.delta > 0 ? '+' : ''}{a.delta}</td>
+                          <td className="p-2 text-right">{(() => {
+                            if (!a.adjustRequired) {
+                              return '—';
+                            }
+                            return a.adjustCorrect ? '✔' : '✖';
+                          })()}</td>
+                          <td className="p-2 text-right">{(() => {
+                            if (!a.adjustRequired) {
+                              return '—';
+                            }
+                            if (a.requiredDir === -1) {
+                              return '↓';
+                            }
+                            if (a.requiredDir === 1) {
+                              return '↑';
+                            }
+                            return '';
+                          })()}</td>
+                          <td className="p-2 text-right">{a.adjustPenalty ? a.adjustPenalty : 0}</td>
+                          <td className="p-2 text-right capitalize">{a.label}</td>
+                          <td className="p-2 text-right">{a.points}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </> : null}
+            </div>
+          </Section>
+          {playfieldFullscreen ? createPortal(
+            <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden">
+              {(() => {
+                const s = fullscreenScale || 1;
+                const fontSize = Math.round(11 * s); // base 11px scaled
+                const padY = 0.9 * s; // base 0.9 (~py-1.5 ≈6px) adjust
+                const padX = 1.2 * s; // base horizontal
+                const gap = 6 * s; // base gap 6px
+                const iconSize = Math.max(14, Math.round(14 * s));
+                return (
+                  <div className="flex items-center justify-between px-4 py-2 text-slate-200" style={{fontSize}}>
+                    <div className="font-medium" style={{fontSize: Math.round(fontSize * 1.05)}}>Practice Playfield</div>
+                    <div className="flex items-center" style={{gap}}>
+                      <button
+                        type="button"
+                        onClick={() => setPlayfieldFullscreen(false)}
+                        title="Exit fullscreen (Esc)"
+                        style={{
+                          padding: `${padY}px ${padX * 8}px`,
+                          fontSize: fontSize * 0.9,
+                          lineHeight: 1.1,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: `${Math.round(4 * s)}px`,
+                          borderWidth: 1,
+                        }}
+                        className="rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 transition-colors"
+                      >
+                        {/* Standard fullscreen exit: arrows pointing inward */}
+                        <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 3H5a2 2 0 0 0-2 2v4" />
+                          <path d="M15 3h4a2 2 0 0 1 2 2v4" />
+                          <path d="M9 21H5a2 2 0 0 1-2-2v-4" />
+                          <path d="M15 21h4a2 2 0 0 0 2-2v-4" />
+                          <path d="M10 14v4h4v-4" />
+                          <path d="M10 10V6h4v4" />
+                        </svg>
+                        <span>Exit</span>
+                      </button>
+                    </div>
                   </div>
+                );
+              })()}
+              {/* Main fullscreen content column. Use overflow-hidden to avoid phantom scrollbar when content fits. */}
+              <div className="flex-1 flex flex-col items-stretch overflow-hidden">
+                <div className="relative flex-1 flex flex-col min-h-0">
+                  <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} />
                 </div>
-                <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
-                  <div className="text-slate-600 mb-1">Attempts</div>
-                  <div className="text-2xl font-semibold">{attemptCount}</div>
-                </div>
-                <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
-                  <div className="text-slate-600 mb-1">Total points</div>
-                  <div className="text-2xl font-semibold">{totalPoints}</div>
-                </div>
-                <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
-                  <div className="text-slate-600 mb-1">Avg abs error</div>
-                  <div className="text-2xl font-semibold">{avgAbsErr.toFixed(1)} pts</div>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                {/* Practice playfield (read-only visual) */}
-                <div className="relative">
-                  {/* Fullscreen toggle button (enter) */}
-                  {!playfieldFullscreen && (
-                    <button
-                      type="button"
-                      onClick={() => setPlayfieldFullscreen(true)}
-                      title="Fullscreen"
-                      className="absolute top-1 right-1 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1"
-                    >
-                      {/* Enter fullscreen icon */}
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M16 3h3a2 2 0 0 1 2 2v3" /><path d="M21 16v3a2 2 0 0 1-2 2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M8 8H5V5" /><path d="M16 8h3V5" /><path d="M16 16h3v3" /><path d="M8 16H5v3" /></svg>
-                      Fullscreen
-                    </button>
-                  )}
-                  <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
-                </div>
-                {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
-                <div>
+                <div className="w-full mx-auto]">
+                  {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
                   {(() => {
+                    // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
+                    // Strategy:
+                    // 1. Measure available container width (window.innerWidth minus side padding ~32px).
+                    // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
+                    //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
+                    // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
                     const values = Array.from({length: 19}, (_, k) => (k + 1) * 5); // 5..95
                     const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                    // Evenly spaced circular chips (normal mode only). Use CSS grid for equal column widths.
-                    const chipFontPx = 24; // chosen for readability in normal mode
+                    const totalChips = 19; // numeric chips only (NP below)
+                    // Estimate inner horizontal padding (px). Container uses px-4 on parent (16px each side).
+                    const horizontalPadding = 32; // 16 left + 16 right
+                    const avail = Math.max(300, window.innerWidth - horizontalPadding); // safeguard
+                    // Increase overall size (~25%) and tighten spacing.
+                    const maxDiameter = 112; // was 90
+                    const minDiameter = 26;
+                    const baseGap = 3 * fullscreenScale; // target very tight spacing (~2-3px final)
+                    // First pass assume gap = baseGap => candidate diameter
+                    let gap = baseGap;
+                    let d = (avail - (totalChips - 1) * gap) / totalChips;
+                    if (d > maxDiameter) {
+                      // Grow gap to consume extra space while keeping diameter at cap
+                      d = maxDiameter;
+                      gap = (avail - totalChips * d) / (totalChips - 1);
+                    }
+                    if (d < minDiameter) {
+                      // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
+                      gap = 4; // minimal aesthetic gap
+                      d = (avail - (totalChips - 1) * gap) / totalChips;
+                      if (d < 20) {
+                        d = 20;
+                      } // absolute floor
+                    }
+                    // Final safety clamp
+                    d = Math.max(20, Math.min(maxDiameter, d));
+                    // Recompute gap precisely to fill width (avoid leftover). Bound gap min/max after recompute.
+                    gap = (avail - totalChips * d) / (totalChips - 1);
+                    const minGap = 2, maxGap = 24; // allow tighter minimum
+                    if (gap < minGap) {
+                      // Reduce diameter slightly so gap hits minGap.
+                      const targetD = (avail - (totalChips - 1) * minGap) / totalChips;
+                      d = Math.max(20, Math.min(maxDiameter, targetD));
+                      gap = minGap;
+                    } else if (gap > maxGap) {
+                      // Increase diameter so gap hits maxGap.
+                      const targetD = (avail - (totalChips - 1) * maxGap) / totalChips;
+                      d = Math.max(20, Math.min(maxDiameter, targetD));
+                      gap = maxGap;
+                    }
+                    const diameter = Math.round(d);
+                    const chipFont = Math.round(diameter * 0.65); // enlarge ~25% more from 0.52
+                    // Container style: use exact width so chips line up flush without overflow/underflow.
+                    const containerStyle = { width: avail, margin: '0 auto' };
                     return (
-                      <div className="w-full select-none flex flex-col items-stretch">
-                        <div
-                          className="grid w-full"
-                          style={{ gridTemplateColumns: `repeat(${ordered.length}, 1fr)`}}
-                        >
+                      <div className="w-full select-none" style={containerStyle}>
+                        <div className="flex items-center" style={{ gap: Math.round(gap) }}>
                           {ordered.map(v => (
                             <button
                               key={v}
                               type="button"
                               onClick={() => submitAttempt(v)}
-                              className="aspect-square rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-slate-700"
-                              style={{ fontSize: chipFontPx }}
+                              className="rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0"
+                              style={{ width: diameter, height: diameter, fontSize: chipFont, lineHeight: 1, fontWeight: 600 }}
                               aria-label={`Recall ${format2(v)}`}
-                            ><span className="relative" style={{ top: '-1px' }}>{format2(v)}</span></button>
+                            ><span className="relative" style={{ top: '-2px' }}>{format2(v)}</span></button>
                           ))}
                         </div>
-                        <div className="flex justify-center">
+                        <div className="mt-[2px] flex justify-center">
                           <button
                             type="button"
                             onClick={() => submitAttempt(0)}
-                            className="px-2 py-0 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 active:scale-[0.95] transition-transform font-semibold text-slate-700"
-                            style={{ fontSize: chipFontPx}}
+                            className="px-1 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.97] transition-transform text-sm font-medium"
+                            style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
                           ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                         </div>
                       </div>
                     );
                   })()}
                 </div>
-                {showAttemptHistory && (
-                  <>
-                    {/* Attempt history below playfield */}
-                    <h3 className="font-medium mb-2">Attempt history</h3>
-                    <div className="overflow-auto border rounded-2xl">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-600">
-                            <th className="p-2 text-left">Time</th>
-                            <th className="p-2 text-left">Shot</th>
-                            <th className="p-2 text-right">Recall</th>
-                            <th className="p-2 text-right">Truth</th>
-                            <th className="p-2 text-right">Prev</th>
-                            <th className="p-2 text-right">Delta</th>
-                            <th className="p-2 text-right">Adj?</th>
-                            <th className="p-2 text-right">Dir</th>
-                            <th className="p-2 text-right">AdjPen</th>
-                            <th className="p-2 text-right">Label</th>
-                            <th className="p-2 text-right">Points</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {attempts.map(a => (
-                            <tr key={a.t} className="border-t">
-                              <td className="p-2">{new Date(a.t).toLocaleTimeString()}</td>
-                              <td className="p-2">{rowDisplayWithSide(rows[a.idx], a.side)}</td>
-                              <td className="p-2 text-right">{formatPct(a.input)}</td>
-                              <td className="p-2 text-right">{formatPct(a.truth)}</td>
-                              <td className="p-2 text-right">{a.prevInput !== null ? formatPct(a.prevInput) : '—'}</td>
-                              <td className="p-2 text-right">{a.delta > 0 ? '+' : ''}{a.delta}</td>
-                              <td className="p-2 text-right">{a.adjustRequired ? (a.adjustCorrect ? '✔' : '✖') : '—'}</td>
-                              <td className="p-2 text-right">{a.adjustRequired ? (a.requiredDir === -1 ? '↓' : a.requiredDir === 1 ? '↑' : '') : '—'}</td>
-                              <td className="p-2 text-right">{a.adjustPenalty ? a.adjustPenalty : 0}</td>
-                              <td className="p-2 text-right capitalize">{a.label}</td>
-                              <td className="p-2 text-right">{a.points}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                )}
               </div>
-            </Section>
-            {playfieldFullscreen && createPortal(
-              <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden">
-                {(() => {
-                  const s = fullscreenScale || 1;
-                  const fontSize = Math.round(11 * s); // base 11px scaled
-                  const padY = 0.9 * s; // base 0.9 (~py-1.5 ≈6px) adjust
-                  const padX = 1.2 * s; // base horizontal
-                  const gap = 6 * s; // base gap 6px
-                  const iconSize = Math.max(14, Math.round(14 * s));
-                  return (
-                    <div className="flex items-center justify-between px-4 py-2 text-slate-200" style={{fontSize}}>
-                      <div className="font-medium" style={{fontSize: Math.round(fontSize * 1.05)}}>Practice Playfield</div>
-                      <div className="flex items-center" style={{gap}}>
-                        <button
-                          type="button"
-                          onClick={() => setPlayfieldFullscreen(false)}
-                          title="Exit fullscreen (Esc)"
-                          style={{
-                            padding: `${padY}px ${padX * 8}px`,
-                            fontSize: fontSize * 0.9,
-                            lineHeight: 1.1,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: `${Math.round(4 * s)}px`,
-                            borderWidth: 1,
-                          }}
-                          className="rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 transition-colors"
-                        >
-                          {/* Standard fullscreen exit: arrows pointing inward */}
-                          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 3H5a2 2 0 0 0-2 2v4" />
-                            <path d="M15 3h4a2 2 0 0 1 2 2v4" />
-                            <path d="M9 21H5a2 2 0 0 1-2-2v-4" />
-                            <path d="M15 21h4a2 2 0 0 0 2-2v-4" />
-                            <path d="M10 14v4h4v-4" />
-                            <path d="M10 10V6h4v4" />
-                          </svg>
-                          <span>Exit</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })()}
-                {/* Main fullscreen content column. Use overflow-hidden to avoid phantom scrollbar when content fits. */}
-                <div className="flex-1 flex flex-col items-stretch overflow-hidden">
-                  <div className="relative flex-1 flex flex-col min-h-0">
-                    <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} />
-                  </div>
-                  <div className="w-full mx-auto]">
-                    {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
-                    {(() => {
-                      // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
-                      // Strategy:
-                      // 1. Measure available container width (window.innerWidth minus side padding ~32px).
-                      // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
-                      //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
-                      // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
-                      const values = Array.from({length: 19}, (_, k) => (k + 1) * 5); // 5..95
-                      const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                      const totalChips = 19; // numeric chips only (NP below)
-                      // Estimate inner horizontal padding (px). Container uses px-4 on parent (16px each side).
-                      const horizontalPadding = 32; // 16 left + 16 right
-                      const avail = Math.max(300, window.innerWidth - horizontalPadding); // safeguard
-                      // Increase overall size (~25%) and tighten spacing.
-                      const maxDiameter = 112; // was 90
-                      const minDiameter = 26;
-                      const baseGap = 3 * fullscreenScale; // target very tight spacing (~2-3px final)
-                      // First pass assume gap = baseGap => candidate diameter
-                      let gap = baseGap;
-                      let d = (avail - (totalChips - 1) * gap) / totalChips;
-                      if (d > maxDiameter) {
-                        // Grow gap to consume extra space while keeping diameter at cap
-                        d = maxDiameter;
-                        gap = (avail - totalChips * d) / (totalChips - 1);
-                      }
-                      if (d < minDiameter) {
-                        // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
-                        gap = 4; // minimal aesthetic gap
-                        d = (avail - (totalChips - 1) * gap) / totalChips;
-                        if (d < 20) {
-                          d = 20;
-                        } // absolute floor
-                      }
-                      // Final safety clamp
-                      d = Math.max(20, Math.min(maxDiameter, d));
-                      // Recompute gap precisely to fill width (avoid leftover). Bound gap min/max after recompute.
-                      gap = (avail - totalChips * d) / (totalChips - 1);
-                      const minGap = 2, maxGap = 24; // allow tighter minimum
-                      if (gap < minGap) {
-                        // Reduce diameter slightly so gap hits minGap.
-                        const targetD = (avail - (totalChips - 1) * minGap) / totalChips;
-                        d = Math.max(20, Math.min(maxDiameter, targetD));
-                        gap = minGap;
-                      } else if (gap > maxGap) {
-                        // Increase diameter so gap hits maxGap.
-                        const targetD = (avail - (totalChips - 1) * maxGap) / totalChips;
-                        d = Math.max(20, Math.min(maxDiameter, targetD));
-                        gap = maxGap;
-                      }
-                      const diameter = Math.round(d);
-                      const chipFont = Math.round(diameter * 0.65); // enlarge ~25% more from 0.52
-                      // Container style: use exact width so chips line up flush without overflow/underflow.
-                      const containerStyle = { width: avail, margin: '0 auto' };
-                      return (
-                        <div className="w-full select-none" style={containerStyle}>
-                          <div className="flex items-center" style={{ gap: Math.round(gap) }}>
-                            {ordered.map(v => (
-                              <button
-                                key={v}
-                                type="button"
-                                onClick={() => submitAttempt(v)}
-                                className="rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0"
-                                style={{ width: diameter, height: diameter, fontSize: chipFont, lineHeight: 1, fontWeight: 600 }}
-                                aria-label={`Recall ${format2(v)}`}
-                              ><span className="relative" style={{ top: '-2px' }}>{format2(v)}</span></button>
-                            ))}
-                          </div>
-                          <div className="mt-[2px] flex justify-center">
-                            <button
-                              type="button"
-                              onClick={() => submitAttempt(0)}
-                              className="px-1 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.97] transition-transform text-sm font-medium"
-                              style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
-                            ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>,
-              document.body,
-            )}
-          </>
-        )}
+            </div>,
+            document.body,
+          ) : null}
+        </> : null}
 
         {/* Final recall */}
-        {initialized && finalPhase && (
+        {initialized && finalPhase ? (
           <Section
             title="Final Recall Challenge"
             right={
@@ -3682,7 +3801,7 @@ export default function App() {
               </div>
             </div>
           </Section>
-        )}
+        ) : null}
       </div>
     </div>
   );

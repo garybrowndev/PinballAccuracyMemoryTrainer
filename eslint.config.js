@@ -1,9 +1,11 @@
 import js from '@eslint/js';
-import globals from 'globals';
+import { defineConfig, globalIgnores } from 'eslint/config';
+import importPlugin from 'eslint-plugin-import';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
-import { defineConfig, globalIgnores } from 'eslint/config';
+import globals from 'globals';
 
 export default defineConfig([
   globalIgnores(['dist']),
@@ -11,11 +13,13 @@ export default defineConfig([
     files: ['**/*.{js,jsx}'],
     plugins: {
       react,
+      'import': importPlugin,
     },
     extends: [
       js.configs.recommended,
       reactHooks.configs['recommended-latest'],
       reactRefresh.configs.vite,
+      jsxA11y.flatConfigs.recommended,
     ],
     settings: {
       react: {
@@ -137,6 +141,33 @@ export default defineConfig([
       'max-depth': ['warn', 5],
       'max-lines-per-function': ['warn', { max: 2500, skipBlankLines: true, skipComments: true }],
       'complexity': ['warn', 60],
+      // Performance & Modern JS
+      'no-nested-ternary': 'warn',
+      'prefer-destructuring': ['error', { array: false, object: true }],
+      'radix': 'error',
+      'prefer-exponentiation-operator': 'error',
+      // Additional React Rules
+      'react/jsx-no-leaked-render': 'error',
+      'react/hook-use-state': 'error',
+      'react/no-unstable-nested-components': 'error',
+      'react/jsx-fragments': ['error', 'syntax'],
+      // Additional Code Quality
+      'no-implicit-coercion': 'error',
+      'no-lonely-if': 'error',
+      'no-unneeded-ternary': 'error',
+      'no-negated-condition': 'warn',
+      // Import Rules
+      'import/no-duplicates': 'error',
+      'import/no-unresolved': 'off',
+      'import/named': 'off',
+      'import/first': 'error',
+      'import/newline-after-import': 'error',
+      'import/no-anonymous-default-export': 'warn',
+      'import/order': ['error', {
+        'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+        'newlines-between': 'always',
+        'alphabetize': { order: 'asc', caseInsensitive: true },
+      }],
     },
   },
 ]);
