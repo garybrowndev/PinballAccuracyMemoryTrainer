@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// eslint-disable-next-line import/no-deprecated
 import { build } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,15 +52,18 @@ async function buildStandaloneWithAssets() {
   let js = '';
 
   if (cssFile) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     css = fs.readFileSync(path.join(assetsDir, cssFile), 'utf8');
   }
 
   if (jsFile) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     js = fs.readFileSync(path.join(assetsDir, jsFile), 'utf8');
   }
 
   // Function to convert image to base64
   function imageToBase64(imagePath) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const imageBuffer = fs.readFileSync(imagePath);
     return imageBuffer.toString('base64');
   }
@@ -71,12 +75,12 @@ async function buildStandaloneWithAssets() {
 
   // eslint-disable-next-line no-console
   console.log(`Embedding ${imageFiles.length} images...`);
-  imageFiles.forEach(file => {
+  for (const file of imageFiles) {
     const imagePath = path.join(elementsDir, file);
     const base64 = imageToBase64(imagePath);
     const name = file.replace('.jpg', '');
     imageMap[name] = `data:image/jpeg;base64,${base64}`;
-  });
+  }
 
   // Embed all presets
   const presetsDir = path.join(__dirname, 'public', 'presets');
@@ -86,8 +90,9 @@ async function buildStandaloneWithAssets() {
 
   // eslint-disable-next-line no-console
   console.log(`Embedding ${presetFiles.length} presets...`);
-  presetFiles.forEach(file => {
+  for (const file of presetFiles) {
     const presetPath = path.join(presetsDir, file);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const presetData = fs.readFileSync(presetPath, 'utf8');
 
     if (file === 'index.json') {
@@ -96,7 +101,7 @@ async function buildStandaloneWithAssets() {
     } else {
       presets[file] = JSON.parse(presetData);
     }
-  });
+  }
 
   // Add embedded assets at the beginning of the JS - assign to window for global access
   const embeddedAssets = `
@@ -111,21 +116,21 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   // Replace all image source references to use EMBEDDED_IMAGES
   // Match various patterns for imgSrc construction
   js = js.replace(
-    /const\s+imgSrc\s*=\s*`\$\{IMAGE_BASE_URL\}\/\$\{slug\}\.jpg`/g,
+    /const\s+imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`/g,
     'const imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
   js = js.replace(
-    /const\s+imgSrc\s*=\s*slug\s*\?\s*`\$\{IMAGE_BASE_URL\}\/\$\{slug\}\.jpg`\s*:\s*null/g,
+    /const\s+imgSrc\s*=\s*slug\s*\?\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`\s*:\s*null/g,
     'const imgSrc = slug ? (EMBEDDED_IMAGES[slug] || "") : null',
   );
   js = js.replace(
-    /imgSrc\s*=\s*`\$\{IMAGE_BASE_URL\}\/\$\{slug\}\.jpg`/g,
+    /imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`/g,
     'imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
 
   // Also replace IMAGE_BASE_URL definition to empty string so it doesn't interfere
   js = js.replace(
-    /const\s+IMAGE_BASE_URL\s*=\s*['"][^'"]*['"]/g,
+    /const\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g,
     'const IMAGE_BASE_URL = ""',
   );
 
@@ -166,9 +171,10 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   console.log(`Embedded ${imageFiles.length} images and ${presetFiles.length} presets`);
 }
 
-buildStandaloneWithAssets().catch(err => {
+// eslint-disable-next-line promise/prefer-await-to-callbacks
+buildStandaloneWithAssets().catch(error => {
   // eslint-disable-next-line no-console
-  console.error('Build failed:', err);
+  console.error('Build failed:', error);
   // eslint-disable-next-line no-undef
   process.exit(1);
 });

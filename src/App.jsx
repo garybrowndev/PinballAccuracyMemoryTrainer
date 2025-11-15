@@ -44,7 +44,7 @@ const SEVERITY_COLORS = {
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
 const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
 function elementSlug(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return name.toLowerCase().replace(/[^\da-z]+/g, '-').replace(/^-+|-+$/g, '');
 }
 // Helper to get image src - checks for embedded images first (standalone mode), falls back to path
 function getImageSrc(name) {
@@ -59,7 +59,7 @@ function getImageSrc(name) {
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
 // Square selectable tile for base element selection (replaces textual chips in popup)
-function ElementTile({ name, selected, onSelect, hasSelection = true }) {
+const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
   const imgSrc = getImageSrc(name);
   const [imgVisible, setImgVisible] = React.useState(false); // show only after successful load
   const size = 80; // consistent square image size
@@ -99,10 +99,10 @@ function ElementTile({ name, selected, onSelect, hasSelection = true }) {
       {/* No black rectangle for selected */}
     </button>
   );
-}
+};
 
 // Inline thumbnail used inside table cell (smaller API: no selection ring offset, but clickable area opens menu / toggles)
-function InlineElementThumb({ name, selected, onClick }) {
+const InlineElementThumb = ({ name, selected, onClick }) => {
   const imgSrc = name ? getImageSrc(name) : null;
   const [imgVisible, setImgVisible] = React.useState(false);
   const size = 80; // square image area
@@ -141,7 +141,7 @@ function InlineElementThumb({ name, selected, onClick }) {
       </div>
     </button>
   );
-}
+};
 // New taxonomy: separate base element from location. All bases share the same location set.
 // Location 'Base' (or null) means unsuffixed (e.g. "Ramp").
 // BASE_ELEMENTS ordered (most common -> least common) as of 2025‑09‑26.
@@ -242,7 +242,7 @@ function computeAllowedRange(rows, side, index) {
 // Bounded isotonic regression preserving initial ordering defined by orderAsc.
 // Each point i constrained within base[i] ± 20 and 0..100; values snapped to 5.
 function isotonicWithBounds(current, base, orderAsc) {
-  if (!current.length) {
+  if (current.length === 0) {
     return current;
   }
   const lower = base.map(v => Math.max(0, v - 20));
@@ -252,8 +252,7 @@ function isotonicWithBounds(current, base, orderAsc) {
   const lowers = inOrderIdx.map(i => lower[i]);
   const uppers = inOrderIdx.map(i => upper[i]);
   const blocks = [];
-  for (let i = 0;i < values.length;i++) {
-    const sum = values[i];
+  for (const [i, sum] of values.entries()) {
     const count = 1;
     const lb = lowers[i];
     const ub = uppers[i];
@@ -277,22 +276,23 @@ function isotonicWithBounds(current, base, orderAsc) {
       blocks.push(merged);
     }
   }
-  const adjusted = new Array(values.length);
+  const adjusted = Array.from({length: values.length});
   let k = 0; for (const bl of blocks) {
     for (let j = 0;j < bl.count;j++) {
       adjusted[k++] = snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value)));
     }
   }
   const next = [...current];
-  for (let i = 0;i < inOrderIdx.length;i++) {
-    next[inOrderIdx[i]] = adjusted[i];
+  for (const [i, element] of inOrderIdx.entries()) {
+    next[element] = adjusted[i];
   }
   return next;
 }
 
 // Ensure strict increasing / decreasing ordering (depending on provided index order) within ±20 bounds and snapping to 5.
+// eslint-disable-next-line sonarjs/cognitive-complexity
 function strictlyIncrease(values, base, orderAsc) {
-  if (!values.length) {
+  if (values.length === 0) {
     return values;
   }
   const idxs = orderAsc;
@@ -326,8 +326,8 @@ function strictlyIncrease(values, base, orderAsc) {
     }
   }
   const out = [...values];
-  for (let k = 0;k < idxs.length;k++) {
-    out[idxs[k]] = arr[k];
+  for (const [k, idx] of idxs.entries()) {
+    out[idx] = arr[k];
   }
   for (let k = 0;k < idxs.length;k++) {
     const i = idxs[k];
@@ -429,7 +429,7 @@ const Chip = ({ active, children, onClick, className = '', disabled = false }) =
 };
 
 // Simple playfield editor for arranging shots spatially & adjusting flipper percentages
-function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedIds, onClear }) {
+const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedIds, onClear }) => {
   const canvasRef = React.useRef(null);
   // Track which shot images have successfully loaded (id -> true). Avoid per-item hooks inside map.
   const [imageLoadedMap, setImageLoadedMap] = useState({});
@@ -437,7 +437,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
   const [boxScale, setBoxScale] = useState(1);
   // Auto-arrange rows along arc; effect recomputes when rows array changes length or order.
   useEffect(() => {
-    if (!rows.length) {
+    if (rows.length === 0) {
       return;
     }
     const endpointY = 550; const apexY = 100; const chord = 1000; const sagitta = endpointY - apexY; // 450
@@ -456,7 +456,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     const spaceNeededComfort = totalBoxWidthAtFullScale + neededGaps;
     const maxMarginAtFullScale = Math.max(minMargin, (chord - spaceNeededComfort) / 2);
 
-    let scale = 1.0;
+    let scale = 1;
     let margin = Math.min(comfortMargin, maxMarginAtFullScale);
 
     // Step 2: If comfortable margin isn't achievable, check if we fit with minimum margin
@@ -493,9 +493,8 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     });
     // Check if positions or scale changed
     let anyDiff = false;
-    for (let i = 0; i < rows.length; i++) {
+    for (const [i, r] of rows.entries()) {
       const np = newPositions[i];
-      const r = rows[i];
       if (r.x !== np.x || r.y !== np.y) {
         anyDiff = true; break;
       }
@@ -558,7 +557,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           {(() => {
             function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl = 0.6) {
               const dx = tip.x - base.x, dy = tip.y - base.y;
-              const len = Math.sqrt(dx * dx + dy * dy) || 1;
+              const len = Math.hypot(dx, dy) || 1;
               const ux = dx / len, uy = dy / len;
               const px = -uy, py = ux;
               const halfTip = tipWidth / 2;
@@ -711,15 +710,15 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           // Reuse geometry: compute top edge anchor for percentage along flipper length.
           function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
             const t = Math.min(1, Math.max(0, (percent || 0) / 100));
-            const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.hypot(dx, dy) || 1;
             const ux = dx / len, uy = dy / len; // along center line
             const px = -uy, py = ux; // perpendicular
             const cx = base.x + dx * t; const cy = base.y + dy * t; // center line point (1000-space)
             const wBase = rBase * 2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width / 2;
             const cand1 = { x: cx + px * half, y: cy + py * half };
             const cand2 = { x: cx - px * half, y: cy - py * half };
-            const edge = cand1.y < cand2.y ? cand1 : cand2; // choose visually higher (smaller y)
-            return edge;
+            // choose visually higher (smaller y)
+            return cand1.y < cand2.y ? cand1 : cand2;
           }
           const rBaseConst = 27.5; const tipWidthConst = 22;
           const Lp = (p) => {
@@ -814,9 +813,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
       {/* Footer controls removed: editing now solely via table; additions via + Add shot button above. */}
     </div>
   );
-}
+};
 
-function PlayfieldScenery() {
+const PlayfieldScenery = () => {
   /* Simplified bottom: two basic elongated flippers only.
      Coordinate system: 1000x1000 viewBox.
      Desired physical proportions (approx): length ~3in, narrow base ~1cm, wide tip ~2.5cm.
@@ -834,19 +833,20 @@ function PlayfieldScenery() {
         {/* Arc moved up ~10%: endpoints (0,550)->(1000,550); apex now at y=100 (still 450 sagitta, same radius ≈502.78). */}
         <path d="M 0 550 A 502.78 502.78 0 0 1 1000 550" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" strokeDasharray="8 10" />
         {/**
-         * Flippers: single capsule/tapered objects with rounded circular ends.
-         * We approximate each flipper by a constant-width capsule along the base->tip vector.
-         * Earlier logic (anchors in PlayfieldEditor) still uses BASE/TIP points below.
-         */}
+          * Flippers: single capsule/tapered objects with rounded circular ends.
+          * We approximate each flipper by a constant-width capsule along the base->tip vector.
+          * Earlier logic (anchors in PlayfieldEditor) still uses BASE/TIP points below.
+          */}
         {(() => {
           // Reversed flipper orientation per request:
           //   Circle (wide end) now at the HIGH / outer side ("base" argument) and
           //   the narrow tapered point aims DOWN toward the center drain ("tip").
           // Signature kept the same; rTip now represents the radius at BASE (circle),
           // baseWidth is the width of the NARROW tip (pivot) at the lower/inner end.
+          // eslint-disable-next-line sonarjs/no-identical-functions
           function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl = 0.6) {
             const dx = tip.x - base.x, dy = tip.y - base.y;
-            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const len = Math.hypot(dx, dy) || 1;
             const ux = dx / len, uy = dy / len; // unit along length (base -> tip)
             const px = -uy, py = ux; // perpendicular (left-hand)
             const halfTip = tipWidth / 2;
@@ -891,12 +891,12 @@ function PlayfieldScenery() {
           // For vertical position: add the same labelOffset as the "9" labels use
           const leftDx = L_TIP.x - L_BASE.x;
           const leftDy = L_TIP.y - L_BASE.y;
-          const leftLen = Math.sqrt(leftDx * leftDx + leftDy * leftDy);
+          const leftLen = Math.hypot(leftDx, leftDy);
           const leftUx = leftDx / leftLen; // unit x component along flipper
 
           const rightDx = R_TIP.x - R_BASE.x;
           const rightDy = R_TIP.y - R_BASE.y;
-          const rightLen = Math.sqrt(rightDx * rightDx + rightDy * rightDy);
+          const rightLen = Math.hypot(rightDx, rightDy);
           const rightUx = rightDx / rightLen; // unit x component along flipper
 
           // Horizontal position: point on circle perimeter opposite to flipper direction
@@ -993,9 +993,9 @@ function PlayfieldScenery() {
       </svg>
     </div>
   );
-}
+};
 
-function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale }) {
+const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale }) => {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -1115,6 +1115,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             </div>
           );
         })}
+        {/* eslint-disable-next-line sonarjs/cognitive-complexity */}
         {mounted && selectedRow && selectedSide ? (() => {
           // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
           const rect = canvasRef.current?.getBoundingClientRect();
@@ -1147,7 +1148,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               // Precise flipper edge anchor at recall %
               function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
                 const t = Math.min(1, Math.max(0, percent / 100));
-                const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.hypot(dx, dy) || 1;
                 const ux = dx / len, uy = dy / len;
                 const px = -uy, py = ux;
                 const cxLine = base.x + dx * t; const cyLine = base.y + dy * t;
@@ -1198,9 +1199,9 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               // Proportional factor (of half shot box width): perfect 0, slight 0.50, fairly 1.00, very 1.65
               let factor = 0;
               if (lastRecall.severity === 'slight') {
-                factor = 0.50;
+                factor = 0.5;
               } else if (lastRecall.severity === 'fairly') {
-                factor = 1.00;
+                factor = 1;
               } else if (lastRecall.severity === 'very') {
                 factor = 1.65;
               }
@@ -1228,7 +1229,7 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               const boxWidth = textW + fbPadX * 2;
               const boxCenterX = endX; // center box at computed endX
               const boxX = boxCenterX - boxWidth / 2;
-              const downwardOffset = 0.80 * boxHeight;
+              const downwardOffset = 0.8 * boxHeight;
               const boxY = endY + downwardOffset - boxHeight;
               // Update: pill fill now matches severity color; border same color; text remains black for contrast
               lineEl = (
@@ -1274,9 +1275,10 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           // Recompute p0/p100 using top-edge anchor logic so green lines terminate on visible flipper edge (not center line)
           function topEdgePoint(side, percent) {
             // Replicate flipperTopEdge from earlier (editor & yellow feedback) for consistency
+            // eslint-disable-next-line unicorn/consistent-function-scoping
             function flipperTopEdge(base, tip, rBase, tipWidth, pct) {
               const t = Math.min(1, Math.max(0, pct / 100));
-              const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx * dx + dy * dy) || 1;
+              const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.hypot(dx, dy) || 1;
               const ux = dx / len, uy = dy / len;
               const px = -uy, py = ux; // perpendicular
               const cx = base.x + dx * t; const cy = base.y + dy * t;
@@ -1345,10 +1347,11 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
       </div>
     </div>
   );
-}
+};
 
 // ---------- main component ----------
-export default function App() {
+// eslint-disable-next-line sonarjs/cognitive-complexity
+const App = () => {
   const [toasts, setToasts] = useState([]); // {id,msg}
   const _pushToast = useCallback((msg) => {
     const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -1394,14 +1397,15 @@ export default function App() {
       setAvailablePresets(presetList);
     } else {
       // Fetch the index.json file which lists all available presets
-      fetch('./presets/index.json')
-        .then(response => response.json())
-        .then(presets => {
+      (async () => {
+        try {
+          const response = await fetch('./presets/index.json');
+          const presets = await response.json();
           setAvailablePresets(presets);
-        })
-        .catch(() => {
+        } catch {
           setAvailablePresets([]);
-        });
+        }
+      })();
     }
   }, []);
   // Keep popup anchored to triggering chip while scrolling/resizing
@@ -1463,17 +1467,15 @@ export default function App() {
   // Close menus on Escape key
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === 'Escape') {
-        // Check if any menu is open before preventing default (to allow other Escape handlers like fullscreen)
-        if (openShotMenuId !== null || openLocMenuId !== null || addCountAnchor !== null || presetOpen) {
-          e.preventDefault();
-          setOpenShotMenuId(null);
-          setOpenLocMenuId(null);
-          setShotMenuAnchor(null);
-          setLocMenuAnchor(null);
-          setAddCountAnchor(null);
-          setPresetOpen(false);
-        }
+      if (e.key === 'Escape' && // Check if any menu is open before preventing default (to allow other Escape handlers like fullscreen)
+        (openShotMenuId !== null || openLocMenuId !== null || addCountAnchor !== null || presetOpen)) {
+        e.preventDefault();
+        setOpenShotMenuId(null);
+        setOpenLocMenuId(null);
+        setShotMenuAnchor(null);
+        setLocMenuAnchor(null);
+        setAddCountAnchor(null);
+        setPresetOpen(false);
       }
     };
     window.addEventListener('keydown', handler);
@@ -1524,16 +1526,16 @@ export default function App() {
     if (didInitCollapse.current) {
       return;
     }
-    if (!rows || !rows.length) {
+    if (!rows || rows.length === 0) {
       return;
     } // nothing yet
     // Only initialize if user hasn't interacted (arrays still empty)
-    if (collapsedTypes.length) {
+    if (collapsedTypes.length > 0) {
       didInitCollapse.current = true; return;
     }
     const typeIds = rows.filter(r => Boolean(r.type)).map(r => r.id);
     // Flipper collapse removed (left/right arrays no longer tracked)
-    if (typeIds.length) {
+    if (typeIds.length > 0) {
       setCollapsedTypes(typeIds);
     }
     // (No flipper collapse initialization)
@@ -1562,16 +1564,15 @@ export default function App() {
   );
 
   const avgAbsErr = useMemo(() => {
-    if (!attempts.length) {
+    if (attempts.length === 0) {
       return 0;
     }
-    const m = attempts.reduce((s, a) => s + Math.abs(a.delta), 0) / attempts.length;
-    return m;
+    return attempts.reduce((s, a) => s + Math.abs(a.delta), 0) / attempts.length;
   }, [attempts]);
 
   // Session can start only if every row has a shot type (base chosen) and both flipper values
   const canStart = useMemo(() => {
-    if (!rows.length) {
+    if (rows.length === 0) {
       return false;
     }
     return rows.every(r => r.base && r.base.length > 0 && r.initL !== null && r.initL !== undefined && r.initR !== null && r.initR !== undefined);
@@ -1644,7 +1645,7 @@ export default function App() {
       const a = document.createElement('a');
       a.href = url;
       a.download = 'shots-export.json';
-      document.body.appendChild(a);
+      document.body.append(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
@@ -1656,7 +1657,7 @@ export default function App() {
 
   // Initialize hidden matrix (wrapped so effects & handlers can depend on stable reference)
   const startSession = useCallback(() => {
-    if (!rows.length) {
+    if (rows.length === 0) {
       return;
     }
     // Capture bases directly
@@ -1702,7 +1703,7 @@ export default function App() {
     setFinalRecallR(rows.map(r => r.initR));
     setInitialized(true);
     // Pick a random starting shot & flipper for both modes so manual mode doesn't always start at first row
-    if (rows.length) {
+    if (rows.length > 0) {
       const randIdx = rndInt(0, rows.length - 1);
       setSelectedIdx(randIdx);
       setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
@@ -1765,7 +1766,7 @@ export default function App() {
     };
 
     setHiddenL(prev => {
-      if (!prev.length || !baseL.length) {
+      if (prev.length === 0 || baseL.length === 0) {
         return prev;
       }
       const drifted = prev.map((v, i) => {
@@ -1777,15 +1778,14 @@ export default function App() {
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
         const candidate = snap5(v + stepDrift());
-        const clamped = Math.min(hi, Math.max(lo, candidate));
         // If drift brings value to 0, it becomes "Not Possible" and will stay 0
-        return clamped;
+        return Math.min(hi, Math.max(lo, candidate));
       });
       const ordered = isotonicWithBounds(drifted, baseL, orderAscL);
       return strictlyIncrease(ordered, baseL, orderAscL);
     });
     setHiddenR(prev => {
-      if (!prev.length || !baseR.length) {
+      if (prev.length === 0 || baseR.length === 0) {
         return prev;
       }
       const drifted = prev.map((v, i) => {
@@ -1797,9 +1797,8 @@ export default function App() {
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
         const candidate = snap5(v + stepDrift());
-        const clamped = Math.min(hi, Math.max(lo, candidate));
         // If drift brings value to 0, it becomes "Not Possible" and will stay 0
-        return clamped;
+        return Math.min(hi, Math.max(lo, candidate));
       });
       const ordered = isotonicWithBounds(drifted, baseR, orderAscR);
       return strictlyIncrease(ordered, baseR, orderAscR);
@@ -1817,7 +1816,7 @@ export default function App() {
   }
 
   function pickRandomIdx() {
-    if (!rows.length) {
+    if (rows.length === 0) {
       return 0;
     }
     if (rows.length === 1) {
@@ -1833,6 +1832,7 @@ export default function App() {
     return idx;
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   function submitAttempt(overrideVal) {
     if (!initialized) {
       return;
@@ -1891,10 +1891,10 @@ export default function App() {
         adjustRequired = true; requiredDir = 1;
       }
       if (adjustRequired) {
-        if (requiredDir === -1 && !(val < prevSame.input)) {
+        if (requiredDir === -1 && val >= prevSame.input) {
           adjustCorrect = false;
         }
-        if (requiredDir === 1 && !(val > prevSame.input)) {
+        if (requiredDir === 1 && val <= prevSame.input) {
           adjustCorrect = false;
         }
       }
@@ -1950,7 +1950,7 @@ export default function App() {
 
   // Final grading
   const finalScore = useMemo(() => {
-    if (!finalPhase || !rows.length || !hiddenL.length || !hiddenR.length || !finalRecallL.length || !finalRecallR.length) {
+    if (!finalPhase || rows.length === 0 || hiddenL.length === 0 || hiddenR.length === 0 || finalRecallL.length === 0 || finalRecallR.length === 0) {
       return 0;
     }
     let total = 0; let count = 0;
@@ -1997,8 +1997,8 @@ export default function App() {
     // Left side normalization: non-decreasing; zeros allowed until first positive; after first positive, strictly increasing (>= +5); no zeros allowed below first positive.
     let lastNonZero = 0;
     const out = rowsArr.map(r => ({...r}));
-    for (let i = 0;i < out.length;i++) {
-      const raw = out[i].initL;
+    for (const element of out) {
+      const raw = element.initL;
       if (raw === null || raw === undefined) {
         continue;
       } // leave nulls/undefined untouched
@@ -2011,15 +2011,15 @@ export default function App() {
       } else if (v === 0 || v <= lastNonZero) {
         v = Math.min(100, lastNonZero + 5);
       }
-      out[i].initL = v;
+      element.initL = v;
       if (v > 0) {
         lastNonZero = v;
       }
     }
     // Right side normalization: strictly decreasing top -> bottom.
     let prevR = 105; // greater than max
-    for (let i = 0;i < out.length;i++) {
-      const raw = out[i].initR;
+    for (const element of out) {
+      const raw = element.initR;
       if (raw === null || raw === undefined) {
         continue;
       } // leave nulls/undefined untouched
@@ -2030,7 +2030,7 @@ export default function App() {
       if (v < 0) {
         v = 0;
       }
-      out[i].initR = v;
+      element.initR = v;
       prevR = v;
     }
     return out;
@@ -2041,6 +2041,7 @@ export default function App() {
     }
     setRows(prev => {
       // Helper: align current spatial left->right order to current top->bottom order if out of sync.
+      // eslint-disable-next-line unicorn/consistent-function-scoping
       function alignPositions(list) {
         const sortedPositions = [...list].sort((a, b) => a.x - b.x).map(r => ({x: r.x, y: r.y}));
         return list.map((r, i) => ({...r, x: sortedPositions[i].x, y: sortedPositions[i].y }));
@@ -2050,8 +2051,8 @@ export default function App() {
       // Pre-align if previous operations left them mismatched.
       const misaligned = (() => {
         const orderByX = [...arr].sort((a, b) => a.x - b.x);
-        for (let i = 0;i < arr.length;i++) {
-          if (orderByX[i].id !== arr[i].id) {
+        for (const [i, element] of arr.entries()) {
+          if (orderByX[i].id !== element.id) {
             return true;
           }
         }
@@ -2244,6 +2245,7 @@ export default function App() {
                 className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
                 onClick={() => {
                   const count = n;
+                  // eslint-disable-next-line unicorn/consistent-function-scoping
                   const buildRows = (cnt) => {
                     const asc = Array.from({length: cnt}, (_, i) => snap5(((i + 1) / (cnt + 1)) * 100));
                     for (let i = 1;i < asc.length;i++) {
@@ -2332,14 +2334,14 @@ export default function App() {
               <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
                 const misorderedIds = (() => {
-                  if (!rows.length) {
+                  if (rows.length === 0) {
                     return new Set();
                   }
                   const byX = [...rows].sort((a, b) => a.x - b.x).map(r => r.id);
                   const mis = new Set();
-                  for (let i = 0;i < rows.length;i++) {
-                    if (rows[i].id !== byX[i]) {
-                      mis.add(rows[i].id);
+                  for (const [i, row] of rows.entries()) {
+                    if (row.id !== byX[i]) {
+                      mis.add(row.id);
                     }
                   }
                   return mis;
@@ -2390,7 +2392,7 @@ export default function App() {
                             className="hover:bg-slate-50 rounded px-1 cursor-pointer select-none"
                             title="Select Both Flippers"
                           >Shot Type</span>
-                          {Boolean(rows.length) && (
+                          {rows.length > 0 && (
                             <button
                               type="button"
                               onClick={() => {
@@ -2423,7 +2425,7 @@ export default function App() {
                             className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
                             title="Select Left Flipper"
                           >Left Flipper</span>
-                          {Boolean(rows.length) && (
+                          {rows.length > 0 && (
                             <button
                               type="button"
                               onClick={() => {
@@ -2472,7 +2474,7 @@ export default function App() {
                             className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
                             title="Select Right Flipper"
                           >Right Flipper</span>
-                          {Boolean(rows.length) && (
+                          {rows.length > 0 && (
                             <button
                               type="button"
                               onClick={() => {
@@ -2963,12 +2965,13 @@ export default function App() {
                                       const next = [...prev];
                                       const aboveIdx = i; // row above insertion point
                                       const belowIdx = i + 1 < prev.length ? i + 1 : null;
+                                      // eslint-disable-next-line sonarjs/cognitive-complexity
                                       const computeInsertValue = (side) => {
                                         if (side === 'L') {
-                                          let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initL > 0)) {
+                                          let upIdx = aboveIdx; while (upIdx >= 0 && prev[upIdx].initL <= 0) {
                                             upIdx--;
                                           }
-                                          let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && !(prev[downIdx].initL > 0)) {
+                                          let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && prev[downIdx].initL <= 0) {
                                             downIdx++;
                                           }
                                           const haveUpper = upIdx >= 0; const haveLower = downIdx !== null && downIdx < prev.length;
@@ -2976,7 +2979,7 @@ export default function App() {
                                             return 0;
                                           }
                                           if (haveUpper && !haveLower) {
-                                            const aboveVal = prev[upIdx].initL; if (!(aboveVal > 0)) {
+                                            const aboveVal = prev[upIdx].initL; if (aboveVal <= 0) {
                                               return 0;
                                             } if (aboveVal === 95) {
                                               return 100;
@@ -2988,30 +2991,30 @@ export default function App() {
                                               mid = aboveVal + 5;
                                             } if (mid >= 100) {
                                               mid = 95;
-                                            } if (!(mid > aboveVal && mid < 100)) {
+                                            } if (mid <= aboveVal || mid >= 100) {
                                               return 0;
                                             } return clamp(mid, 5, 100);
                                           }
                                           if (!haveUpper && haveLower) {
                                             return 0;
-                                          } const aboveVal = prev[upIdx].initL; const belowVal = prev[downIdx].initL; const gap = belowVal - aboveVal; if (!(aboveVal > 0) && !(belowVal > 0) || gap <= 5) {
+                                          } const aboveVal = prev[upIdx].initL; const belowVal = prev[downIdx].initL; const gap = belowVal - aboveVal; if (aboveVal <= 0 && belowVal <= 0 || gap <= 5) {
                                             return 0;
                                           } let mid = Math.round(((aboveVal + belowVal) / 2) / 5) * 5; if (mid <= aboveVal) {
                                             mid = aboveVal + 5;
                                           } if (mid >= belowVal) {
                                             mid = belowVal - 5;
-                                          } if (!(mid > aboveVal && mid < belowVal)) {
+                                          } if (mid <= aboveVal || mid >= belowVal) {
                                             return 0;
                                           } return clamp(mid, 5, 100);
                                         } else {
-                                          let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initR > 0)) {
+                                          let upIdx = aboveIdx; while (upIdx >= 0 && prev[upIdx].initR <= 0) {
                                             upIdx--;
-                                          } let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && !(prev[downIdx].initR > 0)) {
+                                          } let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && prev[downIdx].initR <= 0) {
                                             downIdx++;
                                           } const haveUpper = upIdx >= 0; const haveLower = downIdx !== null && downIdx < prev.length; if (!haveUpper && !haveLower) {
                                             return 0;
                                           } if (haveUpper && !haveLower) {
-                                            const aboveVal = prev[upIdx].initR; if (!(aboveVal > 0)) {
+                                            const aboveVal = prev[upIdx].initR; if (aboveVal <= 0) {
                                               return 0;
                                             } if (aboveVal === 10) {
                                               return 5;
@@ -3023,12 +3026,12 @@ export default function App() {
                                               mid = aboveVal - 5;
                                             } if (mid <= 5) {
                                               mid = 10;
-                                            } if (!(mid < aboveVal && mid > 5)) {
+                                            } if (mid >= aboveVal || mid <= 5) {
                                               return 0;
                                             } return clamp(mid, 5, 100);
                                           } if (!haveUpper && haveLower) {
                                             return 0;
-                                          } const aboveVal = prev[upIdx].initR; const belowVal = prev[downIdx].initR; const gap = aboveVal - belowVal; if (!(aboveVal > 0) && !(belowVal > 0) || gap <= 5) {
+                                          } const aboveVal = prev[upIdx].initR; const belowVal = prev[downIdx].initR; const gap = aboveVal - belowVal; if (aboveVal <= 0 && belowVal <= 0 || gap <= 5) {
                                             return 0;
                                           } let mid = Math.round(((aboveVal + belowVal) / 2) / 5) * 5; if (mid >= aboveVal) {
                                             mid = aboveVal - 5;
@@ -3832,4 +3835,6 @@ export default function App() {
       </div>
     </div>
   );
-}
+};
+
+export default App;
