@@ -17,12 +17,12 @@ const format2 = (n) => {
   return String(v).padStart(2, '0');
 };
 const formatPct = (n) => `${format2(n)}%`;
-// Helper to format initL/initR values (0 -> 'NP', null -> '—', otherwise format)
+// Helper to format initL/initR values (0 -> 'NP', null/undefined -> '—', otherwise format)
 const formatInitValue = (val) => {
   if (val === 0) {
     return 'NP';
   }
-  if (val === null) {
+  if (val === null || val === undefined) {
     return '—';
   }
   return format2(val);
@@ -192,8 +192,8 @@ const newRow = (over = {}, indexHint = 0) => {
     base,
     location,
     type,
-    initL: over.initL === null ? 50 : over.initL,
-    initR: over.initR === null ? 50 : over.initR,
+    initL: over.initL ?? 50,
+    initR: over.initR ?? 50,
     // Provide a basic fan-out pattern: stagger horizontally & vertically based on index.
     x: 0.2 + ((indexHint % 6) * 0.12), // wraps every 6
     y: 0.15 + Math.floor(indexHint / 6) * 0.18,
@@ -214,8 +214,8 @@ function rowDisplayWithSide(r, side) {
 // Right flipper: strictly DECREASING top->bottom (high -> low)
 function computeAllowedRange(rows, side, index) {
   const vals = side === 'L' ? rows.map(r => r.initL) : rows.map(r => r.initR);
-  const earlierPos = vals.slice(0, index).filter(v => v !== null && v > 0);
-  const laterPos = vals.slice(index + 1).filter(v => v !== null && v > 0);
+  const earlierPos = vals.slice(0, index).filter(v => v !== null && v !== undefined && v > 0);
+  const laterPos = vals.slice(index + 1).filter(v => v !== null && v !== undefined && v > 0);
   if (side === 'L') {
     let minAllowed = earlierPos.length > 0 ? Math.max(...earlierPos) + 5 : 5; // greater than largest earlier
     let maxAllowed = laterPos.length > 0 ? Math.min(...laterPos) - 5 : 100; // less than smallest later
@@ -1547,7 +1547,7 @@ export default function App() {
     if (!rows.length) {
       return false;
     }
-    return rows.every(r => r.base && r.base.length > 0 && r.initL !== null && r.initR !== null);
+    return rows.every(r => r.base && r.base.length > 0 && r.initL !== null && r.initL !== undefined && r.initR !== null && r.initR !== undefined);
   }, [rows]);
 
   // Load a preset from /presets/ folder
@@ -1811,7 +1811,7 @@ export default function App() {
       return;
     }
     const idx = mode === 'random' ? selectedIdx : selectedIdx;
-    const usingOverride = overrideVal !== null;
+    const usingOverride = overrideVal !== null && overrideVal !== undefined;
     const val = validatePercent(usingOverride ? overrideVal : guess);
     if (!usingOverride && (guess === '' || val === null)) {
       setRecallError('0–100 (0 - Not Possible)');
@@ -1944,8 +1944,8 @@ export default function App() {
   useEffect(() => {
     setRows(prev => prev.map(r => ({
       ...r,
-      initL: r.initL === null ? null : snap5(r.initL),
-      initR: r.initR === null ? null : snap5(r.initR),
+      initL: r.initL === null || r.initL === undefined ? null : snap5(r.initL),
+      initR: r.initR === null || r.initR === undefined ? null : snap5(r.initR),
     })));
     setMentalL(m => m.map(v => snap5(v ?? 0)));
     setMentalR(m => m.map(v => snap5(v ?? 0)));
@@ -1972,9 +1972,9 @@ export default function App() {
     const out = rowsArr.map(r => ({...r}));
     for (let i = 0;i < out.length;i++) {
       const raw = out[i].initL;
-      if (raw === null) {
+      if (raw === null || raw === undefined) {
         continue;
-      } // leave nulls untouched
+      } // leave nulls/undefined untouched
       let v = snap5(raw);
       if (v < 0) {
         v = 0;
@@ -1993,9 +1993,9 @@ export default function App() {
     let prevR = 105; // greater than max
     for (let i = 0;i < out.length;i++) {
       const raw = out[i].initR;
-      if (raw === null) {
+      if (raw === null || raw === undefined) {
         continue;
-      } // leave nulls untouched
+      } // leave nulls/undefined untouched
       let v = snap5(raw);
       if (v >= prevR) {
         v = prevR - 5;

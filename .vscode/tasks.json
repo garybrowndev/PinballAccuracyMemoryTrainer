@@ -3,6 +3,7 @@
   "tasks": [
     {
       "label": "Install Dependencies",
+      "detail": "Installs all npm packages required for the project",
       "type": "npm",
       "script": "install",
       "problemMatcher": [],
@@ -13,9 +14,11 @@
     },
     {
       "label": "Lint",
+      "detail": "Checks code for errors and style issues using ESLint",
       "type": "npm",
       "script": "lint",
       "problemMatcher": ["$eslint-stylish"],
+      "dependsOn": ["Install Dependencies"],
       "presentation": {
         "reveal": "always",
         "panel": "shared",
@@ -26,9 +29,10 @@
       "type": "npm",
       "script": "dev",
       "label": "npm: dev",
-      "detail": "vite",
+      "detail": "Starts the Vite development server with hot reload",
       "isBackground": true,
-      "dependsOn": ["Install Dependencies"],
+      "dependsOn": ["Lint"],
+      "dependsOrder": "sequence",
       "problemMatcher": {
         "owner": "custom",
         "pattern": {
@@ -47,6 +51,7 @@
     },
     {
       "label": "Stop npm dev server",
+      "detail": "Terminates all running Node.js processes for Vite dev server",
       "type": "shell",
       "command": "Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'node.exe' -and ($_.CommandLine -like '*vite*' -or $_.CommandLine -like '*npm*dev*') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
       "presentation": {

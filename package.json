@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:standalone": "node build-standalone-complete.js",
-    "lint": "eslint .",
+    "build:standalone:description": "Builds a single self-contained HTML file with all assets embedded for offline use",
+    "lint": "eslint . --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
