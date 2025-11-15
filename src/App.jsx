@@ -1296,16 +1296,43 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           }
           const p0Top = topEdgePoint(selectedSide, 0);
           const p100Top = topEdgePoint(selectedSide, 100);
+          // Measure actual shot box dimensions to calculate accurate bottom corners
+          let boxWidth = 96; // default w-24 (fallback text box)
+          let boxHeight = 80; // default h-20
+          const shotEl = canvasRef.current?.querySelector(`[data-shot-box="${selectedRow.id}"]`);
+          if (shotEl) {
+            try {
+              const br = shotEl.getBoundingClientRect();
+              if (br?.width && br?.height) {
+                boxWidth = br.width;
+                boxHeight = br.height;
+              }
+            } catch { /* swallow measurement errors */ }
+          }
+          // Calculate bottom corners of shot box
+          // Shot box is centered at (selectedRow.x * w, selectedRow.y * h)
+          const boxCenterX = selectedRow.x * w;
+          const boxCenterY = selectedRow.y * h;
+          const boxLeft = boxCenterX - boxWidth / 2;
+          const boxRight = boxCenterX + boxWidth / 2;
+          const boxBottom = boxCenterY + boxHeight / 2;
+          // For proper polygon winding: Left flipper goes 0(left)->100(right), Right flipper goes 0(right)->100(left)
+          // So left flipper connects: p0->p100->boxRight->boxLeft, right flipper connects: p0->p100->boxLeft->boxRight
+          const polygonPoints = selectedSide === 'L'
+            ? `${p0Top.x},${p0Top.y} ${p100Top.x},${p100Top.y} ${boxRight},${boxBottom} ${boxLeft},${boxBottom}`
+            : `${p0Top.x},${p0Top.y} ${p100Top.x},${p100Top.y} ${boxLeft},${boxBottom} ${boxRight},${boxBottom}`;
+          const line1End = selectedSide === 'L' ? boxLeft : boxRight;
+          const line2End = selectedSide === 'L' ? boxRight : boxLeft;
           const greenLayer = (
             <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
-              {/* Shaded wedge between anchors and shot box */}
+              {/* Shaded wedge between anchors and shot box - now a quadrilateral connecting to bottom corners */}
               <polygon
-                points={`${p0Top.x},${p0Top.y} ${p100Top.x},${p100Top.y} ${bx},${by}`}
+                points={polygonPoints}
                 fill={stroke}
                 fillOpacity={0.18}
               />
-              <line x1={p0Top.x} y1={p0Top.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
-              <line x1={p100Top.x} y1={p100Top.y} x2={bx} y2={by} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
+              <line x1={p0Top.x} y1={p0Top.y} x2={line1End} y2={boxBottom} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
+              <line x1={p100Top.x} y1={p100Top.y} x2={line2End} y2={boxBottom} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
             </svg>
           );
           const yellowLayer = recallNode && (
