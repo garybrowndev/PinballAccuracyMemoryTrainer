@@ -111,25 +111,25 @@ window.EMBEDDED_PRESETS = ${JSON.stringify(presets)};
 window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 `;
 
-  js = `${embeddedAssets }\n${ js}`;
+  js = `${embeddedAssets}\n${js}`;
 
   // Replace all image source references to use EMBEDDED_IMAGES
   // Match various patterns for imgSrc construction
-  js = js.replace(
+  js = js.replaceAll(
     /const\s+imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`/g,
     'const imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
-  js = js.replace(
+  js = js.replaceAll(
     /const\s+imgSrc\s*=\s*slug\s*\?\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`\s*:\s*null/g,
     'const imgSrc = slug ? (EMBEDDED_IMAGES[slug] || "") : null',
   );
-  js = js.replace(
+  js = js.replaceAll(
     /imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`/g,
     'imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
 
   // Also replace IMAGE_BASE_URL definition to empty string so it doesn't interfere
-  js = js.replace(
+  js = js.replaceAll(
     /const\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g,
     'const IMAGE_BASE_URL = ""',
   );

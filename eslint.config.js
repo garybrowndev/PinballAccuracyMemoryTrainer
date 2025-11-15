@@ -114,6 +114,11 @@ export default defineConfig([
       'prefer-rest-params': 'error',
       'prefer-spread': 'error',
       'yoda': 'error',
+      'no-constructor-return': 'error',
+      'no-unreachable-loop': 'error',
+      'no-unsafe-optional-chaining': 'error',
+      'no-loss-of-precision': 'error',
+      'grouped-accessor-pairs': 'error',
       // More Style Rules
       'array-bracket-spacing': ['error', 'never'],
       'block-spacing': 'error',
@@ -129,6 +134,9 @@ export default defineConfig([
       'space-before-function-paren': ['error', { anonymous: 'always', named: 'never', asyncArrow: 'always' }],
       'space-in-parens': ['error', 'never'],
       'space-infix-ops': 'error',
+      'object-curly-spacing': ['error', 'always'],
+      'template-curly-spacing': ['error', 'never'],
+      'rest-spread-spacing': ['error', 'never'],
       // More React Rules
       'react/jsx-boolean-value': ['error', 'never'],
       'react/jsx-closing-bracket-location': 'error',
@@ -147,6 +155,8 @@ export default defineConfig([
       'react/no-direct-mutation-state': 'error',
       'react/no-unescaped-entities': 'error',
       'react/void-dom-elements-no-children': 'error',
+      'react/jsx-no-bind': ['error', { allowArrowFunctions: true, allowBind: false, ignoreRefs: true }],
+      'react/no-multi-comp': ['warn', { ignoreStateless: true }],
       // Advanced Error Prevention
       'no-async-promise-executor': 'error',
       'no-await-in-loop': 'error',
@@ -185,6 +195,10 @@ export default defineConfig([
         'newlines-between': 'always',
         'alphabetize': { order: 'asc', caseInsensitive: true },
       }],
+      'import/no-self-import': 'error',
+      'import/no-useless-path-segments': 'error',
+      'import/no-webpack-loader-syntax': 'error',
+      'import/exports-last': 'error',
       // SonarJS Rules - Code Smells & Complexity
       'sonarjs/cognitive-complexity': ['error', 30],
       'sonarjs/no-identical-functions': 'error',
@@ -199,6 +213,8 @@ export default defineConfig([
       'sonarjs/prefer-immediate-return': 'error',
       'sonarjs/prefer-single-boolean-return': 'error',
       'sonarjs/prefer-while': 'error',
+      'sonarjs/no-empty-collection': 'error',
+      'sonarjs/no-extra-arguments': 'error',
       // Unicorn Rules - Modern Best Practices
       'unicorn/better-regex': 'error',
       'unicorn/catch-error-name': 'error',
@@ -255,6 +271,13 @@ export default defineConfig([
       'unicorn/prefer-ternary': 'error',
       'unicorn/prefer-type-error': 'error',
       'unicorn/throw-new-error': 'error',
+      'unicorn/prefer-at': 'error',
+      'unicorn/prefer-code-point': 'error',
+      'unicorn/prefer-string-replace-all': 'error',
+      'unicorn/prefer-array-flat': 'error',
+      'unicorn/prefer-spread': 'error',
+      'unicorn/require-array-join-separator': 'error',
+      'unicorn/require-number-to-fixed-digits-argument': 'error',
       // Promise Rules - Async/Await Best Practices
       'promise/always-return': 'error',
       'promise/no-return-wrap': 'error',
@@ -267,6 +290,7 @@ export default defineConfig([
       'promise/valid-params': 'error',
       'promise/prefer-await-to-then': 'error',
       'promise/prefer-await-to-callbacks': 'error',
+      'promise/no-multiple-resolved': 'error',
       // Security Rules
       'security/detect-object-injection': 'off', // Too many false positives
       'security/detect-non-literal-regexp': 'error',

@@ -44,7 +44,7 @@ const SEVERITY_COLORS = {
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
 const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
 function elementSlug(name) {
-  return name.toLowerCase().replace(/[^\da-z]+/g, '-').replace(/^-+|-+$/g, '');
+  return name.toLowerCase().replaceAll(/[^\da-z]+/g, '-').replaceAll(/^-+|-+$/g, '');
 }
 // Helper to get image src - checks for embedded images first (standalone mode), falls back to path
 function getImageSrc(name) {
@@ -89,7 +89,7 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
           alt={name}
           onLoad={() => setImgVisible(true)}
           onError={() => setImgVisible(false)}
-          className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
+          className={`${imgVisible ? 'opacity-100' : 'opacity-0'} absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
           draggable={false}
         />
       </div>
@@ -114,7 +114,7 @@ const InlineElementThumb = ({ name, selected, onClick }) => {
       type="button"
       onClick={onClick}
       data-shot-chip-thumb
-      className={`${selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500' } relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible`}
+      className={`${selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'} relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible`}
       style={{ width: size, height: size + 18 }} // extra space for hanging label
       aria-pressed={selected}
     >
@@ -130,7 +130,7 @@ const InlineElementThumb = ({ name, selected, onClick }) => {
             alt={name}
             onLoad={() => setImgVisible(true)}
             onError={() => setImgVisible(false)}
-            className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
+            className={`${imgVisible ? 'opacity-100' : 'opacity-0'} absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
             draggable={false}
           />
         )}
@@ -262,8 +262,8 @@ function isotonicWithBounds(current, base, orderAsc) {
       mean = ub;
     }
     const val = snap5(mean);
-    blocks.push({sum, count, lb, ub, value: val});
-    while (blocks.length >= 2 && blocks[blocks.length - 2].value > blocks[blocks.length - 1].value) {
+    blocks.push({ sum, count, lb, ub, value: val });
+    while (blocks.length >= 2 && blocks.at(-2).value > blocks.at(-1).value) {
       const b = blocks.pop();
       const a = blocks.pop();
       const merged = { sum: a.sum + b.sum, count: a.count + b.count, lb: Math.max(a.lb, b.lb), ub: Math.min(a.ub, b.ub), value: 0 };
@@ -276,7 +276,7 @@ function isotonicWithBounds(current, base, orderAsc) {
       blocks.push(merged);
     }
   }
-  const adjusted = Array.from({length: values.length});
+  const adjusted = Array.from({ length: values.length });
   let k = 0; for (const bl of blocks) {
     for (let j = 0;j < bl.count;j++) {
       adjusted[k++] = snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value)));
@@ -420,7 +420,7 @@ const Chip = ({ active, children, onClick, className = '', disabled = false }) =
             ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
             : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
         }${disabled ? ' opacity-60 cursor-not-allowed' : ''
-        }${className ? ` ${ className}` : ''}`
+        }${className ? ` ${className}` : ''}`
       }
     >
       {content}
@@ -642,7 +642,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
                       return m;
                     } const copy = { ...m }; delete copy[r.id]; return copy;
                   })}
-                  className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
+                  className={`${imgVisible ? 'opacity-100' : 'opacity-0'} absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
                   draggable={false}
                 />
               ) : null}
@@ -1092,7 +1092,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                       return m;
                     } const copy = { ...m }; delete copy[r.id]; return copy;
                   })}
-                  className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150`}
+                  className={`${imgVisible ? 'opacity-100' : 'opacity-0'} absolute inset-0 w-full h-full object-cover transition-opacity duration-150`}
                   draggable={false}
                 />
                 {imgVisible ? <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>{r.type || '—'}</div> : null}
@@ -1355,7 +1355,7 @@ const App = () => {
   const [toasts, setToasts] = useState([]); // {id,msg}
   const _pushToast = useCallback((msg) => {
     const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
-    setToasts(t => [...t, {id, msg}]);
+    setToasts(t => [...t, { id, msg }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3200);
   }, []);
   // Setup state
@@ -1665,8 +1665,8 @@ const App = () => {
     const bR = rows.map(r => snap5(r.initR));
     setBaseL(bL); setBaseR(bR);
     // Determine original ordering by starting values
-    const ascL = rows.map((r, i) => ({i, v: r.initL})).sort((a, b) => a.v - b.v).map(x => x.i);
-    const ascR = rows.map((r, i) => ({i, v: r.initR})).sort((a, b) => a.v - b.v).map(x => x.i);
+    const ascL = rows.map((r, i) => ({ i, v: r.initL })).sort((a, b) => a.v - b.v).map(x => x.i);
+    const ascR = rows.map((r, i) => ({ i, v: r.initR })).sort((a, b) => a.v - b.v).map(x => x.i);
     // Candidate random offsets (independent) within allowed band using configurable steps
     const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // still capped at 4 for initial randomization.
     // Edge case note: if initRandSteps exceeds the eventual drift usableSteps (floor(driftMag)) then
@@ -1932,11 +1932,11 @@ const App = () => {
     setRecallError('');
   }
 
-  function endSession() {
+  const endSession = useCallback(() => {
     setFinalPhase(true);
-  }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- setState functions are stable
 
-  function resetAll() {
+  const resetAll = useCallback(() => {
     setInitialized(false);
     setHiddenL([]); setHiddenR([]);
     setMentalL([]); setMentalR([]);
@@ -1946,7 +1946,7 @@ const App = () => {
     setFinalRecallL([]); setFinalRecallR([]);
     // Clear any stale selection so overlay lines don't render before canvas measures
     setSelectedBlockId(null);
-  }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- setState functions are stable
 
   // Final grading
   const finalScore = useMemo(() => {
@@ -1996,7 +1996,7 @@ const App = () => {
   function normalizeRowPercents(rowsArr) {
     // Left side normalization: non-decreasing; zeros allowed until first positive; after first positive, strictly increasing (>= +5); no zeros allowed below first positive.
     let lastNonZero = 0;
-    const out = rowsArr.map(r => ({...r}));
+    const out = rowsArr.map(r => ({ ...r }));
     for (const element of out) {
       const raw = element.initL;
       if (raw === null || raw === undefined) {
@@ -2043,11 +2043,11 @@ const App = () => {
       // Helper: align current spatial left->right order to current top->bottom order if out of sync.
       // eslint-disable-next-line unicorn/consistent-function-scoping
       function alignPositions(list) {
-        const sortedPositions = [...list].sort((a, b) => a.x - b.x).map(r => ({x: r.x, y: r.y}));
-        return list.map((r, i) => ({...r, x: sortedPositions[i].x, y: sortedPositions[i].y }));
+        const sortedPositions = [...list].sort((a, b) => a.x - b.x).map(r => ({ x: r.x, y: r.y }));
+        return list.map((r, i) => ({ ...r, x: sortedPositions[i].x, y: sortedPositions[i].y }));
       }
       // Start from a deep-ish copy (shallow objects cloned so we can mutate x,y safely)
-      let arr = prev.map(r => ({...r}));
+      let arr = prev.map(r => ({ ...r }));
       // Pre-align if previous operations left them mismatched.
       const misaligned = (() => {
         const orderByX = [...arr].sort((a, b) => a.x - b.x);
@@ -2153,7 +2153,7 @@ const App = () => {
       {shotMenuAnchor && openShotMenuId !== null ? createPortal(
         <div
           className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
-          style={{ left: `${Math.max(8, shotMenuAnchor.x) }px`, top: `${shotMenuAnchor.y }px` }}
+          style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
           role="dialog"
           aria-label="Select shot type"
         >
@@ -2172,14 +2172,14 @@ const App = () => {
                   // Clicking the currently selected shot deselects it; keep menu open
                     setRows(prev => {
                       const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
-                        next[idx] = {...next[idx], base: '', type: ''};
+                        next[idx] = { ...next[idx], base: '', type: '' };
                       } return next;
                     });
                   } else {
                   // Selecting a new shot; close menu
                     setRows(prev => {
                       const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
-                        next[idx] = {...next[idx], base: b, type: buildType(b, next[idx].location || '')};
+                        next[idx] = { ...next[idx], base: b, type: buildType(b, next[idx].location || '') };
                       } return next;
                     });
                     setOpenShotMenuId(null); setShotMenuAnchor(null);
@@ -2194,7 +2194,7 @@ const App = () => {
       {locMenuAnchor && openLocMenuId !== null ? createPortal(
         <div
           className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
-          style={{ left: `${Math.max(8, locMenuAnchor.x) }px`, top: `${locMenuAnchor.y }px` }}
+          style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
           role="dialog"
           aria-label="Select location"
         >
@@ -2210,20 +2210,20 @@ const App = () => {
                   // Clicking the currently selected location deselects it; keep menu open
                     setRows(prev => {
                       const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
-                        const base = next[idx].base || ''; next[idx] = {...next[idx], location: '', type: buildType(base, '')};
+                        const base = next[idx].base || ''; next[idx] = { ...next[idx], location: '', type: buildType(base, '') };
                       } return next;
                     });
                   } else {
                   // Selecting a new location; close menu
                     setRows(prev => {
                       const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
-                        const base = next[idx].base || ''; next[idx] = {...next[idx], location: loc, type: buildType(base, loc)};
+                        const base = next[idx].base || ''; next[idx] = { ...next[idx], location: loc, type: buildType(base, loc) };
                       } return next;
                     });
                     setOpenLocMenuId(null); setLocMenuAnchor(null);
                   }
                 }}
-                className={`${isSel ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700' } text-[11px] px-2 py-1 rounded-md text-left`}
+                className={`${isSel ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'} text-[11px] px-2 py-1 rounded-md text-left`}
               >{loc}</button>
             );
           })}
@@ -2233,12 +2233,12 @@ const App = () => {
       {addCountAnchor && rows.length === 0 ? createPortal(
         <div
           className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
-          style={{ left: `${Math.max(8, addCountAnchor.x) }px`, top: `${addCountAnchor.y }px` }}
+          style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
           role="dialog"
           aria-label="How many shots to add"
         >
           <div className="grid grid-cols-4 gap-1">
-            {Array.from({length: 20}, (_, k) => k + 1).map(n => (
+            {Array.from({ length: 20 }, (_, k) => k + 1).map(n => (
               <button
                 key={n}
                 type="button"
@@ -2247,7 +2247,7 @@ const App = () => {
                   const count = n;
                   // eslint-disable-next-line unicorn/consistent-function-scoping
                   const buildRows = (cnt) => {
-                    const asc = Array.from({length: cnt}, (_, i) => snap5(((i + 1) / (cnt + 1)) * 100));
+                    const asc = Array.from({ length: cnt }, (_, i) => snap5(((i + 1) / (cnt + 1)) * 100));
                     for (let i = 1;i < asc.length;i++) {
                       if (asc[i] <= asc[i - 1]) {
                         asc[i] = Math.min(100, asc[i - 1] + 5);
@@ -2307,7 +2307,7 @@ const App = () => {
                           loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null);
                         }}
                         title={preset.name}
-                        className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200' } text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
+                        className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200'} text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
                       >
                         <span>{preset.name}</span>
                       </button>
@@ -2434,7 +2434,7 @@ const App = () => {
                                   if (!n) {
                                     return prev;
                                   }
-                                  const asc = Array.from({length: n}, (_, i) => snap5(((i + 1) / (n + 1)) * 100));
+                                  const asc = Array.from({ length: n }, (_, i) => snap5(((i + 1) / (n + 1)) * 100));
                                   for (let k = 1;k < asc.length;k++) {
                                     if (asc[k] <= asc[k - 1]) {
                                       asc[k] = Math.min(100, asc[k - 1] + 5);
@@ -2482,7 +2482,7 @@ const App = () => {
                                   const n = prev.length; if (!n) {
                                     return prev;
                                   }
-                                  const asc = Array.from({length: n}, (_, i) => snap5(((i + 1) / (n + 1)) * 100));
+                                  const asc = Array.from({ length: n }, (_, i) => snap5(((i + 1) / (n + 1)) * 100));
                                   for (let k = 1;k < asc.length;k++) {
                                     if (asc[k] <= asc[k - 1]) {
                                       asc[k] = Math.min(100, asc[k - 1] + 5);
@@ -2608,7 +2608,7 @@ const App = () => {
                                         setSelectedIdx(i); setSelectedBlockId(r.id);
                                         // Only open the shot menu, do not clear selection
                                         const rect = e.currentTarget.getBoundingClientRect();
-                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY - ((rect.bottom - rect.top) * 0.7)});
+                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY - ((rect.bottom - rect.top) * 0.7) });
                                         setOpenShotMenuId(r.id);
                                         setOpenLocMenuId(null);
                                       }}
@@ -2722,7 +2722,7 @@ const App = () => {
                                             newActual = allowedMin;
                                           }
                                           setRows(prev => {
-                                            const next = [...prev]; next[i] = {...next[i], initL: newActual}; return next;
+                                            const next = [...prev]; next[i] = { ...next[i], initL: newActual }; return next;
                                           });
                                         }}
                                         style={{ background: trackBg }}
@@ -2731,15 +2731,15 @@ const App = () => {
                                       {range && !(allowedMin === 5 && allowedMax === 95) ? (() => {
                                         return (
                                           <>
-                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${leftGreyPct }%` }}>{format2(allowedMin)}</div>
-                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${rightGreyStartPct }%` }}>{format2(allowedMax)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${leftGreyPct}%` }}>{format2(allowedMin)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${rightGreyStartPct}%` }}>{format2(allowedMax)}</div>
                                           </>
                                         );
                                       })() : null}
                                       {actual !== null && range ? (() => {
                                         const pct = ((actual - 5) / span) * 100;
                                         return (
-                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct }%` }}>{format2(actual)}</div>
+                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct}%` }}>{format2(actual)}</div>
                                         );
                                       })() : null}
                                     </div>
@@ -2833,7 +2833,7 @@ const App = () => {
                                             newActual = allowedMin;
                                           }
                                           setRows(prev => {
-                                            const next = [...prev]; next[i] = {...next[i], initR: newActual}; return next;
+                                            const next = [...prev]; next[i] = { ...next[i], initR: newActual }; return next;
                                           });
                                         }}
                                         style={{ background: trackBg }}
@@ -2842,15 +2842,15 @@ const App = () => {
                                       {range && !(allowedMin === 5 && allowedMax === 95) ? (() => {
                                         return (
                                           <>
-                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${leftStopPct }%` }}>{format2(allowedMax)}</div>
-                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${rightStartPct }%` }}>{format2(allowedMin)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${leftStopPct}%` }}>{format2(allowedMax)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${rightStartPct}%` }}>{format2(allowedMin)}</div>
                                           </>
                                         );
                                       })() : null}
                                       {actual !== null && range ? (() => {
                                         const pct = ((95 - actual) / span) * 100;
                                         return (
-                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct }%` }}>{format2(actual)}</div>
+                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct}%` }}>{format2(actual)}</div>
                                         );
                                       })() : null}
                                     </div>
@@ -3127,7 +3127,7 @@ const App = () => {
                   onClick={canStart ? startSession : undefined}
                   disabled={!canStart}
                   title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
-                  className={`px-4 py-2 rounded-2xl text-white ${ canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
+                  className={`px-4 py-2 rounded-2xl text-white ${canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
                 >
                   Start Session
                 </button>
@@ -3311,7 +3311,7 @@ const App = () => {
                               {has ? (
                                 <>
                                   {a.label} <span className="text-slate-500">(</span>
-                                  <span style={{color: SEVERITY_COLORS[a.severity] || '#334155'}}>{a.severity}</span>{' '}
+                                  <span style={{ color: SEVERITY_COLORS[a.severity] || '#334155' }}>{a.severity}</span>{' '}
                                   <span className="text-slate-500">{a.delta > 0 ? '+' : ''}{format2(Math.abs(a.delta))}%)</span>
                                 </>
                               ) : 'N/A'}
@@ -3504,7 +3504,7 @@ const App = () => {
               <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
                 <div className="text-slate-600 mb-1">Last attempt</div>
                 <div className="text-2xl font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
-                <div className={`text-[11px] mt-1 text-center min-h-[14px] ${ attempts[0] ? 'text-slate-500' : 'text-slate-400'}`}>
+                <div className={`text-[11px] mt-1 text-center min-h-[14px] ${attempts[0] ? 'text-slate-500' : 'text-slate-400'}`}>
                   {attempts[0]
                     ? `Base ${attempts[0].basePoints}${attempts[0].adjustPenalty ? ` − Penalty ${attempts[0].adjustPenalty}` : ''}`
                     : 'Base —'}
@@ -3545,7 +3545,7 @@ const App = () => {
               {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
               <div>
                 {(() => {
-                  const values = Array.from({length: 19}, (_, k) => (k + 1) * 5); // 5..95
+                  const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
                   const ordered = selectedSide === 'L' ? values : [...values].reverse();
                   // Evenly spaced circular chips (normal mode only). Use CSS grid for equal column widths.
                   const chipFontPx = 24; // chosen for readability in normal mode
@@ -3553,7 +3553,7 @@ const App = () => {
                     <div className="w-full select-none flex flex-col items-stretch">
                       <div
                         className="grid w-full"
-                        style={{ gridTemplateColumns: `repeat(${ordered.length}, 1fr)`}}
+                        style={{ gridTemplateColumns: `repeat(${ordered.length}, 1fr)` }}
                       >
                         {ordered.map(v => (
                           <button
@@ -3571,7 +3571,7 @@ const App = () => {
                           type="button"
                           onClick={() => submitAttempt(0)}
                           className="px-2 py-0 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 active:scale-[0.95] transition-transform font-semibold text-slate-700"
-                          style={{ fontSize: chipFontPx}}
+                          style={{ fontSize: chipFontPx }}
                         ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                       </div>
                     </div>
@@ -3646,9 +3646,9 @@ const App = () => {
                 const gap = 6 * s; // base gap 6px
                 const iconSize = Math.max(14, Math.round(14 * s));
                 return (
-                  <div className="flex items-center justify-between px-4 py-2 text-slate-200" style={{fontSize}}>
-                    <div className="font-medium" style={{fontSize: Math.round(fontSize * 1.05)}}>Practice Playfield</div>
-                    <div className="flex items-center" style={{gap}}>
+                  <div className="flex items-center justify-between px-4 py-2 text-slate-200" style={{ fontSize }}>
+                    <div className="font-medium" style={{ fontSize: Math.round(fontSize * 1.05) }}>Practice Playfield</div>
+                    <div className="flex items-center" style={{ gap }}>
                       <button
                         type="button"
                         onClick={() => setPlayfieldFullscreen(false)}
@@ -3693,7 +3693,7 @@ const App = () => {
                     // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
                     //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
                     // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
-                    const values = Array.from({length: 19}, (_, k) => (k + 1) * 5); // 5..95
+                    const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
                     const ordered = selectedSide === 'L' ? values : [...values].reverse();
                     const totalChips = 19; // numeric chips only (NP below)
                     // Estimate inner horizontal padding (px). Container uses px-4 on parent (16px each side).
