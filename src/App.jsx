@@ -7,7 +7,9 @@ import { createPortal } from 'react-dom';
 
 // ---------- helpers ----------
 const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
-function snap5(v) { return Math.min(100, Math.max(0, Math.round(v / 5) * 5)); }
+function snap5(v) {
+  return Math.min(100, Math.max(0, Math.round(v / 5) * 5));
+}
 const rndInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a; // inclusive
 // Format percentage values with at least two digits (00, 05, 10, ...) retaining % where appropriate.
 const format2 = (n) => {
@@ -19,10 +21,10 @@ const formatPct = (n) => `${format2(n)}%`;
 // Updated per request: perfect bright green, slight darker green, fairly yellow, very bright red
 // Chosen accessible hues (WCAG contrast vs white/black text considered). Adjust if future theme changes.
 const SEVERITY_COLORS = {
-  perfect: '#4ade80',  // lighter/brighter green (emerald-400)
-  slight:  '#15803d',  // darker green (emerald-700)
-  fairly:  '#f59e0b',  // yellow (amber-500)
-  very:    '#dc2626',  // bright red (red-600)
+  perfect: '#4ade80', // lighter/brighter green (emerald-400)
+  slight: '#15803d', // darker green (emerald-700)
+  fairly: '#f59e0b', // yellow (amber-500)
+  very: '#dc2626', // bright red (red-600)
 };
 
 // --- Image infrastructure for shot base element tiles ---
@@ -31,7 +33,9 @@ const SEVERITY_COLORS = {
 // If an image 404s the browser will show the fallback text layer (we keep text absolutely positioned).
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
 const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
-function elementSlug(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+function elementSlug(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
 // Helper to get image src - checks for embedded images first (standalone mode), falls back to path
 function getImageSrc(name) {
   const slug = elementSlug(name);
@@ -54,7 +58,7 @@ function ElementTile({ name, selected, onSelect, hasSelection = true }) {
       type="button"
       onClick={onSelect}
       className={
-        `relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ${ 
+        `relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ${
           selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'}`
       }
       style={{ width: size, height: size + 18, opacity: hasSelection ? (selected ? 1 : 0.45) : 1 }}
@@ -71,7 +75,7 @@ function ElementTile({ name, selected, onSelect, hasSelection = true }) {
           alt={name}
           onLoad={() => setImgVisible(true)}
           onError={() => setImgVisible(false)}
-          className={`${imgVisible ? 'opacity-100' : 'opacity-0'  } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
+          className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
           draggable={false}
         />
       </div>
@@ -88,13 +92,15 @@ function InlineElementThumb({ name, selected, onClick }) {
   const imgSrc = name ? getImageSrc(name) : null;
   const [imgVisible, setImgVisible] = React.useState(false);
   const size = 80; // square image area
-  if (!name) {return null;}
+  if (!name) {
+    return null;
+  }
   return (
     <button
       type="button"
       onClick={onClick}
       data-shot-chip-thumb
-      className={`${selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'  } relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible`}
+      className={`${selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500' } relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible`}
       style={{ width: size, height: size + 18 }} // extra space for hanging label
       aria-pressed={selected}
     >
@@ -110,7 +116,7 @@ function InlineElementThumb({ name, selected, onClick }) {
             alt={name}
             onLoad={() => setImgVisible(true)}
             onError={() => setImgVisible(false)}
-            className={`${imgVisible ? 'opacity-100' : 'opacity-0'  } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
+            className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
             draggable={false}
           />
         )}
@@ -132,28 +138,34 @@ function InlineElementThumb({ name, selected, onClick }) {
 //  4. Combined multi-target groupings: 'Standups' (spot targets) and 'Drops' treated separately due to distinct strategic behavior.
 const BASE_ELEMENTS = [
   // Very Common / Core geometry & ubiquitous scoring surfaces
-  'Ramp','Standups','Orbit','Drops','Spinner','Scoop','Lane',
+  'Ramp', 'Standups', 'Orbit', 'Drops', 'Spinner', 'Scoop', 'Lane',
   // Common but slightly more situational or not on every single game
-  'Toy','Captive Ball','Saucer','Loop',
+  'Toy', 'Captive Ball', 'Saucer', 'Loop',
   // Regular specialty / feature mechs & control elements
-  'Lock','VUK','Bumper','Deadend','Gate','Magnet',
+  'Lock', 'VUK', 'Bumper', 'Deadend', 'Gate', 'Magnet',
   // Occasional (era or design style dependent)
-  'Rollover','Vari Target','Roto Target',
+  'Rollover', 'Vari Target', 'Roto Target',
 ];
 // Added extended location variants to support richer spatial descriptors in practice:
 // Previous: Left, Center, Right. New additions: Bottom, Top, Upper, Lower, Side.
 // These simply expand selectable suffixes; no logic elsewhere depends on specific set/order.
-const LOCATIONS = ['Left','Right','Center','Side','Top','Upper','Bottom','Lower'];
+const LOCATIONS = ['Left', 'Right', 'Center', 'Side', 'Top', 'Upper', 'Bottom', 'Lower'];
 
 function buildType(base, location) {
-  if (!base) {return '';}
+  if (!base) {
+    return '';
+  }
   // If no location specified, return base unsuffixed
-  if (!location) {return base;}
+  if (!location) {
+    return base;
+  }
   // 'Base' sentinel or empty string both mean unsuffixed
-  if (location === 'Base') {return base;}
+  if (location === 'Base') {
+    return base;
+  }
   return `${location} ${base}`;
 }
-const FLIPPERS = ['L','R']; // left/right flippers
+const FLIPPERS = ['L', 'R']; // left/right flippers
 
 // Current row schema only
 // Create a new shot row; if caller doesn't supply x/y we auto-distribute them to avoid overlap.
@@ -175,31 +187,39 @@ const newRow = (over = {}, indexHint = 0) => {
   };
 };
 
-function rowDisplay(r) { return r ? (r.type || buildType(r.base, r.location)) : ''; }
-function rowDisplayWithSide(r, side) { return r ? `${side === 'L' ? 'Left Flipper' : 'Right Flipper'} → ${rowDisplay(r)}` : ''; }
+function rowDisplay(r) {
+  return r ? (r.type || buildType(r.base, r.location)) : '';
+}
+function rowDisplayWithSide(r, side) {
+  return r ? `${side === 'L' ? 'Left Flipper' : 'Right Flipper'} → ${rowDisplay(r)}` : '';
+}
 
 
 // Compute inclusive min/max positive (>=5) range for slider given ordering constraints (0 neutral/not part of ordering)
 // Left flipper: strictly INCREASING top->bottom (low -> high)
 // Right flipper: strictly DECREASING top->bottom (high -> low)
 function computeAllowedRange(rows, side, index) {
-  const vals = side==='L' ? rows.map(r => r.initL) : rows.map(r => r.initR);
-  const earlierPos = vals.slice(0,index).filter(v => v!==null && v>0);
-  const laterPos = vals.slice(index+1).filter(v => v!==null && v>0);
+  const vals = side === 'L' ? rows.map(r => r.initL) : rows.map(r => r.initR);
+  const earlierPos = vals.slice(0, index).filter(v => v !== null && v > 0);
+  const laterPos = vals.slice(index + 1).filter(v => v !== null && v > 0);
   if (side === 'L') {
     let minAllowed = earlierPos.length ? Math.max(...earlierPos) + 5 : 5; // greater than largest earlier
-    let maxAllowed = laterPos.length ? Math.min(...laterPos) - 5 : 100;   // less than smallest later
+    let maxAllowed = laterPos.length ? Math.min(...laterPos) - 5 : 100; // less than smallest later
     minAllowed = Math.max(5, minAllowed);
     maxAllowed = Math.min(100, maxAllowed);
-    if (minAllowed > maxAllowed) {return null;}
+    if (minAllowed > maxAllowed) {
+      return null;
+    }
     return [minAllowed, maxAllowed];
   } else { // Right: descending
     // For descending: value[i] < all earlier positives AND value[i] > all later positives.
     let maxAllowed = earlierPos.length ? Math.min(...earlierPos) - 5 : 100; // smaller than smallest earlier
-    let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5;       // greater than largest later
+    let minAllowed = laterPos.length ? Math.max(...laterPos) + 5 : 5; // greater than largest later
     maxAllowed = Math.min(100, maxAllowed);
     minAllowed = Math.max(5, minAllowed);
-    if (minAllowed > maxAllowed) {return null;}
+    if (minAllowed > maxAllowed) {
+      return null;
+    }
     return [minAllowed, maxAllowed];
   }
 }
@@ -208,7 +228,9 @@ function computeAllowedRange(rows, side, index) {
 // Bounded isotonic regression preserving initial ordering defined by orderAsc.
 // Each point i constrained within base[i] ± 20 and 0..100; values snapped to 5.
 function isotonicWithBounds(current, base, orderAsc) {
-  if (!current.length) {return current;}
+  if (!current.length) {
+    return current;
+  }
   const lower = base.map(v => Math.max(0, v - 20));
   const upper = base.map(v => Math.min(100, v + 20));
   const inOrderIdx = orderAsc;
@@ -216,69 +238,95 @@ function isotonicWithBounds(current, base, orderAsc) {
   const lowers = inOrderIdx.map(i => lower[i]);
   const uppers = inOrderIdx.map(i => upper[i]);
   const blocks = [];
-  for (let i=0;i<values.length;i++) {
+  for (let i = 0;i < values.length;i++) {
     const sum = values[i];
     const count = 1;
     const lb = lowers[i];
     const ub = uppers[i];
-    let mean = sum / count; if (mean < lb) {mean = lb;} else if (mean > ub) {mean = ub;}
+    let mean = sum / count; if (mean < lb) {
+      mean = lb;
+    } else if (mean > ub) {
+      mean = ub;
+    }
     const val = snap5(mean);
-    blocks.push({sum,count,lb,ub,value:val});
-    while (blocks.length >=2 && blocks[blocks.length-2].value > blocks[blocks.length-1].value) {
+    blocks.push({sum, count, lb, ub, value: val});
+    while (blocks.length >= 2 && blocks[blocks.length - 2].value > blocks[blocks.length - 1].value) {
       const b = blocks.pop();
       const a = blocks.pop();
-      const merged = { sum: a.sum + b.sum, count: a.count + b.count, lb: Math.max(a.lb,b.lb), ub: Math.min(a.ub,b.ub), value:0 };
-      let m = merged.sum / merged.count; if (m < merged.lb) {m = merged.lb;} else if (m > merged.ub) {m = merged.ub;}
+      const merged = { sum: a.sum + b.sum, count: a.count + b.count, lb: Math.max(a.lb, b.lb), ub: Math.min(a.ub, b.ub), value: 0 };
+      let m = merged.sum / merged.count; if (m < merged.lb) {
+        m = merged.lb;
+      } else if (m > merged.ub) {
+        m = merged.ub;
+      }
       merged.value = snap5(m);
       blocks.push(merged);
     }
   }
   const adjusted = new Array(values.length);
-  let k=0; for (const bl of blocks) { for (let j=0;j<bl.count;j++) {adjusted[k++] = snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value)));} }
+  let k = 0; for (const bl of blocks) {
+    for (let j = 0;j < bl.count;j++) {
+      adjusted[k++] = snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value)));
+    }
+  }
   const next = [...current];
-  for (let i=0;i<inOrderIdx.length;i++) {next[inOrderIdx[i]] = adjusted[i];}
+  for (let i = 0;i < inOrderIdx.length;i++) {
+    next[inOrderIdx[i]] = adjusted[i];
+  }
   return next;
 }
 
 // Ensure strict increasing / decreasing ordering (depending on provided index order) within ±20 bounds and snapping to 5.
 function strictlyIncrease(values, base, orderAsc) {
-  if (!values.length) {return values;}
+  if (!values.length) {
+    return values;
+  }
   const idxs = orderAsc;
   const arr = idxs.map(i => values[i]);
   const bases = idxs.map(i => base[i]);
-  for (let i=1;i<arr.length;i++) {
-    if (arr[i] <= arr[i-1]) {
+  for (let i = 1;i < arr.length;i++) {
+    if (arr[i] <= arr[i - 1]) {
       const b = bases[i];
       const hi = Math.min(100, b + 20);
-      let candidate = snap5(arr[i-1] + 5);
+      let candidate = snap5(arr[i - 1] + 5);
       if (candidate > hi) {
-        let j=i-1;
-        while (j>=0 && candidate>hi) {
+        let j = i - 1;
+        while (j >= 0 && candidate > hi) {
           const bj = bases[j];
           const loPrev = Math.max(0, bj - 20);
           const lowered = snap5(arr[j] - 5);
-          if (lowered >= loPrev && (j===0 || lowered > arr[j-1])) { arr[j] = lowered; } else {break;}
-          candidate = snap5(arr[i-1] + 5);
+          if (lowered >= loPrev && (j === 0 || lowered > arr[j - 1])) {
+            arr[j] = lowered;
+          } else {
+            break;
+          }
+          candidate = snap5(arr[i - 1] + 5);
           j--;
         }
         candidate = Math.min(hi, candidate);
       }
-      if (candidate <= arr[i-1]) {candidate = arr[i-1] + 5;}
+      if (candidate <= arr[i - 1]) {
+        candidate = arr[i - 1] + 5;
+      }
       arr[i] = candidate;
     }
   }
   const out = [...values];
-  for (let k=0;k<idxs.length;k++) {out[idxs[k]] = arr[k];}
-  for (let k=0;k<idxs.length;k++) {
+  for (let k = 0;k < idxs.length;k++) {
+    out[idxs[k]] = arr[k];
+  }
+  for (let k = 0;k < idxs.length;k++) {
     const i = idxs[k];
     const b = base[i];
     const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
     out[i] = snap5(Math.min(hi, Math.max(lo, out[i])));
-    if (k>0) {
-      const prevIdx = idxs[k-1];
+    if (k > 0) {
+      const prevIdx = idxs[k - 1];
       if (out[i] <= out[prevIdx]) {
         let nv = snap5(out[prevIdx] + 5);
-        if (nv > hi) {nv = hi;}
+        if (nv > hi) {
+          nv = hi;
+        }
         out[i] = nv;
       }
     }
@@ -326,7 +374,7 @@ const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, ste
     onChange={(e) => onChange(e.target.value)}
     onKeyDown={onKeyDown}
     className={
-      `w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${ 
+      `w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${
         className || ''}`
     }
   />
@@ -353,12 +401,12 @@ const Chip = ({ active, children, onClick, className = '', disabled = false }) =
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       className={
-        `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center inline-flex items-center justify-center ${ 
+        `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center inline-flex items-center justify-center ${
           active
             ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300' 
-        }${disabled ? ' opacity-60 cursor-not-allowed' : '' 
-        }${className ? ` ${  className}` : ''}`
+            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+        }${disabled ? ' opacity-60 cursor-not-allowed' : ''
+        }${className ? ` ${ className}` : ''}`
       }
     >
       {content}
@@ -375,9 +423,11 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
   const [boxScale, setBoxScale] = useState(1);
   // Auto-arrange rows along arc; effect recomputes when rows array changes length or order.
   useEffect(() => {
-    if (!rows.length) {return;}
+    if (!rows.length) {
+      return;
+    }
     const endpointY = 550; const apexY = 100; const chord = 1000; const sagitta = endpointY - apexY; // 450
-    const R = (sagitta*sagitta + (chord/2)*(chord/2))/(2*sagitta);
+    const R = (sagitta * sagitta + (chord / 2) * (chord / 2)) / (2 * sagitta);
     const centerY = apexY + R; const centerX = 500;
     const n = rows.length;
     // Distribute evenly along horizontal span (x-axis) to ensure equal horizontal spacing
@@ -385,16 +435,16 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     const minGap = 20; // minimum desired gap between boxes at full scale
     const minMargin = baseBoxWidth / 2; // absolute minimum margin at full scale (40)
     const comfortMargin = 120; // comfortable margin for small counts
-    
+
     // Step 1: Calculate if we can fit at full scale (1.0) with comfortable spacing
     const totalBoxWidthAtFullScale = n * baseBoxWidth;
     const neededGaps = (n - 1) * minGap;
     const spaceNeededComfort = totalBoxWidthAtFullScale + neededGaps;
     const maxMarginAtFullScale = Math.max(minMargin, (chord - spaceNeededComfort) / 2);
-    
+
     let scale = 1.0;
     let margin = Math.min(comfortMargin, maxMarginAtFullScale);
-    
+
     // Step 2: If comfortable margin isn't achievable, check if we fit with minimum margin
     if (margin < minMargin) {
       // Try to fit at full scale with minimum margins
@@ -412,7 +462,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
         margin = minMargin;
       }
     }
-    
+
     const usableWidth = chord - (2 * margin);
     const fracs = n === 1 ? [0.5] : Array.from({ length: n }, (_, i) => i / (n - 1));
     const newPositions = fracs.map(f => {
@@ -422,7 +472,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
       // Circle: (x - centerX)^2 + (y - centerY)^2 = R^2
       // Solve for y (taking the upper part of circle - negative sqrt since arc curves upward)
       const dx = xPos - centerX;
-      const discriminant = R*R - dx*dx;
+      const discriminant = R * R - dx * dx;
       // Arc is on upper part of circle (y < centerY), so take negative sqrt
       const yPos = discriminant >= 0 ? centerY - Math.sqrt(discriminant) : apexY;
       return { x: xPos / 1000, y: yPos / 1000 };
@@ -432,7 +482,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
     for (let i = 0; i < rows.length; i++) {
       const np = newPositions[i];
       const r = rows[i];
-      if (r.x !== np.x || r.y !== np.y) { anyDiff = true; break; }
+      if (r.x !== np.x || r.y !== np.y) {
+        anyDiff = true; break;
+      }
     }
     // Update scale if changed (compare with small epsilon for float precision)
     if (Math.abs(scale - boxScale) > 0.001) {
@@ -446,7 +498,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
 
   // Drag removed; no clamping helper needed.
 
-  const handleMouseDown = (e, id) => { e.stopPropagation(); setSelectedId(id); };
+  const handleMouseDown = (e, id) => {
+    e.stopPropagation(); setSelectedId(id);
+  };
 
   // Drag logic removed.
 
@@ -461,7 +515,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
         {onClear && (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onClear(); }}
+            onClick={(e) => {
+              e.stopPropagation(); onClear();
+            }}
             className="absolute left-3 bottom-3 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
             title="Clear all shots"
             aria-label="Clear all shots"
@@ -481,17 +537,17 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
         {/* Precise clickable flipper paths (no visible outline when selected) */}
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 1000" preserveAspectRatio="none">
           {(() => {
-            function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl=0.6) {
+            function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl = 0.6) {
               const dx = tip.x - base.x, dy = tip.y - base.y;
-              const len = Math.sqrt(dx*dx + dy*dy) || 1;
+              const len = Math.sqrt(dx * dx + dy * dy) || 1;
               const ux = dx / len, uy = dy / len;
               const px = -uy, py = ux;
               const halfTip = tipWidth / 2;
-              const tL = { x: tip.x + px*halfTip, y: tip.y + py*halfTip };
-              const tR = { x: tip.x - px*halfTip, y: tip.y - py*halfTip };
-              const bL = { x: base.x + px*rBase, y: base.y + py*rBase };
-              const bR = { x: base.x - px*rBase, y: base.y - py*rBase };
-              const ctrlTip = { x: tip.x + ux * (roundnessCtrl*halfTip), y: tip.y + uy * (roundnessCtrl*halfTip) };
+              const tL = { x: tip.x + px * halfTip, y: tip.y + py * halfTip };
+              const tR = { x: tip.x - px * halfTip, y: tip.y - py * halfTip };
+              const bL = { x: base.x + px * rBase, y: base.y + py * rBase };
+              const bR = { x: base.x - px * rBase, y: base.y - py * rBase };
+              const ctrlTip = { x: tip.x + ux * (roundnessCtrl * halfTip), y: tip.y + uy * (roundnessCtrl * halfTip) };
               return [
                 `M ${bL.x} ${bL.y}`,
                 `A ${rBase} ${rBase} 0 1 1 ${bR.x} ${bR.y}`,
@@ -510,13 +566,21 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                 <path
                   d={leftD}
                   fill="transparent"
-                  onMouseDown={(e) => { e.stopPropagation(); if (selectedId !== 'FLIPPER_L') {setSelectedId('FLIPPER_L');} }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation(); if (selectedId !== 'FLIPPER_L') {
+                      setSelectedId('FLIPPER_L');
+                    }
+                  }}
                   title="Select Left flipper shot lines"
                 />
                 <path
                   d={rightD}
                   fill="transparent"
-                  onMouseDown={(e) => { e.stopPropagation(); if (selectedId !== 'FLIPPER_R') {setSelectedId('FLIPPER_R');} }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation(); if (selectedId !== 'FLIPPER_R') {
+                      setSelectedId('FLIPPER_R');
+                    }
+                  }}
                   title="Select Right flipper shot lines"
                 />
               </g>
@@ -536,9 +600,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           return (
             <div
               key={r.id}
-              style={{ left: `${r.x*100}%`, top:`${r.y*100}%`, transform:'translate(-50%, -50%)', width: renderedSize, height: renderedSize }}
-              onMouseDown={(e) => handleMouseDown(e,r.id)}
-              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel?'ring-2 ring-emerald-500':''} ${misordered? 'ring-2 ring-red-500 border-red-500': 'border-slate-300'}`}
+              style={{ left: `${r.x * 100}%`, top: `${r.y * 100}%`, transform: 'translate(-50%, -50%)', width: renderedSize, height: renderedSize }}
+              onMouseDown={(e) => handleMouseDown(e, r.id)}
+              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel ? 'ring-2 ring-emerald-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300'}`}
             >
               {/* Background image layer */}
               {showImageAttempt && (
@@ -546,8 +610,12 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
                   src={imgSrc}
                   alt={r.type}
                   onLoad={() => setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
-                  onError={() => setImageLoadedMap(m => { if (!m[r.id]) {return m;} const copy = { ...m }; delete copy[r.id]; return copy; })}
-                  className={`${imgVisible ? 'opacity-100' : 'opacity-0'  } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
+                  onError={() => setImageLoadedMap(m => {
+                    if (!m[r.id]) {
+                      return m;
+                    } const copy = { ...m }; delete copy[r.id]; return copy;
+                  })}
+                  className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150 rounded-md`}
                   draggable={false}
                 />
               )}
@@ -565,7 +633,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               {/* Fallback original content if no image (or no type) */}
               {!imgVisible && (
                 <div className="absolute inset-0 flex flex-col p-1 text-[11px]">
-                  <div className="font-medium truncate max-w-[70px] text-center mt-4 flex-1 flex items-start justify-center" title={r.type||'Select type'}>{r.type||'— Type —'}</div>
+                  <div className="font-medium truncate max-w-[70px] text-center mt-4 flex-1 flex items-start justify-center" title={r.type || 'Select type'}>{r.type || '— Type —'}</div>
                   <div className="mt-auto flex justify-between text-[11px]">
                     <span className="px-1 rounded bg-slate-100">L {r.initL === 0 ? 'NP' : (r.initL !== null ? format2(r.initL) : '—')}</span>
                     <span className="px-1 rounded bg-slate-100">R {r.initR === 0 ? 'NP' : (r.initR !== null ? format2(r.initR) : '—')}</span>
@@ -574,7 +642,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               )}
               {/* X button moved to bottom center of shot box - filled red circle with gray X to match row remove icon style */}
               <button
-                onClick={(e) => { e.stopPropagation(); setRows(prev => prev.filter(x => x.id!==r.id)); }}
+                onClick={(e) => {
+                  e.stopPropagation(); setRows(prev => prev.filter(x => x.id !== r.id));
+                }}
                 className="absolute bottom-0 left-1/2 translate-y-1/2 -translate-x-1/2 p-0.5 rounded-md text-slate-500 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer"
                 style={{ zIndex: 60 }}
                 title="Delete shot"
@@ -594,26 +664,32 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
         {/* Lines visualization: either single-shot selection or flipper-wide selection */}
         {selectedId && (() => {
           const rect = canvasRef.current?.getBoundingClientRect();
-          if (!rect || !rect.width || !rect.height) {return null;}
+          if (!rect || !rect.width || !rect.height) {
+            return null;
+          }
           const w = rect.width; const h = rect.height;
           const L_TIP = { x: 415, y: 920 }, L_BASE = { x: 285, y: 785 };
           const R_TIP = { x: 585, y: 920 }, R_BASE = { x: 715, y: 785 };
           // Reuse geometry: compute top edge anchor for percentage along flipper length.
           function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
-            const t = Math.min(1, Math.max(0, (percent||0)/100));
-            const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx*dx + dy*dy) || 1;
+            const t = Math.min(1, Math.max(0, (percent || 0) / 100));
+            const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx * dx + dy * dy) || 1;
             const ux = dx / len, uy = dy / len; // along center line
-            const px = -uy, py = ux;            // perpendicular
+            const px = -uy, py = ux; // perpendicular
             const cx = base.x + dx * t; const cy = base.y + dy * t; // center line point (1000-space)
-            const wBase = rBase*2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width/2;
-            const cand1 = { x: cx + px*half, y: cy + py*half };
-            const cand2 = { x: cx - px*half, y: cy - py*half };
+            const wBase = rBase * 2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width / 2;
+            const cand1 = { x: cx + px * half, y: cy + py * half };
+            const cand2 = { x: cx - px * half, y: cy - py * half };
             const edge = cand1.y < cand2.y ? cand1 : cand2; // choose visually higher (smaller y)
             return edge;
           }
           const rBaseConst = 27.5; const tipWidthConst = 22;
-          const Lp = (p) => { const e=flipperTopEdge(L_BASE, L_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
-          const Rp = (p) => { const e=flipperTopEdge(R_BASE, R_TIP, rBaseConst, tipWidthConst, p); return { x: e.x/1000*w, y: e.y/1000*h }; };
+          const Lp = (p) => {
+            const e = flipperTopEdge(L_BASE, L_TIP, rBaseConst, tipWidthConst, p); return { x: e.x / 1000 * w, y: e.y / 1000 * h };
+          };
+          const Rp = (p) => {
+            const e = flipperTopEdge(R_BASE, R_TIP, rBaseConst, tipWidthConst, p); return { x: e.x / 1000 * w, y: e.y / 1000 * h };
+          };
           if (selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_R' || selectedId === 'FLIPPER_BOTH') {
             const showLeft = selectedId === 'FLIPPER_L' || selectedId === 'FLIPPER_BOTH';
             const showRight = selectedId === 'FLIPPER_R' || selectedId === 'FLIPPER_BOTH';
@@ -622,37 +698,41 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
               <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
                 {showLeft && rows.map(r => {
                   const val = r.initL;
-                  if (val === null || val <= 0) {return null;}
+                  if (val === null || val <= 0) {
+                    return null;
+                  }
                   const anchor = Lp(val);
                   const bx = r.x * w; const by = r.y * h + BOX_HALF;
                   const color = '#0ea5e9';
                   const incomplete = !r.type; // no shot type chosen
                   const opacity = incomplete ? 0.3 : 1;
                   const label = format2(val);
-                  const fs=11; const padX=5, padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=anchor.x; const cy=anchor.y; // position directly at flipper edge
+                  const fs = 11; const padX = 5, padY = 2; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX * 2; const rectH = fs + padY * 2; const cx = anchor.x; const cy = anchor.y; // position directly at flipper edge
                   return (
                     <g key={`L-${r.id}`}>
                       <line x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={color} strokeWidth={4} strokeLinecap="round" opacity={opacity} />
-                      <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
-                      <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                      <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                      <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                     </g>
                   );
                 })}
                 {showRight && rows.map(r => {
                   const val = r.initR;
-                  if (val === null || val <= 0) {return null;}
+                  if (val === null || val <= 0) {
+                    return null;
+                  }
                   const anchor = Rp(val);
                   const bx = r.x * w; const by = r.y * h + BOX_HALF;
                   const color = '#dc2626';
                   const incomplete = !r.type; // no shot type chosen
                   const opacity = incomplete ? 0.3 : 1;
                   const label = format2(val);
-                  const fs=11; const padX=5, padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=anchor.x; const cy=anchor.y; // position directly at flipper edge
+                  const fs = 11; const padX = 5, padY = 2; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX * 2; const rectH = fs + padY * 2; const cx = anchor.x; const cy = anchor.y; // position directly at flipper edge
                   return (
                     <g key={`R-${r.id}`}>
                       <line x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={color} strokeWidth={4} strokeLinecap="round" opacity={opacity} />
-                      <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
-                      <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                      <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                      <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                     </g>
                   );
                 })}
@@ -660,7 +740,9 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
             );
           }
           // Otherwise a single shot is selected
-          const r = rows.find(x => x.id===selectedId); if(!r) {return null;}
+          const r = rows.find(x => x.id === selectedId); if (!r) {
+            return null;
+          }
           const BOX_HALF = 15;
           const bx = r.x * w; const by = r.y * h + BOX_HALF; // bottom center of box
           const leftAnchor = Lp(r.initL ?? 50);
@@ -668,22 +750,22 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
           return (
             <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
               {(r.initL ?? 0) > 0 && (() => {
-                const label = `${format2(r.initL)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=leftAnchor.x; const cy=leftAnchor.y; const incomplete=!r.type; const opacity=incomplete?0.3:1; // direct edge
+                const label = `${format2(r.initL)}`; const fs = 11; const padX = 5, padY = 2; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX * 2; const rectH = fs + padY * 2; const cx = leftAnchor.x; const cy = leftAnchor.y; const incomplete = !r.type; const opacity = incomplete ? 0.3 : 1; // direct edge
                 return (
                   <g>
                     <line x1={leftAnchor.x} y1={leftAnchor.y} x2={bx} y2={by} stroke="#0ea5e9" strokeWidth={4} strokeLinecap="round" opacity={opacity} />
-                    <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
-                    <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                    <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                    <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                   </g>
                 );
               })()}
               {(r.initR ?? 0) > 0 && (() => {
-                const label = `${format2(r.initR)}`; const fs=11; const padX=5,padY=2; const wTxt=label.length*fs*0.6; const rectW=wTxt+padX*2; const rectH=fs+padY*2; const cx=rightAnchor.x; const cy=rightAnchor.y; const incomplete=!r.type; const opacity=incomplete?0.3:1; // direct edge
+                const label = `${format2(r.initR)}`; const fs = 11; const padX = 5, padY = 2; const wTxt = label.length * fs * 0.6; const rectW = wTxt + padX * 2; const rectH = fs + padY * 2; const cx = rightAnchor.x; const cy = rightAnchor.y; const incomplete = !r.type; const opacity = incomplete ? 0.3 : 1; // direct edge
                 return (
                   <g>
                     <line x1={rightAnchor.x} y1={rightAnchor.y} x2={bx} y2={by} stroke="#dc2626" strokeWidth={4} strokeLinecap="round" opacity={opacity} />
-                    <rect x={cx-rectW/2} y={cy-rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
-                    <text x={cx} y={cy-rectH/2+fs/2-1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                    <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                    <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                   </g>
                 );
               })()}
@@ -696,7 +778,7 @@ function PlayfieldEditor({ rows, setRows, selectedId, setSelectedId, misorderedI
   );
 }
 
-function PlayfieldScenery(){
+function PlayfieldScenery() {
   /* Simplified bottom: two basic elongated flippers only.
      Coordinate system: 1000x1000 viewBox.
      Desired physical proportions (approx): length ~3in, narrow base ~1cm, wide tip ~2.5cm.
@@ -724,21 +806,21 @@ function PlayfieldScenery(){
           //   the narrow tapered point aims DOWN toward the center drain ("tip").
           // Signature kept the same; rTip now represents the radius at BASE (circle),
           // baseWidth is the width of the NARROW tip (pivot) at the lower/inner end.
-          function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl=0.6) {
+          function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl = 0.6) {
             const dx = tip.x - base.x, dy = tip.y - base.y;
-            const len = Math.sqrt(dx*dx + dy*dy) || 1;
-            const ux = dx / len, uy = dy / len;      // unit along length (base -> tip)
-            const px = -uy, py = ux;                 // perpendicular (left-hand)
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const ux = dx / len, uy = dy / len; // unit along length (base -> tip)
+            const px = -uy, py = ux; // perpendicular (left-hand)
             const halfTip = tipWidth / 2;
 
             // Narrow tip points
-            const tL = { x: tip.x + px*halfTip, y: tip.y + py*halfTip };
-            const tR = { x: tip.x - px*halfTip, y: tip.y - py*halfTip };
+            const tL = { x: tip.x + px * halfTip, y: tip.y + py * halfTip };
+            const tR = { x: tip.x - px * halfTip, y: tip.y - py * halfTip };
             // Circle perimeter extreme points along perpendicular axis
-            const bL = { x: base.x + px*rBase, y: base.y + py*rBase };
-            const bR = { x: base.x - px*rBase, y: base.y - py*rBase };
+            const bL = { x: base.x + px * rBase, y: base.y + py * rBase };
+            const bR = { x: base.x - px * rBase, y: base.y - py * rBase };
             // Control point for convex rounding at tip (extend slightly beyond tip in direction of ux,uy)
-            const ctrlTip = { x: tip.x + ux * (roundnessCtrl*halfTip), y: tip.y + uy * (roundnessCtrl*halfTip) };
+            const ctrlTip = { x: tip.x + ux * (roundnessCtrl * halfTip), y: tip.y + uy * (roundnessCtrl * halfTip) };
 
             // Single unified outline path:
             // Start at left circle tangent, sweep large arc around outer side to right tangent, down right edge to tip, rounded tip to left tip edge, back to start.
@@ -757,14 +839,14 @@ function PlayfieldScenery(){
           const tipWidth = 22; // narrow tip (pivot) width toward center drain
           const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth, 0.6);
           const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth, 0.6);
-          
+
           // Add "9" and "0" labels for each flipper
           // "9" at the tip (inner end toward center) and "0" at the base (outer end)
           const labels = [];
           const canvasBottom = 1000;
           const gapToBottom = canvasBottom - L_TIP.y; // Distance from tip to bottom edge
           const labelOffset = gapToBottom / 2.1;
-          
+
           // Calculate the position for "0" labels at the outer end of each flipper
           // The base is a circle with center at L_BASE/R_BASE and radius rBase
           // For horizontal position: use the point furthest from tip (opposite direction)
@@ -773,50 +855,50 @@ function PlayfieldScenery(){
           const leftDy = L_TIP.y - L_BASE.y;
           const leftLen = Math.sqrt(leftDx * leftDx + leftDy * leftDy);
           const leftUx = leftDx / leftLen; // unit x component along flipper
-          
+
           const rightDx = R_TIP.x - R_BASE.x;
           const rightDy = R_TIP.y - R_BASE.y;
           const rightLen = Math.sqrt(rightDx * rightDx + rightDy * rightDy);
           const rightUx = rightDx / rightLen; // unit x component along flipper
-          
+
           // Horizontal position: point on circle perimeter opposite to flipper direction
           // Vertical position: the bottom of the circle at that x position + same offset as "9"
           const leftBaseOuterX = L_BASE.x - leftUx * rBase;
           const rightBaseOuterX = R_BASE.x - rightUx * rBase;
-          
+
           // For vertical: the circle extends from center.y - rBase to center.y + rBase
           // The bottom of the circle (largest y) is at center.y + rBase
-          const leftBaseBottom = { 
+          const leftBaseBottom = {
             x: leftBaseOuterX,
             y: L_BASE.y + rBase,
           };
-          const rightBaseBottom = { 
+          const rightBaseBottom = {
             x: rightBaseOuterX,
             y: R_BASE.y + rBase,
           };
-          
+
           // Position for "9" labels (at tip)
           const leftTipPos = { x: L_TIP.x, y: L_TIP.y + labelOffset };
           const rightTipPos = { x: R_TIP.x, y: R_TIP.y + labelOffset };
-          
+
           // Position for "0" labels (at base outer edge)
           const leftBasePos = { x: leftBaseBottom.x, y: leftBaseBottom.y + labelOffset };
           const rightBasePos = { x: rightBaseBottom.x, y: rightBaseBottom.y + labelOffset };
-          
+
           // Offset for diagonal shift: left flipper goes up-left, right flipper goes up-right
           const horizontalShift = 10; // pixels to move left/right
-          const verticalShift = -10;  // pixels to move up (negative y)
-          
+          const verticalShift = -10; // pixels to move up (negative y)
+
           // Gradient vertical adjustment: numbers closer to 0 get pushed up more than numbers closer to 9
           const verticalGradientMax = 20; // Maximum additional upward shift for "0" (tweakable)
-          
+
           // Generate all numbers 0-9 evenly spaced along the line from "0" to "9" for each flipper
           for (let i = 0; i <= 9; i++) {
             const t = i / 9; // interpolation factor (0 for "0", 1 for "9")
-            
+
             // Calculate gradient adjustment: linearly decreases from verticalGradientMax (at i=0) to 0 (at i=9)
             const gradientAdjustment = verticalGradientMax * (1 - i / 9);
-            
+
             // Left flipper number - shifted up and to the left
             const leftBaseX = leftBasePos.x + (leftTipPos.x - leftBasePos.x) * t;
             const leftBaseY = leftBasePos.y + (leftTipPos.y - leftBasePos.y) * t;
@@ -838,7 +920,7 @@ function PlayfieldScenery(){
                 {i}
               </text>,
             );
-            
+
             // Right flipper number - shifted up and to the right
             const rightBaseX = rightBasePos.x + (rightTipPos.x - rightBasePos.x) * t;
             const rightBaseY = rightBasePos.y + (rightTipPos.y - rightBasePos.y) * t;
@@ -861,9 +943,9 @@ function PlayfieldScenery(){
               </text>,
             );
           }
-          
+
           return (
-            <g /* Flipper styling: individual stroke colors per flipper */ fill="#ffffff" strokeLinecap="round" strokeLinejoin="round">
+            <g fill="#ffffff" strokeLinecap="round" strokeLinejoin="round">
               <path d={leftD} stroke="#0ea5e9" strokeWidth={8} />
               <path d={rightD} stroke="#dc2626" strokeWidth={8} />
               {labels}
@@ -881,14 +963,18 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   const [size, setSize] = useState({ w: 0, h: 0 });
   // Track which images have loaded (reused across shot tiles) keyed by row.id
   const [imageLoadedMap, setImageLoadedMap] = useState({});
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   useEffect(() => {
     if (!fullscreen) {
-      return () => {}; // empty cleanup
+      // eslint-disable-next-line no-empty-function
+      return () => {};
     }
     const el = canvasRef.current;
     if (!el) {
-      return () => {}; // empty cleanup
+      // eslint-disable-next-line no-empty-function
+      return () => {};
     }
     // Immediate measurement so first render already scales
     const first = el.getBoundingClientRect();
@@ -911,28 +997,37 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
     const baseH = 384; // baseline small-mode height
     const baseW = 800; // approximate mid-size width used in standard layout
     scale = Math.min(size.h / baseH, size.w / baseW);
-    if (scale < 1) {scale = 1;} // never shrink below normal size
-    if (scale > 2.6) {scale = 2.6;} // prevent comically large boxes
+    if (scale < 1) {
+      scale = 1;
+    } // never shrink below normal size
+    if (scale > 2.6) {
+      scale = 2.6;
+    } // prevent comically large boxes
   }
   // Notify parent of scale when in fullscreen so ancillary UI (chips) can track size.
-  useEffect(() => { if (fullscreen && typeof onScale === 'function') {onScale(scale);} }, [scale, fullscreen, onScale]);
+  useEffect(() => {
+    if (fullscreen && typeof onScale === 'function') {
+      onScale(scale);
+    }
+  }, [scale, fullscreen, onScale]);
   return (
     <div className={fullscreen ? 'w-full h-full flex flex-col' : 'mt-8'}>
       {!fullscreen && <h3 className="font-medium mb-2">Playfield</h3>}
       <div ref={canvasRef} className={
-        `relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden ${ 
+        `relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden ${
           fullscreen ? 'flex-1 min-h-0' : 'h-96'}`
-      }>
+      }
+      >
         <PlayfieldScenery />
         {rows.map(r => {
           // Practice playfield: NO L/R values. Show image tile if available (square 80x80), else fallback text box.
           const styleBase = fullscreen ? {
-            left: `${r.x*100}%`,
-            top: `${r.y*100}%`,
+            left: `${r.x * 100}%`,
+            top: `${r.y * 100}%`,
             transform: `translate(-50%, -50%) scale(${scale})`,
           } : {
-            left: `${r.x*100}%`,
-            top: `${r.y*100}%`,
+            left: `${r.x * 100}%`,
+            top: `${r.y * 100}%`,
             transform: 'translate(-50%, -50%)',
           };
           const basePart = r.base || '';
@@ -947,22 +1042,26 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 key={r.id}
                 data-shot-box={r.id}
                 style={{ ...styleBase, width: boxSize, height: boxSize }}
-                className={`absolute z-20 select-none rounded-md shadow border overflow-hidden bg-white border-slate-300 origin-center ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
+                className={`absolute z-20 select-none rounded-md shadow border overflow-hidden bg-white border-slate-300 origin-center ${r === selectedRow ? 'ring-2 ring-emerald-500' : ''}`}
                 title={r.type}
               >
                 <img
                   src={imgSrc}
                   alt={r.type}
                   onLoad={() => setImageLoadedMap(m => (m[r.id] ? m : { ...m, [r.id]: true }))}
-                  onError={() => setImageLoadedMap(m => { if (!m[r.id]) {return m;} const copy = { ...m }; delete copy[r.id]; return copy; })}
-                  className={`${imgVisible?'opacity-100':'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150`}
+                  onError={() => setImageLoadedMap(m => {
+                    if (!m[r.id]) {
+                      return m;
+                    } const copy = { ...m }; delete copy[r.id]; return copy;
+                  })}
+                  className={`${imgVisible ? 'opacity-100' : 'opacity-0' } absolute inset-0 w-full h-full object-cover transition-opacity duration-150`}
                   draggable={false}
                 />
                 {imgVisible && (
                   <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>{r.type || '—'}</div>
                 )}
                 {!imgVisible && (
-                  <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium px-1 text-center" title={r.type||'—'}>{r.type||'—'}</div>
+                  <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium px-1 text-center" title={r.type || '—'}>{r.type || '—'}</div>
                 )}
               </div>
             );
@@ -973,17 +1072,19 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               key={r.id}
               data-shot-box={r.id}
               style={styleBase}
-              className={`absolute z-20 select-none rounded-lg shadow border bg-white border-slate-300 origin-center w-24 h-20 overflow-hidden ${r===selectedRow?'ring-2 ring-emerald-500':''}`}
+              className={`absolute z-20 select-none rounded-lg shadow border bg-white border-slate-300 origin-center w-24 h-20 overflow-hidden ${r === selectedRow ? 'ring-2 ring-emerald-500' : ''}`}
               title={r.type}
             >
-              <div className="absolute inset-0 flex items-center justify-center px-1 text-center text-[11px] font-medium" title={r.type||'—'}>{r.type||'—'}</div>
+              <div className="absolute inset-0 flex items-center justify-center px-1 text-center text-[11px] font-medium" title={r.type || '—'}>{r.type || '—'}</div>
             </div>
           );
         })}
         {mounted && selectedRow && selectedSide && (() => {
           // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
           const rect = canvasRef.current?.getBoundingClientRect();
-          if (!rect || !rect.width || !rect.height) {return null;}
+          if (!rect || !rect.width || !rect.height) {
+            return null;
+          }
           const w = rect.width; const h = rect.height;
           const BOX_HALF = 15 * scale; // approximate half-height scaled
           const bx = selectedRow.x * w; const by = selectedRow.y * h + BOX_HALF; // bottom center of shot box
@@ -991,12 +1092,12 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           const L_TIP = { x: 415, y: 920 }, L_BASE = { x: 285, y: 785 };
           const R_TIP = { x: 585, y: 920 }, R_BASE = { x: 715, y: 785 };
           const Lp = (p) => ({
-            x: (L_BASE.x + (L_TIP.x - L_BASE.x)*(p/100))/1000*w,
-            y: (L_BASE.y + (L_TIP.y - L_BASE.y)*(p/100))/1000*h,
+            x: (L_BASE.x + (L_TIP.x - L_BASE.x) * (p / 100)) / 1000 * w,
+            y: (L_BASE.y + (L_TIP.y - L_BASE.y) * (p / 100)) / 1000 * h,
           });
           const Rp = (p) => ({
-            x: (R_BASE.x + (R_TIP.x - R_BASE.x)*(p/100))/1000*w,
-            y: (R_BASE.y + (R_TIP.y - R_BASE.y)*(p/100))/1000*h,
+            x: (R_BASE.x + (R_TIP.x - R_BASE.x) * (p / 100)) / 1000 * w,
+            y: (R_BASE.y + (R_TIP.y - R_BASE.y) * (p / 100)) / 1000 * h,
           });
           // Unified green guide color for both flippers during practice
           const stroke = '#10b981'; // emerald-500
@@ -1009,47 +1110,61 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             if (prevRow) {
               // Precise flipper edge anchor at recall %
               function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
-                const t = Math.min(1, Math.max(0, percent/100));
-                const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx*dx + dy*dy) || 1;
+                const t = Math.min(1, Math.max(0, percent / 100));
+                const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx * dx + dy * dy) || 1;
                 const ux = dx / len, uy = dy / len;
                 const px = -uy, py = ux;
                 const cxLine = base.x + dx * t; const cyLine = base.y + dy * t;
-                const wBase = rBase*2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width/2;
-                const cand1 = { x: cxLine + px*half, y: cyLine + py*half };
-                const cand2 = { x: cxLine - px*half, y: cyLine - py*half };
+                const wBase = rBase * 2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width / 2;
+                const cand1 = { x: cxLine + px * half, y: cyLine + py * half };
+                const cand2 = { x: cxLine - px * half, y: cyLine - py * half };
                 return cand1.y < cand2.y ? cand1 : cand2;
               }
               const rawEdge = lastRecall.side === 'L'
-                ? flipperTopEdge({ x:285, y:785 }, { x:415, y:920 }, 27.5, 22, lastRecall.input)
-                : flipperTopEdge({ x:715, y:785 }, { x:585, y:920 }, 27.5, 22, lastRecall.input);
-              const anchor = { x: rawEdge.x/1000*w, y: rawEdge.y/1000*h };
+                ? flipperTopEdge({ x: 285, y: 785 }, { x: 415, y: 920 }, 27.5, 22, lastRecall.input)
+                : flipperTopEdge({ x: 715, y: 785 }, { x: 585, y: 920 }, 27.5, 22, lastRecall.input);
+              const anchor = { x: rawEdge.x / 1000 * w, y: rawEdge.y / 1000 * h };
               const label = `${format2(lastRecall.input)}`;
               const textScale = scale;
               // Recall value label sizing (50% larger)
               const baseFs = 11 * 1.5; const rPadXBase = 5; const rPadYBase = 2;
               const fs = baseFs * textScale; const rPadX = rPadXBase * textScale; const rPadY = rPadYBase * textScale;
-              const wTxt = label.length * fs * 0.6; const rectW = wTxt + rPadX*2; const rectH = fs + rPadY*2;
+              const wTxt = label.length * fs * 0.6; const rectW = wTxt + rPadX * 2; const rectH = fs + rPadY * 2;
               const cx = anchor.x; const cy = anchor.y - 8;
               // Shot box center (percent coords already represent center due to translate(-50%, -50%))
               const boxCX = prevRow.x * w; const boxCY = prevRow.y * h;
               // Measure actual shot box width (after scaling) for proportional offsets
               let boxW = 120;
               const shotEl = canvasRef.current?.querySelector(`[data-shot-box="${prevRow.id}"]`);
-              if (shotEl) { try { const br = shotEl.getBoundingClientRect(); if (br?.width) {boxW = br.width;} } catch { /* swallow measurement errors (layout shifts) intentionally */ } }
+              if (shotEl) {
+                try {
+                  const br = shotEl.getBoundingClientRect(); if (br?.width) {
+                    boxW = br.width;
+                  }
+                } catch { /* swallow measurement errors (layout shifts) intentionally */ }
+              }
               const boxH = 30; // heuristic height only for vertical anchor reference
               // Direction: Right flipper early-> +x, late-> -x; Left flipper mirrored
               const dirLate = lastRecall.delta > 0 ? 1 : (lastRecall.delta < 0 ? -1 : 0);
               let shiftSign = 0;
               if (dirLate !== 0) {
-                if (lastRecall.side === 'R') {shiftSign = dirLate === -1 ? 1 : -1;} else {shiftSign = dirLate === -1 ? -1 : 1;}
+                if (lastRecall.side === 'R') {
+                  shiftSign = dirLate === -1 ? 1 : -1;
+                } else {
+                  shiftSign = dirLate === -1 ? -1 : 1;
+                }
               }
               // Proportional factor (of half shot box width): perfect 0, slight 0.50, fairly 1.00, very 1.65
               let factor = 0;
-              if (lastRecall.severity === 'slight') {factor = 0.50;}
-              else if (lastRecall.severity === 'fairly') {factor = 1.00;}
-              else if (lastRecall.severity === 'very') {factor = 1.65;}
+              if (lastRecall.severity === 'slight') {
+                factor = 0.50;
+              } else if (lastRecall.severity === 'fairly') {
+                factor = 1.00;
+              } else if (lastRecall.severity === 'very') {
+                factor = 1.65;
+              }
               const endX = boxCX + shiftSign * (factor * (boxW / 2));
-              const endY = boxCY + boxH/2;
+              const endY = boxCY + boxH / 2;
               // Feedback text content
               let word1, word2 = null;
               if (lastRecall.severity === 'perfect') {
@@ -1067,11 +1182,11 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               const textW = longest * approxCharW;
               const lineCount = word2 ? 2 : 1;
               const lineHeight = fontSize;
-              const contentHeight = lineCount === 1 ? lineHeight : (lineHeight*2 + lineGap);
-              const boxHeight = contentHeight + fbPadY*2;
-              const boxWidth = textW + fbPadX*2;
+              const contentHeight = lineCount === 1 ? lineHeight : (lineHeight * 2 + lineGap);
+              const boxHeight = contentHeight + fbPadY * 2;
+              const boxWidth = textW + fbPadX * 2;
               const boxCenterX = endX; // center box at computed endX
-              const boxX = boxCenterX - boxWidth/2;
+              const boxX = boxCenterX - boxWidth / 2;
               const downwardOffset = 0.80 * boxHeight;
               const boxY = endY + downwardOffset - boxHeight;
               // Update: pill fill now matches severity color; border same color; text remains black for contrast
@@ -1106,9 +1221,9 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               recallNode = (
                 <g>
                   {lineEl}
-                  <rect x={cx - rectW/2} y={cy - rectH} width={rectW} height={rectH} rx={6 * textScale} ry={6 * textScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * textScale} />
+                  <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6 * textScale} ry={6 * textScale} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1 * textScale} />
                   {/* Display 'NP' (Not Possible) instead of '00' when the recalled value is 0 */}
-                  <text x={cx} y={cy - rectH/2 + fs/2 - 1 * textScale} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label === '00' ? 'NP' : label}</text>
+                  <text x={cx} y={cy - rectH / 2 + fs / 2 - 1 * textScale} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label === '00' ? 'NP' : label}</text>
                 </g>
               );
             }
@@ -1119,23 +1234,23 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           function topEdgePoint(side, percent) {
             // Replicate flipperTopEdge from earlier (editor & yellow feedback) for consistency
             function flipperTopEdge(base, tip, rBase, tipWidth, pct) {
-              const t = Math.min(1, Math.max(0, pct/100));
-              const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx*dx + dy*dy) || 1;
+              const t = Math.min(1, Math.max(0, pct / 100));
+              const dx = tip.x - base.x, dy = tip.y - base.y; const len = Math.sqrt(dx * dx + dy * dy) || 1;
               const ux = dx / len, uy = dy / len;
               const px = -uy, py = ux; // perpendicular
               const cx = base.x + dx * t; const cy = base.y + dy * t;
-              const wBase = rBase*2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width/2;
-              const cand1 = { x: cx + px*half, y: cy + py*half };
-              const cand2 = { x: cx - px*half, y: cy - py*half };
+              const wBase = rBase * 2; const wTip = tipWidth; const width = wBase + (wTip - wBase) * t; const half = width / 2;
+              const cand1 = { x: cx + px * half, y: cy + py * half };
+              const cand2 = { x: cx - px * half, y: cy - py * half };
               return cand1.y < cand2.y ? cand1 : cand2; // choose visually higher
             }
             const rBaseConst = 27.5; const tipWidthConst = 22;
             if (side === 'L') {
-              const edge = flipperTopEdge({ x:285, y:785 }, { x:415, y:920 }, rBaseConst, tipWidthConst, percent);
-              return { x: edge.x/1000*w, y: edge.y/1000*h };
+              const edge = flipperTopEdge({ x: 285, y: 785 }, { x: 415, y: 920 }, rBaseConst, tipWidthConst, percent);
+              return { x: edge.x / 1000 * w, y: edge.y / 1000 * h };
             } else {
-              const edge = flipperTopEdge({ x:715, y:785 }, { x:585, y:920 }, rBaseConst, tipWidthConst, percent);
-              return { x: edge.x/1000*w, y: edge.y/1000*h };
+              const edge = flipperTopEdge({ x: 715, y: 785 }, { x: 585, y: 920 }, rBaseConst, tipWidthConst, percent);
+              return { x: edge.x / 1000 * w, y: edge.y / 1000 * h };
             }
           }
           const p0Top = topEdgePoint(selectedSide, 0);
@@ -1168,10 +1283,10 @@ function PracticePlayfield({ rows, selectedIdx, selectedSide, lastRecall, fullsc
 export default function App() {
   const [toasts, setToasts] = useState([]); // {id,msg}
   const _pushToast = useCallback((msg) => {
-    const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random());
-    setToasts(t => [...t,{id,msg}]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id!==id)), 3200);
-  },[]);
+    const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
+    setToasts(t => [...t, {id, msg}]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3200);
+  }, []);
   // Setup state
   // Start with no shots by default; user must explicitly add via + Add shot.
   const [rowsRaw, setRowsRaw] = useLocalStorage('pinball_rows_v1', []);
@@ -1181,9 +1296,9 @@ export default function App() {
   }, [setRowsRaw]);
   // Popup menus for new shot/location selector
   const [openShotMenuId, setOpenShotMenuId] = useState(null); // row id currently showing shot list
-  const [openLocMenuId, setOpenLocMenuId] = useState(null);  // row id currently showing location list
+  const [openLocMenuId, setOpenLocMenuId] = useState(null); // row id currently showing location list
   const [shotMenuAnchor, setShotMenuAnchor] = useState(null); // {id,x,y}
-  const [locMenuAnchor, setLocMenuAnchor] = useState(null);   // {id,x,y}
+  const [locMenuAnchor, setLocMenuAnchor] = useState(null); // {id,x,y}
   // Anchor for multi-add popup when list is empty
   const [addCountAnchor, setAddCountAnchor] = useState(null); // {x,y} or null
   // Available presets loaded from /presets/index.json - array of {name, filename} objects
@@ -1223,26 +1338,29 @@ export default function App() {
   }, []);
   // Keep popup anchored to triggering chip while scrolling/resizing
   useEffect(() => {
-    if (openShotMenuId===null && openLocMenuId===null && !addCountAnchor) {
-      return () => {}; // empty cleanup
+    if (openShotMenuId === null && openLocMenuId === null && !addCountAnchor) {
+      // eslint-disable-next-line no-empty-function
+      return () => {};
     }
     let raf = null;
     const update = () => {
-      if (raf) {return;}
+      if (raf) {
+        return;
+      }
       raf = requestAnimationFrame(() => {
         raf = null;
-        if (openShotMenuId!==null) {
+        if (openShotMenuId !== null) {
           const el = document.querySelector(`[data-shot-chip="${openShotMenuId}"]`);
           if (el) {
             const r = el.getBoundingClientRect();
-            setShotMenuAnchor(a => a && a.id===openShotMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
+            setShotMenuAnchor(a => a && a.id === openShotMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
           }
         }
-        if (openLocMenuId!==null) {
+        if (openLocMenuId !== null) {
           const el = document.querySelector(`[data-loc-chip="${openLocMenuId}"]`);
           if (el) {
             const r = el.getBoundingClientRect();
-            setLocMenuAnchor(a => a && a.id===openLocMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
+            setLocMenuAnchor(a => a && a.id === openLocMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
           }
         }
         if (addCountAnchor) {
@@ -1259,7 +1377,7 @@ export default function App() {
     return () => {
       window.removeEventListener('scroll', update, true);
       window.removeEventListener('resize', update);
-      if(raf) {
+      if (raf) {
         cancelAnimationFrame(raf);
       }
     };
@@ -1273,7 +1391,7 @@ export default function App() {
     };
     window.addEventListener('click', handler);
     return () => window.removeEventListener('click', handler);
-  },[]);
+  }, []);
   // Close menus on Escape key
   useEffect(() => {
     const handler = (e) => {
@@ -1335,13 +1453,21 @@ export default function App() {
   // One-time auto-collapse so pre-selected values (from persisted state or defaults) show as single chips, not full option lists on first load.
   const didInitCollapse = useRef(false);
   useEffect(() => {
-    if (didInitCollapse.current) {return;}
-    if (!rows || !rows.length) {return;} // nothing yet
+    if (didInitCollapse.current) {
+      return;
+    }
+    if (!rows || !rows.length) {
+      return;
+    } // nothing yet
     // Only initialize if user hasn't interacted (arrays still empty)
-    if (collapsedTypes.length) { didInitCollapse.current = true; return; }
+    if (collapsedTypes.length) {
+      didInitCollapse.current = true; return;
+    }
     const typeIds = rows.filter(r => !!r.type).map(r => r.id);
     // Flipper collapse removed (left/right arrays no longer tracked)
-    if (typeIds.length) {setCollapsedTypes(typeIds);}
+    if (typeIds.length) {
+      setCollapsedTypes(typeIds);
+    }
     // (No flipper collapse initialization)
     didInitCollapse.current = true;
   }, [rows, collapsedTypes.length]);
@@ -1349,8 +1475,12 @@ export default function App() {
   // Keep selectedIdx within bounds if rows shrink
   useEffect(() => {
     setSelectedIdx((idx) => {
-      if (idx === -1) {return -1;} // preserve explicit no-selection state
-      if (rows.length === 0) {return -1;} // nothing to select
+      if (idx === -1) {
+        return -1;
+      } // preserve explicit no-selection state
+      if (rows.length === 0) {
+        return -1;
+      } // nothing to select
       return idx >= rows.length ? Math.max(0, rows.length - 1) : idx;
     });
     setSelectedSide(s => (s === 'L' || s === 'R') ? s : 'L');
@@ -1364,14 +1494,18 @@ export default function App() {
   );
 
   const avgAbsErr = useMemo(() => {
-    if (!attempts.length) {return 0;}
+    if (!attempts.length) {
+      return 0;
+    }
     const m = attempts.reduce((s, a) => s + Math.abs(a.delta), 0) / attempts.length;
     return m;
   }, [attempts]);
 
   // Session can start only if every row has a shot type (base chosen) and both flipper values
   const canStart = useMemo(() => {
-    if (!rows.length) {return false;}
+    if (!rows.length) {
+      return false;
+    }
     return rows.every(r => r.base && r.base.length > 0 && r.initL !== null && r.initR !== null);
   }, [rows]);
 
@@ -1379,24 +1513,26 @@ export default function App() {
   const loadPreset = useCallback(async (preset) => {
     try {
       let presetData;
-      
+
       // Check if we have embedded presets (standalone mode)
       if (typeof window !== 'undefined' && window.EMBEDDED_PRESETS && window.EMBEDDED_PRESETS[preset.filename]) {
         presetData = window.EMBEDDED_PRESETS[preset.filename];
       } else {
         // Fetch from server
         const response = await fetch(`./presets/${preset.filename}`);
-        if (!response.ok) {throw new Error('Preset not found');}
+        if (!response.ok) {
+          throw new Error('Preset not found');
+        }
         presetData = await response.json();
       }
-      
+
       // Parse preset data and create rows
       const newRows = presetData.map((shot, idx) => {
         // Parse shot type to extract base and location
         const typeStr = shot.shotType || '';
         let base = '';
         let location = '';
-        
+
         // Try to match against known locations
         const foundLoc = LOCATIONS.find(loc => typeStr.includes(loc));
         if (foundLoc) {
@@ -1406,11 +1542,11 @@ export default function App() {
           // No location, entire string is base
           base = typeStr;
         }
-        
+
         // Parse flipper values (handle "NP" for Not Possible)
         const leftVal = shot.leftFlipper === 'NP' || shot.leftFlipper === 'np' ? 0 : snap5(Number(shot.leftFlipper) || 0);
         const rightVal = shot.rightFlipper === 'NP' || shot.rightFlipper === 'np' ? 0 : snap5(Number(shot.rightFlipper) || 0);
-        
+
         return newRow({
           base,
           location,
@@ -1418,7 +1554,7 @@ export default function App() {
           initR: rightVal,
         }, idx);
       });
-      
+
       setRows(newRows);
       setAddCountAnchor(null);
       _pushToast(`Loaded preset: ${preset.name}`);
@@ -1449,17 +1585,19 @@ export default function App() {
       _pushToast('Export failed');
     }
   }, [rows, _pushToast]);
-  
+
   // Initialize hidden matrix (wrapped so effects & handlers can depend on stable reference)
   const startSession = useCallback(() => {
-    if (!rows.length) {return;}
+    if (!rows.length) {
+      return;
+    }
     // Capture bases directly
     const bL = rows.map(r => snap5(r.initL));
     const bR = rows.map(r => snap5(r.initR));
     setBaseL(bL); setBaseR(bR);
     // Determine original ordering by starting values
-    const ascL = rows.map((r,i) => ({i,v:r.initL})).sort((a,b) => a.v-b.v).map(x => x.i);
-    const ascR = rows.map((r,i) => ({i,v:r.initR})).sort((a,b) => a.v-b.v).map(x => x.i);
+    const ascL = rows.map((r, i) => ({i, v: r.initL})).sort((a, b) => a.v - b.v).map(x => x.i);
+    const ascR = rows.map((r, i) => ({i, v: r.initR})).sort((a, b) => a.v - b.v).map(x => x.i);
     // Candidate random offsets (independent) within allowed band using configurable steps
     const steps = Math.min(4, Math.max(0, Number(initRandSteps) || 0)); // still capped at 4 for initial randomization.
     // Edge case note: if initRandSteps exceeds the eventual drift usableSteps (floor(driftMag)) then
@@ -1470,12 +1608,16 @@ export default function App() {
     // if consistent bands are preferred.
     const candL = bL.map(v => {
       // If "Not Possible" (0), keep it at 0 - no randomization
-      if (v === 0) {return 0;}
+      if (v === 0) {
+        return 0;
+      }
       const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
     const candR = bR.map(v => {
       // If "Not Possible" (0), keep it at 0 - no randomization
-      if (v === 0) {return 0;}
+      if (v === 0) {
+        return 0;
+      }
       const off = rndInt(-steps, steps) * 5; const lo = Math.max(0, v - 20); const hi = Math.min(100, v + 20); return snap5(Math.min(hi, Math.max(lo, v + off)));
     });
     // Enforce ordering via bounded isotonic regression
@@ -1502,11 +1644,14 @@ export default function App() {
   // Allow pressing Enter anywhere on setup screen to start the session (if valid)
   useEffect(() => {
     if (initialized) {
-      return () => {}; // empty cleanup
+      // eslint-disable-next-line no-empty-function
+      return () => {};
     }
     function handleKey(e) {
       if (e.key === 'Enter' && !initialized && canStart) {
-        if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) {return;}
+        if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) {
+          return;
+        }
         e.preventDefault();
         startSession();
       }
@@ -1520,16 +1665,20 @@ export default function App() {
   // Apply drift every N attempts
   useEffect(() => {
     if (!initialized) {
-      return () => {}; // empty cleanup
+      // eslint-disable-next-line no-empty-function
+      return () => {};
     }
     if (attemptCount === 0) {
-      return () => {}; // empty cleanup
+      // eslint-disable-next-line no-empty-function
+      return () => {};
     }
     if (driftEvery <= 0) {
-      return () => {}; // empty cleanup
+      // eslint-disable-next-line no-empty-function
+      return () => {};
     }
     if (attemptCount % driftEvery !== 0) {
-      return () => {}; // empty cleanup
+      // eslint-disable-next-line no-empty-function
+      return () => {};
     }
     // Drift logic:
     // New rule: The drift band around each base value is dynamic: ± (driftMag * 5) percentage points.
@@ -1539,17 +1688,23 @@ export default function App() {
     const driftMagNum = Number(driftMag);
     const usableSteps = Math.max(0, Math.min(4, Math.floor(Number.isFinite(driftMagNum) ? driftMagNum : 0))); // retain legacy overall hard ceiling of 4 steps (±20)
     const stepDrift = () => {
-      if (usableSteps === 0) {return 0;}
+      if (usableSteps === 0) {
+        return 0;
+      }
       const k = rndInt(0, usableSteps);
       const dir = Math.random() < 0.5 ? -1 : 1;
       return dir * k * 5;
     };
 
     setHiddenL(prev => {
-      if (!prev.length || !baseL.length) {return prev;}
-      const drifted = prev.map((v,i) => {
+      if (!prev.length || !baseL.length) {
+        return prev;
+      }
+      const drifted = prev.map((v, i) => {
         // If already "Not Possible" (0), it should not drift and remain 0
-        if (v === 0) {return 0;}
+        if (v === 0) {
+          return 0;
+        }
         const b = baseL[i];
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
@@ -1562,10 +1717,14 @@ export default function App() {
       return strictlyIncrease(ordered, baseL, orderAscL);
     });
     setHiddenR(prev => {
-      if (!prev.length || !baseR.length) {return prev;}
-      const drifted = prev.map((v,i) => {
+      if (!prev.length || !baseR.length) {
+        return prev;
+      }
+      const drifted = prev.map((v, i) => {
         // If already "Not Possible" (0), it should not drift and remain 0
-        if (v === 0) {return 0;}
+        if (v === 0) {
+          return 0;
+        }
         const b = baseR[i];
         const lo = Math.max(0, b - usableSteps * 5);
         const hi = Math.min(100, b + usableSteps * 5);
@@ -1577,18 +1736,25 @@ export default function App() {
       const ordered = isotonicWithBounds(drifted, baseR, orderAscR);
       return strictlyIncrease(ordered, baseR, orderAscR);
     });
-    return () => {}; // cleanup function to satisfy consistent-return
+    // eslint-disable-next-line no-empty-function
+    return () => {};
   }, [attemptCount, driftEvery, driftMag, orderAscL, orderAscR, initialized, baseL, baseR, setHiddenL, setHiddenR]);
 
   function validatePercent(numLike) {
     const x = Number(numLike);
-    if (!Number.isFinite(x)) {return null;}
+    if (!Number.isFinite(x)) {
+      return null;
+    }
     return snap5(Math.max(0, Math.min(100, x)));
   }
 
   function pickRandomIdx() {
-    if (!rows.length) {return 0;}
-    if (rows.length === 1) {return 0;}
+    if (!rows.length) {
+      return 0;
+    }
+    if (rows.length === 1) {
+      return 0;
+    }
     let idx = rndInt(0, rows.length - 1);
     // avoid immediate repeats
     let tries = 0;
@@ -1600,16 +1766,22 @@ export default function App() {
   }
 
   function submitAttempt(overrideVal) {
-    if (!initialized) {return;}
+    if (!initialized) {
+      return;
+    }
     const idx = mode === 'random' ? selectedIdx : selectedIdx;
     const usingOverride = overrideVal !== null;
     const val = validatePercent(usingOverride ? overrideVal : guess);
     if (!usingOverride && (guess === '' || val === null)) {
       setRecallError('0–100 (0 - Not Possible)');
-      setTimeout(() => { recallInputRef.current?.focus(); recallInputRef.current?.select(); },0);
+      setTimeout(() => {
+        recallInputRef.current?.focus(); recallInputRef.current?.select();
+      }, 0);
       return;
     }
-    if (usingOverride && val === null) {return;} // ignore invalid override silently
+    if (usingOverride && val === null) {
+      return;
+    } // ignore invalid override silently
     setRecallError('');
     const truth = (selectedSide === 'L' ? hiddenL[idx] : hiddenR[idx]) ?? 0;
     // Determine previous attempt for same shot & side to assess adjustment quality
@@ -1626,10 +1798,15 @@ export default function App() {
       label = delta < 0 ? 'early' : 'late';
     }
     let severity;
-    if (abs === 0) {severity = 'perfect';}
-    else if (abs === 5) {severity = 'slight';}
-    else if (abs === 10) {severity = 'fairly';}
-    else {severity = 'very';} // abs >= 15
+    if (abs === 0) {
+      severity = 'perfect';
+    } else if (abs === 5) {
+      severity = 'slight';
+    } else if (abs === 10) {
+      severity = 'fairly';
+    } else {
+      severity = 'very';
+    } // abs >= 15
     const basePoints = Math.max(0, Math.round(100 - abs));
     // Adjustment logic:
     // If previous attempt existed and was 'late' (prev delta > 0), user should decrease number this time.
@@ -1640,11 +1817,18 @@ export default function App() {
     let adjustCorrect = true; // default true if no requirement
     if (prevSame) {
       const prevDelta = prevSame.delta;
-      if (prevDelta > 0) { adjustRequired = true; requiredDir = -1; }
-      else if (prevDelta < 0) { adjustRequired = true; requiredDir = 1; }
+      if (prevDelta > 0) {
+        adjustRequired = true; requiredDir = -1;
+      } else if (prevDelta < 0) {
+        adjustRequired = true; requiredDir = 1;
+      }
       if (adjustRequired) {
-        if (requiredDir === -1 && !(val < prevSame.input)) {adjustCorrect = false;}
-        if (requiredDir === 1 && !(val > prevSame.input)) {adjustCorrect = false;}
+        if (requiredDir === -1 && !(val < prevSame.input)) {
+          adjustCorrect = false;
+        }
+        if (requiredDir === 1 && !(val > prevSame.input)) {
+          adjustCorrect = false;
+        }
       }
     }
     // Adjustment penalty only if required and incorrect. Penalty magnitude scaled by how strongly you went the wrong way or failed to move.
@@ -1660,9 +1844,13 @@ export default function App() {
     setAttemptCount((c) => c + 1);
     // Update guess values toward the input guess (still adjusts background values)
     if (selectedSide === 'L') {
-      setMentalL(m => { const n=[...m]; n[idx]=val; return n; });
+      setMentalL(m => {
+        const n = [...m]; n[idx] = val; return n;
+      });
     } else {
-      setMentalR(m => { const n=[...m]; n[idx]=val; return n; });
+      setMentalR(m => {
+        const n = [...m]; n[idx] = val; return n;
+      });
     }
 
     // Prepare next random shot and flipper if in random mode
@@ -1694,15 +1882,19 @@ export default function App() {
 
   // Final grading
   const finalScore = useMemo(() => {
-    if (!finalPhase || !rows.length || !hiddenL.length || !hiddenR.length || !finalRecallL.length || !finalRecallR.length) {return 0;}
+    if (!finalPhase || !rows.length || !hiddenL.length || !hiddenR.length || !finalRecallL.length || !finalRecallR.length) {
+      return 0;
+    }
     let total = 0; let count = 0;
-    for (let i=0;i<rows.length;i++) {
+    for (let i = 0;i < rows.length;i++) {
       const tL = hiddenL[i] ?? 0; const tR = hiddenR[i] ?? 0;
       const gL = clamp(finalRecallL[i] ?? 0); const gR = clamp(finalRecallR[i] ?? 0);
       total += Math.abs(gL - tL); count++;
       total += Math.abs(gR - tR); count++;
     }
-    if (!count) {return 0;}
+    if (!count) {
+      return 0;
+    }
     const mae = total / count;
     return Math.max(0, Math.round(100 - mae));
   }, [finalPhase, rows, hiddenL, hiddenR, finalRecallL, finalRecallR]);
@@ -1737,70 +1929,94 @@ export default function App() {
     // Left side normalization: non-decreasing; zeros allowed until first positive; after first positive, strictly increasing (>= +5); no zeros allowed below first positive.
     let lastNonZero = 0;
     const out = rowsArr.map(r => ({...r}));
-    for (let i=0;i<out.length;i++) {
+    for (let i = 0;i < out.length;i++) {
       const raw = out[i].initL;
-      if (raw === null) {continue;} // leave nulls untouched
+      if (raw === null) {
+        continue;
+      } // leave nulls untouched
       let v = snap5(raw);
-      if (v < 0) {v = 0;}
+      if (v < 0) {
+        v = 0;
+      }
       if (lastNonZero === 0) {
         // zeros allowed; any positive establishes lastNonZero
       } else {
-        if (v === 0 || v <= lastNonZero) {v = Math.min(100, lastNonZero + 5);}
+        if (v === 0 || v <= lastNonZero) {
+          v = Math.min(100, lastNonZero + 5);
+        }
       }
       out[i].initL = v;
-      if (v > 0) {lastNonZero = v;}
+      if (v > 0) {
+        lastNonZero = v;
+      }
     }
     // Right side normalization: strictly decreasing top -> bottom.
     let prevR = 105; // greater than max
-    for (let i=0;i<out.length;i++) {
+    for (let i = 0;i < out.length;i++) {
       const raw = out[i].initR;
-      if (raw === null) {continue;} // leave nulls untouched
+      if (raw === null) {
+        continue;
+      } // leave nulls untouched
       let v = snap5(raw);
-      if (v >= prevR) {v = prevR - 5;}
-      if (v < 0) {v = 0;}
+      if (v >= prevR) {
+        v = prevR - 5;
+      }
+      if (v < 0) {
+        v = 0;
+      }
       out[i].initR = v;
       prevR = v;
     }
     return out;
   }
   function handleRowReorder(fromIdx, toIdx) {
-    if (fromIdx === null || toIdx === null || fromIdx === toIdx) { setDragRowIdx(null); return; }
+    if (fromIdx === null || toIdx === null || fromIdx === toIdx) {
+      setDragRowIdx(null); return;
+    }
     setRows(prev => {
       // Helper: align current spatial left->right order to current top->bottom order if out of sync.
       function alignPositions(list) {
-        const sortedPositions = [...list].sort((a,b) => a.x-b.x).map(r => ({x:r.x,y:r.y}));
-        return list.map((r,i) => ({...r, x: sortedPositions[i].x, y: sortedPositions[i].y }));
+        const sortedPositions = [...list].sort((a, b) => a.x - b.x).map(r => ({x: r.x, y: r.y}));
+        return list.map((r, i) => ({...r, x: sortedPositions[i].x, y: sortedPositions[i].y }));
       }
       // Start from a deep-ish copy (shallow objects cloned so we can mutate x,y safely)
       let arr = prev.map(r => ({...r}));
       // Pre-align if previous operations left them mismatched.
       const misaligned = (() => {
-        const orderByX = [...arr].sort((a,b) => a.x-b.x);
-        for (let i=0;i<arr.length;i++) {if (orderByX[i].id !== arr[i].id) {return true;}}
+        const orderByX = [...arr].sort((a, b) => a.x - b.x);
+        for (let i = 0;i < arr.length;i++) {
+          if (orderByX[i].id !== arr[i].id) {
+            return true;
+          }
+        }
         return false;
       })();
-      if (misaligned) {arr = alignPositions(arr);}
+      if (misaligned) {
+        arr = alignPositions(arr);
+      }
       // Perform adjacent swaps to move fromIdx to toIdx while swapping spatial coordinates with each neighbor.
       if (fromIdx < toIdx) {
         for (let i = fromIdx; i < toIdx; i++) {
           const a = arr[i];
-          const b = arr[i+1];
+          const b = arr[i + 1];
           [a.x, b.x] = [b.x, a.x];
           [a.y, b.y] = [b.y, a.y];
-          arr[i] = b; arr[i+1] = a;
+          arr[i] = b; arr[i + 1] = a;
         }
       } else if (fromIdx > toIdx) {
         for (let i = fromIdx; i > toIdx; i--) {
           const a = arr[i];
-          const b = arr[i-1];
+          const b = arr[i - 1];
           [a.x, b.x] = [b.x, a.x];
           [a.y, b.y] = [b.y, a.y];
-          arr[i] = b; arr[i-1] = a;
+          arr[i] = b; arr[i - 1] = a;
         }
       }
       // Final guarantee: enforce left->right strictly increasing relative order to index sequence (minimal reassignment if needed)
-      const outOfOrder = arr.some((r,i) => i>0 && arr[i-1].x > r.x);
-      if (outOfOrder) {arr = alignPositions(arr);}
+      const outOfOrder = arr.some((r, i) => i > 0 && arr[i - 1].x > r.x);
+      if (outOfOrder) {
+        arr = alignPositions(arr);
+      }
       // Normalize percentage constraints after reorder.
       return normalizeRowPercents(arr);
     });
@@ -1818,6 +2034,7 @@ export default function App() {
   // Prevent body/document scrolling when fullscreen overlay is active (removes stray window scrollbar)
   useEffect(() => {
     if (!playfieldFullscreen) {
+      // eslint-disable-next-line no-empty-function
       return () => {};
     }
     const prevBodyOverflow = document.body.style.overflow;
@@ -1832,6 +2049,7 @@ export default function App() {
   // Allow pressing Escape to exit fullscreen (mirrors clicking Exit button)
   useEffect(() => {
     if (!playfieldFullscreen) {
+      // eslint-disable-next-line no-empty-function
       return () => {};
     }
     function handleEsc(e) {
@@ -1849,7 +2067,9 @@ export default function App() {
   useEffect(() => {
     if (initialized && !finalPhase) {
       // small timeout ensures element mounted after conditional render
-      setTimeout(() => { recallInputRef.current?.focus(); recallInputRef.current?.select(); }, 0);
+      setTimeout(() => {
+        recallInputRef.current?.focus(); recallInputRef.current?.select();
+      }, 0);
     }
   }, [initialized, finalPhase]);
   return (
@@ -1863,15 +2083,15 @@ export default function App() {
         ))}
       </div>
       {/* Detached popups (portals) for shot & location selection */}
-      {shotMenuAnchor && openShotMenuId!==null && createPortal(
+      {shotMenuAnchor && openShotMenuId !== null && createPortal(
         <div
           className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
-          style={{ left: `${Math.max(8, shotMenuAnchor.x)  }px`, top: `${shotMenuAnchor.y  }px` }}
+          style={{ left: `${Math.max(8, shotMenuAnchor.x) }px`, top: `${shotMenuAnchor.y }px` }}
           onClick={e => e.stopPropagation()}
         >
           {BASE_ELEMENTS.map(b => {
-            const currentRow = rows.find(r => r.id===shotMenuAnchor.id);
-            const isSel = currentRow?.base===b;
+            const currentRow = rows.find(r => r.id === shotMenuAnchor.id);
+            const isSel = currentRow?.base === b;
             const hasSelection = !!currentRow?.base;
             return (
               <ElementTile
@@ -1882,10 +2102,18 @@ export default function App() {
                 onSelect={() => {
                   if (isSel) {
                   // Clicking the currently selected shot deselects it; keep menu open
-                    setRows(prev => { const next=[...prev]; const idx = prev.findIndex(r => r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:'', type: ''}; } return next; });
+                    setRows(prev => {
+                      const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
+                        next[idx] = {...next[idx], base: '', type: ''};
+                      } return next;
+                    });
                   } else {
                   // Selecting a new shot; close menu
-                    setRows(prev => { const next=[...prev]; const idx = prev.findIndex(r => r.id===shotMenuAnchor.id); if(idx>-1){ next[idx]={...next[idx], base:b, type: buildType(b, next[idx].location || '')}; } return next; });
+                    setRows(prev => {
+                      const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
+                        next[idx] = {...next[idx], base: b, type: buildType(b, next[idx].location || '')};
+                      } return next;
+                    });
                     setOpenShotMenuId(null); setShotMenuAnchor(null);
                   }
                 }}
@@ -1895,15 +2123,15 @@ export default function App() {
         </div>,
         document.body,
       )}
-      {locMenuAnchor && openLocMenuId!==null && createPortal(
+      {locMenuAnchor && openLocMenuId !== null && createPortal(
         <div
           className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
-          style={{ left: `${Math.max(8, locMenuAnchor.x)  }px`, top: `${locMenuAnchor.y  }px` }}
+          style={{ left: `${Math.max(8, locMenuAnchor.x) }px`, top: `${locMenuAnchor.y }px` }}
           onClick={e => e.stopPropagation()}
         >
           {LOCATIONS.map(loc => {
-            const currentRow = rows.find(r => r.id===locMenuAnchor.id);
-            const isSel = currentRow?.location===loc;
+            const currentRow = rows.find(r => r.id === locMenuAnchor.id);
+            const isSel = currentRow?.location === loc;
             return (
               <button
                 key={loc}
@@ -1911,28 +2139,36 @@ export default function App() {
                 onClick={() => {
                   if (isSel) {
                   // Clicking the currently selected location deselects it; keep menu open
-                    setRows(prev => { const next=[...prev]; const idx = prev.findIndex(r => r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:'', type: buildType(base,'')}; } return next; });
+                    setRows(prev => {
+                      const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
+                        const base = next[idx].base || ''; next[idx] = {...next[idx], location: '', type: buildType(base, '')};
+                      } return next;
+                    });
                   } else {
                   // Selecting a new location; close menu
-                    setRows(prev => { const next=[...prev]; const idx = prev.findIndex(r => r.id===locMenuAnchor.id); if(idx>-1){ const base = next[idx].base||''; next[idx]={...next[idx], location:loc, type: buildType(base,loc)}; } return next; });
+                    setRows(prev => {
+                      const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
+                        const base = next[idx].base || ''; next[idx] = {...next[idx], location: loc, type: buildType(base, loc)};
+                      } return next;
+                    });
                     setOpenLocMenuId(null); setLocMenuAnchor(null);
                   }
                 }}
-                className={`${isSel?'bg-slate-900 text-white':'bg-slate-100 hover:bg-slate-200 text-slate-700'  } text-[11px] px-2 py-1 rounded-md text-left`}
+                className={`${isSel ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700' } text-[11px] px-2 py-1 rounded-md text-left`}
               >{loc}</button>
             );
           })}
         </div>,
         document.body,
       )}
-      {addCountAnchor && rows.length===0 && createPortal(
+      {addCountAnchor && rows.length === 0 && createPortal(
         <div
           className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
-          style={{ left: `${Math.max(8, addCountAnchor.x)  }px`, top: `${addCountAnchor.y  }px` }}
+          style={{ left: `${Math.max(8, addCountAnchor.x) }px`, top: `${addCountAnchor.y }px` }}
           onClick={e => e.stopPropagation()}
         >
           <div className="grid grid-cols-4 gap-1">
-            {Array.from({length:20},(_,k) => k+1).map(n => (
+            {Array.from({length: 20}, (_, k) => k + 1).map(n => (
               <button
                 key={n}
                 type="button"
@@ -1940,11 +2176,19 @@ export default function App() {
                 onClick={() => {
                   const count = n;
                   const buildRows = (cnt) => {
-                    const asc = Array.from({length:cnt},(_,i) => snap5(((i+1)/(cnt+1))*100));
-                    for (let i=1;i<asc.length;i++) {if (asc[i] <= asc[i-1]) {asc[i] = Math.min(100, asc[i-1]+5);}}
-                    for (let i=asc.length-2;i>=0;i--) {if (asc[i] >= asc[i+1]) {asc[i] = Math.max(5, asc[i+1]-5);}}
+                    const asc = Array.from({length: cnt}, (_, i) => snap5(((i + 1) / (cnt + 1)) * 100));
+                    for (let i = 1;i < asc.length;i++) {
+                      if (asc[i] <= asc[i - 1]) {
+                        asc[i] = Math.min(100, asc[i - 1] + 5);
+                      }
+                    }
+                    for (let i = asc.length - 2;i >= 0;i--) {
+                      if (asc[i] >= asc[i + 1]) {
+                        asc[i] = Math.max(5, asc[i + 1] - 5);
+                      }
+                    }
                     const desc = [...asc].reverse();
-                    return asc.map((v,i) => newRow({ initL: v, initR: desc[i] }, i));
+                    return asc.map((v, i) => newRow({ initL: v, initR: desc[i] }, i));
                   };
                   setRows(buildRows(count));
                   setAddCountAnchor(null);
@@ -1959,7 +2203,9 @@ export default function App() {
               <div className="relative">
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); setPresetOpen(p => !p); }}
+                  onClick={(e) => {
+                    e.stopPropagation(); setPresetOpen(p => !p);
+                  }}
                   className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
                   aria-expanded={presetOpen}
                   aria-haspopup="listbox"
@@ -1984,9 +2230,11 @@ export default function App() {
                         type="button"
                         role="option"
                         aria-selected={selectedPresetName === preset.name}
-                        onClick={() => { loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null); }}
+                        onClick={() => {
+                          loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null);
+                        }}
                         title={preset.name}
-                        className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200'  } text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
+                        className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200' } text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
                       >
                         <span>{preset.name}</span>
                       </button>
@@ -2013,13 +2261,32 @@ export default function App() {
               <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
                 const misorderedIds = (() => {
-                  if (!rows.length) {return new Set();}
-                  const byX = [...rows].sort((a,b) => a.x-b.x).map(r => r.id);
+                  if (!rows.length) {
+                    return new Set();
+                  }
+                  const byX = [...rows].sort((a, b) => a.x - b.x).map(r => r.id);
                   const mis = new Set();
-                  for (let i=0;i<rows.length;i++) {if (rows[i].id !== byX[i]) {mis.add(rows[i].id);}}
+                  for (let i = 0;i < rows.length;i++) {
+                    if (rows[i].id !== byX[i]) {
+                      mis.add(rows[i].id);
+                    }
+                  }
                   return mis;
                 })();
-                return <PlayfieldEditor rows={rows} setRows={setRows} selectedId={selectedBlockId} setSelectedId={setSelectedBlockId} misorderedIds={misorderedIds} onClear={() => { setRows([]); setCollapsedTypes([]); _pushToast('Cleared all shots'); }} />;
+                return (
+                  <PlayfieldEditor
+                    rows={rows}
+                    setRows={setRows}
+                    selectedId={selectedBlockId}
+                    setSelectedId={setSelectedBlockId}
+                    misorderedIds={misorderedIds}
+                    onClear={() => {
+                      setRows([]);
+                      setCollapsedTypes([]);
+                      _pushToast('Cleared all shots');
+                    }}
+                  />
+                );
               })()}
               <div className="overflow-auto">
                 <table className="w-full text-sm table-fixed">
@@ -2032,13 +2299,21 @@ export default function App() {
                   </colgroup>
                   <thead>
                     <tr className="text-left text-slate-500 align-bottom">
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_BOTH' ? 'bg-slate-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? 'bg-slate-50' : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
                             tabIndex={0}
-                            onClick={() => { if (selectedBlockId !== 'FLIPPER_BOTH') { setSelectedBlockId('FLIPPER_BOTH'); } }}
-                            onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_BOTH') { setSelectedBlockId('FLIPPER_BOTH'); } }}
+                            onClick={() => {
+                              if (selectedBlockId !== 'FLIPPER_BOTH') {
+                                setSelectedBlockId('FLIPPER_BOTH');
+                              }
+                            }}
+                            onKeyDown={e => {
+                              if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_BOTH') {
+                                setSelectedBlockId('FLIPPER_BOTH');
+                              }
+                            }}
                             onMouseEnter={() => setHoverFlipperColumn('BOTH')}
                             onMouseLeave={() => setHoverFlipperColumn(null)}
                             className="hover:bg-slate-50 rounded px-1 cursor-pointer select-none"
@@ -2048,7 +2323,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => {
-                                setRows(prev => prev.map(rw => ({ ...rw, base:'', location:'', type:'', initL: rw.initL, initR: rw.initR })));
+                                setRows(prev => prev.map(rw => ({ ...rw, base: '', location: '', type: '', initL: rw.initL, initR: rw.initR })));
                                 setCollapsedTypes([]);
                               }}
                               className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
@@ -2057,13 +2332,21 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' || hoverFlipperColumn==='BOTH' ? 'bg-emerald-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? 'bg-emerald-50' : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
                             tabIndex={0}
-                            onClick={() => { if (selectedBlockId !== 'FLIPPER_L') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
-                            onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_L') { setSelectedSide('L'); setSelectedBlockId('FLIPPER_L'); } }}
+                            onClick={() => {
+                              if (selectedBlockId !== 'FLIPPER_L') {
+                                setSelectedSide('L'); setSelectedBlockId('FLIPPER_L');
+                              }
+                            }}
+                            onKeyDown={e => {
+                              if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_L') {
+                                setSelectedSide('L'); setSelectedBlockId('FLIPPER_L');
+                              }
+                            }}
                             onMouseEnter={() => setHoverFlipperColumn('L')}
                             onMouseLeave={() => setHoverFlipperColumn(null)}
                             className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
@@ -2075,10 +2358,20 @@ export default function App() {
                               onClick={() => {
                                 setRows(prev => {
                                   const n = prev.length;
-                                  if (!n) {return prev;}
-                                  const asc = Array.from({length:n}, (_,i) => snap5(((i+1)/(n+1))*100));
-                                  for (let k=1;k<asc.length;k++) {if (asc[k] <= asc[k-1]) {asc[k] = Math.min(100, asc[k-1] + 5);}}
-                                  for (let k=asc.length-2;k>=0;k--) {if (asc[k] >= asc[k+1]) {asc[k] = Math.max(5, asc[k+1]-5);}}
+                                  if (!n) {
+                                    return prev;
+                                  }
+                                  const asc = Array.from({length: n}, (_, i) => snap5(((i + 1) / (n + 1)) * 100));
+                                  for (let k = 1;k < asc.length;k++) {
+                                    if (asc[k] <= asc[k - 1]) {
+                                      asc[k] = Math.min(100, asc[k - 1] + 5);
+                                    }
+                                  }
+                                  for (let k = asc.length - 2;k >= 0;k--) {
+                                    if (asc[k] >= asc[k + 1]) {
+                                      asc[k] = Math.max(5, asc[k + 1] - 5);
+                                    }
+                                  }
                                   return prev.map((rw, idx) => ({ ...rw, initL: asc[idx] }));
                                 });
                               }}
@@ -2088,13 +2381,21 @@ export default function App() {
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' || hoverFlipperColumn==='BOTH' ? 'bg-rose-50' : ''}`}> 
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? 'bg-rose-50' : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
                             tabIndex={0}
-                            onClick={() => { if (selectedBlockId !== 'FLIPPER_R') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
-                            onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_R') { setSelectedSide('R'); setSelectedBlockId('FLIPPER_R'); } }}
+                            onClick={() => {
+                              if (selectedBlockId !== 'FLIPPER_R') {
+                                setSelectedSide('R'); setSelectedBlockId('FLIPPER_R');
+                              }
+                            }}
+                            onKeyDown={e => {
+                              if ((e.key === 'Enter' || e.key === ' ') && selectedBlockId !== 'FLIPPER_R') {
+                                setSelectedSide('R'); setSelectedBlockId('FLIPPER_R');
+                              }
+                            }}
                             onMouseEnter={() => setHoverFlipperColumn('R')}
                             onMouseLeave={() => setHoverFlipperColumn(null)}
                             className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
@@ -2105,10 +2406,20 @@ export default function App() {
                               type="button"
                               onClick={() => {
                                 setRows(prev => {
-                                  const n = prev.length; if (!n) {return prev;}
-                                  const asc = Array.from({length:n}, (_,i) => snap5(((i+1)/(n+1))*100));
-                                  for (let k=1;k<asc.length;k++) {if (asc[k] <= asc[k-1]) {asc[k] = Math.min(100, asc[k-1] + 5);}}
-                                  for (let k=asc.length-2;k>=0;k--) {if (asc[k] >= asc[k+1]) {asc[k] = Math.max(5, asc[k+1]-5);}}
+                                  const n = prev.length; if (!n) {
+                                    return prev;
+                                  }
+                                  const asc = Array.from({length: n}, (_, i) => snap5(((i + 1) / (n + 1)) * 100));
+                                  for (let k = 1;k < asc.length;k++) {
+                                    if (asc[k] <= asc[k - 1]) {
+                                      asc[k] = Math.min(100, asc[k - 1] + 5);
+                                    }
+                                  }
+                                  for (let k = asc.length - 2;k >= 0;k--) {
+                                    if (asc[k] >= asc[k + 1]) {
+                                      asc[k] = Math.max(5, asc[k + 1] - 5);
+                                    }
+                                  }
                                   const desc = [...asc].reverse();
                                   return prev.map((rw, idx) => ({ ...rw, initR: desc[idx] }));
                                 });
@@ -2150,7 +2461,9 @@ export default function App() {
                             data-add-multi
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (addCountAnchor) { setAddCountAnchor(null); return; }
+                              if (addCountAnchor) {
+                                setAddCountAnchor(null); return;
+                              }
                               const r = e.currentTarget.getBoundingClientRect();
                               setAddCountAnchor({ x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 });
                             }}
@@ -2174,19 +2487,27 @@ export default function App() {
                           </tr>
                         )}
                         <tr
-                          className={`border-t align-top ${dragRowIdx===i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId===r.id ? 'bg-slate-300' : '')} ${selectedBlockId===r.id ? '' : 'hover:bg-slate-100'} cursor-default`}
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setSelectedIdx(i); 
+                          className={`border-t align-top ${dragRowIdx === i ? 'bg-emerald-50 ring-1 ring-emerald-300' : (selectedBlockId === r.id ? 'bg-slate-300' : '')} ${selectedBlockId === r.id ? '' : 'hover:bg-slate-100'} cursor-default`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedIdx(i);
                             setSelectedBlockId(r.id);
                             // Close any open menus when clicking the row
-                            setOpenShotMenuId(null); 
-                            setOpenLocMenuId(null); 
-                            setShotMenuAnchor(null); 
+                            setOpenShotMenuId(null);
+                            setOpenLocMenuId(null);
+                            setShotMenuAnchor(null);
                             setLocMenuAnchor(null);
                           }}
-                          onDragOver={(e) => { if(initialized) {return;} e.preventDefault(); setDragOverIdx(i); }}
-                          onDrop={(e) => { if(initialized) {return;} e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null); }}
+                          onDragOver={(e) => {
+                            if (initialized) {
+                              return;
+                            } e.preventDefault(); setDragOverIdx(i);
+                          }}
+                          onDrop={(e) => {
+                            if (initialized) {
+                              return;
+                            } e.preventDefault(); handleRowReorder(dragRowIdx, i); setDragOverIdx(null);
+                          }}
                         >
                           <td className="pt-2 pr-2 pl-2 pb-2 align-top relative">
                             {(() => {
@@ -2194,13 +2515,15 @@ export default function App() {
                               const location = r.location || '';
                               const shotMenuOpen = openShotMenuId === r.id;
                               const locMenuOpen = openLocMenuId === r.id;
-                              const closeMenus = () => { setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null); };
+                              const closeMenus = () => {
+                                setOpenShotMenuId(null); setOpenLocMenuId(null); setShotMenuAnchor(null); setLocMenuAnchor(null);
+                              };
                               return (
                                 <div className="flex items-center gap-2 relative">
                                   {base ? (
                                     <InlineElementThumb
                                       name={base}
-                                      selected={true}
+                                      selected
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedIdx(i); setSelectedBlockId(r.id);
@@ -2256,19 +2579,23 @@ export default function App() {
                               );
                             })()}
                           </td>
-                          <td className={`p-2 ${selectedBlockId==='FLIPPER_L' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='L' || hoverFlipperColumn==='BOTH' ? 'bg-emerald-50' : ''}`}> 
+                          <td className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? 'bg-emerald-50' : ''}`}>
                             <div className="flex flex-col gap-1 w-full px-[10px]">
                               {(() => {
-                                const range = computeAllowedRange(rows,'L',i);
+                                const range = computeAllowedRange(rows, 'L', i);
                                 const rawAllowedMin = range ? range[0] : 5;
                                 const rawAllowedMax = range ? range[1] : 100;
                                 // Clamp to new visual/domain max of 95
                                 const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
                                 const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
-                                let actual = r.initL && r.initL>0 ? r.initL : null;
+                                let actual = r.initL && r.initL > 0 ? r.initL : null;
                                 if (actual !== null) {
-                                  if (actual > allowedMax) {actual = allowedMax;} // clamp any legacy 100s down to 95 visually
-                                  if (actual < allowedMin) {actual = allowedMin;}
+                                  if (actual > allowedMax) {
+                                    actual = allowedMax;
+                                  } // clamp any legacy 100s down to 95 visually
+                                  if (actual < allowedMin) {
+                                    actual = allowedMin;
+                                  }
                                 }
                                 const sliderMin = 5; const sliderMax = 95;
                                 const displayVal = actual !== null ? actual : 50;
@@ -2296,29 +2623,42 @@ export default function App() {
                                         max={sliderMax}
                                         step={5}
                                         value={Math.min(Math.max(actual !== null ? actual : displayVal, sliderMin), sliderMax)}
-                                        onMouseDown={e => { e.stopPropagation(); }}
-                                        onPointerDown={e => { e.stopPropagation(); }}
-                                        onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                                        onMouseDown={e => {
+                                          e.stopPropagation();
+                                        }}
+                                        onPointerDown={e => {
+                                          e.stopPropagation();
+                                        }}
+                                        onDragStart={e => {
+                                          e.preventDefault(); e.stopPropagation();
+                                        }}
                                         onChange={e => {
                                           let newActual = Number(e.target.value);
-                                          if (newActual > allowedMax) {newActual = allowedMax;}
-                                          if (newActual < allowedMin) {newActual = allowedMin;}
-                                          setRows(prev => { const next=[...prev]; next[i]={...next[i], initL: newActual}; return next; });
+                                          if (newActual > allowedMax) {
+                                            newActual = allowedMax;
+                                          }
+                                          if (newActual < allowedMin) {
+                                            newActual = allowedMin;
+                                          }
+                                          setRows(prev => {
+                                            const next = [...prev]; next[i] = {...next[i], initL: newActual}; return next;
+                                          });
                                         }}
                                         style={{ background: trackBg }}
-                                        className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
-                                      {range && !(allowedMin===5 && allowedMax===95) && (() => {
+                                        className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"
+                                      />
+                                      {range && !(allowedMin === 5 && allowedMax === 95) && (() => {
                                         return (
                                           <>
-                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${leftGreyPct  }%` }}>{format2(allowedMin)}</div>
-                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${rightGreyStartPct  }%` }}>{format2(allowedMax)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${leftGreyPct }%` }}>{format2(allowedMin)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700" style={{ left: `${rightGreyStartPct }%` }}>{format2(allowedMax)}</div>
                                           </>
                                         );
                                       })()}
-                                      {actual!==null && range && (() => {
+                                      {actual !== null && range && (() => {
                                         const pct = ((actual - 5) / span) * 100;
                                         return (
-                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct  }%` }}>{format2(actual)}</div>
+                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct }%` }}>{format2(actual)}</div>
                                         );
                                       })()}
                                     </div>
@@ -2327,35 +2667,43 @@ export default function App() {
                               })()}
                               <div className="flex flex-col items-center mt-[15px]">
                                 <Chip
-                                  active={r.initL===0}
+                                  active={r.initL === 0}
                                   onClick={() => {
                                     const range = computeAllowedRange(rows, 'L', i);
                                     if (r.initL === 0) {
                                       if (range) {
                                         const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
-                                        setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initL: mid }; return next; });
+                                        setRows(prev => {
+                                          const next = [...prev]; next[i] = { ...next[i], initL: mid }; return next;
+                                        });
                                       }
                                     } else {
-                                      setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initL: 0 }; return next; });
+                                      setRows(prev => {
+                                        const next = [...prev]; next[i] = { ...next[i], initL: 0 }; return next;
+                                      });
                                     }
                                   }}
                                 >Not Possible</Chip>
                               </div>
                             </div>
                           </td>
-                          <td className={`p-2 ${selectedBlockId==='FLIPPER_R' || selectedBlockId==='FLIPPER_BOTH' || hoverFlipperColumn==='R' || hoverFlipperColumn==='BOTH' ? 'bg-rose-50' : ''}`}> 
+                          <td className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? 'bg-rose-50' : ''}`}>
                             <div className="flex flex-col gap-1 w-full px-[10px]">
                               {(() => {
-                                const range = computeAllowedRange(rows,'R',i);
+                                const range = computeAllowedRange(rows, 'R', i);
                                 const rawAllowedMin = range ? range[0] : 5;
                                 const rawAllowedMax = range ? range[1] : 100;
                                 // Clamp both ends to 95 domain
                                 const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
                                 const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
-                                let actual = r.initR && r.initR>0 ? r.initR : null;
+                                let actual = r.initR && r.initR > 0 ? r.initR : null;
                                 if (actual !== null) {
-                                  if (actual > allowedMax) {actual = allowedMax;} // clamp legacy 100
-                                  if (actual < allowedMin) {actual = allowedMin;}
+                                  if (actual > allowedMax) {
+                                    actual = allowedMax;
+                                  } // clamp legacy 100
+                                  if (actual < allowedMin) {
+                                    actual = allowedMin;
+                                  }
                                 }
                                 const sliderMin = 5; const sliderMax = 95; // reversed visual
                                 const displayVal = actual !== null ? actual : 50;
@@ -2383,30 +2731,43 @@ export default function App() {
                                         max={sliderMax}
                                         step={5}
                                         value={Math.min(Math.max(100 - (actual !== null ? actual : displayVal), sliderMin), sliderMax)}
-                                        onMouseDown={e => { e.stopPropagation(); }}
-                                        onPointerDown={e => { e.stopPropagation(); }}
-                                        onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                                        onMouseDown={e => {
+                                          e.stopPropagation();
+                                        }}
+                                        onPointerDown={e => {
+                                          e.stopPropagation();
+                                        }}
+                                        onDragStart={e => {
+                                          e.preventDefault(); e.stopPropagation();
+                                        }}
                                         onChange={e => {
                                           const raw = Number(e.target.value);
                                           let newActual = 100 - raw;
-                                          if (newActual > allowedMax) {newActual = allowedMax;}
-                                          if (newActual < allowedMin) {newActual = allowedMin;}
-                                          setRows(prev => { const next=[...prev]; next[i]={...next[i], initR: newActual}; return next; });
+                                          if (newActual > allowedMax) {
+                                            newActual = allowedMax;
+                                          }
+                                          if (newActual < allowedMin) {
+                                            newActual = allowedMin;
+                                          }
+                                          setRows(prev => {
+                                            const next = [...prev]; next[i] = {...next[i], initR: newActual}; return next;
+                                          });
                                         }}
                                         style={{ background: trackBg }}
-                                        className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"/>
-                                      {range && !(allowedMin===5 && allowedMax===95) && (() => {
+                                        className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"
+                                      />
+                                      {range && !(allowedMin === 5 && allowedMax === 95) && (() => {
                                         return (
                                           <>
-                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${leftStopPct  }%` }}>{format2(allowedMax)}</div>
-                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${rightStartPct  }%` }}>{format2(allowedMin)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${leftStopPct }%` }}>{format2(allowedMax)}</div>
+                                            <div className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700" style={{ left: `${rightStartPct }%` }}>{format2(allowedMin)}</div>
                                           </>
                                         );
                                       })()}
-                                      {actual!==null && range && (() => {
+                                      {actual !== null && range && (() => {
                                         const pct = ((95 - actual) / span) * 100;
                                         return (
-                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct  }%` }}>{format2(actual)}</div>
+                                          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center" style={{ left: `${pct }%` }}>{format2(actual)}</div>
                                         );
                                       })()}
                                     </div>
@@ -2415,16 +2776,20 @@ export default function App() {
                               })()}
                               <div className="flex flex-col items-center mt-[15px]">
                                 <Chip
-                                  active={r.initR===0}
+                                  active={r.initR === 0}
                                   onClick={() => {
                                     const range = computeAllowedRange(rows, 'R', i);
                                     if (r.initR === 0) {
                                       if (range) {
                                         const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
-                                        setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initR: mid }; return next; });
+                                        setRows(prev => {
+                                          const next = [...prev]; next[i] = { ...next[i], initR: mid }; return next;
+                                        });
                                       }
                                     } else {
-                                      setRows(prev => { const next = [...prev]; next[i] = { ...next[i], initR: 0 }; return next; });
+                                      setRows(prev => {
+                                        const next = [...prev]; next[i] = { ...next[i], initR: 0 }; return next;
+                                      });
                                     }
                                   }}
                                 >Not Possible</Chip>
@@ -2458,8 +2823,12 @@ export default function App() {
                                       setSelectedIdx(-1);
                                       setSelectedBlockId(null);
                                     } else {
-                                      if (newIdx < 0) {newIdx = 0;} // safety
-                                      if (newIdx >= next.length) {newIdx = next.length - 1;}
+                                      if (newIdx < 0) {
+                                        newIdx = 0;
+                                      } // safety
+                                      if (newIdx >= next.length) {
+                                        newIdx = next.length - 1;
+                                      }
                                       setSelectedIdx(newIdx);
                                       setSelectedBlockId(next[newIdx]?.id ?? null);
                                     }
@@ -2482,8 +2851,14 @@ export default function App() {
                                   type="button"
                                   aria-label="Drag to reorder"
                                   draggable
-                                  onDragStart={(e) => { if(initialized) {return;} setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed='move'; }}
-                                  onDragEnd={() => { setDragRowIdx(null); setDragOverIdx(null); }}
+                                  onDragStart={(e) => {
+                                    if (initialized) {
+                                      return;
+                                    } setDragRowIdx(i); setDragOverIdx(i); e.dataTransfer.effectAllowed = 'move';
+                                  }}
+                                  onDragEnd={() => {
+                                    setDragRowIdx(null); setDragOverIdx(null);
+                                  }}
                                   className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100/60 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                                   title="Drag to reorder"
                                 >
@@ -2502,27 +2877,94 @@ export default function App() {
                               {!initialized && (
                                 <button
                                   type="button"
-                                  onClick={(e) => { e.stopPropagation(); setRows(prev => {
-                                    const next=[...prev];
-                                    const aboveIdx = i; // row above insertion point
-                                    const belowIdx = i+1 < prev.length ? i+1 : null;
-                                    const computeInsertValue = (side) => {
-                                      if (side === 'L') {
-                                        let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initL > 0)) {upIdx--;}
-                                        let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && !(prev[downIdx].initL > 0)) {downIdx++;}
-                                        const haveUpper = upIdx >= 0; const haveLower = downIdx !== null && downIdx < prev.length;
-                                        if (!haveUpper && !haveLower) {return 0;}
-                                        if (haveUpper && !haveLower) { const aboveVal = prev[upIdx].initL; if (!(aboveVal > 0)) {return 0;} if (aboveVal === 95) {return 100;} if (aboveVal === 100) {return 0;} const gap = 100 - aboveVal; if (gap <= 5) {return 0;} let mid = Math.round(((aboveVal + 100)/2)/5)*5; if (mid <= aboveVal) {mid=aboveVal+5;} if (mid >= 100) {mid=95;} if (!(mid>aboveVal && mid<100)) {return 0;} return clamp(mid,5,100);}    
-                                        if (!haveUpper && haveLower) {return 0;} const aboveVal = prev[upIdx].initL; const belowVal = prev[downIdx].initL; const gap = belowVal - aboveVal; if (!(aboveVal>0)&&!(belowVal>0)||gap<=5) {return 0;} let mid = Math.round(((aboveVal+belowVal)/2)/5)*5; if (mid<=aboveVal) {mid=aboveVal+5;} if (mid>=belowVal) {mid=belowVal-5;} if (!(mid>aboveVal && mid<belowVal)) {return 0;} return clamp(mid,5,100);
-                                      } else {
-                                        let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initR > 0)) {upIdx--;} let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && !(prev[downIdx].initR > 0)) {downIdx++;} const haveUpper = upIdx >= 0; const haveLower = downIdx !== null && downIdx < prev.length; if (!haveUpper && !haveLower) {return 0;} if (haveUpper && !haveLower) { const aboveVal = prev[upIdx].initR; if (!(aboveVal>0)) {return 0;} if (aboveVal===10) {return 5;} if (aboveVal===5) {return 0;} const gap = aboveVal - 5; if (gap <=5) {return 0;} let mid = Math.round(((aboveVal+5)/2)/5)*5; if (mid>=aboveVal) {mid=aboveVal-5;} if (mid<=5) {mid=10;} if (!(mid<aboveVal && mid>5)) {return 0;} return clamp(mid,5,100);} if (!haveUpper && haveLower) {return 0;} const aboveVal = prev[upIdx].initR; const belowVal = prev[downIdx].initR; const gap = aboveVal - belowVal; if (!(aboveVal>0)&&!(belowVal>0)||gap<=5) {return 0;} let mid = Math.round(((aboveVal+belowVal)/2)/5)*5; if (mid>=aboveVal) {mid=aboveVal-5;} if (mid<=belowVal) {mid=belowVal+5;} if (!(mid<aboveVal && mid>belowVal)) {return 0;} return clamp(mid,5,100); }
-                                    };
-                                    const midL = computeInsertValue('L');
-                                    const midR = computeInsertValue('R');
-                                    const row = newRow({ initL: midL, initR: midR }, prev.length);
-                                    next.splice(i+1,0,row);
-                                    return next;
-                                  }); }}
+                                  onClick={(e) => {
+                                    e.stopPropagation(); setRows(prev => {
+                                      const next = [...prev];
+                                      const aboveIdx = i; // row above insertion point
+                                      const belowIdx = i + 1 < prev.length ? i + 1 : null;
+                                      const computeInsertValue = (side) => {
+                                        if (side === 'L') {
+                                          let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initL > 0)) {
+                                            upIdx--;
+                                          }
+                                          let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && !(prev[downIdx].initL > 0)) {
+                                            downIdx++;
+                                          }
+                                          const haveUpper = upIdx >= 0; const haveLower = downIdx !== null && downIdx < prev.length;
+                                          if (!haveUpper && !haveLower) {
+                                            return 0;
+                                          }
+                                          if (haveUpper && !haveLower) {
+                                            const aboveVal = prev[upIdx].initL; if (!(aboveVal > 0)) {
+                                              return 0;
+                                            } if (aboveVal === 95) {
+                                              return 100;
+                                            } if (aboveVal === 100) {
+                                              return 0;
+                                            } const gap = 100 - aboveVal; if (gap <= 5) {
+                                              return 0;
+                                            } let mid = Math.round(((aboveVal + 100) / 2) / 5) * 5; if (mid <= aboveVal) {
+                                              mid = aboveVal + 5;
+                                            } if (mid >= 100) {
+                                              mid = 95;
+                                            } if (!(mid > aboveVal && mid < 100)) {
+                                              return 0;
+                                            } return clamp(mid, 5, 100);
+                                          }
+                                          if (!haveUpper && haveLower) {
+                                            return 0;
+                                          } const aboveVal = prev[upIdx].initL; const belowVal = prev[downIdx].initL; const gap = belowVal - aboveVal; if (!(aboveVal > 0) && !(belowVal > 0) || gap <= 5) {
+                                            return 0;
+                                          } let mid = Math.round(((aboveVal + belowVal) / 2) / 5) * 5; if (mid <= aboveVal) {
+                                            mid = aboveVal + 5;
+                                          } if (mid >= belowVal) {
+                                            mid = belowVal - 5;
+                                          } if (!(mid > aboveVal && mid < belowVal)) {
+                                            return 0;
+                                          } return clamp(mid, 5, 100);
+                                        } else {
+                                          let upIdx = aboveIdx; while (upIdx >= 0 && !(prev[upIdx].initR > 0)) {
+                                            upIdx--;
+                                          } let downIdx = belowIdx; while (downIdx !== null && downIdx < prev.length && !(prev[downIdx].initR > 0)) {
+                                            downIdx++;
+                                          } const haveUpper = upIdx >= 0; const haveLower = downIdx !== null && downIdx < prev.length; if (!haveUpper && !haveLower) {
+                                            return 0;
+                                          } if (haveUpper && !haveLower) {
+                                            const aboveVal = prev[upIdx].initR; if (!(aboveVal > 0)) {
+                                              return 0;
+                                            } if (aboveVal === 10) {
+                                              return 5;
+                                            } if (aboveVal === 5) {
+                                              return 0;
+                                            } const gap = aboveVal - 5; if (gap <= 5) {
+                                              return 0;
+                                            } let mid = Math.round(((aboveVal + 5) / 2) / 5) * 5; if (mid >= aboveVal) {
+                                              mid = aboveVal - 5;
+                                            } if (mid <= 5) {
+                                              mid = 10;
+                                            } if (!(mid < aboveVal && mid > 5)) {
+                                              return 0;
+                                            } return clamp(mid, 5, 100);
+                                          } if (!haveUpper && haveLower) {
+                                            return 0;
+                                          } const aboveVal = prev[upIdx].initR; const belowVal = prev[downIdx].initR; const gap = aboveVal - belowVal; if (!(aboveVal > 0) && !(belowVal > 0) || gap <= 5) {
+                                            return 0;
+                                          } let mid = Math.round(((aboveVal + belowVal) / 2) / 5) * 5; if (mid >= aboveVal) {
+                                            mid = aboveVal - 5;
+                                          } if (mid <= belowVal) {
+                                            mid = belowVal + 5;
+                                          } if (!(mid < aboveVal && mid > belowVal)) {
+                                            return 0;
+                                          } return clamp(mid, 5, 100);
+                                        }
+                                      };
+                                      const midL = computeInsertValue('L');
+                                      const midR = computeInsertValue('R');
+                                      const row = newRow({ initL: midL, initR: midR }, prev.length);
+                                      next.splice(i + 1, 0, row);
+                                      return next;
+                                    });
+                                  }}
                                   className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 hover:bg-slate-100/60 cursor-copy"
                                   aria-label="Insert shot below"
                                   title="Insert shot below"
@@ -2539,7 +2981,7 @@ export default function App() {
                           </td>
                         </tr>
                         {/* If dragging to end: show marker after last row */}
-                        {dragRowIdx !== null && i === rows.length-1 && dragOverIdx === rows.length && (
+                        {dragRowIdx !== null && i === rows.length - 1 && dragOverIdx === rows.length && (
                           <tr aria-hidden className="pointer-events-none">
                             <td colSpan={4} className="p-0">
                               <div className="h-2 relative">
@@ -2601,7 +3043,7 @@ export default function App() {
                   onClick={canStart ? startSession : undefined}
                   disabled={!canStart}
                   title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
-                  className={`px-4 py-2 rounded-2xl text-white ${  canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
+                  className={`px-4 py-2 rounded-2xl text-white ${ canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
                 >
                   Start Session
                 </button>
@@ -2662,7 +3104,9 @@ export default function App() {
                         <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
                         {mode === 'random' && (
                           <button
-                            onClick={() => { setSelectedIdx(pickRandomIdx()); setSelectedSide(Math.random() < 0.5 ? 'L' : 'R'); }}
+                            onClick={() => {
+                              setSelectedIdx(pickRandomIdx()); setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
+                            }}
                             className="px-3 py-1.5 rounded-xl border text-sm"
                             title="Random new shot & flipper"
                           >↻ New</button>
@@ -2693,14 +3137,14 @@ export default function App() {
                     <label className="w-28 text-sm text-slate-600">Flipper</label>
                     <div className="flex gap-2">
                       <Chip
-                        active={selectedSide==='L'}
-                        onClick={() => mode==='manual' ? setSelectedSide('L') : undefined}
-                        disabled={mode==='random'}
+                        active={selectedSide === 'L'}
+                        onClick={() => mode === 'manual' ? setSelectedSide('L') : undefined}
+                        disabled={mode === 'random'}
                       >Left</Chip>
                       <Chip
-                        active={selectedSide==='R'}
-                        onClick={() => mode==='manual' ? setSelectedSide('R') : undefined}
-                        disabled={mode==='random'}
+                        active={selectedSide === 'R'}
+                        onClick={() => mode === 'manual' ? setSelectedSide('R') : undefined}
+                        disabled={mode === 'random'}
                       >Right</Chip>
                     </div>
                   </div>
@@ -2719,14 +3163,20 @@ export default function App() {
                             onChange={(v) => {
                               if (v === '' || v === null || v === undefined) {
                                 setGuess('');
-                                if (recallError) {setRecallError('');}
+                                if (recallError) {
+                                  setRecallError('');
+                                }
                                 return;
                               }
                               const n = Number(v);
-                              if (!Number.isFinite(n)) {return;}
+                              if (!Number.isFinite(n)) {
+                                return;
+                              }
                               const clamped = Math.max(0, Math.min(100, n));
                               setGuess(clamped);
-                              if (recallError) {setRecallError('');}
+                              if (recallError) {
+                                setRecallError('');
+                              }
                             }}
                             step={5}
                             onKeyDown={(e) => {
@@ -2747,7 +3197,11 @@ export default function App() {
                   </div>
 
                   <button
-                    onClick={() => { submitAttempt(); /* keep focus for rapid entry */ setTimeout(() => {recallInputRef.current?.focus(); recallInputRef.current?.select();},0); }}
+                    onClick={() => {
+                      submitAttempt(); /* keep focus for rapid entry */ setTimeout(() => {
+                        recallInputRef.current?.focus(); recallInputRef.current?.select();
+                      }, 0);
+                    }}
                     className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
                   >
                     Submit
@@ -2793,7 +3247,9 @@ export default function App() {
                               </div>
                               <div className="flex justify-between mb-1">
                                 <div className="text-slate-600">Guess delta</div>
-                                <div>{has ? (a.prevInput !== null ? (() => { const diff = Math.round((a.input ?? 0)-(a.prevInput ?? 0)); return `${(diff>0?'+':'')+format2(Math.abs(diff))}%`; })() : 'N/A') : 'N/A'}</div>
+                                <div>{has ? (a.prevInput !== null ? (() => {
+                                  const diff = Math.round((a.input ?? 0) - (a.prevInput ?? 0)); return `${(diff > 0 ? '+' : '') + format2(Math.abs(diff))}%`;
+                                })() : 'N/A') : 'N/A'}</div>
                               </div>
                               <div className="flex justify-between mb-1">
                                 <div className="text-slate-600">Adjustment needed</div>
@@ -2830,7 +3286,9 @@ export default function App() {
                                     <input
                                       type="checkbox"
                                       checked={showMentalModel}
-                                      onChange={(e) => { const v=e.target.checked; setShowMentalModel(v); }}
+                                      onChange={(e) => {
+                                        const v = e.target.checked; setShowMentalModel(v);
+                                      }}
                                     />
                                     Guess values
                                   </label>
@@ -2910,7 +3368,7 @@ export default function App() {
                 <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
                   <div className="text-slate-600 mb-1">Last attempt</div>
                   <div className="text-2xl font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
-                  <div className={`text-[11px] mt-1 text-center min-h-[14px] ${  attempts[0] ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <div className={`text-[11px] mt-1 text-center min-h-[14px] ${ attempts[0] ? 'text-slate-500' : 'text-slate-400'}`}>
                     {attempts[0]
                       ? `Base ${attempts[0].basePoints}${attempts[0].adjustPenalty ? ` − Penalty ${attempts[0].adjustPenalty}` : ''}`
                       : 'Base —'}
@@ -2942,7 +3400,7 @@ export default function App() {
                       className="absolute top-1 right-1 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1"
                     >
                       {/* Enter fullscreen icon */}
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8H5V5"/><path d="M16 8h3V5"/><path d="M16 16h3v3"/><path d="M8 16H5v3"/></svg>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M16 3h3a2 2 0 0 1 2 2v3" /><path d="M21 16v3a2 2 0 0 1-2 2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M8 8H5V5" /><path d="M16 8h3V5" /><path d="M16 16h3v3" /><path d="M8 16H5v3" /></svg>
                       Fullscreen
                     </button>
                   )}
@@ -2951,7 +3409,7 @@ export default function App() {
                 {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
                 <div>
                   {(() => {
-                    const values = Array.from({length:19},(_,k) => (k+1)*5); // 5..95
+                    const values = Array.from({length: 19}, (_, k) => (k + 1) * 5); // 5..95
                     const ordered = selectedSide === 'L' ? values : [...values].reverse();
                     // Evenly spaced circular chips (normal mode only). Use CSS grid for equal column widths.
                     const chipFontPx = 24; // chosen for readability in normal mode
@@ -3039,19 +3497,19 @@ export default function App() {
                   const iconSize = Math.max(14, Math.round(14 * s));
                   return (
                     <div className="flex items-center justify-between px-4 py-2 text-slate-200" style={{fontSize}}>
-                      <div className="font-medium" style={{fontSize: Math.round(fontSize*1.05)}}>Practice Playfield</div>
+                      <div className="font-medium" style={{fontSize: Math.round(fontSize * 1.05)}}>Practice Playfield</div>
                       <div className="flex items-center" style={{gap}}>
                         <button
                           type="button"
                           onClick={() => setPlayfieldFullscreen(false)}
                           title="Exit fullscreen (Esc)"
                           style={{
-                            padding: `${padY}px ${padX*8}px`,
+                            padding: `${padY}px ${padX * 8}px`,
                             fontSize: fontSize * 0.9,
                             lineHeight: 1.1,
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: `${Math.round(4*s)}px`,
+                            gap: `${Math.round(4 * s)}px`,
                             borderWidth: 1,
                           }}
                           className="rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 transition-colors"
@@ -3085,7 +3543,7 @@ export default function App() {
                       // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
                       //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
                       // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
-                      const values = Array.from({length:19},(_,k) => (k+1)*5); // 5..95
+                      const values = Array.from({length: 19}, (_, k) => (k + 1) * 5); // 5..95
                       const ordered = selectedSide === 'L' ? values : [...values].reverse();
                       const totalChips = 19; // numeric chips only (NP below)
                       // Estimate inner horizontal padding (px). Container uses px-4 on parent (16px each side).
@@ -3107,7 +3565,9 @@ export default function App() {
                         // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
                         gap = 4; // minimal aesthetic gap
                         d = (avail - (totalChips - 1) * gap) / totalChips;
-                        if (d < 20) {d = 20;} // absolute floor
+                        if (d < 20) {
+                          d = 20;
+                        } // absolute floor
                       }
                       // Final safety clamp
                       d = Math.max(20, Math.min(maxDiameter, d));
@@ -3148,7 +3608,7 @@ export default function App() {
                               type="button"
                               onClick={() => submitAttempt(0)}
                               className="px-1 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.97] transition-transform text-sm font-medium"
-                              style={{ fontSize: Math.max(12, Math.round(chipFont*0.75)) }}
+                              style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
                             ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                           </div>
                         </div>
@@ -3164,63 +3624,66 @@ export default function App() {
 
         {/* Final recall */}
         {initialized && finalPhase && (
-          <>
-            <Section
-              title="Final Recall Challenge"
-              right={
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setFinalPhase(false)} className="px-3 py-1.5 rounded-xl border text-sm">Back to practice</button>
-                  <button onClick={resetAll} className="px-3 py-1.5 rounded-xl border text-sm">Full reset</button>
-                </div>
-              }
-            >
-              <p className="text-sm text-slate-600 mb-4">Enter your best recall for each shot. Higher score means closer to the correct values.</p>
-              <div className="overflow-auto border rounded-2xl">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-600">
-                      <th className="p-2 text-left">Shot</th>
-                      <th className="p-2 text-right">Your final recall</th>
-                      <th className="p-2 text-right">Correct values</th>
-                      <th className="p-2 text-right">Abs error</th>
+          <Section
+            title="Final Recall Challenge"
+            right={
+              <div className="flex items-center gap-3">
+                <button onClick={() => setFinalPhase(false)} className="px-3 py-1.5 rounded-xl border text-sm">Back to practice</button>
+                <button onClick={resetAll} className="px-3 py-1.5 rounded-xl border text-sm">Full reset</button>
+              </div>
+            }
+          >
+            <p className="text-sm text-slate-600 mb-4">Enter your best recall for each shot. Higher score means closer to the correct values.</p>
+            <div className="overflow-auto border rounded-2xl">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600">
+                    <th className="p-2 text-left">Shot</th>
+                    <th className="p-2 text-right">Your final recall</th>
+                    <th className="p-2 text-right">Correct values</th>
+                    <th className="p-2 text-right">Abs error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, i) => (
+                    <tr key={r.id} className="border-t">
+                      <td className="p-2">{r.type}</td>
+                      <td className="p-2 text-right">
+                        <NumberInput value={finalRecallL[i] ?? 0} onChange={(v) => setFinalRecallL(arr => {
+                          const next = [...arr]; next[i] = validatePercent(v) ?? next[i] ?? 0; return next;
+                        })}
+                        />
+                      </td>
+                      <td className="p-2 text-right">
+                        <NumberInput value={finalRecallR[i] ?? 0} onChange={(v) => setFinalRecallR(arr => {
+                          const next = [...arr]; next[i] = validatePercent(v) ?? next[i] ?? 0; return next;
+                        })}
+                        />
+                      </td>
+                      <td className="p-2 text-right">{formatPct(hiddenL[i] ?? 0)} / {formatPct(hiddenR[i] ?? 0)}</td>
+                      <td className="p-2 text-right">{(Math.abs(clamp(finalRecallL[i] ?? 0) - (hiddenL[i] ?? 0)) + Math.abs(clamp(finalRecallR[i] ?? 0) - (hiddenR[i] ?? 0))).toFixed(0)} pts</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r, i) => (
-                      <tr key={r.id} className="border-t">
-                        <td className="p-2">{r.type}</td>
-                        <td className="p-2 text-right">
-                          <NumberInput value={finalRecallL[i] ?? 0} onChange={(v) => setFinalRecallL(arr => {const next=[...arr]; next[i]=validatePercent(v) ?? next[i] ?? 0; return next;})} />
-                        </td>
-                        <td className="p-2 text-right">
-                          <NumberInput value={finalRecallR[i] ?? 0} onChange={(v) => setFinalRecallR(arr => {const next=[...arr]; next[i]=validatePercent(v) ?? next[i] ?? 0; return next;})} />
-                        </td>
-                        <td className="p-2 text-right">{formatPct(hiddenL[i] ?? 0)} / {formatPct(hiddenR[i] ?? 0)}</td>
-                        <td className="p-2 text-right">{(Math.abs(clamp(finalRecallL[i] ?? 0)-(hiddenL[i] ?? 0)) + Math.abs(clamp(finalRecallR[i] ?? 0)-(hiddenR[i] ?? 0))).toFixed(0)} pts</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+              <div className="border rounded-2xl p-3">
+                <div className="text-slate-600">Final score</div>
+                <div className="text-3xl font-semibold">{finalScore}</div>
               </div>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                <div className="border rounded-2xl p-3">
-                  <div className="text-slate-600">Final score</div>
-                  <div className="text-3xl font-semibold">{finalScore}</div>
-                </div>
-                <div className="border rounded-2xl p-3">
-                  <div className="text-slate-600">Shots</div>
-                  <div className="text-3xl font-semibold">{rows.length}</div>
-                </div>
-                <div className="border rounded-2xl p-3">
-                  <div className="text-slate-600">Total attempts</div>
-                  <div className="text-3xl font-semibold">{attemptCount}</div>
-                </div>
+              <div className="border rounded-2xl p-3">
+                <div className="text-slate-600">Shots</div>
+                <div className="text-3xl font-semibold">{rows.length}</div>
               </div>
-            </Section>
-          </>
+              <div className="border rounded-2xl p-3">
+                <div className="text-slate-600">Total attempts</div>
+                <div className="text-3xl font-semibold">{attemptCount}</div>
+              </div>
+            </div>
+          </Section>
         )}
       </div>
     </div>
   );
 }
-

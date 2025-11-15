@@ -23,7 +23,7 @@ async function buildStandaloneWithAssets() {
 
   // eslint-disable-next-line no-console
   console.log('Building Vite bundle first...');
-  
+
   // Build with Vite
   await build({
     build: {
@@ -42,17 +42,17 @@ async function buildStandaloneWithAssets() {
   // Read CSS and JS
   const assetsDir = path.join(distDir, 'assets');
   const files = fs.readdirSync(assetsDir);
-  
+
   const cssFile = files.find(f => f.endsWith('.css'));
   const jsFile = files.find(f => f.endsWith('.js'));
-  
+
   let css = '';
   let js = '';
-  
+
   if (cssFile) {
     css = fs.readFileSync(path.join(assetsDir, cssFile), 'utf8');
   }
-  
+
   if (jsFile) {
     js = fs.readFileSync(path.join(assetsDir, jsFile), 'utf8');
   }
@@ -88,7 +88,7 @@ async function buildStandaloneWithAssets() {
   presetFiles.forEach(file => {
     const presetPath = path.join(presetsDir, file);
     const presetData = fs.readFileSync(presetPath, 'utf8');
-    
+
     if (file === 'index.json') {
       // Store the index separately
       presetIndex = JSON.parse(presetData);
@@ -104,9 +104,9 @@ window.EMBEDDED_IMAGES = ${JSON.stringify(imageMap)};
 window.EMBEDDED_PRESETS = ${JSON.stringify(presets)};
 window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 `;
-  
-  js = `${embeddedAssets  }\n${  js}`;
-  
+
+  js = `${embeddedAssets }\n${ js}`;
+
   // Replace all image source references to use EMBEDDED_IMAGES
   // Match various patterns for imgSrc construction
   js = js.replace(
@@ -121,7 +121,7 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
     /imgSrc\s*=\s*`\$\{IMAGE_BASE_URL\}\/\$\{slug\}\.jpg`/g,
     'imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
-  
+
   // Also replace IMAGE_BASE_URL definition to empty string so it doesn't interfere
   js = js.replace(
     /const\s+IMAGE_BASE_URL\s*=\s*['"][^'"]*['"]/g,
