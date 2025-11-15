@@ -16,9 +16,9 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 
 ### Shot Configuration
 - **Visual playfield editor** - Arrange shots spatially on an arc-based layout with visual flipper representations
-- **38+ pinball preset tables** - Pre-configured shot layouts from classic and modern pinball machines (Addams Family, Medieval Madness, Attack from Mars, etc.)
-- **Custom shot creation** - Define shots using 19 base elements (Ramp, Orbit, Drops, Spinner, etc.) combined with 8 location modifiers
-- **Image-based tiles** - Optional visual shot element thumbnails (extensible with JPG images in `/public/images/elements/`)
+- **39 pinball preset tables** - Pre-configured shot layouts from classic and modern pinball machines (Addams Family, Medieval Madness, Attack from Mars, etc.)
+- **Custom shot creation** - Define shots using 19 base elements (Ramp, Orbit, Drops, Spinner, etc.) combined with 8 location modifiers (Left, Right, Center, Side, Top, Upper, Bottom, Lower)
+- **Image-based tiles** - Optional visual shot element thumbnails with 80×80px tiles (extensible with JPG images in `/public/images/elements/`)
 - **Export/import** - Save your custom shot configurations as JSON files
 
 ### Training Mechanics
@@ -51,16 +51,17 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 ## Technical Architecture
 
 ### Stack
-- **React 19** - Single-page application architecture
-- **Vite** - Fast build tool with HMR
-- **Tailwind CSS 4** - Utility-first styling
-- **No backend** - 100% client-side, offline-capable
+- **React 19.1.1** - Single-page application with functional components and hooks
+- **Vite 7.1.6** - Lightning-fast build tool with Hot Module Replacement (HMR)
+- **Tailwind CSS 4.1.13** - Utility-first styling with Vite plugin integration
+- **No backend** - 100% client-side, offline-capable with localStorage persistence
 
 ### Code Structure
-- **Single-file app** - `src/App.jsx` (~3000 lines) containing all logic
+- **Single-file app** - `src/App.jsx` (~3800 lines) containing all logic
 - **Functional helpers** - Pure functions for percentage snapping, ordering, drift calculations
 - **Custom hooks** - `useLocalStorage` for automatic state persistence
 - **Isotonic regression** - Mathematical constraint solver for maintaining shot order during randomization/drift
+- **Portal-based modals** - Using React's `createPortal` for modal dialogs
 
 ### Key Algorithms
 
@@ -102,9 +103,20 @@ The app will be available at `http://localhost:5173`
 ### Building for Production
 
 ```bash
+# Standard Vite build (outputs to dist/)
 npm run build
 npm run preview
+
+# Standalone single-file build with embedded assets
+npm run build:standalone
 ```
+
+The `build:standalone` script creates a self-contained HTML file (`pinball-trainer-standalone.html`) with:
+- All CSS and JavaScript inlined
+- All shot element images embedded as base64 data URIs
+- All 39 preset configurations embedded
+- No external dependencies - works completely offline
+- Automatic lint check before build
 
 ## Usage Guide
 
@@ -137,7 +149,7 @@ npm run preview
 
 ## Presets
 
-The app includes 38 preset pinball tables with pre-configured shot layouts:
+The app includes 39 preset pinball tables (including `index.json`) with pre-configured shot layouts:
 - Classic tables: Addams Family, Medieval Madness, Twilight Zone, Funhouse
 - Modern Stern: Deadpool, Godzilla, Jurassic Park, JAWS
 - Williams/Bally classics: Attack from Mars, Monster Bash, White Water
@@ -153,10 +165,22 @@ Place JPG files in `/public/images/elements/` with kebab-case filenames matching
 - `left-orbit.jpg` for "Left Orbit"
 - `center-scoop.jpg` for "Center Scoop"
 
-Images display as 80×80px tiles with automatic fallback to text labels.
+Images display as 80×80px tiles with automatic fallback to text labels. The standalone build automatically embeds all images as base64 data URIs.
 
 ### Creating Custom Presets
-Export your shot configuration via the export button (⬆ icon) in the setup table, then place the JSON file in `/public/presets/` and add an entry to `/public/presets/index.json`.
+1. Export your shot configuration via the export button (⬆ icon) in the setup table
+2. Place the JSON file in `/public/presets/`
+3. Add an entry to `/public/presets/index.json` with the table name and filename
+4. Preset will appear in the "+ Add Shot(s)" popup
+
+### Element and Location Options
+**Base Elements (19):**
+Ramp, Standups, Orbit, Drops, Spinner, Scoop, Lane, Toy, Captive Ball, Saucer, Loop, Lock, VUK, Bumper, Deadend, Gate, Magnet, Rollover, Vari Target, Roto Target
+
+**Location Modifiers (8):**
+Left, Right, Center, Side, Top, Upper, Bottom, Lower
+
+Locations can be omitted for base-element-only shots.
 
 ## Data Persistence
 
@@ -171,52 +195,90 @@ Clear browser data to reset the app completely.
 ## Performance Considerations
 
 - **Attempt history capped at 200** entries to prevent unbounded growth
-- **Efficient re-renders** via `useMemo` for expensive calculations
-- **No component splitting** - Single-file architecture optimized for this scale (~3000 LOC)
-- **Minimal dependencies** - Only React, React-DOM, and Tailwind
+- **Efficient re-renders** via `useMemo` for expensive calculations (drift, ordering, visual layout)
+- **Single-file architecture** - Optimized for this scale (~3800 LOC), no component splitting overhead
+- **Minimal dependencies** - Only React 19, React-DOM, and Tailwind CSS
+- **Source maps enabled** - Full debugging support in development
+- **Strict linting** - 80+ ESLint rules enforced with zero warnings policy
 
 ## Browser Support
 
 - Modern browsers with ES6+ support (Chrome, Firefox, Edge, Safari)
-- LocalStorage required
-- Recommended: Desktop or tablet (optimal screen size)
+- LocalStorage required for state persistence
+- Recommended: Desktop or tablet (optimal screen size for playfield visualization)
+- Tested with Brave browser in development
 
 ## Development
+
+### Available Scripts
+
+- **`npm install`** - Install all dependencies
+- **`npm run dev`** - Start Vite development server (port 5173)
+- **`npm run build`** - Build for production (outputs to `dist/`)
+- **`npm run build:standalone`** - Build self-contained single HTML file with embedded assets
+- **`npm run lint`** - Run ESLint with strict error checking (max warnings: 0)
+- **`npm run preview`** - Preview production build locally
+
+### VS Code Tasks
+
+The project includes predefined VS Code tasks (`.vscode/tasks.json`):
+
+1. **Install Dependencies** - Runs `npm install`
+2. **Lint** - Runs ESLint with problem matcher integration
+3. **npm: dev** - Starts Vite dev server (depends on Lint task)
+4. **Stop npm dev server** - PowerShell script to terminate Node.js processes for Vite
 
 ### Project Structure
 ```
 ├── public/
-│   ├── images/elements/    # Shot element image tiles (optional)
-│   └── presets/            # Pre-configured table JSON files
+│   ├── images/elements/    # Shot element image tiles (JPG format)
+│   └── presets/            # 39 pre-configured table JSON files
 ├── src/
-│   ├── App.jsx             # Main application (all logic)
+│   ├── App.jsx             # Main application (~3800 lines)
+│   ├── App.css             # Component-specific styles
 │   ├── main.jsx            # React entry point
-│   └── index.css           # Minimal global styles
+│   └── index.css           # Global styles and Tailwind imports
+├── .vscode/
+│   ├── launch.json         # Debugger configuration (Brave browser)
+│   └── tasks.json          # VS Code task definitions
 ├── .github/
-│   └── copilot-instructions.md  # AI assistant guidelines
-└── .vscode/
-    └── launch.json         # Debugger configuration (Brave)
+│   └── copilot-instructions.md  # AI assistant development guidelines
+├── build-standalone-complete.js # Standalone build script
+├── eslint.config.js        # ESLint 9+ flat config with strict rules
+├── vite.config.js          # Vite configuration
+├── package.json            # Dependencies and scripts
+└── index.html              # HTML entry point
 ```
 
 ### Key Files
-- **`src/App.jsx`** - Core application logic, helpers, components, state management
+- **`src/App.jsx`** - Core application logic, state management, all components
+- **`build-standalone-complete.js`** - Custom build script that embeds all assets into a single HTML file
 - **`.github/copilot-instructions.md`** - Comprehensive development guidelines for AI assistants
-- **`vite.config.js`** - Build configuration with source maps enabled
+- **`vite.config.js`** - Vite config with React plugin, Tailwind integration, and source maps
+- **`eslint.config.js`** - Strict ESLint configuration with 80+ rules for code quality
 
 ### Debugging
-Use the "Brave: Vite React" launch configuration in VS Code:
-1. Start the dev server (`npm run dev`)
-2. Press F5 to launch debugger
+Use the "Brave: Vite React (Single Tab)" launch configuration in VS Code:
+1. Start the dev server (`npm run dev`) or press F5 (task runs automatically)
+2. Debugger launches Brave browser in app mode
 3. Set breakpoints in `src/App.jsx`
+4. Dev server automatically stops when debugging ends
+
+The launch config uses:
+- Brave browser in app mode (`--app=http://localhost:5173`)
+- Ephemeral user data directory (fresh profile per session)
+- Disabled extensions and session restore
+- Source map support enabled
 
 ## Contributing
 
 See `.github/copilot-instructions.md` for detailed development guidelines, including:
-- Architectural principles
-- State model documentation
-- Ordering constraint rules
-- Performance guidelines
-- Coding conventions
+- Architectural principles (single-file design, state management)
+- State model documentation (localStorage keys, data structures)
+- Ordering constraint rules (left ascending, right descending)
+- Performance guidelines (memoization, render optimization)
+- Coding conventions (ESLint rules, formatting standards)
+- Build processes (standard and standalone builds)
 
 ## License
 
