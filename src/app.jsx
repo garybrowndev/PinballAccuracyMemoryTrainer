@@ -241,6 +241,7 @@ function computeAllowedRange(rows, side, index) {
 
 // Bounded isotonic regression preserving initial ordering defined by orderAsc.
 // Each point i constrained within base[i] ± 20 and 0..100; values snapped to 5.
+// Special handling: 0 ("Not Possible") values are never modified and don't participate in ordering.
 function isotonicWithBounds(current, base, orderAsc) {
   if (current.length === 0) {
     return current;
@@ -253,6 +254,11 @@ function isotonicWithBounds(current, base, orderAsc) {
   const uppers = inOrderIdx.map(i => upper[i]);
   const blocks = [];
   for (const [i, sum] of values.entries()) {
+    // Skip "Not Possible" (0) values - they never change
+    if (sum === 0 || base[inOrderIdx[i]] === 0) {
+      blocks.push({ sum: 0, count: 1, lb: 0, ub: 0, value: 0, isNotPossible: true });
+      continue;
+    }
     const count = 1;
     const lb = lowers[i];
     const ub = uppers[i];
@@ -262,11 +268,11 @@ function isotonicWithBounds(current, base, orderAsc) {
       mean = ub;
     }
     const val = snap5(mean);
-    blocks.push({ sum, count, lb, ub, value: val });
-    while (blocks.length >= 2 && blocks.at(-2).value > blocks.at(-1).value) {
+    blocks.push({ sum, count, lb, ub, value: val, isNotPossible: false });
+    while (blocks.length >= 2 && !blocks.at(-2).isNotPossible && !blocks.at(-1).isNotPossible && blocks.at(-2).value > blocks.at(-1).value) {
       const b = blocks.pop();
       const a = blocks.pop();
-      const merged = { sum: a.sum + b.sum, count: a.count + b.count, lb: Math.max(a.lb, b.lb), ub: Math.min(a.ub, b.ub), value: 0 };
+      const merged = { sum: a.sum + b.sum, count: a.count + b.count, lb: Math.max(a.lb, b.lb), ub: Math.min(a.ub, b.ub), value: 0, isNotPossible: false };
       let m = merged.sum / merged.count; if (m < merged.lb) {
         m = merged.lb;
       } else if (m > merged.ub) {
@@ -279,7 +285,7 @@ function isotonicWithBounds(current, base, orderAsc) {
   const adjusted = Array.from({ length: values.length });
   let k = 0; for (const bl of blocks) {
     for (let j = 0;j < bl.count;j++) {
-      adjusted[k++] = snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value)));
+      adjusted[k++] = bl.isNotPossible ? 0 : snap5(Math.min(bl.ub, Math.max(bl.lb, bl.value)));
     }
   }
   const next = [...current];
@@ -290,6 +296,7 @@ function isotonicWithBounds(current, base, orderAsc) {
 }
 
 // Ensure strict increasing / decreasing ordering (depending on provided index order) within ±20 bounds and snapping to 5.
+// Special handling: 0 ("Not Possible") values are never modified and don't participate in ordering constraints.
 // eslint-disable-next-line sonarjs/cognitive-complexity
 function strictlyIncrease(values, base, orderAsc) {
   if (values.length === 0) {
@@ -299,6 +306,10 @@ function strictlyIncrease(values, base, orderAsc) {
   const arr = idxs.map(i => values[i]);
   const bases = idxs.map(i => base[i]);
   for (let i = 1;i < arr.length;i++) {
+    // Skip if current or previous value is "Not Possible" (0)
+    if (arr[i] === 0 || bases[i] === 0 || arr[i - 1] === 0 || bases[i - 1] === 0) {
+      continue;
+    }
     if (arr[i] <= arr[i - 1]) {
       const b = bases[i];
       const hi = Math.min(100, b + 20);
@@ -332,11 +343,16 @@ function strictlyIncrease(values, base, orderAsc) {
   for (let k = 0;k < idxs.length;k++) {
     const i = idxs[k];
     const b = base[i];
+    // Never modify "Not Possible" (0) values
+    if (out[i] === 0 || b === 0) {
+      continue;
+    }
     const lo = Math.max(0, b - 20), hi = Math.min(100, b + 20);
     out[i] = snap5(Math.min(hi, Math.max(lo, out[i])));
     if (k > 0) {
       const prevIdx = idxs[k - 1];
-      if (out[i] <= out[prevIdx]) {
+      // Only enforce ordering if neither current nor previous is "Not Possible" (0)
+      if (out[prevIdx] !== 0 && base[prevIdx] !== 0 && out[i] <= out[prevIdx]) {
         let nv = snap5(out[prevIdx] + 5);
         if (nv > hi) {
           nv = hi;
