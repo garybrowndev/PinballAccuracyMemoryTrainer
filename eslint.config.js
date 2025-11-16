@@ -1,5 +1,4 @@
 import js from '@eslint/js';
-import { defineConfig, globalIgnores } from 'eslint/config';
 import importPlugin from 'eslint-plugin-import';
 import jsdoc from 'eslint-plugin-jsdoc';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
@@ -13,8 +12,14 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 
-export default defineConfig([
-  globalIgnores(['dist']),
+const config = [
+  {
+    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js'],
+  },
+  js.configs.recommended,
+  reactHooks.configs['recommended-latest'],
+  reactRefresh.configs.vite,
+  jsxA11y.flatConfigs.recommended,
   {
     files: ['**/*.{js,jsx}'],
     plugins: {
@@ -26,12 +31,6 @@ export default defineConfig([
       security,
       jsdoc,
     },
-    extends: [
-      js.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-      jsxA11y.flatConfigs.recommended,
-    ],
     settings: {
       react: {
         version: 'detect',
@@ -315,4 +314,6 @@ export default defineConfig([
       'jsdoc/require-returns-description': 'off',
     },
   },
-]);
+];
+
+export default config;
