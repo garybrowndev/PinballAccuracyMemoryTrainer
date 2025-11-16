@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,7 +12,7 @@ async function buildStandaloneWithAssets() {
   // Skip lint check - run manually before building if needed
   // The lint step was causing compatibility issues in CI environments
   // To lint: run `npm run lint` separately before building
-  
+
   // eslint-disable-next-line no-console
   console.log('Building Vite bundle first...');
 

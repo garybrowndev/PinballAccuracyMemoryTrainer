@@ -1,13 +1,13 @@
 # Copilot / AI Assistant Instructions
 
-These guidelines help AI coding assistants work effectively within this project’s current architecture (a single-file advanced React app in `src/App.jsx`). Keep responses concise, respect existing patterns, and avoid unrequested large refactors.
+These guidelines help AI coding assistants work effectively within this project’s current architecture (a single-file advanced React app in `src/app.jsx`). Keep responses concise, respect existing patterns, and avoid unrequested large refactors.
 
 ---
 ## 1. Purpose & Audience
 This repository hosts a Pinball Accuracy Memory Trainer. It’s an offline, client‑only, data-in-localStorage practice tool. Instructions target AI assistants (Copilot / Chat) and human contributors performing incremental enhancements.
 
 ## 2. Project Overview
-- Stack: React + Vite, single dominant file: `src/App.jsx` (~2500+ lines).
+- Stack: React + Vite, single dominant file: `src/app.jsx` (~2500+ lines).
 - Styling: Tailwind utility classes (implicit via PostCSS/Vite setup).
 - State Persistence: `useLocalStorage` wrapper for most session and config values.
 - Data Model: Array of "rows" (shots) with per-flipper percent values plus multiple derived state arrays representing hidden truth, mental model, ordering, attempts, and final recall.
@@ -16,7 +16,7 @@ This repository hosts a Pinball Accuracy Memory Trainer. It’s an offline, clie
 ## 3. Architectural Principles
 - Single render surface; avoid prop drilling explosion—derived values via `useMemo` not global state libs.
 - Deterministic snapping & ordering for flipper percentages (5% granularity) enforced at input & mutation sites.
-- Separation of concerns by semantic grouping inside `App.jsx` (helpers → components → main state logic → UI sections).
+- Separation of concerns by semantic grouping inside `app.jsx` (helpers → components → main state logic → UI sections).
 - Overlay (fullscreen) implemented as in‑DOM portal, not true browser Fullscreen API.
 - Minimal side effects: all listeners cleaned up in `useEffect` returns.
 
@@ -80,7 +80,7 @@ Incremental only. Acceptable small refactors:
 - Consolidate repetitive percentage display formatting into tiny shared helpers instead of inline duplication.
 Avoid until justified:
 - Global state libraries.
-- Over-eager splitting of `App.jsx` purely for size (risk of breaking tight coupling of helpers/state).
+- Over-eager splitting of `app.jsx` purely for size (risk of breaking tight coupling of helpers/state).
 
 ## 11. LocalStorage Versioning & Migration
 - Keys are suffixed with `_v1`. If schema changes (e.g., new field in `rows`), implement a lightweight migration pass on load: detect missing field & fill default.
@@ -147,7 +147,7 @@ When requesting code changes:
 ---
 ### Maintenance Notes
 - Keep this file updated if semantic changes occur (drift algorithm, ordering constraints, fullscreen mechanism, or persistence schema).
-- If file size of `App.jsx` grows > ~3500 lines, revisit controlled extraction plan.
+- If file size of `app.jsx` grows > ~3500 lines, revisit controlled extraction plan.
 
 ### Quick Health Checklist Before Merging PRs
 - Percent logic still enforces 5% increments.

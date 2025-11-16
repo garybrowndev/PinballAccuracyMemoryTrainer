@@ -57,7 +57,7 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 - **No backend** - 100% client-side, offline-capable with localStorage persistence
 
 ### Code Structure
-- **Single-file app** - `src/App.jsx` (~3800 lines) containing all logic
+- **Single-file app** - `src/app.jsx` (~3800 lines) containing all logic
 - **Functional helpers** - Pure functions for percentage snapping, ordering, drift calculations
 - **Custom hooks** - `useLocalStorage` for automatic state persistence
 - **Isotonic regression** - Mathematical constraint solver for maintaining shot order during randomization/drift
@@ -234,8 +234,8 @@ The project includes predefined VS Code tasks (`.vscode/tasks.json`):
 │   ├── images/elements/    # Shot element image tiles (JPG format)
 │   └── presets/            # 39 pre-configured table JSON files
 ├── src/
-│   ├── App.jsx             # Main application (~3800 lines)
-│   ├── App.css             # Component-specific styles
+│   ├── app.jsx             # Main application (~3800 lines)
+│   ├── app.css             # Component-specific styles
 │   ├── main.jsx            # React entry point
 │   └── index.css           # Global styles and Tailwind imports
 ├── .vscode/
@@ -251,7 +251,7 @@ The project includes predefined VS Code tasks (`.vscode/tasks.json`):
 ```
 
 ### Key Files
-- **`src/App.jsx`** - Core application logic, state management, all components
+- **`src/app.jsx`** - Core application logic, state management, all components
 - **`build-standalone-complete.js`** - Custom build script that embeds all assets into a single HTML file
 - **`.github/copilot-instructions.md`** - Comprehensive development guidelines for AI assistants
 - **`vite.config.js`** - Vite config with React plugin, Tailwind integration, and source maps
@@ -261,7 +261,7 @@ The project includes predefined VS Code tasks (`.vscode/tasks.json`):
 Use the "Brave: Vite React (Single Tab)" launch configuration in VS Code:
 1. Start the dev server (`npm run dev`) or press F5 (task runs automatically)
 2. Debugger launches Brave browser in app mode
-3. Set breakpoints in `src/App.jsx`
+3. Set breakpoints in `src/app.jsx`
 4. Dev server automatically stops when debugging ends
 
 The launch config uses:
