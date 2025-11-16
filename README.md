@@ -1,6 +1,22 @@
 # Pinball Accuracy Memory Trainer
 
-A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall. This progressive web application helps players internalize shot percentages for different flipper angles, with dynamic difficulty through drift mechanics and detailed performance feedback.
+## A Note from the Author
+
+Hi, I'm a competitive pinball player. Like many players, I've worked hard to improve my accuracy and aiming consistency. There are many ways to aim in pinball—some players use visual references, others use feel or timing. I personally aim by position on the flipper.
+
+As games progress, players need to remember dozens of different shots and their optimal flipper positions. This project is my attempt to create a training tool to help develop that muscle memory and recall ability. It's designed to internalize shot accuracy recall so deeply that thinking becomes unnecessary—performance becomes instinctive under pressure during competitive play.
+
+This is also an experiment in 100% pure AI "vibe coding"—every line of code in this project, along with the build scripts, GitHub workflows, Copilot instructions, and even this README file, has been written by AI. I just provide the prompts, review the output, and guide the direction.
+
+I hope this tool helps improve your game. If you'd like to discuss pinball—strategy, techniques, theory, or have feedback—I'd be happy to connect.
+
+— Gary Brown
+
+---
+
+## Overview
+
+A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall. This progressive web application helps players develop muscle memory for shot percentages for different flipper angles, with dynamic difficulty through drift mechanics and detailed performance feedback.
 
 ## What It Does
 
@@ -287,4 +303,6 @@ Private repository - all rights reserved.
 ## Acknowledgments
 
 Built for the pinball community to help players improve their shot accuracy recall and develop better muscle memory for competitive play.
+
+---
 
