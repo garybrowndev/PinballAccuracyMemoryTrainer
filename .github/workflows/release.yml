@@ -27,12 +27,20 @@ jobs:
       - name: Run linter
         run: npm run lint
 
-      - name: Build standalone HTML
-        run: npm run build:standalone
-
       - name: Get version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build standalone HTML
+        run: npm run build:standalone
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist-standalone
+          destination_dir: releases/${{ steps.get_version.outputs.VERSION }}
+          keep_files: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -47,7 +55,11 @@ jobs:
             
             A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall.
             
-            ### Installation
+            ### 🚀 Try it Online
+            
+            **[Launch App →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/releases/${{ steps.get_version.outputs.VERSION }}/pinball-trainer-standalone.html)**
+            
+            ### 💾 Or Download
             
             Download the standalone HTML file below and open it in your browser. No installation or internet connection required - all assets are embedded.
             
@@ -61,8 +73,9 @@ jobs:
             
             ### Usage
             
-            1. Download `pinball-trainer-standalone.html`
-            2. Open the file in any modern browser
-            3. Start training!
+            1. Click the "Launch App" link above to use it online, OR
+            2. Download `pinball-trainer-standalone.html` below
+            3. Open the downloaded file in any modern browser
+            4. Start training!
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
