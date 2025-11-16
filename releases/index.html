@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pinball Trainer - Releases</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 { color: #2c3e50; }
+    .version { 
+      padding: 20px;
+      margin: 20px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    .version h2 { margin-top: 0; }
+    .launch-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .launch-btn:hover { background: #45a049; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Pinball Accuracy Memory Trainer</h1>
+  <p>A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall.</p>
+  
+  <h2>Available Releases</h2>
+  <div id="releases"></div>
+  
+  <script>
+    // This will be populated by scanning the releases directory
+    fetch('.')
+      .then(r => r.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const links = Array.from(doc.querySelectorAll('a'))
+          .map(a => a.href)
+          .filter(href => /releases\/v[\d.]+/.test(href))
+          .map(href => href.match(/releases\/(v[\d.]+)/)[1])
+          .filter((v, i, arr) => arr.indexOf(v) === i)
+          .sort((a, b) => b.localeCompare(a, undefined, {numeric: true}));
+        
+        const releasesDiv = document.getElementById('releases');
+        if (links.length === 0) {
+          releasesDiv.innerHTML = '<div class="version"><p>Latest version: <a href="./0.0.3/pinball-trainer-standalone.html" class="launch-btn">Launch v0.0.3</a></p></div>';
+        } else {
+          links.forEach(version => {
+            releasesDiv.innerHTML += `
+              <div class="version">
+                <h2>Version ${version}</h2>
+                <a href="./${version}/pinball-trainer-standalone.html" class="launch-btn">Launch ${version}</a>
+              </div>
+            `;
+          });
+        }
+      })
+      .catch(() => {
+        document.getElementById('releases').innerHTML = '<div class="version"><p>Latest version: <a href="./0.0.3/pinball-trainer-standalone.html" class="launch-btn">Launch v0.0.3</a></p></div>';
+      });
+  </script>
+</body>
+</html>
