@@ -10,7 +10,29 @@ const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
 function snap5(v) {
   return Math.min(100, Math.max(0, Math.round(v / 5) * 5));
 }
-const rndInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a; // inclusive
+
+// Seeded random number generator (Mulberry32)
+const FIXED_SEED = 42; // Fixed seed value for reproducible randomness
+let rngState = null;
+function setSeed(enabled) {
+  if (enabled) {
+    rngState = FIXED_SEED >>> 0; // Convert to 32-bit unsigned integer
+  } else {
+    rngState = null;
+  }
+}
+function seededRandom() {
+  if (rngState === null) {
+    return Math.random();
+  }
+  let t = rngState += 0x6D2B79F5;
+  t = Math.imul(t ^ t >>> 15, t | 1);
+  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+  rngState = t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+
+const rndInt = (a, b) => Math.floor(seededRandom() * (b - a + 1)) + a; // inclusive
 // Format percentage values with at least two digits (00, 05, 10, ...) retaining % where appropriate.
 const format2 = (n) => {
   const v = Math.round(Number.isFinite(n) ? n : 0);
@@ -1515,6 +1537,7 @@ const App = () => {
   const [orderAscR, setOrderAscR] = useLocalStorage('pinball_initialOrderR_v1', []);
 
   const [mode, setMode] = useLocalStorage('pinball_mode_v1', 'random'); // 'manual' | 'random'
+  const [useSeededRandom, setUseSeededRandom] = useLocalStorage('pinball_useSeededRandom_v1', false);
   const [selectedIdx, setSelectedIdx] = useLocalStorage('pinball_sel_v1', 0);
   const [guess, setGuess] = useLocalStorage('pinball_guess_v1', '');
   const [selectedSide, setSelectedSide] = useLocalStorage('pinball_selSide_v1', 'L');
@@ -1572,6 +1595,11 @@ const App = () => {
     setSelectedSide(s => (s === 'L' || s === 'R') ? s : 'L');
     // No restore stacks to invalidate.
   }, [rows.length, setSelectedIdx, setSelectedSide]);
+
+  // Update seeded random generator when checkbox changes
+  useEffect(() => {
+    setSeed(useSeededRandom);
+  }, [useSeededRandom]);
 
   // Derived
   const totalPoints = useMemo(
@@ -1722,7 +1750,7 @@ const App = () => {
     if (rows.length > 0) {
       const randIdx = rndInt(0, rows.length - 1);
       setSelectedIdx(randIdx);
-      setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
+      setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
     }
   }, [rows, initRandSteps, setBaseL, setBaseR, setHiddenL, setHiddenR, setOrderAscL, setOrderAscR, setMentalL, setMentalR, setAttempts, setAttemptCount, setFinalPhase, setFinalRecallL, setFinalRecallR, setInitialized, setSelectedIdx, setSelectedSide]);
 
@@ -1777,7 +1805,7 @@ const App = () => {
         return 0;
       }
       const k = rndInt(0, usableSteps);
-      const dir = Math.random() < 0.5 ? -1 : 1;
+      const dir = seededRandom() < 0.5 ? -1 : 1;
       return dir * k * 5;
     };
 
@@ -1940,7 +1968,7 @@ const App = () => {
     // Prepare next random shot and flipper if in random mode
     if (mode === 'random') {
       setSelectedIdx(pickRandomIdx());
-      setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
+      setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
     }
 
     // Clear guess so input resets for next attempt
@@ -3202,13 +3230,23 @@ const App = () => {
                     <div className="flex items-center gap-2">
                       <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
                       {mode === 'random' && (
-                        <button
-                          onClick={() => {
-                            setSelectedIdx(pickRandomIdx()); setSelectedSide(Math.random() < 0.5 ? 'L' : 'R');
-                          }}
-                          className="px-3 py-1.5 rounded-xl border text-sm"
-                          title="Random new shot & flipper"
-                        >↻ New</button>
+                        <>
+                          <button
+                            onClick={() => {
+                              setSelectedIdx(pickRandomIdx()); setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
+                            }}
+                            className="px-3 py-1.5 rounded-xl border text-sm"
+                            title="Random new shot & flipper"
+                          >↻ New</button>
+                          <label className="flex items-center gap-2 text-xs text-slate-600 ml-2">
+                            <input
+                              type="checkbox"
+                              checked={useSeededRandom}
+                              onChange={(e) => setUseSeededRandom(e.target.checked)}
+                            />
+                            Seeded
+                          </label>
+                        </>
                       )}
                     </div>
                   </div>
