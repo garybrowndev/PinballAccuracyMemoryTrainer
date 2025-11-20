@@ -1,4 +1,18 @@
 @import "tailwindcss";
+
+/* Ensure minimum body width to prevent content from being drawn off-screen */
+body {
+  min-width: 320px;
+}
+
+/* Responsive helpers for shot boxes and UI elements */
+@media (max-width: 640px) {
+  /* Prevent horizontal overflow on small screens */
+  #root {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+}
 /* optional v4 config-in-CSS example:
 @theme {
   --breakpoint-md: 768px;

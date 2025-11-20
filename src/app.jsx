@@ -469,6 +469,51 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
   const [imageLoadedMap, setImageLoadedMap] = useState({});
   // Track computed scale for rendering
   const [boxScale, setBoxScale] = useState(1);
+  // Track actual canvas dimensions for responsive scaling
+  const [canvasWidth, setCanvasWidth] = useState(800); // default assumption
+
+  // ResizeObserver to track actual canvas width for responsive box scaling
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) {
+      // eslint-disable-next-line unicorn/no-useless-undefined
+      return undefined;
+    }
+
+    // Initial measurement
+    const initialRect = el.getBoundingClientRect();
+    if (initialRect.width) {
+      setCanvasWidth(initialRect.width);
+    }
+
+    let rafId = null;
+    const ro = new ResizeObserver(entries => {
+      // Cancel any pending update
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+
+      // Schedule update for next animation frame for smooth real-time resizing
+      rafId = requestAnimationFrame(() => {
+        for (const entry of entries) {
+          const w = entry.contentRect.width;
+          if (w > 0) {
+            setCanvasWidth(w);
+          }
+        }
+        rafId = null;
+      });
+    });
+
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, []);
+
   // Auto-arrange rows along arc; effect recomputes when rows array changes length or order.
   useEffect(() => {
     if (rows.length === 0) {
@@ -483,6 +528,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
     const minGap = 20; // minimum desired gap between boxes at full scale
     const minMargin = baseBoxWidth / 2; // absolute minimum margin at full scale (40)
     const comfortMargin = 120; // comfortable margin for small counts
+    const MIN_SCALE = 0.4; // Enforce minimum scale to prevent boxes from becoming too small/overlapping
 
     // Step 1: Calculate if we can fit at full scale (1.0) with comfortable spacing
     const totalBoxWidthAtFullScale = n * baseBoxWidth;
@@ -505,11 +551,23 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
         // n * baseBoxWidth * scale + 2 * minMargin * scale = chord
         // scale * (n * baseBoxWidth + 2 * minMargin) = chord
         scale = chord / (n * baseBoxWidth + 2 * minMargin);
+        // Enforce minimum scale to prevent excessive shrinkage
+        scale = Math.max(MIN_SCALE, scale);
         margin = minMargin * scale;
       } else {
         margin = minMargin;
       }
     }
+
+    // Step 3: Apply additional scaling based on actual canvas width to prevent overlap
+    // The virtual coordinate system is 1000 units, but actual canvas may be narrower
+    // We need to scale boxes down proportionally if the canvas is narrower than expected
+    const virtualToActualRatio = canvasWidth / 1000;
+    const widthConstrainedScale = scale * virtualToActualRatio;
+
+    // Choose the more restrictive scale (smaller of the two)
+    // But still enforce the minimum scale floor
+    const finalScale = Math.max(MIN_SCALE, Math.min(scale, widthConstrainedScale));
 
     const usableWidth = chord - (2 * margin);
     const fracs = n === 1 ? [0.5] : Array.from({ length: n }, (_, i) => i / (n - 1));
@@ -534,14 +592,14 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
       }
     }
     // Update scale if changed (compare with small epsilon for float precision)
-    if (Math.abs(scale - boxScale) > 0.001) {
-      setBoxScale(scale);
+    if (Math.abs(finalScale - boxScale) > 0.001) {
+      setBoxScale(finalScale);
     }
     // Update positions if changed
     if (anyDiff) {
       setRows(prev => prev.map((r, i) => ({ ...r, x: newPositions[i].x, y: newPositions[i].y })));
     }
-  }, [rows, setRows, boxScale]);
+  }, [rows, setRows, boxScale, canvasWidth]);
 
   // Drag removed; no clamping helper needed.
 
@@ -1064,14 +1122,16 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   const selectedRow = rows[selectedIdx] || null;
   // Default (non-fullscreen) canvas height is h-96 => 384px (24rem at 16px). Typical width in layout around ~800px.
   // Scale shot boxes proportionally relative to BOTH dimensions so they enlarge meaningfully on large screens.
+  // Also allow shrinking below baseline for very small screens to prevent off-screen rendering.
   let scale = 1;
   if (fullscreen && size.w && size.h) {
     const baseH = 384; // baseline small-mode height
     const baseW = 800; // approximate mid-size width used in standard layout
     scale = Math.min(size.h / baseH, size.w / baseW);
-    if (scale < 1) {
-      scale = 1;
-    } // never shrink below normal size
+    // Allow shrinking down to 0.4x for very small screens, but cap upper bound
+    if (scale < 0.4) {
+      scale = 0.4;
+    }
     if (scale > 2.6) {
       scale = 2.6;
     } // prevent comically large boxes
@@ -1107,7 +1167,9 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           // Image visibility tracked in parent map (imageLoadedMap) to avoid per-iteration hook misuse.
           const imgVisible = Boolean(imgSrc && imageLoadedMap[r.id]);
           const showImageAttempt = Boolean(imgSrc);
-          const boxSize = 80; // match setup tile size when image
+          // Scale box size but enforce minimum to prevent excessive shrinkage
+          const baseBoxSize = 80; // match setup tile size when image
+          const boxSize = Math.max(32, baseBoxSize * scale); // Minimum 32px to stay readable
           if (showImageAttempt) {
             return (
               <div
@@ -1129,9 +1191,23 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                   className={`${imgVisible ? 'opacity-100' : 'opacity-0'} absolute inset-0 w-full h-full object-cover transition-opacity duration-150`}
                   draggable={false}
                 />
-                {imgVisible ? <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>{r.type || '—'}</div> : null}
+                {imgVisible ? (
+                  <div
+                    className="absolute top-0 left-0 right-0 bg-black/55 text-white font-semibold px-1 py-[2px] leading-tight text-center truncate"
+                    style={{ fontSize: Math.max(7, 10 * scale) }}
+                    title={r.type}
+                  >
+                    {r.type || '—'}
+                  </div>
+                ) : null}
                 {!imgVisible && (
-                  <div className="absolute inset-0 flex items-center justify-center text-[11px] font-medium px-1 text-center" title={r.type || '—'}>{r.type || '—'}</div>
+                  <div
+                    className="absolute inset-0 flex items-center justify-center font-medium px-1 text-center"
+                    style={{ fontSize: Math.max(8, 11 * scale) }}
+                    title={r.type || '—'}
+                  >
+                    {r.type || '—'}
+                  </div>
                 )}
               </div>
             );
@@ -3638,59 +3714,56 @@ const App = () => {
                     Fullscreen
                   </button>
                 )}
-                {/* Metric boxes positioned at bottom corners */}
-                <div className="absolute bottom-4 left-4 z-30 flex gap-2">
-                  <div className="bg-white/95 backdrop-blur-sm border rounded-xl p-2 shadow-lg w-18 h-18 flex flex-col items-center justify-center">
-                    <div className="text-slate-600 text-[9px] mb-0.5 leading-tight text-center">Last attempt</div>
-                    <div className="text-base font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
+                {/* Metric boxes positioned at bottom corners - responsive sizing */}
+                <div className="absolute bottom-2 left-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:left-4">
+                  <div className="bg-white/95 backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center">
+                    <div className="text-slate-600 text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center">Last attempt</div>
+                    <div className="text-sm sm:text-base font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
                   </div>
-                  <div className="bg-white/95 backdrop-blur-sm border rounded-xl p-2 shadow-lg w-18 h-18 flex flex-col items-center justify-center">
-                    <div className="text-slate-600 text-[9px] mb-0.5">Attempts</div>
-                    <div className="text-base font-semibold">{attemptCount}</div>
+                  <div className="bg-white/95 backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center">
+                    <div className="text-slate-600 text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center">Attempts</div>
+                    <div className="text-sm sm:text-base font-semibold">{attemptCount}</div>
                   </div>
                 </div>
-                <div className="absolute bottom-4 right-4 z-30 flex gap-2">
-                  <div className="bg-white/95 backdrop-blur-sm border rounded-xl p-2 shadow-lg w-18 h-18 flex flex-col items-center justify-center">
-                    <div className="text-slate-600 text-[9px] mb-0.5 leading-tight text-center">Total points</div>
-                    <div className="text-base font-semibold">{totalPoints}</div>
+                <div className="absolute bottom-2 right-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:right-4">
+                  <div className="bg-white/95 backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center">
+                    <div className="text-slate-600 text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center">Total points</div>
+                    <div className="text-sm sm:text-base font-semibold">{totalPoints}</div>
                   </div>
-                  <div className="bg-white/95 backdrop-blur-sm border rounded-xl p-2 shadow-lg w-18 h-18 flex flex-col items-center justify-center">
-                    <div className="text-slate-600 text-[9px] mb-0.5 leading-tight text-center">Avg abs error</div>
-                    <div className="text-base font-semibold">{avgAbsErr.toFixed(1)}</div>
+                  <div className="bg-white/95 backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center">
+                    <div className="text-slate-600 text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center">Avg abs error</div>
+                    <div className="text-sm sm:text-base font-semibold">{avgAbsErr.toFixed(1)}</div>
                   </div>
                 </div>
                 <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
               </div>
-              {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
-              <div>
+              {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below - responsive sizing */}
+              <div className="w-full overflow-x-auto">
                 {(() => {
                   const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
                   const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                  // Evenly spaced circular chips (normal mode only). Use CSS grid for equal column widths.
-                  const chipFontPx = 24; // chosen for readability in normal mode
+                  // Responsive font size using clamp for smooth scaling
                   return (
-                    <div className="w-full select-none flex flex-col items-stretch">
+                    <div className="select-none flex flex-col items-stretch min-w-[320px]">
                       <div
-                        className="grid w-full"
-                        style={{ gridTemplateColumns: `repeat(${ordered.length}, 1fr)` }}
+                        className="grid w-full gap-[2px]"
+                        style={{ gridTemplateColumns: `repeat(${ordered.length}, minmax(0, 1fr))` }}
                       >
                         {ordered.map(v => (
                           <button
                             key={v}
                             type="button"
                             onClick={() => submitAttempt(v)}
-                            className="aspect-square rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-slate-700"
-                            style={{ fontSize: chipFontPx }}
+                            className="aspect-square rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-slate-700 text-[clamp(10px,2.2vw,24px)]"
                             aria-label={`Recall ${format2(v)}`}
                           ><span className="relative" style={{ top: '-1px' }}>{format2(v)}</span></button>
                         ))}
                       </div>
-                      <div className="flex justify-center">
+                      <div className="flex justify-center mt-1">
                         <button
                           type="button"
                           onClick={() => submitAttempt(0)}
-                          className="px-2 py-0 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 active:scale-[0.95] transition-transform font-semibold text-slate-700"
-                          style={{ fontSize: chipFontPx }}
+                          className="px-2 py-0.5 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 active:scale-[0.95] transition-transform font-semibold text-slate-700 text-[clamp(10px,2.2vw,24px)]"
                         ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                       </div>
                     </div>
@@ -3811,7 +3884,7 @@ const App = () => {
                     const labelFont = Math.max(8, Math.round(9 * s)); // base text-[9px]
                     const valueFont = Math.max(12, Math.round(16 * s)); // base text-base (16px)
                     const borderRadius = Math.round(12 * s); // base rounded-xl
-                    
+
                     return (
                       <>
                         <div className="absolute z-30 flex" style={{ bottom: margin, left: margin, gap }}>

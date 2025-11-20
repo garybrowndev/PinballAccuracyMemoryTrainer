@@ -14,7 +14,7 @@ import globals from 'globals';
 
 const config = [
   {
-    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js'],
+    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js', '.vscode'],
   },
   js.configs.recommended,
   reactHooks.configs['recommended-latest'],
