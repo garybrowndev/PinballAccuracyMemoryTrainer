@@ -15,11 +15,7 @@ function snap5(v) {
 const FIXED_SEED = 42; // Fixed seed value for reproducible randomness
 let rngState = null;
 function setSeed(enabled) {
-  if (enabled) {
-    rngState = FIXED_SEED >>> 0; // Convert to 32-bit unsigned integer
-  } else {
-    rngState = null;
-  }
+  rngState = enabled ? (FIXED_SEED >>> 0) : null; // Convert to 32-bit unsigned integer if enabled
 }
 function seededRandom() {
   if (rngState === null) {
@@ -1298,12 +1294,71 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                   </text>
                 </g>
               );
+              // Arrow vertical offset constants (adjustable)
+              const ARROW_INWARD_Y_OFFSET = 10; // Negative moves up (for arrows pointing toward center)
+              const ARROW_OUTWARD_Y_OFFSET = -15; // Negative moves up (for arrows pointing toward edges)
+              const ARROW_INWARD_X_OFFSET = 0.75; // Fraction to move inward arrow closer to number box
+
+              // Get arrow color based on severity (same as feedback box)
+              const arrowColor = SEVERITY_COLORS[lastRecall.severity] || '#eab308';
+
+              // Determine arrow direction based on delta (only if not perfect)
+              let arrowSymbol = null;
+              let arrowOffset = 0;
+              let arrowRotation = 0;
+              let arrowYOffset = 0;
+              if (lastRecall.delta !== 0) {
+                // For left flipper: negative delta means guess too low (arrow right/up toward higher numbers)
+                // For right flipper: negative delta means guess too low (arrow left/down toward higher numbers)
+                // Arrow points in the direction where the correct answer is
+                // Left flipper angle: approximately -45 degrees (base lower-left to tip upper-right)
+                // Right flipper angle: approximately 45 degrees (base lower-right to tip upper-left)
+                if (lastRecall.side === 'L') {
+                  if (lastRecall.delta < 0) {
+                    arrowSymbol = '→';
+                    arrowOffset = (rectW / 2 + fs * 0.6) * ARROW_INWARD_X_OFFSET; // Right side
+                    arrowRotation = 35; // 35 degrees clockwise
+                    arrowYOffset = ARROW_INWARD_Y_OFFSET; // Inward arrow moves up
+                  } else {
+                    arrowSymbol = '←';
+                    arrowOffset = -(rectW / 2 + fs * 0.6); // Left side, closer to box
+                    arrowRotation = 35; // 35 degrees counter-clockwise
+                    arrowYOffset = ARROW_OUTWARD_Y_OFFSET; // Outward arrow moves up
+                  }
+                } else if (lastRecall.delta < 0) {
+                  arrowSymbol = '←';
+                  arrowOffset = -(rectW / 2 + fs * 0.6) * ARROW_INWARD_X_OFFSET; // Left side, closer to box
+                  arrowRotation = -35; // -35 degrees counter-clockwise
+                  arrowYOffset = ARROW_INWARD_Y_OFFSET; // Inward arrow moves up
+                } else {
+                  arrowSymbol = '→';
+                  arrowOffset = rectW / 2 + fs * 0.6; // Right side
+                  arrowRotation = -35; // -35 degrees clockwise
+                  arrowYOffset = ARROW_OUTWARD_Y_OFFSET; // Outward arrow moves up
+                }
+              }
               recallNode = (
                 <g>
                   {lineEl}
                   <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6 * Number(textScale)} ry={6 * Number(textScale)} fill="#ffffff" stroke="#cbd5e1" strokeWidth={Number(textScale)} />
                   {/* Display 'NP' (Not Possible) instead of '00' when the recalled value is 0 */}
                   <text x={cx} y={cy - rectH / 2 + fs / 2 - Number(textScale)} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label === '00' ? 'NP' : label}</text>
+                  {/* Arrow indicator showing direction of correct answer, rotated along flipper axis */}
+                  {arrowSymbol ? (
+                    <text
+                      x={cx + arrowOffset}
+                      y={cy - rectH / 2 + fs / 2 - Number(textScale) + arrowYOffset}
+                      fontSize={fs}
+                      textAnchor="middle"
+                      fill={arrowColor}
+                      fontFamily="ui-sans-serif"
+                      fontWeight="700"
+                      stroke={arrowColor}
+                      strokeWidth={fs * 0.15}
+                      paintOrder="stroke"
+                      transform={`rotate(${arrowRotation}, ${cx + arrowOffset}, ${cy - rectH / 2 + fs / 2 - Number(textScale) + arrowYOffset})`}
+                    >{arrowSymbol}</text>
+                  ) : null}
                 </g>
               );
             }
@@ -3143,26 +3198,36 @@ const App = () => {
             <Section title="2) Session parameters">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-3">
-                  <span className="w-48" title={'How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75.'}>Initial random steps</span>
+                  <span className="w-32 flex-shrink-0" title={'How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75.'}>Initial random steps</span>
                   <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="w-48" title={'How often hidden values shift after attempts.\nExample: 5 means every 5th attempt triggers a drift.'}>Drift every</span>
+                  <span className="w-32 flex-shrink-0" title={'How often hidden values shift after attempts.\nExample: 5 means every 5th attempt triggers a drift.'}>Drift every</span>
                   <NumberInput value={driftEvery} onChange={setDriftEvery} min={0} max={50} />
                   <span>attempts</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="w-48" title={'Maximum distance (in 5% steps) a value can wander from its base during drift.\nExample: 2 means each shot stays within ±10 of its starting value.'}>Drift magnitude</span>
+                  <span className="w-32 flex-shrink-0" title={'Maximum distance (in 5% steps) a value can wander from its base during drift.\nExample: 2 means each shot stays within ±10 of its starting value.'}>Drift magnitude</span>
                   <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
                 {/* Drift bias removed: drift band now directly based on magnitude (usable integer steps = floor(mag)) */}
-                <div className="flex items-center gap-3">
-                  <span className="w-48" title={'Manual lets you pick any shot & flipper; Random picks one for you each attempt to reduce bias.\nExample: Random may jump Ramp Left → Orbit Right.'}>Mode</span>
-                  <div className="flex gap-2 flex-wrap">
+                <div className="flex items-start gap-3">
+                  <span className="w-32 flex-shrink-0 mt-1" title={'Manual lets you pick any shot & flipper; Random picks one for you each attempt to reduce bias.\nExample: Random may jump Ramp Left → Orbit Right.'}>Mode</span>
+                  <div className="flex gap-2 flex-wrap items-center flex-1 min-w-0">
                     <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
                     <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                    {mode === 'random' && (
+                      <label className="flex items-center gap-2 text-xs text-slate-600 ml-2 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={useSeededRandom}
+                          onChange={(e) => setUseSeededRandom(e.target.checked)}
+                        />
+                        Seeded
+                      </label>
+                    )}
                   </div>
                 </div>
               </div>
@@ -3220,135 +3285,138 @@ const App = () => {
               </div>
             }
           >
-            <div className={`grid grid-cols-1 ${showFeedbackPanel ? 'lg:[grid-template-columns:1.2fr_1fr]' : ''} gap-4`}>
+            <div className={`grid grid-cols-1 ${showFeedbackPanel ? 'lg:[grid-template-columns:60fr_40fr] lg:items-start' : ''} gap-4`}>
               {/* Left: selection and input */}
-              <div className="lg:col-span-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="w-28 text-sm text-slate-600">Mode</span>
-                  <div className="flex gap-2 flex-wrap items-center">
-                    <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
-                    <div className="flex items-center gap-2">
-                      <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
-                      {mode === 'random' && (
-                        <>
-                          <button
-                            onClick={() => {
-                              setSelectedIdx(pickRandomIdx()); setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
-                            }}
-                            className="px-3 py-1.5 rounded-xl border text-sm"
-                            title="Random new shot & flipper"
-                          >↻ New</button>
-                          <label className="flex items-center gap-2 text-xs text-slate-600 ml-2">
-                            <input
-                              type="checkbox"
-                              checked={useSeededRandom}
-                              onChange={(e) => setUseSeededRandom(e.target.checked)}
-                            />
-                            Seeded
-                          </label>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="w-28 text-sm text-slate-600 mt-1">Shot</span>
-                    <div className="flex gap-2 flex-wrap">
-                      {rows.map((r, i) => (
-                        <Chip
-                          key={r.id}
-                          active={selectedIdx === i}
-                          onClick={() => mode === 'manual' ? setSelectedIdx(i) : undefined}
-                          disabled={mode === 'random'}
-                        >
-                          {r.type}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="w-28 text-sm text-slate-600">Flipper</span>
-                  <div className="flex gap-2">
-                    <Chip
-                      active={selectedSide === 'L'}
-                      onClick={() => mode === 'manual' ? setSelectedSide('L') : undefined}
-                      disabled={mode === 'random'}
-                    >Left</Chip>
-                    <Chip
-                      active={selectedSide === 'R'}
-                      onClick={() => mode === 'manual' ? setSelectedSide('R') : undefined}
-                      disabled={mode === 'random'}
-                    >Right</Chip>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex items-start gap-3">
-                    <span className="w-28 text-sm text-slate-600 mt-1">Recall</span>
-                    <div className="flex flex-col items-stretch">
+              <div className="lg:col-span-1 flex flex-col">
+                <h3 className="font-medium mb-2">Current Attempt</h3>
+                <div className="border rounded-2xl p-3 mb-4 flex-1">
+                  <div className="flex items-start gap-3 mb-3 pb-3 border-b-2 border-slate-200">
+                    <span className="w-28 flex-shrink-0 text-sm text-slate-600 mt-1">Mode</span>
+                    <div className="flex gap-2 flex-wrap items-center">
+                      <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
                       <div className="flex items-center gap-2">
-                        <NumberInput
-                          ref={recallInputRef}
-                          value={guess}
-                          min={0}
-                          max={100}
-                          className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
-                          onChange={(v) => {
-                            if (v === '' || v === null || v === undefined) {
-                              setGuess('');
+                        <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                        {mode === 'random' && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setSelectedIdx(pickRandomIdx()); setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
+                              }}
+                              className="w-8 h-8 rounded-full border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 flex items-center justify-center text-lg"
+                              title="Random new shot & flipper"
+                            >↻</button>
+                            <label className="flex items-center gap-2 text-xs text-slate-600 ml-2">
+                              <input
+                                type="checkbox"
+                                checked={useSeededRandom}
+                                onChange={(e) => setUseSeededRandom(e.target.checked)}
+                              />
+                              Seeded
+                            </label>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-3 pb-3 border-b-2 border-slate-200">
+                    <div className="flex items-start gap-3 mb-2">
+                      <span className="w-28 flex-shrink-0 text-sm text-slate-600 mt-1">Shot</span>
+                      <div className="flex gap-2 flex-wrap">
+                        {rows.map((r, i) => (
+                          <Chip
+                            key={r.id}
+                            active={selectedIdx === i}
+                            onClick={() => mode === 'manual' ? setSelectedIdx(i) : undefined}
+                            disabled={mode === 'random'}
+                          >
+                            {r.type}
+                          </Chip>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 mb-4 pb-3 border-b-2 border-slate-200">
+                    <span className="w-28 flex-shrink-0 text-sm text-slate-600 mt-1">Flipper</span>
+                    <div className="flex gap-2">
+                      <Chip
+                        active={selectedSide === 'L'}
+                        onClick={() => mode === 'manual' ? setSelectedSide('L') : undefined}
+                        disabled={mode === 'random'}
+                      >Left</Chip>
+                      <Chip
+                        active={selectedSide === 'R'}
+                        onClick={() => mode === 'manual' ? setSelectedSide('R') : undefined}
+                        disabled={mode === 'random'}
+                      >Right</Chip>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="flex items-start gap-3">
+                      <span className="w-28 flex-shrink-0 text-sm text-slate-600 mt-1">Recall</span>
+                      <div className="flex flex-col items-stretch">
+                        <div className="flex items-center gap-2">
+                          <NumberInput
+                            ref={recallInputRef}
+                            value={guess}
+                            min={0}
+                            max={100}
+                            className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
+                            onChange={(v) => {
+                              if (v === '' || v === null || v === undefined) {
+                                setGuess('');
+                                if (recallError) {
+                                  setRecallError('');
+                                }
+                                return;
+                              }
+                              const n = Number(v);
+                              if (!Number.isFinite(n)) {
+                                return;
+                              }
+                              const clamped = Math.max(0, Math.min(100, n));
+                              setGuess(clamped);
                               if (recallError) {
                                 setRecallError('');
                               }
-                              return;
-                            }
-                            const n = Number(v);
-                            if (!Number.isFinite(n)) {
-                              return;
-                            }
-                            const clamped = Math.max(0, Math.min(100, n));
-                            setGuess(clamped);
-                            if (recallError) {
-                              setRecallError('');
-                            }
-                          }}
-                          step={5}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              submitAttempt();
-                            }
-                          }}
-                        />
+                            }}
+                            step={5}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                submitAttempt();
+                              }
+                            }}
+                          />
+                        </div>
+                        {recallError ? <div className="mt-1 text-center text-[11px] leading-snug whitespace-pre-line text-red-600">
+                          {recallError}
+                        </div> : null}
                       </div>
-                      {recallError ? <div className="mt-1 text-center text-[11px] leading-snug whitespace-pre-line text-red-600">
-                        {recallError}
-                      </div> : null}
                     </div>
                   </div>
-                </div>
 
-                <button
-                  onClick={() => {
-                    submitAttempt(); /* keep focus for rapid entry */ setTimeout(() => {
-                      recallInputRef.current?.focus(); recallInputRef.current?.select();
-                    }, 0);
-                  }}
-                  className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
-                >
-                  Submit
-                </button>
+                  <button
+                    onClick={() => {
+                      submitAttempt(); /* keep focus for rapid entry */ setTimeout(() => {
+                        recallInputRef.current?.focus(); recallInputRef.current?.select();
+                      }, 0);
+                    }}
+                    className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
+                  >
+                    Submit
+                  </button>
+                </div>
 
                 {/* Guess values moved into feedback panel */}
               </div>
 
               {/* Right: feedback and stats (toggleable) */}
-              {showFeedbackPanel ? <div className="lg:col-span-1">
+              {showFeedbackPanel ? <div className="lg:col-span-1 flex flex-col">
                 <h3 className="font-medium mb-2">Feedback</h3>
-                <div className="border rounded-2xl p-3">
+                <div className="border rounded-2xl p-3 flex-1">
                   <div className="text-sm">
                     {(() => {
                       const a = attempts[0];
@@ -3474,6 +3542,7 @@ const App = () => {
                             </div>
                           </div>
                           <div className="mt-4 pt-4 border-t">
+                            <div className="text-[11px] font-medium text-slate-700 mb-2">View Shot Values</div>
                             <div className="flex flex-wrap gap-4 items-center mb-3">
                               <label className="flex items-center gap-2 text-[11px] text-slate-600">
                                 <input
@@ -3483,7 +3552,7 @@ const App = () => {
                                     const v = e.target.checked; setShowMentalModel(v);
                                   }}
                                 />
-                                Guess values
+                                Guess
                               </label>
                               <label className="flex items-center gap-2 text-[11px] text-slate-600">
                                 <input
@@ -3491,7 +3560,7 @@ const App = () => {
                                   checked={showBaseValues}
                                   onChange={(e) => setShowBaseValues(e.target.checked)}
                                 />
-                                Starting values
+                                Starting
                               </label>
                               <label className="flex items-center gap-2 text-[11px] text-slate-600">
                                 <input
@@ -3499,7 +3568,7 @@ const App = () => {
                                   checked={showTruth}
                                   onChange={(e) => setShowTruth(e.target.checked)}
                                 />
-                                Correct values
+                                Correct
                               </label>
                             </div>
                             {(showMentalModel || showBaseValues || showTruth) ? <div>
@@ -3553,31 +3622,6 @@ const App = () => {
               </div> : null}
             </div>
 
-            {/* Consolidated metrics row above playfield */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-              <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
-                <div className="text-slate-600 mb-1">Last attempt</div>
-                <div className="text-2xl font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
-                <div className={`text-[11px] mt-1 text-center min-h-[14px] ${attempts[0] ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {attempts[0]
-                    ? `Base ${attempts[0].basePoints}${attempts[0].adjustPenalty ? ` − Penalty ${attempts[0].adjustPenalty}` : ''}`
-                    : 'Base —'}
-                </div>
-              </div>
-              <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
-                <div className="text-slate-600 mb-1">Attempts</div>
-                <div className="text-2xl font-semibold">{attemptCount}</div>
-              </div>
-              <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
-                <div className="text-slate-600 mb-1">Total points</div>
-                <div className="text-2xl font-semibold">{totalPoints}</div>
-              </div>
-              <div className="border rounded-2xl p-4 flex flex-col items-center justify-center">
-                <div className="text-slate-600 mb-1">Avg abs error</div>
-                <div className="text-2xl font-semibold">{avgAbsErr.toFixed(1)} pts</div>
-              </div>
-            </div>
-
             <div className="mt-6">
               {/* Practice playfield (read-only visual) */}
               <div className="relative">
@@ -3594,6 +3638,27 @@ const App = () => {
                     Fullscreen
                   </button>
                 )}
+                {/* Metric boxes positioned at bottom corners */}
+                <div className="absolute bottom-4 left-4 z-30 flex gap-2">
+                  <div className="bg-white/95 backdrop-blur-sm border rounded-xl p-2 shadow-lg w-18 h-18 flex flex-col items-center justify-center">
+                    <div className="text-slate-600 text-[9px] mb-0.5 leading-tight text-center">Last attempt</div>
+                    <div className="text-base font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
+                  </div>
+                  <div className="bg-white/95 backdrop-blur-sm border rounded-xl p-2 shadow-lg w-18 h-18 flex flex-col items-center justify-center">
+                    <div className="text-slate-600 text-[9px] mb-0.5">Attempts</div>
+                    <div className="text-base font-semibold">{attemptCount}</div>
+                  </div>
+                </div>
+                <div className="absolute bottom-4 right-4 z-30 flex gap-2">
+                  <div className="bg-white/95 backdrop-blur-sm border rounded-xl p-2 shadow-lg w-18 h-18 flex flex-col items-center justify-center">
+                    <div className="text-slate-600 text-[9px] mb-0.5 leading-tight text-center">Total points</div>
+                    <div className="text-base font-semibold">{totalPoints}</div>
+                  </div>
+                  <div className="bg-white/95 backdrop-blur-sm border rounded-xl p-2 shadow-lg w-18 h-18 flex flex-col items-center justify-center">
+                    <div className="text-slate-600 text-[9px] mb-0.5 leading-tight text-center">Avg abs error</div>
+                    <div className="text-base font-semibold">{avgAbsErr.toFixed(1)}</div>
+                  </div>
+                </div>
                 <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
               </div>
               {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below */}
@@ -3736,6 +3801,42 @@ const App = () => {
               {/* Main fullscreen content column. Use overflow-hidden to avoid phantom scrollbar when content fits. */}
               <div className="flex-1 flex flex-col items-stretch overflow-hidden">
                 <div className="relative flex-1 flex flex-col min-h-0">
+                  {/* Metric boxes positioned at bottom corners - scaled */}
+                  {(() => {
+                    const s = fullscreenScale || 1;
+                    const boxSize = Math.round(72 * s); // base 72px (w-18 h-18)
+                    const padding = Math.round(8 * s); // base p-2
+                    const margin = Math.round(16 * s); // base bottom-4/left-4/right-4
+                    const gap = Math.round(8 * s); // base gap-2
+                    const labelFont = Math.max(8, Math.round(9 * s)); // base text-[9px]
+                    const valueFont = Math.max(12, Math.round(16 * s)); // base text-base (16px)
+                    const borderRadius = Math.round(12 * s); // base rounded-xl
+                    
+                    return (
+                      <>
+                        <div className="absolute z-30 flex" style={{ bottom: margin, left: margin, gap }}>
+                          <div className="bg-white/95 backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center" style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className="text-slate-600 leading-tight text-center" style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Last attempt</div>
+                            <div className="font-semibold" style={{ fontSize: valueFont }}>{attempts[0] ? attempts[0].points : '—'}</div>
+                          </div>
+                          <div className="bg-white/95 backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center" style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className="text-slate-600" style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Attempts</div>
+                            <div className="font-semibold" style={{ fontSize: valueFont }}>{attemptCount}</div>
+                          </div>
+                        </div>
+                        <div className="absolute z-30 flex" style={{ bottom: margin, right: margin, gap }}>
+                          <div className="bg-white/95 backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center" style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className="text-slate-600 leading-tight text-center" style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Total points</div>
+                            <div className="font-semibold" style={{ fontSize: valueFont }}>{totalPoints}</div>
+                          </div>
+                          <div className="bg-white/95 backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center" style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className="text-slate-600 leading-tight text-center" style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Avg abs error</div>
+                            <div className="font-semibold" style={{ fontSize: valueFont }}>{avgAbsErr.toFixed(1)}</div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                   <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} />
                 </div>
                 <div className="w-full mx-auto]">
