@@ -40,8 +40,8 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": ".*VITE.*",
-          "endsPattern": ".*Local:.*http://localhost:[0-9]+.*"
+          "beginsPattern": "VITE",
+          "endsPattern": "Local:.*http://localhost:5173"
         }
       },
       "presentation": {

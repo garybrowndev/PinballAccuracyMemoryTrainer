@@ -298,11 +298,23 @@ See `.github/copilot-instructions.md` for detailed development guidelines, inclu
 
 ## License
 
-Private repository - all rights reserved.
+This project is licensed under the **MIT License** - one of the most permissive open source licenses available.
+
+You are free to:
+- ✅ Use this software for any purpose (personal, commercial, educational)
+- ✅ Modify and adapt the code to your needs
+- ✅ Distribute copies of the software
+- ✅ Sublicense and incorporate it into your own projects
+
+The only requirement is that you include the original copyright notice and license text in any copies or substantial portions of the software.
+
+See the [LICENSE](LICENSE) file for the full license text.
 
 ## Acknowledgments
 
 Built for the pinball community to help players improve their shot accuracy recall and develop better muscle memory for competitive play.
+
+This project is free and open source - contributions, forks, and adaptations are welcome!
 
 ---
 

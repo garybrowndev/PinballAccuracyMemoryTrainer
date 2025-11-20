@@ -14,7 +14,7 @@ import globals from 'globals';
 
 const config = [
   {
-    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js', '.vscode'],
+    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js', '.vscode/brave-debug-ephemeral'],
   },
   js.configs.recommended,
   reactHooks.configs['recommended-latest'],
