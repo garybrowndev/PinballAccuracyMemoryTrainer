@@ -1,0 +1,53 @@
+name: Auto Version and Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  create-release-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Calculate version from run number and commit hash
+        id: version
+        run: |
+          # Get short commit hash (7 chars)
+          SHORT_HASH=$(git rev-parse --short=7 HEAD)
+          # Use GitHub run_number as patch version with commit hash: 0.0.{run_number}.{hash}
+          NEW_VERSION="0.0.${{ github.run_number }}.${SHORT_HASH}"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "commit_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
+          echo "📦 Calculated version: $NEW_VERSION"
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Tag v${{ steps.version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "✅ Tag v${{ steps.version.outputs.version }} does not exist"
+          fi
+
+      - name: Create and push tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.version }}"
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+          git push origin "v$NEW_VERSION"
+          echo "🏷️  Created and pushed tag v$NEW_VERSION"

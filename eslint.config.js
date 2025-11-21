@@ -41,6 +41,9 @@ const config = [
       globals: {
         ...globals.browser,
         __APP_VERSION__: 'readonly',
+        __BUILD_COMMIT__: 'readonly',
+        __BUILD_COMMIT_URL__: 'readonly',
+        __BUILD_WORKFLOW_URL__: 'readonly',
       },
       parserOptions: {
         ecmaVersion: 'latest',

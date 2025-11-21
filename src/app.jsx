@@ -2392,7 +2392,39 @@ const App = () => {
                   </a>
                 </div>
                 <div className="pt-4 border-t text-sm text-slate-500">
-                  <p>Version {typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__} • Built with React + Vite + Tailwind CSS</p>
+                  <p>
+                    Version {typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__}
+                    {(() => {
+                      if (typeof __BUILD_COMMIT__ === 'undefined' || !__BUILD_COMMIT__) {
+                        return null;
+                      }
+                      if (__BUILD_COMMIT__ === 'dev') {
+                        return <span className="ml-2 text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded">Development Build</span>;
+                      }
+                      return (
+                        <span className="ml-2">
+                          (
+                          {(typeof __BUILD_COMMIT_URL__ !== 'undefined' && __BUILD_COMMIT_URL__) ? (
+                            <a href={__BUILD_COMMIT_URL__} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" title="View commit on GitHub">
+                              {__BUILD_COMMIT__}
+                            </a>
+                          ) : (
+                            <span>{__BUILD_COMMIT__}</span>
+                          )}
+                          {Boolean(typeof __BUILD_WORKFLOW_URL__ !== 'undefined' && __BUILD_WORKFLOW_URL__) && (
+                            <>
+                              {' • '}
+                              <a href={__BUILD_WORKFLOW_URL__} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" title="View build workflow">
+                                build
+                              </a>
+                            </>
+                          )}
+                          )
+                        </span>
+                      );
+                    })()}
+                  </p>
+                  <p className="mt-1">Built with React + Vite + Tailwind CSS</p>
                 </div>
               </div>
             </div>

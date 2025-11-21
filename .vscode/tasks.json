@@ -4,8 +4,8 @@
     {
       "label": "Install Dependencies",
       "detail": "Installs all npm packages required for the project",
-      "type": "npm",
-      "script": "install",
+      "type": "shell",
+      "command": "if (-not (Test-Path 'node_modules')) { npm install } else { Write-Host 'Dependencies already installed' }",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -15,8 +15,9 @@
     {
       "label": "Lint",
       "detail": "Checks code for errors and style issues using ESLint",
-      "type": "npm",
-      "script": "lint",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "lint"],
       "problemMatcher": ["$eslint-stylish"],
       "dependsOn": ["Install Dependencies"],
       "presentation": {
@@ -26,8 +27,9 @@
       }
     },
     {
-      "type": "npm",
-      "script": "dev",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
       "label": "npm: dev",
       "detail": "Starts the Vite development server with hot reload",
       "isBackground": true,
