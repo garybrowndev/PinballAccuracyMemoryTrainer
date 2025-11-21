@@ -1344,7 +1344,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               // Update: pill fill now matches severity color; border same color; text remains black for contrast
               lineEl = (
                 <g>
-                  <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke="#eab308" strokeWidth={4 * tScale} strokeLinecap="round" />
+                  <line x1={anchor.x} y1={anchor.y} x2={endX} y2={endY} stroke={SEVERITY_COLORS[lastRecall.severity] || '#eab308'} strokeWidth={8 * tScale} strokeLinecap="round" />
                   <rect
                     x={boxX}
                     y={boxY}
@@ -3599,7 +3599,9 @@ const App = () => {
                         <>
                           <div className="flex justify-between mb-1">
                             <div className="text-slate-600">Last shot</div>
-                            <div className="font-medium">{has ? rowDisplayWithSide(rows[a.idx], a.side) : '—'}</div>
+                            <div className="font-medium" style={{ color: has ? (SEVERITY_COLORS[a.severity] || '#334155') : undefined }}>
+                              {has ? rowDisplayWithSide(rows[a.idx], a.side) : '—'}
+                            </div>
                           </div>
                           <div className="flex justify-between mb-1">
                             <div className="text-slate-600">Result</div>
