@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Discussion Forum
+    url: https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/discussions
+    about: For general discussions, ideas, and community conversations about pinball training and strategy
+  - name: Copilot Development Guidelines
+    url: https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/blob/master/.github/copilot-instructions.md
+    about: If you're contributing code, check out our detailed AI-assisted development guidelines

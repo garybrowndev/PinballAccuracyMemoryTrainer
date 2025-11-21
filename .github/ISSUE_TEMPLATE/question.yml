@@ -1,0 +1,61 @@
+name: Question or Help
+description: Ask a question or get help using the Pinball Accuracy Memory Trainer
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about how to use the app or need help? We're here to assist!
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: How do I...?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What is your question about?
+      options:
+        - Getting started / Setup
+        - Training mechanics and drift system
+        - Shot configuration
+        - Creating custom presets
+        - Understanding feedback and scoring
+        - Using the visual playfield editor
+        - Importing/exporting data
+        - Technical issues or errors
+        - Pinball strategy or technique
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What Have You Tried?
+      description: Have you attempted to solve this yourself? If so, what did you try?
+      placeholder: I've looked at the README section on...
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or information that might help answer your question
+      placeholder: Any additional details that might help
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked the README documentation
+          required: false
+        - label: I have searched for existing issues/questions about this topic
+          required: true

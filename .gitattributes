@@ -1,0 +1,44 @@
+# Auto detect text files and normalize line endings to LF on checkout
+* text=auto eol=lf
+
+# Explicitly declare text files for consistent line endings
+*.md text
+*.txt text
+*.json text
+*.js text
+*.jsx text
+*.css text
+*.html text
+*.yml text
+*.yaml text
+
+# Windows-specific files should use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files - no line ending conversion
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+
+# Archive generated files
+dist/** linguist-generated=true
+dist-standalone/** linguist-generated=true
+
+# Exclude node_modules from language statistics
+node_modules/** linguist-vendored
+
+# Mark preset JSON files as data
+public/presets/*.json linguist-language=JSON linguist-detectable=true
