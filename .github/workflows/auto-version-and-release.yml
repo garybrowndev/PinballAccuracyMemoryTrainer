@@ -27,21 +27,24 @@ jobs:
         run: |
           # Get short commit hash (7 chars)
           SHORT_HASH=$(git rev-parse --short=7 HEAD)
-          # Use GitHub run_number as patch version with commit hash: 0.0.{run_number}.{hash}
-          NEW_VERSION="0.0.${{ github.run_number }}.${SHORT_HASH}"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          # Numeric version for npm (semver compliant): 0.0.{run_number}
+          NUMERIC_VERSION="0.0.${{ github.run_number }}"
+          # Full version with commit hash for tag: 0.0.{run_number}.{hash}
+          FULL_VERSION="0.0.${{ github.run_number }}.${SHORT_HASH}"
+          echo "numeric_version=$NUMERIC_VERSION" >> $GITHUB_OUTPUT
+          echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
           echo "commit_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
-          echo "📦 Calculated version: $NEW_VERSION"
+          echo "📦 Calculated version: $FULL_VERSION (npm: $NUMERIC_VERSION)"
 
       - name: Check if tag already exists
         id: check_tag
         run: |
-          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+          if git rev-parse "v${{ steps.version.outputs.full_version }}" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "⚠️  Tag v${{ steps.version.outputs.version }} already exists - skipping release"
+            echo "⚠️  Tag v${{ steps.version.outputs.full_version }} already exists - skipping release"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "✅ Tag v${{ steps.version.outputs.version }} does not exist - proceeding with release"
+            echo "✅ Tag v${{ steps.version.outputs.full_version }} does not exist - proceeding with release"
           fi
 
       - name: Setup Node.js
@@ -62,7 +65,7 @@ jobs:
       - name: Update package.json version temporarily for build
         if: steps.check_tag.outputs.exists == 'false'
         run: |
-          npm version ${{ steps.version.outputs.version }} --no-git-tag-version --allow-same-version
+          npm version ${{ steps.version.outputs.numeric_version }} --no-git-tag-version --allow-same-version
 
       - name: Build standalone HTML
         if: steps.check_tag.outputs.exists == 'false'
@@ -75,7 +78,7 @@ jobs:
       - name: Create and push tag
         if: steps.check_tag.outputs.exists == 'false'
         run: |
-          NEW_VERSION="${{ steps.version.outputs.version }}"
+          NEW_VERSION="${{ steps.version.outputs.full_version }}"
           git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           git push origin "v$NEW_VERSION"
           echo "🏷️  Created and pushed tag v$NEW_VERSION"
@@ -86,27 +89,27 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist-standalone
-          destination_dir: releases/${{ steps.version.outputs.version }}
+          destination_dir: releases/${{ steps.version.outputs.full_version }}
           keep_files: true
 
       - name: Create Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: Release ${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.full_version }}
+          name: Release ${{ steps.version.outputs.full_version }}
           draft: false
           prerelease: false
           files: |
             dist-standalone/pinball-trainer-standalone.html
           body: |
-            ## Pinball Accuracy Memory Trainer v${{ steps.version.outputs.version }}
+            ## Pinball Accuracy Memory Trainer v${{ steps.version.outputs.full_version }}
             
             A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall.
             
             ### 🚀 Try it Online
             
-            **[Launch App →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/releases/${{ steps.version.outputs.version }}/pinball-trainer-standalone.html)**
+            **[Launch App →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/releases/${{ steps.version.outputs.full_version }}/pinball-trainer-standalone.html)**
             
             ### 💾 Or Download
             
