@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  create-release-tag:
+  version-build-and-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -38,11 +38,39 @@ jobs:
         run: |
           if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "⚠️  Tag v${{ steps.version.outputs.version }} already exists"
+            echo "⚠️  Tag v${{ steps.version.outputs.version }} already exists - skipping release"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "✅ Tag v${{ steps.version.outputs.version }} does not exist"
+            echo "✅ Tag v${{ steps.version.outputs.version }} does not exist - proceeding with release"
           fi
+
+      - name: Setup Node.js
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm ci
+
+      - name: Run linter
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm run lint
+
+      - name: Update package.json version temporarily for build
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version --allow-same-version
+
+      - name: Build standalone HTML
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm run build:standalone
+        env:
+          BUILD_COMMIT: ${{ steps.version.outputs.commit_hash }}
+          BUILD_COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.version.outputs.commit_hash }}
+          BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Create and push tag
         if: steps.check_tag.outputs.exists == 'false'
@@ -51,3 +79,52 @@ jobs:
           git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           git push origin "v$NEW_VERSION"
           echo "🏷️  Created and pushed tag v$NEW_VERSION"
+
+      - name: Deploy to GitHub Pages
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist-standalone
+          destination_dir: releases/${{ steps.version.outputs.version }}
+          keep_files: true
+
+      - name: Create Release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            dist-standalone/pinball-trainer-standalone.html
+          body: |
+            ## Pinball Accuracy Memory Trainer v${{ steps.version.outputs.version }}
+            
+            A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall.
+            
+            ### 🚀 Try it Online
+            
+            **[Launch App →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/releases/${{ steps.version.outputs.version }}/pinball-trainer-standalone.html)**
+            
+            ### 💾 Or Download
+            
+            Download the standalone HTML file below and open it in your browser. No installation or internet connection required - all assets are embedded.
+            
+            ### What's Included
+            
+            - 39 preset pinball tables (Addams Family, Medieval Madness, Attack from Mars, and more)
+            - Progressive training with drift mechanics
+            - Visual playfield editor
+            - Performance tracking and feedback
+            - Fully offline-capable
+            
+            ### Usage
+            
+            1. Click the "Launch App" link above to use it online, OR
+            2. Download `pinball-trainer-standalone.html` below
+            3. Open the downloaded file in any modern browser
+            4. Start training!
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
