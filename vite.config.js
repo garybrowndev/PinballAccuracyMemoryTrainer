@@ -1,10 +1,22 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import tailwind from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 // eslint-disable-next-line import/no-deprecated
 import { defineConfig } from 'vite';
 
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
+
 export default defineConfig({
   plugins: [react(), tailwind()],
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+  },
   build: {
     sourcemap: true,
   },

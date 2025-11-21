@@ -2318,20 +2318,6 @@ const App = () => {
   }, [initialized, finalPhase]);
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
-      {/* Info button - top right corner */}
-      <button
-        type="button"
-        onClick={() => setShowInfoModal(true)}
-        className="fixed top-4 right-4 z-40 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-300 shadow-lg hover:bg-white hover:shadow-xl transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
-        title="About this app"
-        aria-label="About"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 16v-4" />
-          <path d="M12 8h.01" />
-        </svg>
-      </button>
       {/* Info Modal */}
       {showInfoModal ? (
         <div
@@ -2406,7 +2392,7 @@ const App = () => {
                   </a>
                 </div>
                 <div className="pt-4 border-t text-sm text-slate-500">
-                  <p>Version 1.0 • Built with React + Vite + Tailwind CSS</p>
+                  <p>Version {typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__} • Built with React + Vite + Tailwind CSS</p>
                 </div>
               </div>
             </div>
@@ -2602,6 +2588,21 @@ const App = () => {
             })()}
             <Section
               title="1) Define shots and initial guessed percentages"
+              right={
+                <button
+                  type="button"
+                  onClick={() => setShowInfoModal(true)}
+                  className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                  title="About this app"
+                  aria-label="About"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <path d="M12 17h.01" />
+                  </svg>
+                </button>
+              }
             >
               <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
