@@ -9,9 +9,22 @@
 
 ## 🚀 Live Demo
 
-**[Launch App →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)**
+<div align="center">
+  
+### [**🎯 Launch App**](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)
 
-Try it instantly in your browser - no download or installation required! Works completely offline with 39 preset pinball tables.
+[![App Screenshot](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/app-screenshot.jpg)](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)
+
+*Click the image above or the button to launch the app instantly in your browser*
+
+</div>
+
+**✨ Features at a Glance:**
+- 🎮 Works completely offline with 39 preset pinball tables
+- 🎯 Progressive training with dynamic drift mechanics
+- 📊 Real-time performance tracking and feedback
+- 💾 No download or installation required
+- 🔒 All data stored locally in your browser
 
 ## A Note from the Author
 
