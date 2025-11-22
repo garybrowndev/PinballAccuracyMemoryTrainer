@@ -7,6 +7,12 @@
 [![Issues](https://img.shields.io/github/issues/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues)
 [![Code Size](https://img.shields.io/github/languages/code-size/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer)
 
+## 🚀 Live Demo
+
+**[Launch App →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)**
+
+Try it instantly in your browser - no download or installation required! Works completely offline with 39 preset pinball tables.
+
 ## A Note from the Author
 
 Hi, I'm a competitive pinball player. Like many players, I've worked hard to improve my accuracy and aiming consistency. There are many ways to aim in pinball—some players use visual references, others use feel or timing. I personally aim by position on the flipper.
@@ -292,6 +298,14 @@ The launch config uses:
 - Ephemeral user data directory (fresh profile per session)
 - Disabled extensions and session restore
 - Source map support enabled
+
+## 💬 Community
+
+Join the discussion and connect with other pinball players:
+- **[Ask Questions](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/discussions/categories/q-a)** - Get help with setup, configuration, or usage
+- **[Share Ideas](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/discussions/categories/ideas)** - Suggest new features or preset tables
+- **[Show Your Results](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/discussions/categories/show-and-tell)** - Share your training progress and accuracy improvements
+- **[General Discussion](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/discussions)** - Talk strategy, tournament prep, and pinball theory
 
 ## Contributing
 
