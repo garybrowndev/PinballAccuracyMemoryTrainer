@@ -56,8 +56,8 @@ const SEVERITY_COLORS = {
 };
 
 // --- Image infrastructure for shot base element tiles ---
-// In future you will host JPGs at a backend/static path. For now we attempt to load them optimistically.
-// Convention: filename derived from element slug (lowercase, spaces -> dashes): e.g. "Left Ramp" -> "left-ramp.jpg".
+// In future you will host WebP images at a backend/static path. For now we attempt to load them optimistically.
+// Convention: filename derived from element slug (lowercase, spaces -> dashes): e.g. "Left Ramp" -> "left-ramp.webp".
 // If an image 404s the browser will show the fallback text layer (we keep text absolutely positioned).
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
 const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
@@ -71,7 +71,7 @@ function getImageSrc(name) {
   if (typeof window !== 'undefined' && window.EMBEDDED_IMAGES && window.EMBEDDED_IMAGES[slug]) {
     return window.EMBEDDED_IMAGES[slug];
   }
-  return `${IMAGE_BASE_URL}/${slug}.jpg`;
+  return `${IMAGE_BASE_URL}/${slug}.webp`;
 }
 
 // Stable id generator for rows to prevent input remount/focus loss

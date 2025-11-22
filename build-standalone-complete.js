@@ -70,7 +70,7 @@ async function buildStandaloneWithAssets() {
 
   // Embed all element images
   const elementsDir = path.join(__dirname, 'public', 'images', 'elements');
-  const imageFiles = fs.readdirSync(elementsDir).filter(f => f.endsWith('.jpg'));
+  const imageFiles = fs.readdirSync(elementsDir).filter(f => f.endsWith('.webp'));
   const imageMap = {};
 
   // eslint-disable-next-line no-console
@@ -78,8 +78,8 @@ async function buildStandaloneWithAssets() {
   for (const file of imageFiles) {
     const imagePath = path.join(elementsDir, file);
     const base64 = imageToBase64(imagePath);
-    const name = file.replace('.jpg', '');
-    imageMap[name] = `data:image/jpeg;base64,${base64}`;
+    const name = file.replace('.webp', '');
+    imageMap[name] = `data:image/webp;base64,${base64}`;
   }
 
   // Embed all presets
@@ -116,15 +116,15 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   // Replace all image source references to use EMBEDDED_IMAGES
   // Match various patterns for imgSrc construction
   js = js.replaceAll(
-    /const\s+imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`/g,
+    /const\s+imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.webp`/g,
     'const imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
   js = js.replaceAll(
-    /const\s+imgSrc\s*=\s*slug\s*\?\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`\s*:\s*null/g,
+    /const\s+imgSrc\s*=\s*slug\s*\?\s*`\${IMAGE_BASE_URL}\/\${slug}\.webp`\s*:\s*null/g,
     'const imgSrc = slug ? (EMBEDDED_IMAGES[slug] || "") : null',
   );
   js = js.replaceAll(
-    /imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.jpg`/g,
+    /imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.webp`/g,
     'imgSrc = EMBEDDED_IMAGES[slug] || ""',
   );
 
