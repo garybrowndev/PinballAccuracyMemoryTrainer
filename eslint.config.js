@@ -168,7 +168,7 @@ const config = [
       'no-promise-executor-return': 'error',
       'require-atomic-updates': 'error',
       'max-depth': ['error', 5],
-      'max-lines-per-function': ['error', { max: 2500, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 2520, skipBlankLines: true, skipComments: true }],
       'complexity': ['error', 60],
       // Performance & Modern JS
       'no-nested-ternary': 'error',

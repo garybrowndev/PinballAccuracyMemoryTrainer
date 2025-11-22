@@ -1832,6 +1832,28 @@ const App = () => {
     }
   }, [rows, _pushToast]);
 
+  // Download the current standalone HTML file
+  const downloadStandalone = useCallback(() => {
+    try {
+      const htmlContent = document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pinball-trainer-standalone.html';
+      document.body.append(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      _pushToast('Downloaded standalone HTML file');
+    } catch {
+      _pushToast('Download failed');
+    }
+  }, [_pushToast]);
+
+  // Check if running in standalone mode
+  const isStandalone = typeof window !== 'undefined' && window.EMBEDDED_IMAGES;
+
   // Initialize hidden matrix (wrapped so effects & handlers can depend on stable reference)
   const startSession = useCallback(() => {
     if (rows.length === 0) {
@@ -2621,19 +2643,36 @@ const App = () => {
             <Section
               title="1) Define shots and initial guessed percentages"
               right={
-                <button
-                  type="button"
-                  onClick={() => setShowInfoModal(true)}
-                  className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
-                  title="About this app"
-                  aria-label="About"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                    <path d="M12 17h.01" />
-                  </svg>
-                </button>
+                <div className="flex gap-2">
+                  {Boolean(isStandalone) && (
+                    <button
+                      type="button"
+                      onClick={downloadStandalone}
+                      className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                      title="Download this standalone HTML file"
+                      aria-label="Download standalone"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <path d="M7 10l5 5 5-5" />
+                        <path d="M12 15V3" />
+                      </svg>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowInfoModal(true)}
+                    className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                    title="About this app"
+                    aria-label="About"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <path d="M12 17h.01" />
+                    </svg>
+                  </button>
+                </div>
               }
             >
               <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
