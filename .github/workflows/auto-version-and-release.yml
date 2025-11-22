@@ -83,13 +83,22 @@ jobs:
           git push origin "v$NEW_VERSION"
           echo "🏷️  Created and pushed tag v$NEW_VERSION"
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy versioned release to GitHub Pages
         if: steps.check_tag.outputs.exists == 'false'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist-standalone
           destination_dir: releases/${{ steps.version.outputs.full_version }}
+          keep_files: true
+
+      - name: Deploy latest version to GitHub Pages root
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist-standalone
+          destination_dir: .
           keep_files: true
 
       - name: Create Release
@@ -109,7 +118,9 @@ jobs:
             
             ### 🚀 Try it Online
             
-            **[Launch App →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/releases/${{ steps.version.outputs.full_version }}/pinball-trainer-standalone.html)**
+            **[Launch Latest Version →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)**
+            
+            **[Launch This Release (v${{ steps.version.outputs.full_version }}) →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/releases/${{ steps.version.outputs.full_version }}/pinball-trainer-standalone.html)**
             
             ### 💾 Or Download
             
@@ -125,9 +136,10 @@ jobs:
             
             ### Usage
             
-            1. Click the "Launch App" link above to use it online, OR
-            2. Download `pinball-trainer-standalone.html` below
-            3. Open the downloaded file in any modern browser
-            4. Start training!
+            1. Click the "Launch Latest Version" link above to use the most recent version, OR
+            2. Click the "Launch This Release" link to use this specific version, OR
+            3. Download `pinball-trainer-standalone.html` below
+            4. Open the downloaded file in any modern browser
+            5. Start training!
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
