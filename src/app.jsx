@@ -86,8 +86,8 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
       type="button"
       onClick={onSelect}
       className={
-        `relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ${
-          selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'}`
+        `relative rounded-md bg-white dark:bg-slate-700 shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-gray-400 overflow-visible ${
+          selected ? 'ring-2 ring-slate-900 dark:ring-gray-300' : 'ring-1 ring-slate-300 dark:ring-gray-700 hover:ring-slate-500 dark:hover:ring-gray-600'}`
       }
       style={{
         width: size,
@@ -98,7 +98,7 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
         {!imgVisible && (
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-gray-300 p-1 text-center leading-tight select-none">
             {name}
           </div>
         )}
@@ -132,13 +132,13 @@ const InlineElementThumb = ({ name, selected, onClick }) => {
       type="button"
       onClick={onClick}
       data-shot-chip-thumb
-      className={`${selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'} relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible`}
+      className={`${selected ? 'ring-2 ring-slate-900 dark:ring-gray-300' : 'ring-1 ring-slate-300 dark:ring-gray-700 hover:ring-slate-500 dark:hover:ring-gray-600'} relative bg-white dark:bg-slate-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-gray-400 rounded-md overflow-visible`}
       style={{ width: size, height: size + 18 }} // extra space for hanging label
       aria-pressed={selected}
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
         {!imgVisible && (
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-gray-300 p-1 text-center leading-tight select-none">
             {name}
           </div>
         )}
@@ -402,9 +402,9 @@ function useLocalStorage(key, initialValue) {
 
 // Reusable presentational components hoisted out of App to keep stable identity
 const Section = ({ title, children, right }) => (
-  <div className="bg-white/80 rounded-2xl shadow p-4 md:p-6 mb-6">
+  <div className="bg-white/80 dark:bg-gray-900/95 rounded-2xl shadow p-4 md:p-6 mb-6">
     <div className="flex items-center justify-between mb-3">
-      <h2 className="text-lg md:text-xl font-semibold">{title}</h2>
+      <h2 className="text-lg md:text-xl font-semibold dark:text-gray-100">{title}</h2>
       {right}
     </div>
     {children}
@@ -422,7 +422,7 @@ const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, ste
     onChange={(e) => onChange(e.target.value)}
     onKeyDown={onKeyDown}
     className={
-      `w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${
+      `w-24 px-2 py-1 border dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl text-sm focus:outline-none focus:ring ${
         className || ''}`
     }
   />
@@ -451,8 +451,8 @@ const Chip = ({ active, children, onClick, className = '', disabled = false }) =
       className={
         `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center inline-flex items-center justify-center ${
           active
-            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+            ? 'bg-slate-900 dark:bg-gray-100 text-white dark:text-gray-900 border-slate-900 dark:border-gray-100 shadow-sm'
+            : 'bg-white dark:bg-gray-800 hover:bg-slate-100 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 border-slate-300 dark:border-gray-700'
         }${disabled ? ' opacity-60 cursor-not-allowed' : ''
         }${className ? ` ${className}` : ''}`
       }
@@ -614,10 +614,10 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
   return (
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout</h3>
-      <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
+      <div className="text-xs text-slate-600 dark:text-gray-400 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
       <div
         ref={canvasRef}
-        className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden"
+        className="relative border dark:border-gray-700 rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-950 h-96 overflow-hidden"
         role="region"
         aria-label="Playfield layout"
       >
@@ -628,7 +628,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
             onClick={(e) => {
               e.stopPropagation(); onClear();
             }}
-            className="absolute left-3 bottom-3 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
+            className="absolute left-3 bottom-3 z-40 bg-white/90 dark:bg-slate-700/90 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-gray-200 border dark:border-slate-600 shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
             title="Clear all shots"
             aria-label="Clear all shots"
           >
@@ -712,7 +712,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
               key={r.id}
               style={{ left: `${r.x * 100}%`, top: `${r.y * 100}%`, transform: 'translate(-50%, -50%)', width: renderedSize, height: renderedSize }}
               onMouseDown={(e) => handleMouseDown(e, r.id)}
-              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel ? 'ring-2 ring-emerald-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300'}`}
+              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white dark:bg-slate-700 ${sel ? 'ring-2 ring-emerald-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300 dark:border-slate-600'}`}
               role="button"
               tabIndex={0}
               aria-label={`Shot ${r.type || 'element'}`}
@@ -1146,7 +1146,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
     <div className={fullscreen ? 'w-full h-full flex flex-col' : 'mt-8'}>
       {!fullscreen && <h3 className="font-medium mb-2">Playfield</h3>}
       <div ref={canvasRef} className={
-        `relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden ${
+        `relative border dark:border-gray-700 rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-950 overflow-hidden ${
           fullscreen ? 'flex-1 min-h-0' : 'h-96'}`
       }
       >
@@ -1519,7 +1519,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
 };
 
 // ---------- main component ----------
-// eslint-disable-next-line sonarjs/cognitive-complexity
+// eslint-disable-next-line sonarjs/cognitive-complexity, max-lines-per-function
 const App = () => {
   const [toasts, setToasts] = useState([]); // {id,msg}
   const _pushToast = useCallback((msg) => {
@@ -1682,6 +1682,7 @@ const App = () => {
   const [showBaseValues, setShowBaseValues] = useLocalStorage('pinball_showBaseValues_v1', true); // visibility toggle for starting/original values
   const [showAttemptHistory, setShowAttemptHistory] = useLocalStorage('pinball_showAttemptHistory_v1', false);
   const [showFeedbackPanel, setShowFeedbackPanel] = useLocalStorage('pinball_showFeedback_v1', false); // new toggle for Feedback table
+  const [darkMode, setDarkMode] = useLocalStorage('pinball_darkMode_v1', true); // dark mode toggle (default: true)
   // Restore stacks removed (Not Possible is neutral now)
   // UI local (non-persisted) state: collapsed shot type rows (store ids)
   const [collapsedTypes, setCollapsedTypes] = useState([]); // Only shot type collapsing retained; flipper collapsing removed.
@@ -2339,12 +2340,12 @@ const App = () => {
     }
   }, [initialized, finalPhase]);
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
+    <div className={`min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 dark:from-gray-950 dark:to-black dark:text-gray-100 ${darkMode ? 'dark' : ''}`}>
       {/* Info Modal */}
       {showInfoModal ? (
         <div
           role="presentation"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${darkMode ? 'dark' : ''}`}
         >
           <button
             type="button"
@@ -2357,15 +2358,15 @@ const App = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="info-modal-title"
-            className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6 md:p-8">
               <div className="flex items-start justify-between mb-6">
-                <h2 id="info-modal-title" className="text-2xl md:text-3xl font-bold text-slate-900">About This App</h2>
+                <h2 id="info-modal-title" className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100">About This App</h2>
                 <button
                   type="button"
                   onClick={() => setShowInfoModal(false)}
-                  className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                   aria-label="Close"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2374,15 +2375,15 @@ const App = () => {
                   </svg>
                 </button>
               </div>
-              <div className="space-y-6 text-slate-700">
+              <div className="space-y-6 text-slate-700 dark:text-gray-300">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Pinball Accuracy Memory Trainer</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Pinball Accuracy Memory Trainer</h3>
                   <p className="leading-relaxed">
                     A training tool designed to help pinball players improve their shot accuracy estimation and mental model of flipper-to-target percentages. Practice recalling and adjusting your guesses to build muscle memory for real-world pinball play.
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">How It Works</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">How It Works</h3>
                   <ul className="space-y-2 list-disc list-inside">
                     <li>Define shots on a virtual playfield with left and right flipper percentages</li>
                     <li>Practice recalling those percentages from memory</li>
@@ -2391,13 +2392,13 @@ const App = () => {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Author</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Author</h3>
                   <p className="leading-relaxed">
                     Created by Gary Brown for the pinball community. This tool runs entirely in your browser with no data sent to any server - all your practice data stays local.
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Open Source</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Open Source</h3>
                   <p className="leading-relaxed mb-3">
                     This project is open source and available on GitHub. Contributions, feedback, and suggestions are welcome!
                   </p>
@@ -2405,7 +2406,7 @@ const App = () => {
                     href="https://github.com/garybrowndev/PinballAccuracyMemoryTrainer"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors"
                   >
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                       <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
@@ -2413,7 +2414,7 @@ const App = () => {
                     View on GitHub
                   </a>
                 </div>
-                <div className="pt-4 border-t text-sm text-slate-500">
+                <div className="pt-4 border-t dark:border-slate-600 text-sm text-slate-500 dark:text-gray-400">
                   <p>
                     Version {typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__}
                     {(() => {
@@ -2456,179 +2457,185 @@ const App = () => {
       {/* Toast notifications */}
       <div className="fixed top-16 right-4 z-50 flex flex-col gap-2">
         {toasts.map(t => (
-          <div key={t.id} className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein">
+          <div key={t.id} className="bg-slate-900 dark:bg-slate-700 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein">
             {t.msg}
           </div>
         ))}
       </div>
       {/* Detached popups (portals) for shot & location selection */}
       {shotMenuAnchor && openShotMenuId !== null ? createPortal(
-        <div
-          className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
-          style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
-          role="dialog"
-          aria-label="Select shot type"
-        >
-          {BASE_ELEMENTS.map(b => {
-            const currentRow = rows.find(r => r.id === shotMenuAnchor.id);
-            const isSel = currentRow?.base === b;
-            const hasSelection = Boolean(currentRow?.base);
-            return (
-              <ElementTile
-                key={b}
-                name={b}
-                selected={isSel}
-                hasSelection={hasSelection}
-                onSelect={() => {
-                  if (isSel) {
-                  // Clicking the currently selected shot deselects it; keep menu open
-                    setRows(prev => {
-                      const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
-                        next[idx] = { ...next[idx], base: '', type: '' };
-                      } return next;
-                    });
-                  } else {
-                  // Selecting a new shot; close menu
-                    setRows(prev => {
-                      const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
-                        next[idx] = { ...next[idx], base: b, type: buildType(b, next[idx].location || '') };
-                      } return next;
-                    });
-                    setOpenShotMenuId(null); setShotMenuAnchor(null);
-                  }
-                }}
-              />
-            );
-          })}
+        <div className={darkMode ? 'dark' : ''}>
+          <div
+            className="absolute z-50 w-[360px] rounded-xl border dark:border-slate-600 bg-white dark:bg-gray-900 shadow-xl p-3 grid grid-cols-4 gap-3"
+            style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
+            role="dialog"
+            aria-label="Select shot type"
+          >
+            {BASE_ELEMENTS.map(b => {
+              const currentRow = rows.find(r => r.id === shotMenuAnchor.id);
+              const isSel = currentRow?.base === b;
+              const hasSelection = Boolean(currentRow?.base);
+              return (
+                <ElementTile
+                  key={b}
+                  name={b}
+                  selected={isSel}
+                  hasSelection={hasSelection}
+                  onSelect={() => {
+                    if (isSel) {
+                      // Clicking the currently selected shot deselects it; keep menu open
+                      setRows(prev => {
+                        const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
+                          next[idx] = { ...next[idx], base: '', type: '' };
+                        } return next;
+                      });
+                    } else {
+                      // Selecting a new shot; close menu
+                      setRows(prev => {
+                        const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
+                          next[idx] = { ...next[idx], base: b, type: buildType(b, next[idx].location || '') };
+                        } return next;
+                      });
+                      setOpenShotMenuId(null); setShotMenuAnchor(null);
+                    }
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>,
         document.body,
       ) : null}
       {locMenuAnchor && openLocMenuId !== null ? createPortal(
-        <div
-          className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
-          style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
-          role="dialog"
-          aria-label="Select location"
-        >
-          {LOCATIONS.map(loc => {
-            const currentRow = rows.find(r => r.id === locMenuAnchor.id);
-            const isSel = currentRow?.location === loc;
-            return (
-              <button
-                key={loc}
-                type="button"
-                onClick={() => {
-                  if (isSel) {
-                  // Clicking the currently selected location deselects it; keep menu open
-                    setRows(prev => {
-                      const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
-                        const base = next[idx].base || ''; next[idx] = { ...next[idx], location: '', type: buildType(base, '') };
-                      } return next;
-                    });
-                  } else {
-                  // Selecting a new location; close menu
-                    setRows(prev => {
-                      const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
-                        const base = next[idx].base || ''; next[idx] = { ...next[idx], location: loc, type: buildType(base, loc) };
-                      } return next;
-                    });
-                    setOpenLocMenuId(null); setLocMenuAnchor(null);
-                  }
-                }}
-                className={`${isSel ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'} text-[11px] px-2 py-1 rounded-md text-left`}
-              >{loc}</button>
-            );
-          })}
+        <div className={darkMode ? 'dark' : ''}>
+          <div
+            className="absolute z-50 w-48 rounded-xl border dark:border-slate-600 bg-white dark:bg-gray-900 shadow-xl p-2 grid grid-cols-2 gap-2"
+            style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
+            role="dialog"
+            aria-label="Select location"
+          >
+            {LOCATIONS.map(loc => {
+              const currentRow = rows.find(r => r.id === locMenuAnchor.id);
+              const isSel = currentRow?.location === loc;
+              return (
+                <button
+                  key={loc}
+                  type="button"
+                  onClick={() => {
+                    if (isSel) {
+                      // Clicking the currently selected location deselects it; keep menu open
+                      setRows(prev => {
+                        const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
+                          const base = next[idx].base || ''; next[idx] = { ...next[idx], location: '', type: buildType(base, '') };
+                        } return next;
+                      });
+                    } else {
+                      // Selecting a new location; close menu
+                      setRows(prev => {
+                        const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
+                          const base = next[idx].base || ''; next[idx] = { ...next[idx], location: loc, type: buildType(base, loc) };
+                        } return next;
+                      });
+                      setOpenLocMenuId(null); setLocMenuAnchor(null);
+                    }
+                  }}
+                  className={`${isSel ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-gray-200'} text-[11px] px-2 py-1 rounded-md text-left`}
+                >{loc}</button>
+              );
+            })}
+          </div>
         </div>,
         document.body,
       ) : null}
       {addCountAnchor && rows.length === 0 ? createPortal(
-        <div
-          className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
-          style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
-          role="dialog"
-          aria-label="How many shots to add"
-        >
-          <div className="grid grid-cols-4 gap-1">
-            {Array.from({ length: 20 }, (_, k) => k + 1).map(n => (
-              <button
-                key={n}
-                type="button"
-                className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-                onClick={() => {
-                  const count = n;
-                  // eslint-disable-next-line unicorn/consistent-function-scoping
-                  const buildRows = (cnt) => {
-                    const asc = Array.from({ length: cnt }, (_, i) => snap5(((i + 1) / (cnt + 1)) * 100));
-                    for (let i = 1;i < asc.length;i++) {
-                      if (asc[i] <= asc[i - 1]) {
-                        asc[i] = Math.min(100, asc[i - 1] + 5);
-                      }
-                    }
-                    for (let i = asc.length - 2;i >= 0;i--) {
-                      if (asc[i] >= asc[i + 1]) {
-                        asc[i] = Math.max(5, asc[i + 1] - 5);
-                      }
-                    }
-                    const desc = [...asc].reverse();
-                    return asc.map((v, i) => newRow({ initL: v, initR: desc[i] }, i));
-                  };
-                  setRows(buildRows(count));
-                  setAddCountAnchor(null);
-                }}
-              >{n}</button>
-            ))}
-            <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
-          </div>
-          {availablePresets.length > 0 && (
-            <div className="mt-2 pt-2 border-t">
-              <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
-              <div className="relative">
+        <div className={darkMode ? 'dark' : ''}>
+          <div
+            className="absolute z-50 w-44 rounded-xl border dark:border-slate-600 bg-white dark:bg-gray-900 shadow-xl p-2"
+            style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
+            role="dialog"
+            aria-label="How many shots to add"
+          >
+            <div className="grid grid-cols-4 gap-1">
+              {Array.from({ length: 20 }, (_, k) => k + 1).map(n => (
                 <button
+                  key={n}
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation(); setPresetOpen(p => !p);
+                  className="text-[11px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-gray-200"
+                  onClick={() => {
+                    const count = n;
+                    // eslint-disable-next-line unicorn/consistent-function-scoping
+                    const buildRows = (cnt) => {
+                      const asc = Array.from({ length: cnt }, (_, i) => snap5(((i + 1) / (cnt + 1)) * 100));
+                      for (let i = 1;i < asc.length;i++) {
+                        if (asc[i] <= asc[i - 1]) {
+                          asc[i] = Math.min(100, asc[i - 1] + 5);
+                        }
+                      }
+                      for (let i = asc.length - 2;i >= 0;i--) {
+                        if (asc[i] >= asc[i + 1]) {
+                          asc[i] = Math.max(5, asc[i + 1] - 5);
+                        }
+                      }
+                      const desc = [...asc].reverse();
+                      return asc.map((v, i) => newRow({ initL: v, initR: desc[i] }, i));
+                    };
+                    setRows(buildRows(count));
+                    setAddCountAnchor(null);
                   }}
-                  className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
-                  aria-expanded={presetOpen}
-                  aria-haspopup="listbox"
-                  title={selectedPresetName || 'Select preset'}
-                >
-                  <span className="truncate block" style={{ maxWidth: '80%' }}>{selectedPresetName || 'Choose preset...'}</span>
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="w-4 h-4 ml-2">
-                    <path d="M6 8l4 4 4-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                {presetOpen ? (
-                  <div
-                    role="listbox"
-                    aria-label="Available presets"
-                    tabIndex={-1}
-                    className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
-                    onClick={e => e.stopPropagation()}
-                    onKeyDown={e => e.stopPropagation()}
-                    style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
-                  >
-                    {availablePresets.map(preset => (
-                      <button
-                        key={preset.filename}
-                        type="button"
-                        role="option"
-                        aria-selected={selectedPresetName === preset.name}
-                        onClick={() => {
-                          loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null);
-                        }}
-                        title={preset.name}
-                        className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200'} text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
-                      >
-                        <span>{preset.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
+                >{n}</button>
+              ))}
+              <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
             </div>
-          )}
+            {availablePresets.length > 0 && (
+              <div className="mt-2 pt-2 border-t">
+                <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation(); setPresetOpen(p => !p);
+                    }}
+                    className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
+                    aria-expanded={presetOpen}
+                    aria-haspopup="listbox"
+                    title={selectedPresetName || 'Select preset'}
+                  >
+                    <span className="truncate block" style={{ maxWidth: '80%' }}>{selectedPresetName || 'Choose preset...'}</span>
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="w-4 h-4 ml-2">
+                      <path d="M6 8l4 4 4-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  {presetOpen ? (
+                    <div
+                      role="listbox"
+                      aria-label="Available presets"
+                      tabIndex={-1}
+                      className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => e.stopPropagation()}
+                      style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
+                    >
+                      {availablePresets.map(preset => (
+                        <button
+                          key={preset.filename}
+                          type="button"
+                          role="option"
+                          aria-selected={selectedPresetName === preset.name}
+                          onClick={() => {
+                            loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null);
+                          }}
+                          title={preset.name}
+                          className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200'} text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
+                        >
+                          <span>{preset.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
         </div>,
         document.body,
       ) : null}
@@ -2648,7 +2655,7 @@ const App = () => {
                     <button
                       type="button"
                       onClick={downloadStandalone}
-                      className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                      className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-slate-100"
                       title="Download this standalone HTML file"
                       aria-label="Download standalone"
                     >
@@ -2661,8 +2668,33 @@ const App = () => {
                   )}
                   <button
                     type="button"
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-slate-100"
+                    title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                    aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  >
+                    {darkMode ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2" />
+                        <path d="M12 20v2" />
+                        <path d="m4.93 4.93 1.41 1.41" />
+                        <path d="m17.66 17.66 1.41 1.41" />
+                        <path d="M2 12h2" />
+                        <path d="M20 12h2" />
+                        <path d="m6.34 17.66-1.41 1.41" />
+                        <path d="m19.07 4.93-1.41 1.41" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setShowInfoModal(true)}
-                    className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                    className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-slate-100"
                     title="About this app"
                     aria-label="About"
                   >
@@ -2675,7 +2707,7 @@ const App = () => {
                 </div>
               }
             >
-              <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
+              <div className="mb-4 text-xs text-slate-600 dark:text-gray-400">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
                 const misorderedIds = (() => {
                   if (rows.length === 0) {
@@ -2715,8 +2747,8 @@ const App = () => {
                     <col className="w-[30px]" />
                   </colgroup>
                   <thead>
-                    <tr className="text-left text-slate-500 align-bottom">
-                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? 'bg-slate-50' : ''}`}>
+                    <tr className="text-left text-slate-500 dark:text-gray-400 align-bottom">
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? 'bg-slate-50 dark:bg-slate-700' : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
