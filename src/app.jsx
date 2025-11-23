@@ -86,8 +86,8 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
       type="button"
       onClick={onSelect}
       className={
-        `relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ${
-          selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'}`
+        `relative rounded-md bg-white dark:bg-slate-700 shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-300 overflow-visible ${
+          selected ? 'ring-2 ring-slate-900 dark:ring-slate-300' : 'ring-1 ring-slate-300 dark:ring-slate-600 hover:ring-slate-500 dark:hover:ring-slate-400'}`
       }
       style={{
         width: size,
@@ -98,7 +98,7 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
         {!imgVisible && (
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-slate-300 p-1 text-center leading-tight select-none">
             {name}
           </div>
         )}
@@ -132,13 +132,13 @@ const InlineElementThumb = ({ name, selected, onClick }) => {
       type="button"
       onClick={onClick}
       data-shot-chip-thumb
-      className={`${selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'} relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible`}
+      className={`${selected ? 'ring-2 ring-slate-900 dark:ring-slate-300' : 'ring-1 ring-slate-300 dark:ring-slate-600 hover:ring-slate-500 dark:hover:ring-slate-400'} relative bg-white dark:bg-slate-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-300 rounded-md overflow-visible`}
       style={{ width: size, height: size + 18 }} // extra space for hanging label
       aria-pressed={selected}
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
         {!imgVisible && (
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-slate-300 p-1 text-center leading-tight select-none">
             {name}
           </div>
         )}
@@ -402,9 +402,9 @@ function useLocalStorage(key, initialValue) {
 
 // Reusable presentational components hoisted out of App to keep stable identity
 const Section = ({ title, children, right }) => (
-  <div className="bg-white/80 rounded-2xl shadow p-4 md:p-6 mb-6">
+  <div className="bg-white/80 dark:bg-slate-800/80 rounded-2xl shadow p-4 md:p-6 mb-6">
     <div className="flex items-center justify-between mb-3">
-      <h2 className="text-lg md:text-xl font-semibold">{title}</h2>
+      <h2 className="text-lg md:text-xl font-semibold dark:text-slate-100">{title}</h2>
       {right}
     </div>
     {children}
@@ -422,7 +422,7 @@ const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, ste
     onChange={(e) => onChange(e.target.value)}
     onKeyDown={onKeyDown}
     className={
-      `w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${
+      `w-24 px-2 py-1 border dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl text-sm focus:outline-none focus:ring ${
         className || ''}`
     }
   />
@@ -451,8 +451,8 @@ const Chip = ({ active, children, onClick, className = '', disabled = false }) =
       className={
         `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center inline-flex items-center justify-center ${
           active
-            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+            ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-sm'
+            : 'bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600'
         }${disabled ? ' opacity-60 cursor-not-allowed' : ''
         }${className ? ` ${className}` : ''}`
       }
@@ -1519,7 +1519,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
 };
 
 // ---------- main component ----------
-// eslint-disable-next-line sonarjs/cognitive-complexity
+// eslint-disable-next-line sonarjs/cognitive-complexity, max-lines-per-function
 const App = () => {
   const [toasts, setToasts] = useState([]); // {id,msg}
   const _pushToast = useCallback((msg) => {
@@ -1682,6 +1682,7 @@ const App = () => {
   const [showBaseValues, setShowBaseValues] = useLocalStorage('pinball_showBaseValues_v1', true); // visibility toggle for starting/original values
   const [showAttemptHistory, setShowAttemptHistory] = useLocalStorage('pinball_showAttemptHistory_v1', false);
   const [showFeedbackPanel, setShowFeedbackPanel] = useLocalStorage('pinball_showFeedback_v1', false); // new toggle for Feedback table
+  const [darkMode, setDarkMode] = useLocalStorage('pinball_darkMode_v1', true); // dark mode toggle (default: true)
   // Restore stacks removed (Not Possible is neutral now)
   // UI local (non-persisted) state: collapsed shot type rows (store ids)
   const [collapsedTypes, setCollapsedTypes] = useState([]); // Only shot type collapsing retained; flipper collapsing removed.
@@ -2339,7 +2340,7 @@ const App = () => {
     }
   }, [initialized, finalPhase]);
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
+    <div className={`min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-slate-100 ${darkMode ? 'dark' : ''}`}>
       {/* Info Modal */}
       {showInfoModal ? (
         <div
@@ -2357,15 +2358,15 @@ const App = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="info-modal-title"
-            className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6 md:p-8">
               <div className="flex items-start justify-between mb-6">
-                <h2 id="info-modal-title" className="text-2xl md:text-3xl font-bold text-slate-900">About This App</h2>
+                <h2 id="info-modal-title" className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100">About This App</h2>
                 <button
                   type="button"
                   onClick={() => setShowInfoModal(false)}
-                  className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                   aria-label="Close"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2374,15 +2375,15 @@ const App = () => {
                   </svg>
                 </button>
               </div>
-              <div className="space-y-6 text-slate-700">
+              <div className="space-y-6 text-slate-700 dark:text-slate-300">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Pinball Accuracy Memory Trainer</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Pinball Accuracy Memory Trainer</h3>
                   <p className="leading-relaxed">
                     A training tool designed to help pinball players improve their shot accuracy estimation and mental model of flipper-to-target percentages. Practice recalling and adjusting your guesses to build muscle memory for real-world pinball play.
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">How It Works</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">How It Works</h3>
                   <ul className="space-y-2 list-disc list-inside">
                     <li>Define shots on a virtual playfield with left and right flipper percentages</li>
                     <li>Practice recalling those percentages from memory</li>
@@ -2391,13 +2392,13 @@ const App = () => {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Author</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Author</h3>
                   <p className="leading-relaxed">
                     Created by Gary Brown for the pinball community. This tool runs entirely in your browser with no data sent to any server - all your practice data stays local.
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Open Source</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Open Source</h3>
                   <p className="leading-relaxed mb-3">
                     This project is open source and available on GitHub. Contributions, feedback, and suggestions are welcome!
                   </p>
@@ -2405,7 +2406,7 @@ const App = () => {
                     href="https://github.com/garybrowndev/PinballAccuracyMemoryTrainer"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors"
                   >
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                       <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
@@ -2413,7 +2414,7 @@ const App = () => {
                     View on GitHub
                   </a>
                 </div>
-                <div className="pt-4 border-t text-sm text-slate-500">
+                <div className="pt-4 border-t dark:border-slate-600 text-sm text-slate-500 dark:text-slate-400">
                   <p>
                     Version {typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__}
                     {(() => {
@@ -2456,7 +2457,7 @@ const App = () => {
       {/* Toast notifications */}
       <div className="fixed top-16 right-4 z-50 flex flex-col gap-2">
         {toasts.map(t => (
-          <div key={t.id} className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein">
+          <div key={t.id} className="bg-slate-900 dark:bg-slate-700 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein">
             {t.msg}
           </div>
         ))}
@@ -2464,7 +2465,7 @@ const App = () => {
       {/* Detached popups (portals) for shot & location selection */}
       {shotMenuAnchor && openShotMenuId !== null ? createPortal(
         <div
-          className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
+          className="absolute z-50 w-[360px] rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-3 grid grid-cols-4 gap-3"
           style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
           role="dialog"
           aria-label="Select shot type"
@@ -2505,7 +2506,7 @@ const App = () => {
       ) : null}
       {locMenuAnchor && openLocMenuId !== null ? createPortal(
         <div
-          className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
+          className="absolute z-50 w-48 rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-2 grid grid-cols-2 gap-2"
           style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
           role="dialog"
           aria-label="Select location"
@@ -2535,7 +2536,7 @@ const App = () => {
                     setOpenLocMenuId(null); setLocMenuAnchor(null);
                   }
                 }}
-                className={`${isSel ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'} text-[11px] px-2 py-1 rounded-md text-left`}
+                className={`${isSel ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'} text-[11px] px-2 py-1 rounded-md text-left`}
               >{loc}</button>
             );
           })}
@@ -2544,7 +2545,7 @@ const App = () => {
       ) : null}
       {addCountAnchor && rows.length === 0 ? createPortal(
         <div
-          className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
+          className="absolute z-50 w-44 rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-2"
           style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
           role="dialog"
           aria-label="How many shots to add"
@@ -2554,7 +2555,7 @@ const App = () => {
               <button
                 key={n}
                 type="button"
-                className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
+                className="text-[11px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200"
                 onClick={() => {
                   const count = n;
                   // eslint-disable-next-line unicorn/consistent-function-scoping
@@ -2659,6 +2660,31 @@ const App = () => {
                       </svg>
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+                    title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                    aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  >
+                    {darkMode ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2" />
+                        <path d="M12 20v2" />
+                        <path d="m4.93 4.93 1.41 1.41" />
+                        <path d="m17.66 17.66 1.41 1.41" />
+                        <path d="M2 12h2" />
+                        <path d="M20 12h2" />
+                        <path d="m6.34 17.66-1.41 1.41" />
+                        <path d="m19.07 4.93-1.41 1.41" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                      </svg>
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={() => setShowInfoModal(true)}
