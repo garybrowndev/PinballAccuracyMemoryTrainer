@@ -102,21 +102,47 @@ Avoid until justified:
 - Snap & clamp before persisting or comparing thresholds.
 - Derive rather than store values where possible (e.g., computed metrics).
 
-## 14. Recommended Dev / Agent Tools (Do NOT start dev server here)
+## 14. Recommended Dev / Agent Tools
 Use these during AI-driven changes to validate safety:
 - Static analysis / lint: rely on `eslint.config.js` (invoke ESLint if integrated in workspace).
 - Type/logic sanity: Run a quick search for helper usage before altering (`computeAllowedRange`, drift helpers) to avoid regression.
+- Testing: Run `npm run test:run` for unit tests and `npm run test:e2e` for E2E tests before finalizing changes.
 - DOM performance: Use browser Performance Profiler only if you observe jank with >100 attempts.
 - Visual regression: Manual screenshot before/after for layout-affecting changes (overlay, scaling, chip grid).
 - Memory sanity: Check detached listeners (DevTools > Performance > JS Heap snapshots) after toggling fullscreen repeatedly.
 
-## 15. Testing Strategy (Current Gap & Proposal)
-Current: No automated tests.
-Proposed minimal additions (future):
-- Pure helper tests (snap5, ordering enforcement) via Vitest.
-- Drift band invariants (hidden values remain within ± band & monotonic) property-style test.
-- Rendering smoke test: mount `App` with sample rows, assert chips count & fullscreen toggle presence.
-AI assistants should not add tests unless explicitly requested.
+## 15. Testing Strategy
+Current: Vitest unit tests and Playwright E2E tests.
+
+### Test Types
+- **Unit Tests (Vitest)**: Pure helper tests (snap5, ordering enforcement), component rendering smoke tests
+- **E2E Tests (Playwright)**: Full user workflow tests including setup, practice, and recall phases
+
+### Test Locations
+- Unit tests: `src/*.test.jsx` (co-located with source files)
+- E2E tests: `tests/e2e/*.spec.js`
+
+### Running Tests
+- Unit tests: `npm run test` (watch) or `npm run test:run` (once)
+- E2E tests: `npm run test:e2e`
+- All tests run automatically before:
+  - Standalone builds (`npm run build:standalone`)
+  - Dev server start (VS Code task)
+  - CI/CD deployment (GitHub Actions)
+  - Commits (via `commit-and-push` prompt)
+
+### Test Guidelines
+- Write unit tests for pure helpers and critical state logic
+- Write E2E tests for user workflows and integration scenarios
+- Tests must pass before builds/deploys (enforced in CI/CD)
+- Keep unit tests fast (<100ms each)
+- E2E tests should be deterministic (avoid flaky tests)
+
+When adding new features:
+1. Add unit tests for new helper functions
+2. Add E2E tests for new user workflows
+3. Run tests locally before committing
+4. AI assistants should suggest tests when adding significant logic
 
 ## 16. Security & Data Boundaries
 - All data local; no network I/O expected. Do not introduce remote calls without approval.
@@ -154,5 +180,7 @@ When requesting code changes:
 - Escape exits fullscreen.
 - Adding/removing shots keeps monotonic order constraints.
 - No unbounded growth in `attempts` (capped logic intact if modified).
+- All unit tests pass (`npm run test:run`).
+- All E2E tests pass (`npm run test:e2e`).
 
 End of instructions.

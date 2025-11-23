@@ -257,8 +257,15 @@ Clear browser data to reset the app completely.
 - **`npm install`** - Install all dependencies
 - **`npm run dev`** - Start Vite development server (port 5173)
 - **`npm run build`** - Build for production (outputs to `dist/`)
-- **`npm run build:standalone`** - Build self-contained single HTML file with embedded assets
+- **`npm run build:standalone`** - Build self-contained single HTML file with embedded assets (includes lint and test checks)
 - **`npm run lint`** - Run ESLint with strict error checking (max warnings: 0)
+- **`npm run test`** - Run Vitest unit tests in watch mode
+- **`npm run test:run`** - Run Vitest unit tests once
+- **`npm run test:ui`** - Run Vitest with interactive UI
+- **`npm run test:e2e`** - Run Playwright E2E tests
+- **`npm run test:e2e:ui`** - Run Playwright tests with interactive UI
+- **`npm run test:e2e:headed`** - Run Playwright tests in headed mode (visible browser)
+- **`npm run test:e2e:debug`** - Run Playwright tests in debug mode
 - **`npm run preview`** - Preview production build locally
 
 ### VS Code Tasks
@@ -267,8 +274,38 @@ The project includes predefined VS Code tasks (`.vscode/tasks.json`):
 
 1. **Install Dependencies** - Runs `npm install`
 2. **Lint** - Runs ESLint with problem matcher integration
-3. **npm: dev** - Starts Vite dev server (depends on Lint task)
-4. **Stop npm dev server** - PowerShell script to terminate Node.js processes for Vite
+3. **Run Unit Tests** - Runs Vitest unit tests (depends on Lint)
+4. **Run E2E Tests** - Runs Playwright E2E tests (depends on Unit Tests)
+5. **Run All Tests** - Runs both unit and E2E tests sequentially
+6. **npm: dev** - Starts Vite dev server (depends on all tests passing)
+7. **npm: build:standalone** - Builds standalone HTML (script includes lint and test checks)
+8. **Stop npm dev server** - PowerShell script to terminate Node.js processes for Vite
+
+### Testing
+
+The project includes two types of tests:
+
+#### Unit Tests (Vitest)
+- Fast, focused tests for individual functions and components
+- Located in `src/` with `.test.jsx` extension
+- Run with `npm run test` (watch mode) or `npm run test:run` (once)
+- Interactive UI available with `npm run test:ui`
+
+#### E2E Tests (Playwright)
+- End-to-end tests simulating user interactions
+- Located in `tests/e2e/`
+- Run with `npm run test:e2e`
+- Interactive UI available with `npm run test:e2e:ui`
+- Debug mode available with `npm run test:e2e:debug`
+
+#### Test Integration
+Tests are automatically run in these scenarios:
+- **Before standalone builds** - `npm run build:standalone` runs lint → unit tests → E2E tests → build
+- **Before starting dev server** - VS Code task runs all tests before starting Vite
+- **In CI/CD pipeline** - GitHub Actions runs lint → unit tests → E2E tests → build → deploy
+- **Before commits** - Using the `commit-and-push` prompt runs lint → tests → build → commit → push
+
+All test failures block the build process to ensure code quality.
 
 ### Project Structure
 ```

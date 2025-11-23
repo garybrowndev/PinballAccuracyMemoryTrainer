@@ -36,6 +36,14 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.js',
     css: true,
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/dist-standalone/**',
+      '**/tests/e2e/**', // Exclude Playwright E2E tests
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+    ],
     api: {
       port: 8888, // Use a port outside Windows reserved ranges (51135-52005 are blocked by Windows)
     },

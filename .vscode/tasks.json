@@ -27,13 +27,59 @@
       }
     },
     {
+      "label": "Run Unit Tests",
+      "detail": "Runs Vitest unit tests",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:run"],
+      "problemMatcher": [],
+      "dependsOn": ["Lint"],
+      "dependsOrder": "sequence",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "Run E2E Tests",
+      "detail": "Runs Playwright E2E tests",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:e2e"],
+      "problemMatcher": [],
+      "dependsOn": ["Run Unit Tests"],
+      "dependsOrder": "sequence",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "Run All Tests",
+      "detail": "Runs both unit tests and E2E tests sequentially",
+      "dependsOn": ["Run Unit Tests", "Run E2E Tests"],
+      "dependsOrder": "sequence",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
       "type": "shell",
       "command": "npm",
       "args": ["run", "dev"],
       "label": "npm: dev",
       "detail": "Starts the Vite development server with hot reload",
       "isBackground": true,
-      "dependsOn": ["Lint"],
+      "dependsOn": ["Run All Tests"],
       "dependsOrder": "sequence",
       "problemMatcher": {
         "owner": "custom",
@@ -55,8 +101,8 @@
       "type": "npm",
       "script": "build:standalone",
       "label": "npm: build:standalone",
-      "detail": "Builds a single self-contained HTML file with all assets embedded for offline use",
-      "dependsOn": ["Lint"],
+      "detail": "Builds a single self-contained HTML file with all assets embedded for offline use (includes lint and test checks)",
+      "dependsOn": ["Install Dependencies"],
       "dependsOrder": "sequence",
       "problemMatcher": [],
       "presentation": {

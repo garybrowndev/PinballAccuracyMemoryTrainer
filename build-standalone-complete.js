@@ -24,6 +24,32 @@ async function buildStandaloneWithAssets() {
   }
 
   // eslint-disable-next-line no-console
+  console.log('Running unit tests...');
+  try {
+    execSync('npm run test:run', { stdio: 'inherit', cwd: __dirname });
+    // eslint-disable-next-line no-console
+    console.log('Unit tests passed!\n');
+  } catch {
+    // eslint-disable-next-line no-console
+    console.error('Unit tests failed. Please fix test failures before building.');
+    // eslint-disable-next-line no-undef
+    process.exit(1);
+  }
+
+  // eslint-disable-next-line no-console
+  console.log('Running E2E tests...');
+  try {
+    execSync('npm run test:e2e', { stdio: 'inherit', cwd: __dirname });
+    // eslint-disable-next-line no-console
+    console.log('E2E tests passed!\n');
+  } catch {
+    // eslint-disable-next-line no-console
+    console.error('E2E tests failed. Please fix test failures before building.');
+    // eslint-disable-next-line no-undef
+    process.exit(1);
+  }
+
+  // eslint-disable-next-line no-console
   console.log('Building Vite bundle first...');
 
   // Build with Vite
