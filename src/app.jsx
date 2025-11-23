@@ -86,8 +86,8 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
       type="button"
       onClick={onSelect}
       className={
-        `relative rounded-md bg-white dark:bg-slate-700 shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-300 overflow-visible ${
-          selected ? 'ring-2 ring-slate-900 dark:ring-slate-300' : 'ring-1 ring-slate-300 dark:ring-slate-600 hover:ring-slate-500 dark:hover:ring-slate-400'}`
+        `relative rounded-md bg-white dark:bg-slate-700 shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-gray-400 overflow-visible ${
+          selected ? 'ring-2 ring-slate-900 dark:ring-gray-300' : 'ring-1 ring-slate-300 dark:ring-gray-700 hover:ring-slate-500 dark:hover:ring-gray-600'}`
       }
       style={{
         width: size,
@@ -98,7 +98,7 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
         {!imgVisible && (
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-slate-300 p-1 text-center leading-tight select-none">
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-gray-300 p-1 text-center leading-tight select-none">
             {name}
           </div>
         )}
@@ -132,13 +132,13 @@ const InlineElementThumb = ({ name, selected, onClick }) => {
       type="button"
       onClick={onClick}
       data-shot-chip-thumb
-      className={`${selected ? 'ring-2 ring-slate-900 dark:ring-slate-300' : 'ring-1 ring-slate-300 dark:ring-slate-600 hover:ring-slate-500 dark:hover:ring-slate-400'} relative bg-white dark:bg-slate-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-300 rounded-md overflow-visible`}
+      className={`${selected ? 'ring-2 ring-slate-900 dark:ring-gray-300' : 'ring-1 ring-slate-300 dark:ring-gray-700 hover:ring-slate-500 dark:hover:ring-gray-600'} relative bg-white dark:bg-slate-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-gray-400 rounded-md overflow-visible`}
       style={{ width: size, height: size + 18 }} // extra space for hanging label
       aria-pressed={selected}
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
         {!imgVisible && (
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-slate-300 p-1 text-center leading-tight select-none">
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-gray-300 p-1 text-center leading-tight select-none">
             {name}
           </div>
         )}
@@ -402,9 +402,9 @@ function useLocalStorage(key, initialValue) {
 
 // Reusable presentational components hoisted out of App to keep stable identity
 const Section = ({ title, children, right }) => (
-  <div className="bg-white/80 dark:bg-slate-800/80 rounded-2xl shadow p-4 md:p-6 mb-6">
+  <div className="bg-white/80 dark:bg-gray-900/95 rounded-2xl shadow p-4 md:p-6 mb-6">
     <div className="flex items-center justify-between mb-3">
-      <h2 className="text-lg md:text-xl font-semibold dark:text-slate-100">{title}</h2>
+      <h2 className="text-lg md:text-xl font-semibold dark:text-gray-100">{title}</h2>
       {right}
     </div>
     {children}
@@ -422,7 +422,7 @@ const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, ste
     onChange={(e) => onChange(e.target.value)}
     onKeyDown={onKeyDown}
     className={
-      `w-24 px-2 py-1 border dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 rounded-xl text-sm focus:outline-none focus:ring ${
+      `w-24 px-2 py-1 border dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl text-sm focus:outline-none focus:ring ${
         className || ''}`
     }
   />
@@ -451,8 +451,8 @@ const Chip = ({ active, children, onClick, className = '', disabled = false }) =
       className={
         `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center inline-flex items-center justify-center ${
           active
-            ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100 shadow-sm'
-            : 'bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600'
+            ? 'bg-slate-900 dark:bg-gray-100 text-white dark:text-gray-900 border-slate-900 dark:border-gray-100 shadow-sm'
+            : 'bg-white dark:bg-gray-800 hover:bg-slate-100 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 border-slate-300 dark:border-gray-700'
         }${disabled ? ' opacity-60 cursor-not-allowed' : ''
         }${className ? ` ${className}` : ''}`
       }
@@ -614,10 +614,10 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
   return (
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout</h3>
-      <div className="text-xs text-slate-600 dark:text-slate-400 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
+      <div className="text-xs text-slate-600 dark:text-gray-400 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
       <div
         ref={canvasRef}
-        className="relative border dark:border-slate-600 rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 h-96 overflow-hidden"
+        className="relative border dark:border-gray-700 rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-950 h-96 overflow-hidden"
         role="region"
         aria-label="Playfield layout"
       >
@@ -628,7 +628,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
             onClick={(e) => {
               e.stopPropagation(); onClear();
             }}
-            className="absolute left-3 bottom-3 z-40 bg-white/90 dark:bg-slate-700/90 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border dark:border-slate-600 shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
+            className="absolute left-3 bottom-3 z-40 bg-white/90 dark:bg-slate-700/90 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-gray-200 border dark:border-slate-600 shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
             title="Clear all shots"
             aria-label="Clear all shots"
           >
@@ -1146,7 +1146,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
     <div className={fullscreen ? 'w-full h-full flex flex-col' : 'mt-8'}>
       {!fullscreen && <h3 className="font-medium mb-2">Playfield</h3>}
       <div ref={canvasRef} className={
-        `relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden ${
+        `relative border dark:border-gray-700 rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-950 overflow-hidden ${
           fullscreen ? 'flex-1 min-h-0' : 'h-96'}`
       }
       >
@@ -2340,7 +2340,7 @@ const App = () => {
     }
   }, [initialized, finalPhase]);
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 dark:from-slate-900 dark:to-slate-800 dark:text-slate-100 ${darkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900 dark:from-gray-950 dark:to-black dark:text-gray-100 ${darkMode ? 'dark' : ''}`}>
       {/* Info Modal */}
       {showInfoModal ? (
         <div
@@ -2358,7 +2358,7 @@ const App = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="info-modal-title"
-            className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6 md:p-8">
               <div className="flex items-start justify-between mb-6">
@@ -2375,7 +2375,7 @@ const App = () => {
                   </svg>
                 </button>
               </div>
-              <div className="space-y-6 text-slate-700 dark:text-slate-300">
+              <div className="space-y-6 text-slate-700 dark:text-gray-300">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Pinball Accuracy Memory Trainer</h3>
                   <p className="leading-relaxed">
@@ -2414,7 +2414,7 @@ const App = () => {
                     View on GitHub
                   </a>
                 </div>
-                <div className="pt-4 border-t dark:border-slate-600 text-sm text-slate-500 dark:text-slate-400">
+                <div className="pt-4 border-t dark:border-slate-600 text-sm text-slate-500 dark:text-gray-400">
                   <p>
                     Version {typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__}
                     {(() => {
@@ -2466,7 +2466,7 @@ const App = () => {
       {shotMenuAnchor && openShotMenuId !== null ? createPortal(
         <div className={darkMode ? 'dark' : ''}>
           <div
-            className="absolute z-50 w-[360px] rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-3 grid grid-cols-4 gap-3"
+            className="absolute z-50 w-[360px] rounded-xl border dark:border-slate-600 bg-white dark:bg-gray-900 shadow-xl p-3 grid grid-cols-4 gap-3"
             style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
             role="dialog"
             aria-label="Select shot type"
@@ -2509,7 +2509,7 @@ const App = () => {
       {locMenuAnchor && openLocMenuId !== null ? createPortal(
         <div className={darkMode ? 'dark' : ''}>
           <div
-            className="absolute z-50 w-48 rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-2 grid grid-cols-2 gap-2"
+            className="absolute z-50 w-48 rounded-xl border dark:border-slate-600 bg-white dark:bg-gray-900 shadow-xl p-2 grid grid-cols-2 gap-2"
             style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
             role="dialog"
             aria-label="Select location"
@@ -2539,7 +2539,7 @@ const App = () => {
                       setOpenLocMenuId(null); setLocMenuAnchor(null);
                     }
                   }}
-                  className={`${isSel ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'} text-[11px] px-2 py-1 rounded-md text-left`}
+                  className={`${isSel ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-gray-200'} text-[11px] px-2 py-1 rounded-md text-left`}
                 >{loc}</button>
               );
             })}
@@ -2550,7 +2550,7 @@ const App = () => {
       {addCountAnchor && rows.length === 0 ? createPortal(
         <div className={darkMode ? 'dark' : ''}>
           <div
-            className="absolute z-50 w-44 rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-2"
+            className="absolute z-50 w-44 rounded-xl border dark:border-slate-600 bg-white dark:bg-gray-900 shadow-xl p-2"
             style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
             role="dialog"
             aria-label="How many shots to add"
@@ -2560,7 +2560,7 @@ const App = () => {
                 <button
                   key={n}
                   type="button"
-                  className="text-[11px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200"
+                  className="text-[11px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-gray-200"
                   onClick={() => {
                     const count = n;
                     // eslint-disable-next-line unicorn/consistent-function-scoping
@@ -2655,7 +2655,7 @@ const App = () => {
                     <button
                       type="button"
                       onClick={downloadStandalone}
-                      className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+                      className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-slate-100"
                       title="Download this standalone HTML file"
                       aria-label="Download standalone"
                     >
@@ -2669,7 +2669,7 @@ const App = () => {
                   <button
                     type="button"
                     onClick={() => setDarkMode(!darkMode)}
-                    className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+                    className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-slate-100"
                     title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                     aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                   >
@@ -2694,7 +2694,7 @@ const App = () => {
                   <button
                     type="button"
                     onClick={() => setShowInfoModal(true)}
-                    className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+                    className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-slate-100"
                     title="About this app"
                     aria-label="About"
                   >
@@ -2707,7 +2707,7 @@ const App = () => {
                 </div>
               }
             >
-              <div className="mb-4 text-xs text-slate-600 dark:text-slate-400">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
+              <div className="mb-4 text-xs text-slate-600 dark:text-gray-400">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
                 const misorderedIds = (() => {
                   if (rows.length === 0) {
@@ -2747,7 +2747,7 @@ const App = () => {
                     <col className="w-[30px]" />
                   </colgroup>
                   <thead>
-                    <tr className="text-left text-slate-500 dark:text-slate-400 align-bottom">
+                    <tr className="text-left text-slate-500 dark:text-gray-400 align-bottom">
                       <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? 'bg-slate-50 dark:bg-slate-700' : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
