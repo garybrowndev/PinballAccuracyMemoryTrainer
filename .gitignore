@@ -2,5 +2,10 @@ node_modules
 dist
 dist-standalone
 
+# Test results and reports
+test-results/
+playwright-report/
+.playwright/
+
 # Editor directories and files
 .vscode/*

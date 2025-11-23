@@ -28,7 +28,16 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    strictPort: true,
-    host: true, // allows access via LAN IP (0.0.0.0 bind)
+    strictPort: false,
+    host: '127.0.0.1', // Force IPv4 instead of IPv6
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.js',
+    css: true,
+    api: {
+      port: 8888, // Use a port outside Windows reserved ranges (51135-52005 are blocked by Windows)
+    },
   },
 });

@@ -14,7 +14,7 @@ import globals from 'globals';
 
 const config = [
   {
-    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js', '.vscode/brave-debug-ephemeral'],
+    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js', '.vscode/brave-debug-ephemeral', 'test-results', 'playwright-report'],
   },
   js.configs.recommended,
   reactHooks.configs['recommended-latest'],
@@ -318,6 +318,21 @@ const config = [
       'jsdoc/no-undefined-types': 'off',
       'jsdoc/require-param-description': 'off',
       'jsdoc/require-returns-description': 'off',
+    },
+  },
+  // Test files configuration
+  {
+    files: ['**/*.test.jsx', '**/*.spec.js', '**/setupTests.js', 'playwright.config.js'],
+    languageOptions: {
+      globals: {
+        vi: 'readonly',
+        global: 'readonly',
+        process: 'readonly',
+      },
+    },
+    rules: {
+      'no-empty-function': 'off',
+      'unicorn/filename-case': 'off',
     },
   },
 ];
