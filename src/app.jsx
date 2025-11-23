@@ -614,10 +614,10 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
   return (
     <div className="mt-6">
       <h3 className="font-medium mb-2">Playfield Layout</h3>
-      <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
+      <div className="text-xs text-slate-600 dark:text-slate-400 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
       <div
         ref={canvasRef}
-        className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden"
+        className="relative border dark:border-slate-600 rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 h-96 overflow-hidden"
         role="region"
         aria-label="Playfield layout"
       >
@@ -628,7 +628,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
             onClick={(e) => {
               e.stopPropagation(); onClear();
             }}
-            className="absolute left-3 bottom-3 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
+            className="absolute left-3 bottom-3 z-40 bg-white/90 dark:bg-slate-700/90 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border dark:border-slate-600 shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
             title="Clear all shots"
             aria-label="Clear all shots"
           >
@@ -712,7 +712,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
               key={r.id}
               style={{ left: `${r.x * 100}%`, top: `${r.y * 100}%`, transform: 'translate(-50%, -50%)', width: renderedSize, height: renderedSize }}
               onMouseDown={(e) => handleMouseDown(e, r.id)}
-              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel ? 'ring-2 ring-emerald-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300'}`}
+              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white dark:bg-slate-700 ${sel ? 'ring-2 ring-emerald-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300 dark:border-slate-600'}`}
               role="button"
               tabIndex={0}
               aria-label={`Shot ${r.type || 'element'}`}
@@ -2345,7 +2345,7 @@ const App = () => {
       {showInfoModal ? (
         <div
           role="presentation"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${darkMode ? 'dark' : ''}`}
         >
           <button
             type="button"
@@ -2464,172 +2464,178 @@ const App = () => {
       </div>
       {/* Detached popups (portals) for shot & location selection */}
       {shotMenuAnchor && openShotMenuId !== null ? createPortal(
-        <div
-          className="absolute z-50 w-[360px] rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-3 grid grid-cols-4 gap-3"
-          style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
-          role="dialog"
-          aria-label="Select shot type"
-        >
-          {BASE_ELEMENTS.map(b => {
-            const currentRow = rows.find(r => r.id === shotMenuAnchor.id);
-            const isSel = currentRow?.base === b;
-            const hasSelection = Boolean(currentRow?.base);
-            return (
-              <ElementTile
-                key={b}
-                name={b}
-                selected={isSel}
-                hasSelection={hasSelection}
-                onSelect={() => {
-                  if (isSel) {
-                  // Clicking the currently selected shot deselects it; keep menu open
-                    setRows(prev => {
-                      const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
-                        next[idx] = { ...next[idx], base: '', type: '' };
-                      } return next;
-                    });
-                  } else {
-                  // Selecting a new shot; close menu
-                    setRows(prev => {
-                      const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
-                        next[idx] = { ...next[idx], base: b, type: buildType(b, next[idx].location || '') };
-                      } return next;
-                    });
-                    setOpenShotMenuId(null); setShotMenuAnchor(null);
-                  }
-                }}
-              />
-            );
-          })}
+        <div className={darkMode ? 'dark' : ''}>
+          <div
+            className="absolute z-50 w-[360px] rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-3 grid grid-cols-4 gap-3"
+            style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
+            role="dialog"
+            aria-label="Select shot type"
+          >
+            {BASE_ELEMENTS.map(b => {
+              const currentRow = rows.find(r => r.id === shotMenuAnchor.id);
+              const isSel = currentRow?.base === b;
+              const hasSelection = Boolean(currentRow?.base);
+              return (
+                <ElementTile
+                  key={b}
+                  name={b}
+                  selected={isSel}
+                  hasSelection={hasSelection}
+                  onSelect={() => {
+                    if (isSel) {
+                      // Clicking the currently selected shot deselects it; keep menu open
+                      setRows(prev => {
+                        const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
+                          next[idx] = { ...next[idx], base: '', type: '' };
+                        } return next;
+                      });
+                    } else {
+                      // Selecting a new shot; close menu
+                      setRows(prev => {
+                        const next = [...prev]; const idx = prev.findIndex(r => r.id === shotMenuAnchor.id); if (idx > -1) {
+                          next[idx] = { ...next[idx], base: b, type: buildType(b, next[idx].location || '') };
+                        } return next;
+                      });
+                      setOpenShotMenuId(null); setShotMenuAnchor(null);
+                    }
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>,
         document.body,
       ) : null}
       {locMenuAnchor && openLocMenuId !== null ? createPortal(
-        <div
-          className="absolute z-50 w-48 rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-2 grid grid-cols-2 gap-2"
-          style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
-          role="dialog"
-          aria-label="Select location"
-        >
-          {LOCATIONS.map(loc => {
-            const currentRow = rows.find(r => r.id === locMenuAnchor.id);
-            const isSel = currentRow?.location === loc;
-            return (
-              <button
-                key={loc}
-                type="button"
-                onClick={() => {
-                  if (isSel) {
-                  // Clicking the currently selected location deselects it; keep menu open
-                    setRows(prev => {
-                      const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
-                        const base = next[idx].base || ''; next[idx] = { ...next[idx], location: '', type: buildType(base, '') };
-                      } return next;
-                    });
-                  } else {
-                  // Selecting a new location; close menu
-                    setRows(prev => {
-                      const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
-                        const base = next[idx].base || ''; next[idx] = { ...next[idx], location: loc, type: buildType(base, loc) };
-                      } return next;
-                    });
-                    setOpenLocMenuId(null); setLocMenuAnchor(null);
-                  }
-                }}
-                className={`${isSel ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'} text-[11px] px-2 py-1 rounded-md text-left`}
-              >{loc}</button>
-            );
-          })}
+        <div className={darkMode ? 'dark' : ''}>
+          <div
+            className="absolute z-50 w-48 rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-2 grid grid-cols-2 gap-2"
+            style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
+            role="dialog"
+            aria-label="Select location"
+          >
+            {LOCATIONS.map(loc => {
+              const currentRow = rows.find(r => r.id === locMenuAnchor.id);
+              const isSel = currentRow?.location === loc;
+              return (
+                <button
+                  key={loc}
+                  type="button"
+                  onClick={() => {
+                    if (isSel) {
+                      // Clicking the currently selected location deselects it; keep menu open
+                      setRows(prev => {
+                        const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
+                          const base = next[idx].base || ''; next[idx] = { ...next[idx], location: '', type: buildType(base, '') };
+                        } return next;
+                      });
+                    } else {
+                      // Selecting a new location; close menu
+                      setRows(prev => {
+                        const next = [...prev]; const idx = prev.findIndex(r => r.id === locMenuAnchor.id); if (idx > -1) {
+                          const base = next[idx].base || ''; next[idx] = { ...next[idx], location: loc, type: buildType(base, loc) };
+                        } return next;
+                      });
+                      setOpenLocMenuId(null); setLocMenuAnchor(null);
+                    }
+                  }}
+                  className={`${isSel ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'} text-[11px] px-2 py-1 rounded-md text-left`}
+                >{loc}</button>
+              );
+            })}
+          </div>
         </div>,
         document.body,
       ) : null}
       {addCountAnchor && rows.length === 0 ? createPortal(
-        <div
-          className="absolute z-50 w-44 rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-2"
-          style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
-          role="dialog"
-          aria-label="How many shots to add"
-        >
-          <div className="grid grid-cols-4 gap-1">
-            {Array.from({ length: 20 }, (_, k) => k + 1).map(n => (
-              <button
-                key={n}
-                type="button"
-                className="text-[11px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200"
-                onClick={() => {
-                  const count = n;
-                  // eslint-disable-next-line unicorn/consistent-function-scoping
-                  const buildRows = (cnt) => {
-                    const asc = Array.from({ length: cnt }, (_, i) => snap5(((i + 1) / (cnt + 1)) * 100));
-                    for (let i = 1;i < asc.length;i++) {
-                      if (asc[i] <= asc[i - 1]) {
-                        asc[i] = Math.min(100, asc[i - 1] + 5);
-                      }
-                    }
-                    for (let i = asc.length - 2;i >= 0;i--) {
-                      if (asc[i] >= asc[i + 1]) {
-                        asc[i] = Math.max(5, asc[i + 1] - 5);
-                      }
-                    }
-                    const desc = [...asc].reverse();
-                    return asc.map((v, i) => newRow({ initL: v, initR: desc[i] }, i));
-                  };
-                  setRows(buildRows(count));
-                  setAddCountAnchor(null);
-                }}
-              >{n}</button>
-            ))}
-            <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
-          </div>
-          {availablePresets.length > 0 && (
-            <div className="mt-2 pt-2 border-t">
-              <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
-              <div className="relative">
+        <div className={darkMode ? 'dark' : ''}>
+          <div
+            className="absolute z-50 w-44 rounded-xl border dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl p-2"
+            style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
+            role="dialog"
+            aria-label="How many shots to add"
+          >
+            <div className="grid grid-cols-4 gap-1">
+              {Array.from({ length: 20 }, (_, k) => k + 1).map(n => (
                 <button
+                  key={n}
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation(); setPresetOpen(p => !p);
+                  className="text-[11px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200"
+                  onClick={() => {
+                    const count = n;
+                    // eslint-disable-next-line unicorn/consistent-function-scoping
+                    const buildRows = (cnt) => {
+                      const asc = Array.from({ length: cnt }, (_, i) => snap5(((i + 1) / (cnt + 1)) * 100));
+                      for (let i = 1;i < asc.length;i++) {
+                        if (asc[i] <= asc[i - 1]) {
+                          asc[i] = Math.min(100, asc[i - 1] + 5);
+                        }
+                      }
+                      for (let i = asc.length - 2;i >= 0;i--) {
+                        if (asc[i] >= asc[i + 1]) {
+                          asc[i] = Math.max(5, asc[i + 1] - 5);
+                        }
+                      }
+                      const desc = [...asc].reverse();
+                      return asc.map((v, i) => newRow({ initL: v, initR: desc[i] }, i));
+                    };
+                    setRows(buildRows(count));
+                    setAddCountAnchor(null);
                   }}
-                  className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
-                  aria-expanded={presetOpen}
-                  aria-haspopup="listbox"
-                  title={selectedPresetName || 'Select preset'}
-                >
-                  <span className="truncate block" style={{ maxWidth: '80%' }}>{selectedPresetName || 'Choose preset...'}</span>
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="w-4 h-4 ml-2">
-                    <path d="M6 8l4 4 4-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                {presetOpen ? (
-                  <div
-                    role="listbox"
-                    aria-label="Available presets"
-                    tabIndex={-1}
-                    className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
-                    onClick={e => e.stopPropagation()}
-                    onKeyDown={e => e.stopPropagation()}
-                    style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
-                  >
-                    {availablePresets.map(preset => (
-                      <button
-                        key={preset.filename}
-                        type="button"
-                        role="option"
-                        aria-selected={selectedPresetName === preset.name}
-                        onClick={() => {
-                          loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null);
-                        }}
-                        title={preset.name}
-                        className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200'} text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
-                      >
-                        <span>{preset.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
+                >{n}</button>
+              ))}
+              <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
             </div>
-          )}
+            {availablePresets.length > 0 && (
+              <div className="mt-2 pt-2 border-t">
+                <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation(); setPresetOpen(p => !p);
+                    }}
+                    className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
+                    aria-expanded={presetOpen}
+                    aria-haspopup="listbox"
+                    title={selectedPresetName || 'Select preset'}
+                  >
+                    <span className="truncate block" style={{ maxWidth: '80%' }}>{selectedPresetName || 'Choose preset...'}</span>
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="w-4 h-4 ml-2">
+                      <path d="M6 8l4 4 4-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  {presetOpen ? (
+                    <div
+                      role="listbox"
+                      aria-label="Available presets"
+                      tabIndex={-1}
+                      className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => e.stopPropagation()}
+                      style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
+                    >
+                      {availablePresets.map(preset => (
+                        <button
+                          key={preset.filename}
+                          type="button"
+                          role="option"
+                          aria-selected={selectedPresetName === preset.name}
+                          onClick={() => {
+                            loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null);
+                          }}
+                          title={preset.name}
+                          className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200'} text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
+                        >
+                          <span>{preset.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
         </div>,
         document.body,
       ) : null}
@@ -2649,7 +2655,7 @@ const App = () => {
                     <button
                       type="button"
                       onClick={downloadStandalone}
-                      className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                      className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
                       title="Download this standalone HTML file"
                       aria-label="Download standalone"
                     >
@@ -2688,7 +2694,7 @@ const App = () => {
                   <button
                     type="button"
                     onClick={() => setShowInfoModal(true)}
-                    className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                    className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
                     title="About this app"
                     aria-label="About"
                   >
@@ -2701,7 +2707,7 @@ const App = () => {
                 </div>
               }
             >
-              <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
+              <div className="mb-4 text-xs text-slate-600 dark:text-slate-400">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
                 const misorderedIds = (() => {
                   if (rows.length === 0) {
@@ -2741,8 +2747,8 @@ const App = () => {
                     <col className="w-[30px]" />
                   </colgroup>
                   <thead>
-                    <tr className="text-left text-slate-500 align-bottom">
-                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? 'bg-slate-50' : ''}`}>
+                    <tr className="text-left text-slate-500 dark:text-slate-400 align-bottom">
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? 'bg-slate-50 dark:bg-slate-700' : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
