@@ -492,7 +492,7 @@ const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, ste
       value={value}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={onKeyDown}
-      className={`w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${inputClasses} ${className || ''}`}
+      className={`w-12 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${inputClasses} ${className || ''}`}
     />
   );
 });

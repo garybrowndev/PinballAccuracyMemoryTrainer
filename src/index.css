@@ -5,6 +5,18 @@ body {
   min-width: 320px;
 }
 
+/* Hide number input spinner arrows while keeping keyboard up/down functionality */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* Responsive helpers for shot boxes and UI elements */
 @media (max-width: 640px) {
   /* Prevent horizontal overflow on small screens */
