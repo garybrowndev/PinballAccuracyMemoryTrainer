@@ -6,15 +6,67 @@ import { createPortal } from 'react-dom';
 // Styling: Tailwind utility classes. No external UI libs.
 
 // ---------- constants ----------
-const DARK_TEXT_PRIMARY = 'text-slate-100';
-const DARK_TEXT_SECONDARY = 'text-slate-400';
-const LIGHT_TEXT_PRIMARY = 'text-slate-900';
-const LIGHT_TEXT_SECONDARY = 'text-slate-600';
-const DARK_BG_PRIMARY = 'bg-slate-700';
-const DARK_BG_SECONDARY = 'bg-slate-800/95';
-const DARK_BORDER = 'border-slate-600';
-const LIGHT_BORDER = 'border-slate-300';
-const BUTTON_SUCCESS = 'bg-emerald-600 hover:bg-emerald-700';
+// Color constants for dark/light mode theming
+/* eslint-disable sonarjs/no-duplicate-string */
+const COLORS = {
+  dark: {
+    text: {
+      primary: 'text-slate-100',
+      secondary: 'text-slate-400',
+      tertiary: 'text-slate-300',
+      quaternary: 'text-slate-200',
+      muted: 'text-slate-500',
+    },
+    bg: {
+      primary: 'bg-slate-700',
+      secondary: 'bg-slate-800/95',
+      tertiary: 'bg-slate-800/80',
+      hover: 'hover:bg-slate-700',
+      hoverAlt: 'hover:bg-slate-600',
+      button: 'bg-slate-700/90 hover:bg-slate-700',
+    },
+    border: {
+      primary: 'border-slate-600',
+      secondary: 'border-slate-700',
+    },
+  },
+  light: {
+    text: {
+      primary: 'text-slate-900',
+      secondary: 'text-slate-600',
+      tertiary: 'text-slate-700',
+    },
+    bg: {
+      primary: 'bg-white',
+      secondary: 'bg-slate-50',
+      tertiary: 'bg-white/80',
+      hover: 'hover:bg-slate-50',
+      hoverAlt: 'hover:bg-slate-100',
+      button: 'bg-white/90 hover:bg-white',
+    },
+    border: {
+      primary: 'border-slate-300',
+    },
+  },
+};
+/* eslint-enable sonarjs/no-duplicate-string */
+
+// Button style constants
+const BTN_SUCCESS = 'bg-emerald-600 hover:bg-emerald-700';
+const BTN_ICON = 'px-4 py-2 rounded-2xl text-white flex items-center gap-2';
+const BTN_BASE = 'px-4 py-2 rounded-2xl text-white';
+
+// Helper functions to get themed classes
+const GetTextClass = (darkMode, variant = 'primary') => (darkMode ? COLORS.dark.text[variant] : COLORS.light.text[variant]);
+const GetBgClass = (darkMode, variant = 'primary') => (darkMode ? COLORS.dark.bg[variant] : COLORS.light.bg[variant]);
+const GetBorderClass = (darkMode) => (darkMode ? COLORS.dark.border.primary : COLORS.light.border.primary);
+const GetButtonClass = (darkMode) => (darkMode ? COLORS.dark.bg.button : COLORS.light.bg.button);
+const GetHoverClass = (darkMode) => (darkMode ? COLORS.dark.bg.hover : COLORS.light.bg.hover);
+const GetHoverAltClass = (darkMode) => (darkMode ? COLORS.dark.bg.hoverAlt : COLORS.light.bg.hoverAlt);
+const GetIconButtonClass = (darkMode) => `w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} ${COLORS.dark.text.tertiary} hover:text-slate-100` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary} text-slate-600 hover:text-slate-900`}`;
+const GetSmallButtonClass = (darkMode) => `text-[11px] px-2 py-0.5 rounded-md ${GetButtonClass(darkMode)} text-slate-200 border ${GetBorderClass(darkMode)}`;
+const GetCheckboxClass = (darkMode) => `w-4 h-4 rounded ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} checked:bg-blue-600 checked:border-blue-600` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary}`}`;
+const GetMetricBoxClass = (darkMode) => darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300';
 
 // ---------- helpers ----------
 const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
@@ -413,8 +465,8 @@ function useLocalStorage(key, initialValue) {
 
 // Reusable presentational components hoisted out of App to keep stable identity
 const Section = ({ title, children, right, darkMode = false }) => {
-  const bgClass = darkMode ? 'bg-slate-800/80' : 'bg-white/80';
-  const textClass = darkMode ? DARK_TEXT_PRIMARY : LIGHT_TEXT_PRIMARY;
+  const bgClass = darkMode ? COLORS.dark.bg.tertiary : COLORS.light.bg.tertiary;
+  const textClass = GetTextClass(darkMode, 'primary');
   return (
     <div className={`rounded-2xl shadow p-4 md:p-6 mb-6 ${bgClass}`}>
       <div className="flex items-center justify-between mb-3">
@@ -426,23 +478,24 @@ const Section = ({ title, children, right, darkMode = false }) => {
   );
 };
 
-const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, step = 1, className = '', onKeyDown, darkMode = false }, ref) => (
-  <input
-    ref={ref}
-    type="number"
-    min={min}
-    max={max}
-    step={step}
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    onKeyDown={onKeyDown}
-    className={
-      `w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${
-        darkMode ? 'bg-slate-700 border-slate-600 text-slate-100 focus:ring-slate-500' : 'bg-white border-slate-300 text-slate-900 focus:ring-slate-400'
-      } ${className || ''}`
-    }
-  />
-));
+const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, step = 1, className = '', onKeyDown, darkMode = false }, ref) => {
+  const inputClasses = darkMode
+    ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} ${COLORS.dark.text.primary} focus:ring-slate-500`
+    : `${COLORS.light.bg.primary} ${COLORS.light.border.primary} ${COLORS.light.text.primary} focus:ring-slate-400`;
+  return (
+    <input
+      ref={ref}
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={onKeyDown}
+      className={`w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${inputClasses} ${className || ''}`}
+    />
+  );
+});
 NumberInput.displayName = 'NumberInput';
 
 // Simple chip button (auto multi-line for 3+ word shot type labels)
@@ -466,8 +519,8 @@ const Chip = ({ active, children, onClick, className = '', disabled = false, dar
         : 'bg-blue-600 text-white border-blue-600 shadow-sm font-semibold';
     }
     return darkMode
-      ? 'bg-slate-800/50 hover:bg-slate-700 text-slate-400 border-slate-700 hover:border-slate-600'
-      : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300';
+      ? `${COLORS.dark.bg.tertiary} ${COLORS.dark.bg.hover} ${COLORS.dark.text.secondary} ${COLORS.dark.border.secondary} hover:border-slate-600`
+      : `${COLORS.light.bg.primary} ${COLORS.light.bg.hoverAlt} ${COLORS.light.text.tertiary} ${COLORS.light.border.primary}`;
   };
 
   const disabledClass = disabled ? ' opacity-60 cursor-not-allowed' : '';
@@ -637,7 +690,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
   return (
     <div className="mt-6">
       <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Playfield Layout</h3>
-      <div className={`text-xs mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
+      <div className={`text-xs mb-2 ${GetTextClass(darkMode, 'secondary')}`}>Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
       <div
         ref={canvasRef}
         className={`relative border rounded-xl bg-gradient-to-b h-96 overflow-hidden ${darkMode ? 'from-slate-800 to-slate-900 border-slate-700' : 'from-slate-50 to-slate-100 border-slate-300'}`}
@@ -1560,7 +1613,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
 };
 
 // ---------- main component ----------
-// eslint-disable-next-line sonarjs/cognitive-complexity
+// eslint-disable-next-line sonarjs/cognitive-complexity, complexity, max-lines-per-function
 const App = () => {
   const [toasts, setToasts] = useState([]); // {id,msg}
   const _pushToast = useCallback((msg) => {
@@ -2736,7 +2789,7 @@ const App = () => {
                 </div>
               }
             >
-              <div className={`mb-4 text-xs ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
+              <div className={`mb-4 text-xs ${GetTextClass(darkMode, 'secondary')}`}>Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
                 const misorderedIds = (() => {
                   if (rows.length === 0) {
@@ -2785,8 +2838,8 @@ const App = () => {
                     <col className="w-[30px]" />
                   </colgroup>
                   <thead>
-                    <tr className={`text-left align-bottom ${darkMode ? DARK_TEXT_SECONDARY : 'text-slate-500'}`}>
-                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? (darkMode ? DARK_BG_PRIMARY : 'bg-slate-50') : ''}`}>
+                    <tr className={`text-left align-bottom ${GetTextClass(darkMode, 'secondary')}`}>
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? GetBgClass(darkMode, 'primary') : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
@@ -2819,6 +2872,7 @@ const App = () => {
                           )}
                         </div>
                       </th>
+                      {/* eslint-disable-next-line no-nested-ternary */}
                       <th className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-sky-900/30' : 'bg-sky-50') : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
@@ -2868,6 +2922,7 @@ const App = () => {
                           )}
                         </div>
                       </th>
+                      {/* eslint-disable-next-line no-nested-ternary */}
                       <th className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-rose-900/30' : 'bg-rose-50') : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
@@ -2942,7 +2997,7 @@ const App = () => {
                   <tbody>
                     {rows.length === 0 && (
                       <tr>
-                        <td colSpan={4} className={`p-8 text-center text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        <td colSpan={4} className={`p-8 text-center text-sm ${GetTextClass(darkMode, 'secondary')}`}>
                           <button
                             type="button"
                             data-add-multi
@@ -2977,9 +3032,9 @@ const App = () => {
                           className={(() => {
                             const baseClasses = 'border-t align-top cursor-default';
                             const dragClass = dragRowIdx === i ? 'bg-emerald-50 ring-1 ring-emerald-300' : '';
-                            const selectedBg = darkMode ? DARK_BG_PRIMARY : 'bg-slate-300';
+                            const selectedBg = GetBgClass(darkMode, 'primary');
                             const selectedClass = selectedBlockId === r.id && dragRowIdx !== i ? selectedBg : '';
-                            const hoverBg = darkMode ? 'hover:bg-slate-800' : 'hover:bg-slate-100';
+                            const hoverBg = GetHoverClass(darkMode);
                             const hoverClass = selectedBlockId === r.id ? '' : hoverBg;
                             return `${baseClasses} ${dragClass} ${selectedClass} ${hoverClass}`;
                           })()}
@@ -3074,6 +3129,7 @@ const App = () => {
                               );
                             })()}
                           </td>
+                          {/* eslint-disable-next-line no-nested-ternary */}
                           <td className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-sky-900/30' : 'bg-sky-50') : ''}`}>
                             <div className="flex flex-col gap-1 w-full px-[10px]">
                               {(() => {
@@ -3185,6 +3241,7 @@ const App = () => {
                               </div>
                             </div>
                           </td>
+                          {/* eslint-disable-next-line no-nested-ternary */}
                           <td className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-rose-900/30' : 'bg-rose-50') : ''}`}>
                             <div className="flex flex-col gap-1 w-full px-[10px]">
                               {(() => {
@@ -3538,12 +3595,12 @@ const App = () => {
                     <Chip active={mode === 'manual'} onClick={() => setMode('manual')} darkMode={darkMode}>Manual</Chip>
                     <Chip active={mode === 'random'} onClick={() => setMode('random')} darkMode={darkMode}>Random</Chip>
                     {mode === 'random' && (
-                      <label className={`flex items-center gap-2 text-xs ml-2 whitespace-nowrap ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      <label className={`flex items-center gap-2 text-xs ml-2 whitespace-nowrap ${GetTextClass(darkMode, 'secondary')}`}>
                         <input
                           type="checkbox"
                           checked={useSeededRandom}
                           onChange={(e) => setUseSeededRandom(e.target.checked)}
-                          className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
+                          className={GetCheckboxClass(darkMode)}
                         />
                         Seeded
                       </label>
@@ -3556,7 +3613,7 @@ const App = () => {
                   onClick={canStart ? startSession : undefined}
                   disabled={!canStart}
                   title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
-                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
+                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${canStart ? BTN_SUCCESS : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="5 3 19 12 5 21 5 3" />
@@ -3576,32 +3633,32 @@ const App = () => {
             right={
               <div className="flex items-center gap-3">
                 {/* Guess values & correct values toggles moved into feedback panel */}
-                <label className={`flex items-center gap-2 text-xs ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                <label className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}>
                   <input
                     type="checkbox"
                     checked={showAttemptHistory}
                     onChange={(e) => setShowAttemptHistory(e.target.checked)}
-                    className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
+                    className={GetCheckboxClass(darkMode)}
                   />
                   Attempt history
                 </label>
-                <label className={`flex items-center gap-2 text-xs ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                <label className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}>
                   <input
                     type="checkbox"
                     checked={showFeedbackPanel}
                     onChange={(e) => setShowFeedbackPanel(e.target.checked)}
-                    className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
+                    className={GetCheckboxClass(darkMode)}
                   />
                   Feedback
                 </label>
-                <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                   Setup
                 </button>
-                <button onClick={endSession} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                <button onClick={endSession} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                     <line x1="4" y1="22" x2="4" y2="15" />
@@ -3617,7 +3674,7 @@ const App = () => {
                 <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Current Attempt</h3>
                 <div className={`border rounded-2xl p-3 mb-4 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
                   <div className={`flex items-start gap-3 mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
-                    <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Mode</span>
+                    <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}>Mode</span>
                     <div className="flex gap-2 flex-wrap items-center">
                       <Chip active={mode === 'manual'} onClick={() => setMode('manual')} darkMode={darkMode}>Manual</Chip>
                       <div className="flex items-center gap-2">
@@ -3631,12 +3688,12 @@ const App = () => {
                               className={`w-8 h-8 rounded-full border flex items-center justify-center text-lg ${darkMode ? 'border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300' : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-700'}`}
                               title="Random new shot & flipper"
                             >↻</button>
-                            <label className={`flex items-center gap-2 text-xs ml-2 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                            <label className={`flex items-center gap-2 text-xs ml-2 ${GetTextClass(darkMode, 'secondary')}`}>
                               <input
                                 type="checkbox"
                                 checked={useSeededRandom}
                                 onChange={(e) => setUseSeededRandom(e.target.checked)}
-                                className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
+                                className={GetCheckboxClass(darkMode)}
                               />
                               Seeded
                             </label>
@@ -3648,7 +3705,7 @@ const App = () => {
 
                   <div className={`mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
                     <div className="flex items-start gap-3 mb-2">
-                      <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Shot</span>
+                      <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}>Shot</span>
                       <div className="flex gap-2 flex-wrap">
                         {rows.map((r, i) => (
                           <Chip
@@ -3666,7 +3723,7 @@ const App = () => {
                   </div>
 
                   <div className={`flex items-start gap-3 mb-4 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
-                    <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Flipper</span>
+                    <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}>Flipper</span>
                     <div className="flex gap-2">
                       <Chip
                         active={selectedSide === 'L'}
@@ -3685,7 +3742,7 @@ const App = () => {
 
                   <div className="mb-4">
                     <div className="flex items-start gap-3">
-                      <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Recall</span>
+                      <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}>Recall</span>
                       <div className="flex flex-col items-stretch">
                         <div className="flex items-center gap-2">
                           <NumberInput
@@ -3735,7 +3792,7 @@ const App = () => {
                         recallInputRef.current?.focus(); recallInputRef.current?.select();
                       }, 0);
                     }}
-                    className={`px-4 py-2 rounded-2xl text-white ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+                    className={`px-4 py-2 rounded-2xl text-white ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
                   >
                     Submit
                   </button>
@@ -3749,19 +3806,20 @@ const App = () => {
                 <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Feedback</h3>
                 <div className={`border rounded-2xl p-3 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
                   <div className="text-sm">
+                    {/* eslint-disable-next-line sonarjs/cognitive-complexity */}
                     {(() => {
                       const a = attempts[0];
                       const has = Boolean(a);
                       return (
                         <>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Last shot</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Last shot</div>
                             <div className="font-medium" style={{ color: has ? (SEVERITY_COLORS[a.severity] || (darkMode ? '#cbd5e1' : '#334155')) : undefined }}>
                               {has ? rowDisplayWithSide(rows[a.idx], a.side) : '—'}
                             </div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Result</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Result</div>
                             <div className="font-medium capitalize">
                               {has ? (
                                 <>
@@ -3773,11 +3831,11 @@ const App = () => {
                             </div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Guess</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Guess</div>
                             <div>{has ? formatPct(a.input) : '—'}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Prev guess</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Prev guess</div>
                             <div>{(() => {
                               if (!showMentalModel) {
                                 return '—';
@@ -3789,7 +3847,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Guess delta</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Guess delta</div>
                             <div>{(() => {
                               if (!has) {
                                 return 'N/A';
@@ -3802,7 +3860,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Adjustment needed</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Adjustment needed</div>
                             <div className="capitalize">{(() => {
                               if (!has) {
                                 return 'N/A';
@@ -3820,7 +3878,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Adjustment result</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Adjustment result</div>
                             <div className={(() => {
                               if (!has || !a.adjustRequired) {
                                 return 'text-slate-400';
@@ -3840,7 +3898,7 @@ const App = () => {
                             </div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Starting</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Starting</div>
                             <div>{(() => {
                               if (!showBaseValues) {
                                 return '—';
@@ -3852,7 +3910,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Correct</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Correct</div>
                             <div>{(() => {
                               if (!showTruth) {
                                 return '—';
@@ -3864,7 +3922,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mt-2 pt-2 border-t">
-                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Points</div>
+                            <div className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}>Points</div>
                             <div className="text-right">
                               <div>{has ? `${a.points} pts` : '—'}</div>
                               {has && a.basePoints !== null ? (
@@ -3877,32 +3935,32 @@ const App = () => {
                           <div className="mt-4 pt-4 border-t">
                             <div className={`text-sm font-medium mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}>View Shot Values</div>
                             <div className="flex flex-wrap gap-4 items-center mb-3">
-                              <label className={`flex items-center gap-2 text-[11px] ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                              <label className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}>
                                 <input
                                   type="checkbox"
                                   checked={showBaseValues}
                                   onChange={(e) => setShowBaseValues(e.target.checked)}
-                                  className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
+                                  className={GetCheckboxClass(darkMode)}
                                 />
                                 Starting
                               </label>
-                              <label className={`flex items-center gap-2 text-[11px] ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                              <label className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}>
                                 <input
                                   type="checkbox"
                                   checked={showMentalModel}
                                   onChange={(e) => {
                                     const v = e.target.checked; setShowMentalModel(v);
                                   }}
-                                  className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
+                                  className={GetCheckboxClass(darkMode)}
                                 />
                                 Guess
                               </label>
-                              <label className={`flex items-center gap-2 text-[11px] ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                              <label className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}>
                                 <input
                                   type="checkbox"
                                   checked={showTruth}
                                   onChange={(e) => setShowTruth(e.target.checked)}
-                                  className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
+                                  className={GetCheckboxClass(darkMode)}
                                 />
                                 Correct
                               </label>
@@ -3942,7 +4000,7 @@ const App = () => {
                                         {showTruth ? <td className={`p-1.5 text-right ${darkMode ? 'text-slate-400 border-r border-slate-600' : 'text-slate-600 border-r border-slate-300'}`}>{formatPct(hiddenL[i] ?? 0)}</td> : null}
                                         {showBaseValues ? <td className={`p-1.5 text-right ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}>{formatPct(baseR[i] ?? 0)}</td> : null}
                                         {showMentalModel ? <td className="p-1.5 text-right">{formatPct(mentalR[i] ?? 0)}</td> : null}
-                                        {showTruth ? <td className={`p-1.5 text-right ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>{formatPct(hiddenR[i] ?? 0)}</td> : null}
+                                        {showTruth ? <td className={`p-1.5 text-right ${GetTextClass(darkMode, 'secondary')}`}>{formatPct(hiddenR[i] ?? 0)}</td> : null}
                                       </tr>
                                     ))}
                                   </tbody>
@@ -3976,22 +4034,22 @@ const App = () => {
                 )}
                 {/* Metric boxes positioned at bottom corners - responsive sizing */}
                 <div className="absolute bottom-2 left-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:left-4">
-                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`}>
-                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Last attempt</div>
+                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}>
+                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}>Last attempt</div>
                     <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{attempts[0] ? attempts[0].points : '—'}</div>
                   </div>
-                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`}>
-                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Attempts</div>
+                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}>
+                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}>Attempts</div>
                     <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{attemptCount}</div>
                   </div>
                 </div>
                 <div className="absolute bottom-2 right-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:right-4">
-                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`}>
-                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Total points</div>
+                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}>
+                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}>Total points</div>
                     <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{totalPoints}</div>
                   </div>
-                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`}>
-                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Avg abs error</div>
+                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}>
+                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}>Avg abs error</div>
                     <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{avgAbsErr.toFixed(1)}</div>
                   </div>
                 </div>
@@ -4148,22 +4206,22 @@ const App = () => {
                     return (
                       <>
                         <div className="absolute z-30 flex" style={{ bottom: margin, left: margin, gap }}>
-                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
-                            <div className={`leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Last attempt</div>
+                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Last attempt</div>
                             <div className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: valueFont }}>{attempts[0] ? attempts[0].points : '—'}</div>
                           </div>
-                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
-                            <div className={darkMode ? 'text-slate-400' : 'text-slate-600'} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Attempts</div>
+                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className={GetTextClass(darkMode, 'secondary')} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Attempts</div>
                             <div className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: valueFont }}>{attemptCount}</div>
                           </div>
                         </div>
                         <div className="absolute z-30 flex" style={{ bottom: margin, right: margin, gap }}>
-                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
-                            <div className={`leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Total points</div>
+                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Total points</div>
                             <div className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: valueFont }}>{totalPoints}</div>
                           </div>
-                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
-                            <div className={`leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Avg abs error</div>
+                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Avg abs error</div>
                             <div className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: valueFont }}>{avgAbsErr.toFixed(1)}</div>
                           </div>
                         </div>
@@ -4266,13 +4324,13 @@ const App = () => {
             darkMode={darkMode}
             right={
               <div className="flex items-center gap-3">
-                <button onClick={() => setFinalPhase(false)} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                <button onClick={() => setFinalPhase(false)} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="5 3 19 12 5 21 5 3" />
                   </svg>
                   Practice
                 </button>
-                <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                     <circle cx="12" cy="12" r="3" />
@@ -4325,15 +4383,15 @@ const App = () => {
             </div>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
               <div className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
-                <div className={darkMode ? 'text-slate-400' : 'text-slate-600'}>Final score</div>
+                <div className={GetTextClass(darkMode, 'secondary')}>Final score</div>
                 <div className="text-3xl font-semibold">{finalScore}</div>
               </div>
               <div className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
-                <div className={darkMode ? 'text-slate-400' : 'text-slate-600'}>Shots</div>
+                <div className={GetTextClass(darkMode, 'secondary')}>Shots</div>
                 <div className="text-3xl font-semibold">{rows.length}</div>
               </div>
               <div className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
-                <div className={darkMode ? 'text-slate-400' : 'text-slate-600'}>Total attempts</div>
+                <div className={GetTextClass(darkMode, 'secondary')}>Total attempts</div>
                 <div className="text-3xl font-semibold">{attemptCount}</div>
               </div>
             </div>
