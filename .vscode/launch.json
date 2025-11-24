@@ -30,7 +30,7 @@
         "/*": "*",
         "/./~/*": "${webRoot}/node_modules/*"
       },
-      "preLaunchTask": "npm: dev",
+      "preLaunchTask": "Start dev server for debugging",
       "postDebugTask": "Stop npm dev server"
     }
   ]

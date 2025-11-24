@@ -77,10 +77,8 @@
       "command": "npm",
       "args": ["run", "dev"],
       "label": "npm: dev",
-      "detail": "Starts the Vite development server with hot reload",
+      "detail": "Starts the Vite development server with hot reload (tests disabled for debugging)",
       "isBackground": true,
-      "dependsOn": ["Run All Tests"],
-      "dependsOrder": "sequence",
       "problemMatcher": {
         "owner": "custom",
         "pattern": {
@@ -118,6 +116,43 @@
       "presentation": {
         "reveal": "never",
         "panel": "shared"
+      }
+    },
+    {
+      "label": "Ensure dev server is running",
+      "detail": "Checks if Vite dev server is running, starts it if not",
+      "type": "shell",
+      "command": "$response = try { Invoke-WebRequest -Uri 'http://localhost:5173' -Method Head -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop; $true } catch { $false }; if (-not $response) { Write-Host 'Dev server not running, please start it manually or wait...'; Start-Sleep -Seconds 2; exit 1 } else { Write-Host 'Dev server is already running' }",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "never",
+        "panel": "shared",
+        "close": true
+      }
+    },
+    {
+      "label": "Start dev server for debugging",
+      "detail": "Ensures dependencies are installed and starts the Vite dev server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "isBackground": true,
+      "dependsOn": ["Install Dependencies"],
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*VITE.*",
+          "endsPattern": ".*(Local|ready).*"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false
       }
     }
   ]

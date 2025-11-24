@@ -5,6 +5,17 @@ import { createPortal } from 'react-dom';
 // Local, no backend. All data in memory + localStorage.
 // Styling: Tailwind utility classes. No external UI libs.
 
+// ---------- constants ----------
+const DARK_TEXT_PRIMARY = 'text-slate-100';
+const DARK_TEXT_SECONDARY = 'text-slate-400';
+const LIGHT_TEXT_PRIMARY = 'text-slate-900';
+const LIGHT_TEXT_SECONDARY = 'text-slate-600';
+const DARK_BG_PRIMARY = 'bg-slate-700';
+const DARK_BG_SECONDARY = 'bg-slate-800/95';
+const DARK_BORDER = 'border-slate-600';
+const LIGHT_BORDER = 'border-slate-300';
+const BUTTON_SUCCESS = 'bg-emerald-600 hover:bg-emerald-700';
+
 // ---------- helpers ----------
 const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
 function snap5(v) {
@@ -401,17 +412,21 @@ function useLocalStorage(key, initialValue) {
 }
 
 // Reusable presentational components hoisted out of App to keep stable identity
-const Section = ({ title, children, right }) => (
-  <div className="bg-white/80 rounded-2xl shadow p-4 md:p-6 mb-6">
-    <div className="flex items-center justify-between mb-3">
-      <h2 className="text-lg md:text-xl font-semibold">{title}</h2>
-      {right}
+const Section = ({ title, children, right, darkMode = false }) => {
+  const bgClass = darkMode ? 'bg-slate-800/80' : 'bg-white/80';
+  const textClass = darkMode ? DARK_TEXT_PRIMARY : LIGHT_TEXT_PRIMARY;
+  return (
+    <div className={`rounded-2xl shadow p-4 md:p-6 mb-6 ${bgClass}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className={`text-lg md:text-xl font-semibold ${textClass}`}>{title}</h2>
+        {right}
+      </div>
+      {children}
     </div>
-    {children}
-  </div>
-);
+  );
+};
 
-const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, step = 1, className = '', onKeyDown }, ref) => (
+const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, step = 1, className = '', onKeyDown, darkMode = false }, ref) => (
   <input
     ref={ref}
     type="number"
@@ -423,14 +438,15 @@ const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, ste
     onKeyDown={onKeyDown}
     className={
       `w-24 px-2 py-1 border rounded-xl text-sm focus:outline-none focus:ring ${
-        className || ''}`
+        darkMode ? 'bg-slate-700 border-slate-600 text-slate-100 focus:ring-slate-500' : 'bg-white border-slate-300 text-slate-900 focus:ring-slate-400'
+      } ${className || ''}`
     }
   />
 ));
 NumberInput.displayName = 'NumberInput';
 
 // Simple chip button (auto multi-line for 3+ word shot type labels)
-const Chip = ({ active, children, onClick, className = '', disabled = false }) => {
+const Chip = ({ active, children, onClick, className = '', disabled = false, darkMode = false }) => {
   let content = children;
   if (typeof children === 'string') {
     const words = children.split(' ').filter(Boolean);
@@ -443,19 +459,26 @@ const Chip = ({ active, children, onClick, className = '', disabled = false }) =
       );
     }
   }
+  const getChipClasses = () => {
+    if (active) {
+      return darkMode
+        ? 'bg-blue-600 text-white border-blue-600 font-semibold'
+        : 'bg-blue-600 text-white border-blue-600 shadow-sm font-semibold';
+    }
+    return darkMode
+      ? 'bg-slate-800/50 hover:bg-slate-700 text-slate-400 border-slate-700 hover:border-slate-600'
+      : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300';
+  };
+
+  const disabledClass = disabled ? ' opacity-60 cursor-not-allowed' : '';
+  const customClass = className ? ` ${className}` : '';
+
   return (
     <button
       type="button"
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      className={
-        `px-3 py-1.5 rounded-full text-xs font-medium border transition-colors select-none text-center inline-flex items-center justify-center ${
-          active
-            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
-        }${disabled ? ' opacity-60 cursor-not-allowed' : ''
-        }${className ? ` ${className}` : ''}`
-      }
+      className={`px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all select-none text-center inline-flex items-center justify-center ${getChipClasses()}${disabledClass}${customClass}`}
     >
       {content}
     </button>
@@ -463,7 +486,7 @@ const Chip = ({ active, children, onClick, className = '', disabled = false }) =
 };
 
 // Simple playfield editor for arranging shots spatially & adjusting flipper percentages
-const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedIds, onClear }) => {
+const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedIds, onClear, onExample, darkMode = false }) => {
   const canvasRef = React.useRef(null);
   // Track which shot images have successfully loaded (id -> true). Avoid per-item hooks inside map.
   const [imageLoadedMap, setImageLoadedMap] = useState({});
@@ -613,11 +636,11 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
 
   return (
     <div className="mt-6">
-      <h3 className="font-medium mb-2">Playfield Layout</h3>
-      <div className="text-xs text-slate-600 mb-2">Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
+      <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Playfield Layout</h3>
+      <div className={`text-xs mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Shot positions auto-arranged along arc (updates on add/remove/reorder).</div>
       <div
         ref={canvasRef}
-        className="relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 h-96 overflow-hidden"
+        className={`relative border rounded-xl bg-gradient-to-b h-96 overflow-hidden ${darkMode ? 'from-slate-800 to-slate-900 border-slate-700' : 'from-slate-50 to-slate-100 border-slate-300'}`}
         role="region"
         aria-label="Playfield layout"
       >
@@ -628,7 +651,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
             onClick={(e) => {
               e.stopPropagation(); onClear();
             }}
-            className="absolute left-3 bottom-3 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2"
+            className={`absolute left-3 bottom-3 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2 ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300'}`}
             title="Clear all shots"
             aria-label="Clear all shots"
           >
@@ -642,61 +665,80 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
             <span className="hidden md:inline">Clear</span>
           </button>
         )}
+        {/* Example button placed inside playfield (bottom-right) when provided */}
+        {Boolean(onExample) && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation(); onExample();
+            }}
+            className={`absolute right-3 bottom-3 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2 ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300'}`}
+            title="Load example shots"
+            aria-label="Load example shots"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+            <span className="hidden md:inline">Example</span>
+          </button>
+        )}
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
-        <PlayfieldScenery />
-        {/* Precise clickable flipper paths (no visible outline when selected) */}
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-          {(() => {
-            function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl = 0.6) {
-              const dx = tip.x - base.x, dy = tip.y - base.y;
-              const len = Math.hypot(dx, dy) || 1;
-              const ux = dx / len, uy = dy / len;
-              const px = -uy, py = ux;
-              const halfTip = tipWidth / 2;
-              const tL = { x: tip.x + px * halfTip, y: tip.y + py * halfTip };
-              const tR = { x: tip.x - px * halfTip, y: tip.y - py * halfTip };
-              const bL = { x: base.x + px * rBase, y: base.y + py * rBase };
-              const bR = { x: base.x - px * rBase, y: base.y - py * rBase };
-              const ctrlTip = { x: tip.x + ux * (roundnessCtrl * halfTip), y: tip.y + uy * (roundnessCtrl * halfTip) };
-              return [
-                `M ${bL.x} ${bL.y}`,
-                `A ${rBase} ${rBase} 0 1 1 ${bR.x} ${bR.y}`,
-                `L ${tR.x} ${tR.y}`,
-                `Q ${ctrlTip.x} ${ctrlTip.y} ${tL.x} ${tL.y}`,
-                'Z',
-              ].join(' ');
-            }
-            const L_BASE = { x: 285, y: 785 }; const L_TIP = { x: 415, y: 920 };
-            const R_BASE = { x: 715, y: 785 }; const R_TIP = { x: 585, y: 920 };
-            const rBase = 27.5; const tipWidth = 22;
-            const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth);
-            const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth);
-            return (
-              <g className="cursor-pointer select-none">
-                <path
-                  d={leftD}
-                  fill="transparent"
-                  onMouseDown={(e) => {
-                    e.stopPropagation(); if (selectedId !== 'FLIPPER_L') {
-                      setSelectedId('FLIPPER_L');
-                    }
-                  }}
-                  title="Select Left flipper shot lines"
-                />
-                <path
-                  d={rightD}
-                  fill="transparent"
-                  onMouseDown={(e) => {
-                    e.stopPropagation(); if (selectedId !== 'FLIPPER_R') {
-                      setSelectedId('FLIPPER_R');
-                    }
-                  }}
-                  title="Select Right flipper shot lines"
-                />
-              </g>
-            );
-          })()}
-        </svg>
+        <PlayfieldScenery darkMode={darkMode} />
+        {/* Precise clickable flipper paths (no visible outline when selected) */
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+            {(() => {
+              function flipperPath(base, tip, rBase, tipWidth, roundnessCtrl = 0.6) {
+                const dx = tip.x - base.x, dy = tip.y - base.y;
+                const len = Math.hypot(dx, dy) || 1;
+                const ux = dx / len, uy = dy / len;
+                const px = -uy, py = ux;
+                const halfTip = tipWidth / 2;
+                const tL = { x: tip.x + px * halfTip, y: tip.y + py * halfTip };
+                const tR = { x: tip.x - px * halfTip, y: tip.y - py * halfTip };
+                const bL = { x: base.x + px * rBase, y: base.y + py * rBase };
+                const bR = { x: base.x - px * rBase, y: base.y - py * rBase };
+                const ctrlTip = { x: tip.x + ux * (roundnessCtrl * halfTip), y: tip.y + uy * (roundnessCtrl * halfTip) };
+                return [
+                  `M ${bL.x} ${bL.y}`,
+                  `A ${rBase} ${rBase} 0 1 1 ${bR.x} ${bR.y}`,
+                  `L ${tR.x} ${tR.y}`,
+                  `Q ${ctrlTip.x} ${ctrlTip.y} ${tL.x} ${tL.y}`,
+                  'Z',
+                ].join(' ');
+              }
+              const L_BASE = { x: 285, y: 785 }; const L_TIP = { x: 415, y: 920 };
+              const R_BASE = { x: 715, y: 785 }; const R_TIP = { x: 585, y: 920 };
+              const rBase = 27.5; const tipWidth = 22;
+              const leftD = flipperPath(L_BASE, L_TIP, rBase, tipWidth);
+              const rightD = flipperPath(R_BASE, R_TIP, rBase, tipWidth);
+              return (
+                <g className="cursor-pointer select-none">
+                  <path
+                    d={leftD}
+                    fill="transparent"
+                    onMouseDown={(e) => {
+                      e.stopPropagation(); if (selectedId !== 'FLIPPER_L') {
+                        setSelectedId('FLIPPER_L');
+                      }
+                    }}
+                    title="Select Left flipper shot lines"
+                  />
+                  <path
+                    d={rightD}
+                    fill="transparent"
+                    onMouseDown={(e) => {
+                      e.stopPropagation(); if (selectedId !== 'FLIPPER_R') {
+                        setSelectedId('FLIPPER_R');
+                      }
+                    }}
+                    title="Select Right flipper shot lines"
+                  />
+                </g>
+              );
+            })()}
+          </svg>
+        }
         {rows.map(r => {
           const sel = r.id === selectedId;
           const misordered = misorderedIds?.has(r.id);
@@ -712,7 +754,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
               key={r.id}
               style={{ left: `${r.x * 100}%`, top: `${r.y * 100}%`, transform: 'translate(-50%, -50%)', width: renderedSize, height: renderedSize }}
               onMouseDown={(e) => handleMouseDown(e, r.id)}
-              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel ? 'ring-2 ring-emerald-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300'}`}
+              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel ? 'ring-2 ring-blue-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300'}`}
               role="button"
               tabIndex={0}
               aria-label={`Shot ${r.type || 'element'}`}
@@ -840,8 +882,8 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
                   return (
                     <g key={`L-${r.id}`}>
                       <line x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={color} strokeWidth={4} strokeLinecap="round" opacity={opacity} />
-                      <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
-                      <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                      <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill={darkMode ? '#334155' : '#ffffff'} stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                      <text x={cx} y={cy - rectH / 2 + fs / 2 - 2} fontSize={fs} textAnchor="middle" fill={darkMode ? '#e2e8f0' : '#000'} fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                     </g>
                   );
                 }) : null}
@@ -860,8 +902,8 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
                   return (
                     <g key={`R-${r.id}`}>
                       <line x1={anchor.x} y1={anchor.y} x2={bx} y2={by} stroke={color} strokeWidth={4} strokeLinecap="round" opacity={opacity} />
-                      <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
-                      <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                      <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill={darkMode ? '#334155' : '#ffffff'} stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                      <text x={cx} y={cy - rectH / 2 + fs / 2 - 2} fontSize={fs} textAnchor="middle" fill={darkMode ? '#e2e8f0' : '#000'} fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                     </g>
                   );
                 }) : null}
@@ -883,8 +925,8 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
                 return (
                   <g>
                     <line x1={leftAnchor.x} y1={leftAnchor.y} x2={bx} y2={by} stroke="#0ea5e9" strokeWidth={4} strokeLinecap="round" opacity={opacity} />
-                    <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
-                    <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                    <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill={darkMode ? '#334155' : '#ffffff'} stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                    <text x={cx} y={cy - rectH / 2 + fs / 2} fontSize={fs} textAnchor="middle" fill={darkMode ? '#e2e8f0' : '#000'} fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                   </g>
                 );
               })()}
@@ -893,8 +935,8 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
                 return (
                   <g>
                     <line x1={rightAnchor.x} y1={rightAnchor.y} x2={bx} y2={by} stroke="#dc2626" strokeWidth={4} strokeLinecap="round" opacity={opacity} />
-                    <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
-                    <text x={cx} y={cy - rectH / 2 + fs / 2 - 1} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
+                    <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6} ry={6} fill={darkMode ? '#334155' : '#ffffff'} stroke="#cbd5e1" strokeWidth={1} opacity={opacity} />
+                    <text x={cx} y={cy - rectH / 2 + fs / 2} fontSize={fs} textAnchor="middle" fill={darkMode ? '#e2e8f0' : '#000'} fontFamily="ui-sans-serif" fontWeight="400" opacity={opacity}>{label}</text>
                   </g>
                 );
               })()}
@@ -907,7 +949,7 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
   );
 };
 
-const PlayfieldScenery = () => {
+const PlayfieldScenery = ({ darkMode = false }) => {
   /* Simplified bottom: two basic elongated flippers only.
      Coordinate system: 1000x1000 viewBox.
      Desired physical proportions (approx): length ~3in, narrow base ~1cm, wide tip ~2.5cm.
@@ -1075,7 +1117,7 @@ const PlayfieldScenery = () => {
           }
 
           return (
-            <g fill="#ffffff" strokeLinecap="round" strokeLinejoin="round">
+            <g fill={darkMode ? '#334155' : '#ffffff'} strokeLinecap="round" strokeLinejoin="round">
               <path d={leftD} stroke="#0ea5e9" strokeWidth={8} />
               <path d={rightD} stroke="#dc2626" strokeWidth={8} />
               {labels}
@@ -1087,7 +1129,7 @@ const PlayfieldScenery = () => {
   );
 };
 
-const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale }) => {
+const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale, darkMode = false }) => {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -1144,13 +1186,12 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   }, [scale, fullscreen, onScale]);
   return (
     <div className={fullscreen ? 'w-full h-full flex flex-col' : 'mt-8'}>
-      {!fullscreen && <h3 className="font-medium mb-2">Playfield</h3>}
-      <div ref={canvasRef} className={
-        `relative border rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 overflow-hidden ${
-          fullscreen ? 'flex-1 min-h-0' : 'h-96'}`
-      }
+      {!fullscreen && <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Playfield</h3>}
+      <div
+        ref={canvasRef}
+        className={`relative border rounded-xl bg-gradient-to-b overflow-hidden ${darkMode ? 'from-slate-800 to-slate-900 border-slate-700' : 'from-slate-50 to-slate-100 border-slate-300'} ${fullscreen ? 'flex-1 min-h-0' : 'h-96'}`}
       >
-        <PlayfieldScenery />
+        <PlayfieldScenery darkMode={darkMode} />
         {rows.map(r => {
           // Practice playfield: NO L/R values. Show image tile if available (square 80x80), else fallback text box.
           const styleBase = fullscreen ? {
@@ -1176,7 +1217,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 key={r.id}
                 data-shot-box={r.id}
                 style={{ ...styleBase, width: boxSize, height: boxSize }}
-                className={`absolute z-20 select-none rounded-md shadow border overflow-hidden bg-white border-slate-300 origin-center ${r === selectedRow ? 'ring-2 ring-emerald-500' : ''}`}
+                className={`absolute z-20 select-none rounded-md shadow border overflow-hidden bg-white border-slate-300 origin-center ${r === selectedRow ? 'ring-2 ring-blue-500' : ''}`}
                 title={r.type}
               >
                 <img
@@ -1218,7 +1259,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               key={r.id}
               data-shot-box={r.id}
               style={styleBase}
-              className={`absolute z-20 select-none rounded-lg shadow border bg-white border-slate-300 origin-center w-24 h-20 overflow-hidden ${r === selectedRow ? 'ring-2 ring-emerald-500' : ''}`}
+              className={`absolute z-20 select-none rounded-lg shadow border bg-white border-slate-300 origin-center w-24 h-20 overflow-hidden ${r === selectedRow ? 'ring-2 ring-blue-500' : ''}`}
               title={r.type}
             >
               <div className="absolute inset-0 flex items-center justify-center px-1 text-center text-[11px] font-medium" title={r.type || '—'}>{r.type || '—'}</div>
@@ -1416,9 +1457,9 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               recallNode = (
                 <g>
                   {lineEl}
-                  <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6 * Number(textScale)} ry={6 * Number(textScale)} fill="#ffffff" stroke="#cbd5e1" strokeWidth={Number(textScale)} />
+                  <rect x={cx - rectW / 2} y={cy - rectH} width={rectW} height={rectH} rx={6 * Number(textScale)} ry={6 * Number(textScale)} fill={darkMode ? '#334155' : '#ffffff'} stroke="#cbd5e1" strokeWidth={Number(textScale)} />
                   {/* Display 'NP' (Not Possible) instead of '00' when the recalled value is 0 */}
-                  <text x={cx} y={cy - rectH / 2 + fs / 2 - Number(textScale)} fontSize={fs} textAnchor="middle" fill="#000" fontFamily="ui-sans-serif" fontWeight="400">{label === '00' ? 'NP' : label}</text>
+                  <text x={cx} y={cy - rectH / 2 + fs / 2 - 2} fontSize={fs} textAnchor="middle" fill={darkMode ? '#e2e8f0' : '#000'} fontFamily="ui-sans-serif" fontWeight="400">{label === '00' ? 'NP' : label}</text>
                   {/* Arrow indicator showing direction of correct answer, rotated along flipper axis */}
                   {arrowSymbol ? (
                     <text
@@ -1692,6 +1733,8 @@ const App = () => {
   const [hoverFlipperColumn, setHoverFlipperColumn] = useState(null);
   // Info modal state
   const [showInfoModal, setShowInfoModal] = useState(false);
+  // Dark mode toggle (default: true for dark mode)
+  const [darkMode, setDarkMode] = useLocalStorage('pinball_darkMode_v1', true);
   // One-time auto-collapse so pre-selected values (from persisted state or defaults) show as single chips, not full option lists on first load.
   const didInitCollapse = useRef(false);
   useEffect(() => {
@@ -2339,7 +2382,7 @@ const App = () => {
     }
   }, [initialized, finalPhase]);
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 text-slate-900">
+    <div className={`min-h-screen bg-gradient-to-b transition-colors ${darkMode ? 'dark from-slate-900 to-slate-950 text-slate-100' : 'from-slate-100 to-slate-200 text-slate-900'}`}>
       {/* Info Modal */}
       {showInfoModal ? (
         <div
@@ -2357,15 +2400,15 @@ const App = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="info-modal-title"
-            className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className={`relative rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800 text-slate-100' : 'bg-white text-slate-900'}`}
           >
             <div className="p-6 md:p-8">
               <div className="flex items-start justify-between mb-6">
-                <h2 id="info-modal-title" className="text-2xl md:text-3xl font-bold text-slate-900">About This App</h2>
+                <h2 id="info-modal-title" className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>About This App</h2>
                 <button
                   type="button"
                   onClick={() => setShowInfoModal(false)}
-                  className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  className={`p-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
                   aria-label="Close"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2374,15 +2417,15 @@ const App = () => {
                   </svg>
                 </button>
               </div>
-              <div className="space-y-6 text-slate-700">
+              <div className={`space-y-6 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Pinball Accuracy Memory Trainer</h3>
+                  <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>Pinball Accuracy Memory Trainer</h3>
                   <p className="leading-relaxed">
                     A training tool designed to help pinball players improve their shot accuracy estimation and mental model of flipper-to-target percentages. Practice recalling and adjusting your guesses to build muscle memory for real-world pinball play.
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">How It Works</h3>
+                  <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>How It Works</h3>
                   <ul className="space-y-2 list-disc list-inside">
                     <li>Define shots on a virtual playfield with left and right flipper percentages</li>
                     <li>Practice recalling those percentages from memory</li>
@@ -2391,13 +2434,13 @@ const App = () => {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Author</h3>
+                  <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>Author</h3>
                   <p className="leading-relaxed">
                     Created by Gary Brown for the pinball community. This tool runs entirely in your browser with no data sent to any server - all your practice data stays local.
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Open Source</h3>
+                  <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>Open Source</h3>
                   <p className="leading-relaxed mb-3">
                     This project is open source and available on GitHub. Contributions, feedback, and suggestions are welcome!
                   </p>
@@ -2405,7 +2448,7 @@ const App = () => {
                     href="https://github.com/garybrowndev/PinballAccuracyMemoryTrainer"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${darkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                   >
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                       <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
@@ -2642,13 +2685,14 @@ const App = () => {
             })()}
             <Section
               title="1) Define shots and initial guessed percentages"
+              darkMode={darkMode}
               right={
                 <div className="flex gap-2">
                   {Boolean(isStandalone) && (
                     <button
                       type="button"
                       onClick={downloadStandalone}
-                      className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                      className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
                       title="Download this standalone HTML file"
                       aria-label="Download standalone"
                     >
@@ -2661,8 +2705,25 @@ const App = () => {
                   )}
                   <button
                     type="button"
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
+                    title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                    aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  >
+                    {darkMode ? (
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                        <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setShowInfoModal(true)}
-                    className="w-8 h-8 rounded-full bg-white border border-slate-300 shadow hover:shadow-md transition-all flex items-center justify-center text-slate-600 hover:text-slate-900"
+                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
                     title="About this app"
                     aria-label="About"
                   >
@@ -2675,7 +2736,7 @@ const App = () => {
                 </div>
               }
             >
-              <div className="mb-4 text-xs text-slate-600">Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
+              <div className={`mb-4 text-xs ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Spatial arrangement helps visualize logical ordering. Misordered shots (array order vs left→right) are highlighted in red.</div>
               {(() => {
                 const misorderedIds = (() => {
                   if (rows.length === 0) {
@@ -2697,10 +2758,19 @@ const App = () => {
                     selectedId={selectedBlockId}
                     setSelectedId={setSelectedBlockId}
                     misorderedIds={misorderedIds}
+                    darkMode={darkMode}
                     onClear={() => {
                       setRows([]);
                       setCollapsedTypes([]);
                       _pushToast('Cleared all shots');
+                    }}
+                    onExample={() => {
+                      setRows([
+                        newRow({ base: 'Orbit', location: 'Left', initL: 25, initR: 75 }, 0),
+                        newRow({ base: 'Ramp', location: 'Center', initL: 50, initR: 50 }, 1),
+                        newRow({ base: 'Orbit', location: 'Right', initL: 75, initR: 25 }, 2),
+                      ]);
+                      _pushToast('Loaded example shots');
                     }}
                   />
                 );
@@ -2715,8 +2785,8 @@ const App = () => {
                     <col className="w-[30px]" />
                   </colgroup>
                   <thead>
-                    <tr className="text-left text-slate-500 align-bottom">
-                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? 'bg-slate-50' : ''}`}>
+                    <tr className={`text-left align-bottom ${darkMode ? DARK_TEXT_SECONDARY : 'text-slate-500'}`}>
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? (darkMode ? DARK_BG_PRIMARY : 'bg-slate-50') : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
@@ -2733,7 +2803,7 @@ const App = () => {
                             }}
                             onMouseEnter={() => setHoverFlipperColumn('BOTH')}
                             onMouseLeave={() => setHoverFlipperColumn(null)}
-                            className="hover:bg-slate-50 rounded px-1 cursor-pointer select-none"
+                            className={`rounded px-1 cursor-pointer select-none ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}
                             title="Select Both Flippers"
                           >Shot Type</span>
                           {rows.length > 0 && (
@@ -2743,13 +2813,13 @@ const App = () => {
                                 setRows(prev => prev.map(rw => ({ ...rw, base: '', location: '', type: '', initL: rw.initL, initR: rw.initR })));
                                 setCollapsedTypes([]);
                               }}
-                              className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
+                              className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
                               title="Clear all shot type selections"
                             >Clear</button>
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? 'bg-emerald-50' : ''}`}>
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-sky-900/30' : 'bg-sky-50') : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
@@ -2792,13 +2862,13 @@ const App = () => {
                                   return prev.map((rw, idx) => ({ ...rw, initL: asc[idx] }));
                                 });
                               }}
-                              className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
+                              className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
                               title="Auto-fill evenly spaced ascending values starting near center for left flipper"
                             >Reset</button>
                           )}
                         </div>
                       </th>
-                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? 'bg-rose-50' : ''}`}>
+                      <th className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-rose-900/30' : 'bg-rose-50') : ''}`}>
                         <div className="flex items-center gap-2">
                           <span
                             role="button"
@@ -2841,7 +2911,7 @@ const App = () => {
                                   return prev.map((rw, idx) => ({ ...rw, initR: desc[idx] }));
                                 });
                               }}
-                              className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-600"
+                              className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
                               title="Auto-fill evenly spaced descending values (high→low) for right flipper"
                             >Reset</button>
                           )}
@@ -2872,7 +2942,7 @@ const App = () => {
                   <tbody>
                     {rows.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="p-8 text-center text-sm text-slate-600">
+                        <td colSpan={4} className={`p-8 text-center text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                           <button
                             type="button"
                             data-add-multi
@@ -2884,7 +2954,7 @@ const App = () => {
                               const r = e.currentTarget.getBoundingClientRect();
                               setAddCountAnchor({ x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 });
                             }}
-                            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800"
+                            className={`px-4 py-2 rounded-xl text-white text-sm ${darkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-900 hover:bg-slate-800'}`}
                           >+ Add Shot(s)</button>
                         </td>
                       </tr>
@@ -2907,8 +2977,10 @@ const App = () => {
                           className={(() => {
                             const baseClasses = 'border-t align-top cursor-default';
                             const dragClass = dragRowIdx === i ? 'bg-emerald-50 ring-1 ring-emerald-300' : '';
-                            const selectedClass = selectedBlockId === r.id && dragRowIdx !== i ? 'bg-slate-300' : '';
-                            const hoverClass = selectedBlockId === r.id ? '' : 'hover:bg-slate-100';
+                            const selectedBg = darkMode ? DARK_BG_PRIMARY : 'bg-slate-300';
+                            const selectedClass = selectedBlockId === r.id && dragRowIdx !== i ? selectedBg : '';
+                            const hoverBg = darkMode ? 'hover:bg-slate-800' : 'hover:bg-slate-100';
+                            const hoverClass = selectedBlockId === r.id ? '' : hoverBg;
                             return `${baseClasses} ${dragClass} ${selectedClass} ${hoverClass}`;
                           })()}
                           onClick={(e) => {
@@ -3002,7 +3074,7 @@ const App = () => {
                               );
                             })()}
                           </td>
-                          <td className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? 'bg-emerald-50' : ''}`}>
+                          <td className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-sky-900/30' : 'bg-sky-50') : ''}`}>
                             <div className="flex flex-col gap-1 w-full px-[10px]">
                               {(() => {
                                 const range = computeAllowedRange(rows, 'L', i);
@@ -3093,6 +3165,7 @@ const App = () => {
                               <div className="flex flex-col items-center mt-[15px]">
                                 <Chip
                                   active={r.initL === 0}
+                                  darkMode={darkMode}
                                   onClick={() => {
                                     const range = computeAllowedRange(rows, 'L', i);
                                     if (r.initL === 0) {
@@ -3112,7 +3185,7 @@ const App = () => {
                               </div>
                             </div>
                           </td>
-                          <td className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? 'bg-rose-50' : ''}`}>
+                          <td className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-rose-900/30' : 'bg-rose-50') : ''}`}>
                             <div className="flex flex-col gap-1 w-full px-[10px]">
                               {(() => {
                                 const range = computeAllowedRange(rows, 'R', i);
@@ -3204,6 +3277,7 @@ const App = () => {
                               <div className="flex flex-col items-center mt-[15px]">
                                 <Chip
                                   active={r.initR === 0}
+                                  darkMode={darkMode}
                                   onClick={() => {
                                     const range = computeAllowedRange(rows, 'R', i);
                                     if (r.initR === 0) {
@@ -3440,35 +3514,36 @@ const App = () => {
               {/* Clear all shots button below table removed; only in-canvas button remains */}
             </Section>
 
-            <Section title="2) Session parameters">
+            <Section title="2) Session parameters" darkMode={darkMode}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-3">
                   <span className="w-32 flex-shrink-0" title={'How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75.'}>Initial random steps</span>
-                  <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} />
+                  <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} darkMode={darkMode} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="w-32 flex-shrink-0" title={'How often hidden values shift after attempts.\nExample: 5 means every 5th attempt triggers a drift.'}>Drift every</span>
-                  <NumberInput value={driftEvery} onChange={setDriftEvery} min={0} max={50} />
+                  <NumberInput value={driftEvery} onChange={setDriftEvery} min={0} max={50} darkMode={darkMode} />
                   <span>attempts</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="w-32 flex-shrink-0" title={'Maximum distance (in 5% steps) a value can wander from its base during drift.\nExample: 2 means each shot stays within ±10 of its starting value.'}>Drift magnitude</span>
-                  <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} />
+                  <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} darkMode={darkMode} />
                   <span className="text-slate-500">(×5%)</span>
                 </div>
                 {/* Drift bias removed: drift band now directly based on magnitude (usable integer steps = floor(mag)) */}
                 <div className="flex items-start gap-3">
                   <span className="w-32 flex-shrink-0 mt-1" title={'Manual lets you pick any shot & flipper; Random picks one for you each attempt to reduce bias.\nExample: Random may jump Ramp Left → Orbit Right.'}>Mode</span>
                   <div className="flex gap-2 flex-wrap items-center flex-1 min-w-0">
-                    <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
-                    <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                    <Chip active={mode === 'manual'} onClick={() => setMode('manual')} darkMode={darkMode}>Manual</Chip>
+                    <Chip active={mode === 'random'} onClick={() => setMode('random')} darkMode={darkMode}>Random</Chip>
                     {mode === 'random' && (
-                      <label className="flex items-center gap-2 text-xs text-slate-600 ml-2 whitespace-nowrap">
+                      <label className={`flex items-center gap-2 text-xs ml-2 whitespace-nowrap ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                         <input
                           type="checkbox"
                           checked={useSeededRandom}
                           onChange={(e) => setUseSeededRandom(e.target.checked)}
+                          className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
                         />
                         Seeded
                       </label>
@@ -3481,21 +3556,12 @@ const App = () => {
                   onClick={canStart ? startSession : undefined}
                   disabled={!canStart}
                   title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
-                  className={`px-4 py-2 rounded-2xl text-white ${canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
+                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${canStart ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
                 >
-                  Start Session
-                </button>
-                <button
-                  onClick={() => {
-                    setRows([
-                      newRow({ base: 'Orbit', location: 'Left', initL: 25, initR: 75 }, 0),
-                      newRow({ base: 'Ramp', location: 'Center', initL: 50, initR: 50 }, 1),
-                      newRow({ base: 'Orbit', location: 'Right', initL: 75, initR: 25 }, 2),
-                    ]);
-                  }}
-                  className="px-4 py-2 rounded-2xl border"
-                >
-                  Reset to example
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  Practice
                 </button>
               </div>
             </Section>
@@ -3506,55 +3572,71 @@ const App = () => {
         {initialized && !finalPhase ? <>
           <Section
             title="Practice"
+            darkMode={darkMode}
             right={
               <div className="flex items-center gap-3">
                 {/* Guess values & correct values toggles moved into feedback panel */}
-                <label className="flex items-center gap-2 text-xs text-slate-600">
+                <label className={`flex items-center gap-2 text-xs ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                   <input
                     type="checkbox"
                     checked={showAttemptHistory}
                     onChange={(e) => setShowAttemptHistory(e.target.checked)}
+                    className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
                   />
                   Attempt history
                 </label>
-                <label className="flex items-center gap-2 text-xs text-slate-600">
+                <label className={`flex items-center gap-2 text-xs ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                   <input
                     type="checkbox"
                     checked={showFeedbackPanel}
                     onChange={(e) => setShowFeedbackPanel(e.target.checked)}
+                    className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
                   />
                   Feedback
                 </label>
-                <button onClick={endSession} className="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-sm">End session</button>
-                <button onClick={resetAll} className="px-3 py-1.5 rounded-xl border text-sm">Full reset</button>
+                <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  Setup
+                </button>
+                <button onClick={endSession} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                    <line x1="4" y1="22" x2="4" y2="15" />
+                  </svg>
+                  Finish
+                </button>
               </div>
             }
           >
             <div className={`grid grid-cols-1 ${showFeedbackPanel ? 'lg:[grid-template-columns:60fr_40fr] lg:items-start' : ''} gap-4`}>
               {/* Left: selection and input */}
               <div className="lg:col-span-1 flex flex-col">
-                <h3 className="font-medium mb-2">Current Attempt</h3>
-                <div className="border rounded-2xl p-3 mb-4 flex-1">
-                  <div className="flex items-start gap-3 mb-3 pb-3 border-b-2 border-slate-200">
-                    <span className="w-28 flex-shrink-0 text-sm text-slate-600 mt-1">Mode</span>
+                <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Current Attempt</h3>
+                <div className={`border rounded-2xl p-3 mb-4 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
+                  <div className={`flex items-start gap-3 mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                    <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Mode</span>
                     <div className="flex gap-2 flex-wrap items-center">
-                      <Chip active={mode === 'manual'} onClick={() => setMode('manual')}>Manual</Chip>
+                      <Chip active={mode === 'manual'} onClick={() => setMode('manual')} darkMode={darkMode}>Manual</Chip>
                       <div className="flex items-center gap-2">
-                        <Chip active={mode === 'random'} onClick={() => setMode('random')}>Random</Chip>
+                        <Chip active={mode === 'random'} onClick={() => setMode('random')} darkMode={darkMode}>Random</Chip>
                         {mode === 'random' && (
                           <>
                             <button
                               onClick={() => {
                                 setSelectedIdx(pickRandomIdx()); setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
                               }}
-                              className="w-8 h-8 rounded-full border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 flex items-center justify-center text-lg"
+                              className={`w-8 h-8 rounded-full border flex items-center justify-center text-lg ${darkMode ? 'border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300' : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-700'}`}
                               title="Random new shot & flipper"
                             >↻</button>
-                            <label className="flex items-center gap-2 text-xs text-slate-600 ml-2">
+                            <label className={`flex items-center gap-2 text-xs ml-2 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                               <input
                                 type="checkbox"
                                 checked={useSeededRandom}
                                 onChange={(e) => setUseSeededRandom(e.target.checked)}
+                                className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
                               />
                               Seeded
                             </label>
@@ -3564,9 +3646,9 @@ const App = () => {
                     </div>
                   </div>
 
-                  <div className="mb-3 pb-3 border-b-2 border-slate-200">
+                  <div className={`mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
                     <div className="flex items-start gap-3 mb-2">
-                      <span className="w-28 flex-shrink-0 text-sm text-slate-600 mt-1">Shot</span>
+                      <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Shot</span>
                       <div className="flex gap-2 flex-wrap">
                         {rows.map((r, i) => (
                           <Chip
@@ -3574,6 +3656,7 @@ const App = () => {
                             active={selectedIdx === i}
                             onClick={() => mode === 'manual' ? setSelectedIdx(i) : undefined}
                             disabled={mode === 'random'}
+                            darkMode={darkMode}
                           >
                             {r.type}
                           </Chip>
@@ -3582,25 +3665,27 @@ const App = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 mb-4 pb-3 border-b-2 border-slate-200">
-                    <span className="w-28 flex-shrink-0 text-sm text-slate-600 mt-1">Flipper</span>
+                  <div className={`flex items-start gap-3 mb-4 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                    <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Flipper</span>
                     <div className="flex gap-2">
                       <Chip
                         active={selectedSide === 'L'}
                         onClick={() => mode === 'manual' ? setSelectedSide('L') : undefined}
                         disabled={mode === 'random'}
+                        darkMode={darkMode}
                       >Left</Chip>
                       <Chip
                         active={selectedSide === 'R'}
                         onClick={() => mode === 'manual' ? setSelectedSide('R') : undefined}
                         disabled={mode === 'random'}
+                        darkMode={darkMode}
                       >Right</Chip>
                     </div>
                   </div>
 
                   <div className="mb-4">
                     <div className="flex items-start gap-3">
-                      <span className="w-28 flex-shrink-0 text-sm text-slate-600 mt-1">Recall</span>
+                      <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Recall</span>
                       <div className="flex flex-col items-stretch">
                         <div className="flex items-center gap-2">
                           <NumberInput
@@ -3609,6 +3694,7 @@ const App = () => {
                             min={0}
                             max={100}
                             className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
+                            darkMode={darkMode}
                             onChange={(v) => {
                               if (v === '' || v === null || v === undefined) {
                                 setGuess('');
@@ -3649,7 +3735,7 @@ const App = () => {
                         recallInputRef.current?.focus(); recallInputRef.current?.select();
                       }, 0);
                     }}
-                    className="px-4 py-2 rounded-2xl bg-emerald-600 text-white"
+                    className={`px-4 py-2 rounded-2xl text-white ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                   >
                     Submit
                   </button>
@@ -3660,8 +3746,8 @@ const App = () => {
 
               {/* Right: feedback and stats (toggleable) */}
               {showFeedbackPanel ? <div className="lg:col-span-1 flex flex-col">
-                <h3 className="font-medium mb-2">Feedback</h3>
-                <div className="border rounded-2xl p-3 flex-1">
+                <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Feedback</h3>
+                <div className={`border rounded-2xl p-3 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
                   <div className="text-sm">
                     {(() => {
                       const a = attempts[0];
@@ -3669,29 +3755,29 @@ const App = () => {
                       return (
                         <>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Last shot</div>
-                            <div className="font-medium" style={{ color: has ? (SEVERITY_COLORS[a.severity] || '#334155') : undefined }}>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Last shot</div>
+                            <div className="font-medium" style={{ color: has ? (SEVERITY_COLORS[a.severity] || (darkMode ? '#cbd5e1' : '#334155')) : undefined }}>
                               {has ? rowDisplayWithSide(rows[a.idx], a.side) : '—'}
                             </div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Result</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Result</div>
                             <div className="font-medium capitalize">
                               {has ? (
                                 <>
-                                  {a.label} <span className="text-slate-500">(</span>
-                                  <span style={{ color: SEVERITY_COLORS[a.severity] || '#334155' }}>{a.severity}</span>{' '}
-                                  <span className="text-slate-500">{a.delta > 0 ? '+' : ''}{format2(Math.abs(a.delta))}%)</span>
+                                  {a.label} <span className={darkMode ? 'text-slate-500' : 'text-slate-500'}>(</span>
+                                  <span style={{ color: SEVERITY_COLORS[a.severity] || (darkMode ? '#cbd5e1' : '#334155') }}>{a.severity}</span>{' '}
+                                  <span className={darkMode ? 'text-slate-500' : 'text-slate-500'}>{a.delta > 0 ? '+' : ''}{format2(Math.abs(a.delta))}%)</span>
                                 </>
                               ) : 'N/A'}
                             </div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Guess</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Guess</div>
                             <div>{has ? formatPct(a.input) : '—'}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Prev guess</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Prev guess</div>
                             <div>{(() => {
                               if (!showMentalModel) {
                                 return '—';
@@ -3703,7 +3789,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Guess delta</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Guess delta</div>
                             <div>{(() => {
                               if (!has) {
                                 return 'N/A';
@@ -3716,7 +3802,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Adjustment needed</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Adjustment needed</div>
                             <div className="capitalize">{(() => {
                               if (!has) {
                                 return 'N/A';
@@ -3734,7 +3820,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Adjustment result</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Adjustment result</div>
                             <div className={(() => {
                               if (!has || !a.adjustRequired) {
                                 return 'text-slate-400';
@@ -3754,7 +3840,7 @@ const App = () => {
                             </div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Starting</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Starting</div>
                             <div>{(() => {
                               if (!showBaseValues) {
                                 return '—';
@@ -3766,7 +3852,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mb-1">
-                            <div className="text-slate-600">Correct</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Correct</div>
                             <div>{(() => {
                               if (!showTruth) {
                                 return '—';
@@ -3778,7 +3864,7 @@ const App = () => {
                             })()}</div>
                           </div>
                           <div className="flex justify-between mt-2 pt-2 border-t">
-                            <div className="text-slate-600">Points</div>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Points</div>
                             <div className="text-right">
                               <div>{has ? `${a.points} pts` : '—'}</div>
                               {has && a.basePoints !== null ? (
@@ -3789,31 +3875,34 @@ const App = () => {
                             </div>
                           </div>
                           <div className="mt-4 pt-4 border-t">
-                            <div className="text-[11px] font-medium text-slate-700 mb-2">View Shot Values</div>
+                            <div className={`text-sm font-medium mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}>View Shot Values</div>
                             <div className="flex flex-wrap gap-4 items-center mb-3">
-                              <label className="flex items-center gap-2 text-[11px] text-slate-600">
+                              <label className={`flex items-center gap-2 text-[11px] ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={showBaseValues}
+                                  onChange={(e) => setShowBaseValues(e.target.checked)}
+                                  className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
+                                />
+                                Starting
+                              </label>
+                              <label className={`flex items-center gap-2 text-[11px] ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                                 <input
                                   type="checkbox"
                                   checked={showMentalModel}
                                   onChange={(e) => {
                                     const v = e.target.checked; setShowMentalModel(v);
                                   }}
+                                  className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
                                 />
                                 Guess
                               </label>
-                              <label className="flex items-center gap-2 text-[11px] text-slate-600">
-                                <input
-                                  type="checkbox"
-                                  checked={showBaseValues}
-                                  onChange={(e) => setShowBaseValues(e.target.checked)}
-                                />
-                                Starting
-                              </label>
-                              <label className="flex items-center gap-2 text-[11px] text-slate-600">
+                              <label className={`flex items-center gap-2 text-[11px] ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                                 <input
                                   type="checkbox"
                                   checked={showTruth}
                                   onChange={(e) => setShowTruth(e.target.checked)}
+                                  className={`w-4 h-4 rounded ${darkMode ? 'bg-slate-700 border-slate-600 checked:bg-blue-600 checked:border-blue-600' : 'bg-white border-slate-300'}`}
                                 />
                                 Correct
                               </label>
@@ -3822,38 +3911,38 @@ const App = () => {
                               <div className="rounded-xl border overflow-hidden">
                                 <table className="w-full text-[11px] md:text-xs">
                                   <thead>
-                                    <tr className="bg-slate-100 text-slate-700 font-semibold">
+                                    <tr className={darkMode ? 'bg-slate-700 text-slate-300 font-semibold' : 'bg-slate-100 text-slate-700 font-semibold'}>
                                       <th className="p-1.5 text-left" rowSpan="2">Shot</th>
                                       {(() => {
                                         const leftCols = [showMentalModel, showBaseValues, showTruth].filter(Boolean).length;
                                         const rightCols = leftCols; // same columns for right
                                         return (
                                           <>
-                                            {leftCols > 0 && <th className="p-1.5 text-center border-r border-slate-300" colSpan={leftCols}>Left Flipper</th>}
+                                            {leftCols > 0 && <th className={`p-1.5 text-center ${darkMode ? 'border-r border-slate-600' : 'border-r border-slate-300'}`} colSpan={leftCols}>Left Flipper</th>}
                                             {rightCols > 0 && <th className="p-1.5 text-center" colSpan={rightCols}>Right Flipper</th>}
                                           </>
                                         );
                                       })()}
                                     </tr>
-                                    <tr className="bg-slate-50 text-slate-600">
-                                      {showBaseValues ? <th className="p-1.5 text-right">Str</th> : null}
-                                      {showMentalModel ? <th className="p-1.5 text-right">Gss</th> : null}
-                                      {showTruth ? <th className="p-1.5 text-right border-r border-slate-300">Cor</th> : null}
-                                      {showBaseValues ? <th className="p-1.5 text-right">Str</th> : null}
-                                      {showMentalModel ? <th className="p-1.5 text-right">Gss</th> : null}
-                                      {showTruth ? <th className="p-1.5 text-right">Cor</th> : null}
+                                    <tr className={darkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-50 text-slate-600'}>
+                                      {showBaseValues ? <th className="p-1.5 text-right" title="Starting">Str</th> : null}
+                                      {showMentalModel ? <th className="p-1.5 text-right" title="Guess">Gss</th> : null}
+                                      {showTruth ? <th className={`p-1.5 text-right ${darkMode ? 'border-r border-slate-600' : 'border-r border-slate-300'}`} title="Correct">Cor</th> : null}
+                                      {showBaseValues ? <th className="p-1.5 text-right" title="Starting">Str</th> : null}
+                                      {showMentalModel ? <th className="p-1.5 text-right" title="Guess">Gss</th> : null}
+                                      {showTruth ? <th className="p-1.5 text-right" title="Correct">Cor</th> : null}
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {rows.map((r, i) => (
                                       <tr key={r.id} className="border-t">
                                         <td className="p-1.5 whitespace-nowrap max-w-[120px] truncate" title={r.type}>{r.type}</td>
-                                        {showBaseValues ? <td className="p-1.5 text-right text-slate-500">{formatPct(baseL[i] ?? 0)}</td> : null}
+                                        {showBaseValues ? <td className={`p-1.5 text-right ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}>{formatPct(baseL[i] ?? 0)}</td> : null}
                                         {showMentalModel ? <td className="p-1.5 text-right">{formatPct(mentalL[i] ?? 0)}</td> : null}
-                                        {showTruth ? <td className="p-1.5 text-right text-slate-600 border-r border-slate-300">{formatPct(hiddenL[i] ?? 0)}</td> : null}
-                                        {showBaseValues ? <td className="p-1.5 text-right text-slate-500">{formatPct(baseR[i] ?? 0)}</td> : null}
+                                        {showTruth ? <td className={`p-1.5 text-right ${darkMode ? 'text-slate-400 border-r border-slate-600' : 'text-slate-600 border-r border-slate-300'}`}>{formatPct(hiddenL[i] ?? 0)}</td> : null}
+                                        {showBaseValues ? <td className={`p-1.5 text-right ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}>{formatPct(baseR[i] ?? 0)}</td> : null}
                                         {showMentalModel ? <td className="p-1.5 text-right">{formatPct(mentalR[i] ?? 0)}</td> : null}
-                                        {showTruth ? <td className="p-1.5 text-right text-slate-600">{formatPct(hiddenR[i] ?? 0)}</td> : null}
+                                        {showTruth ? <td className={`p-1.5 text-right ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>{formatPct(hiddenR[i] ?? 0)}</td> : null}
                                       </tr>
                                     ))}
                                   </tbody>
@@ -3878,7 +3967,7 @@ const App = () => {
                     type="button"
                     onClick={() => setPlayfieldFullscreen(true)}
                     title="Fullscreen"
-                    className="absolute top-1 right-1 z-40 bg-white/90 hover:bg-white text-slate-700 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1"
+                    className={`absolute top-1 right-1 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1 ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300'}`}
                   >
                     {/* Enter fullscreen icon */}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M16 3h3a2 2 0 0 1 2 2v3" /><path d="M21 16v3a2 2 0 0 1-2 2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M8 8H5V5" /><path d="M16 8h3V5" /><path d="M16 16h3v3" /><path d="M8 16H5v3" /></svg>
@@ -3887,26 +3976,26 @@ const App = () => {
                 )}
                 {/* Metric boxes positioned at bottom corners - responsive sizing */}
                 <div className="absolute bottom-2 left-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:left-4">
-                  <div className="bg-white/95 backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center">
-                    <div className="text-slate-600 text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center">Last attempt</div>
-                    <div className="text-sm sm:text-base font-semibold">{attempts[0] ? attempts[0].points : '—'}</div>
+                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`}>
+                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Last attempt</div>
+                    <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{attempts[0] ? attempts[0].points : '—'}</div>
                   </div>
-                  <div className="bg-white/95 backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center">
-                    <div className="text-slate-600 text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center">Attempts</div>
-                    <div className="text-sm sm:text-base font-semibold">{attemptCount}</div>
+                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`}>
+                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Attempts</div>
+                    <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{attemptCount}</div>
                   </div>
                 </div>
                 <div className="absolute bottom-2 right-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:right-4">
-                  <div className="bg-white/95 backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center">
-                    <div className="text-slate-600 text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center">Total points</div>
-                    <div className="text-sm sm:text-base font-semibold">{totalPoints}</div>
+                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`}>
+                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Total points</div>
+                    <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{totalPoints}</div>
                   </div>
-                  <div className="bg-white/95 backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center">
-                    <div className="text-slate-600 text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center">Avg abs error</div>
-                    <div className="text-sm sm:text-base font-semibold">{avgAbsErr.toFixed(1)}</div>
+                  <div className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`}>
+                    <div className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Avg abs error</div>
+                    <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{avgAbsErr.toFixed(1)}</div>
                   </div>
                 </div>
-                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} />
+                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} darkMode={darkMode} />
               </div>
               {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below - responsive sizing */}
               <div className="w-full overflow-x-auto">
@@ -3925,7 +4014,7 @@ const App = () => {
                             key={v}
                             type="button"
                             onClick={() => submitAttempt(v)}
-                            className="aspect-square rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-slate-700 text-[clamp(10px,2.2vw,24px)]"
+                            className={`aspect-square rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-[clamp(10px,2.2vw,24px)] ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                             aria-label={`Recall ${format2(v)}`}
                           ><span className="relative" style={{ top: '-1px' }}>{format2(v)}</span></button>
                         ))}
@@ -3934,7 +4023,7 @@ const App = () => {
                         <button
                           type="button"
                           onClick={() => submitAttempt(0)}
-                          className="px-2 py-0.5 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-100 active:scale-[0.95] transition-transform font-semibold text-slate-700 text-[clamp(10px,2.2vw,24px)]"
+                          className={`px-2 py-0.5 rounded-xl border shadow active:scale-[0.95] transition-transform font-semibold text-[clamp(10px,2.2vw,24px)] ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
                         ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                       </div>
                     </div>
@@ -3943,11 +4032,11 @@ const App = () => {
               </div>
               {showAttemptHistory ? <>
                 {/* Attempt history below playfield */}
-                <h3 className="font-medium mb-2">Attempt history</h3>
+                <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Attempt history</h3>
                 <div className="overflow-auto border rounded-2xl">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-slate-50 text-slate-600">
+                      <tr className={darkMode ? 'bg-slate-700 text-slate-300 font-semibold' : 'bg-slate-100 text-slate-700 font-semibold'}>
                         <th className="p-2 text-left">Time</th>
                         <th className="p-2 text-left">Shot</th>
                         <th className="p-2 text-right">Recall</th>
@@ -4059,29 +4148,29 @@ const App = () => {
                     return (
                       <>
                         <div className="absolute z-30 flex" style={{ bottom: margin, left: margin, gap }}>
-                          <div className="bg-white/95 backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center" style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
-                            <div className="text-slate-600 leading-tight text-center" style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Last attempt</div>
-                            <div className="font-semibold" style={{ fontSize: valueFont }}>{attempts[0] ? attempts[0].points : '—'}</div>
+                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className={`leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Last attempt</div>
+                            <div className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: valueFont }}>{attempts[0] ? attempts[0].points : '—'}</div>
                           </div>
-                          <div className="bg-white/95 backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center" style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
-                            <div className="text-slate-600" style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Attempts</div>
-                            <div className="font-semibold" style={{ fontSize: valueFont }}>{attemptCount}</div>
+                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className={darkMode ? 'text-slate-400' : 'text-slate-600'} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Attempts</div>
+                            <div className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: valueFont }}>{attemptCount}</div>
                           </div>
                         </div>
                         <div className="absolute z-30 flex" style={{ bottom: margin, right: margin, gap }}>
-                          <div className="bg-white/95 backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center" style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
-                            <div className="text-slate-600 leading-tight text-center" style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Total points</div>
-                            <div className="font-semibold" style={{ fontSize: valueFont }}>{totalPoints}</div>
+                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className={`leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Total points</div>
+                            <div className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: valueFont }}>{totalPoints}</div>
                           </div>
-                          <div className="bg-white/95 backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center" style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
-                            <div className="text-slate-600 leading-tight text-center" style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Avg abs error</div>
-                            <div className="font-semibold" style={{ fontSize: valueFont }}>{avgAbsErr.toFixed(1)}</div>
+                          <div className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300'}`} style={{ width: boxSize, height: boxSize, padding, borderRadius }}>
+                            <div className={`leading-tight text-center ${darkMode ? 'text-slate-400' : 'text-slate-600'}`} style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}>Avg abs error</div>
+                            <div className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: valueFont }}>{avgAbsErr.toFixed(1)}</div>
                           </div>
                         </div>
                       </>
                     );
                   })()}
-                  <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} />
+                  <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} darkMode={darkMode} />
                 </div>
                 <div className="w-full mx-auto]">
                   {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
@@ -4146,7 +4235,7 @@ const App = () => {
                               key={v}
                               type="button"
                               onClick={() => submitAttempt(v)}
-                              className="rounded-full bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0"
+                              className={`rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                               style={{ width: diameter, height: diameter, fontSize: chipFont, lineHeight: 1, fontWeight: 600 }}
                               aria-label={`Recall ${format2(v)}`}
                             ><span className="relative" style={{ top: '-2px' }}>{format2(v)}</span></button>
@@ -4156,7 +4245,7 @@ const App = () => {
                           <button
                             type="button"
                             onClick={() => submitAttempt(0)}
-                            className="px-1 rounded-xl bg-white border border-slate-300 shadow hover:bg-slate-50 active:scale-[0.97] transition-transform text-sm font-medium"
+                            className={`px-1 rounded-xl border shadow active:scale-[0.97] transition-transform text-sm font-medium ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                             style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
                           ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                         </div>
@@ -4174,10 +4263,22 @@ const App = () => {
         {initialized && finalPhase ? (
           <Section
             title="Final Recall Challenge"
+            darkMode={darkMode}
             right={
               <div className="flex items-center gap-3">
-                <button onClick={() => setFinalPhase(false)} className="px-3 py-1.5 rounded-xl border text-sm">Back to practice</button>
-                <button onClick={resetAll} className="px-3 py-1.5 rounded-xl border text-sm">Full reset</button>
+                <button onClick={() => setFinalPhase(false)} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  Practice
+                </button>
+                <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  Setup
+                </button>
               </div>
             }
           >
@@ -4185,11 +4286,12 @@ const App = () => {
             <div className="overflow-auto border rounded-2xl">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50 text-slate-600">
+                  <tr className={darkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-50 text-slate-600'}>
                     <th className="p-2 text-left">Shot</th>
-                    <th className="p-2 text-right">Your final recall</th>
-                    <th className="p-2 text-right">Correct values</th>
-                    <th className="p-2 text-right">Abs error</th>
+                    <th className="p-2 text-right">Your L</th>
+                    <th className="p-2 text-right">Your R</th>
+                    <th className="p-2 text-right">Correct L / R</th>
+                    <th className="p-2 text-right">Error</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -4197,15 +4299,21 @@ const App = () => {
                     <tr key={r.id} className="border-t">
                       <td className="p-2">{r.type}</td>
                       <td className="p-2 text-right">
-                        <NumberInput value={finalRecallL[i] ?? 0} onChange={(v) => setFinalRecallL(arr => {
-                          const next = [...arr]; next[i] = validatePercent(v) ?? next[i] ?? 0; return next;
-                        })}
+                        <NumberInput
+                          value={finalRecallL[i] ?? 0}
+                          onChange={(v) => setFinalRecallL(arr => {
+                            const next = [...arr]; next[i] = validatePercent(v) ?? next[i] ?? 0; return next;
+                          })}
+                          darkMode={darkMode}
                         />
                       </td>
                       <td className="p-2 text-right">
-                        <NumberInput value={finalRecallR[i] ?? 0} onChange={(v) => setFinalRecallR(arr => {
-                          const next = [...arr]; next[i] = validatePercent(v) ?? next[i] ?? 0; return next;
-                        })}
+                        <NumberInput
+                          value={finalRecallR[i] ?? 0}
+                          onChange={(v) => setFinalRecallR(arr => {
+                            const next = [...arr]; next[i] = validatePercent(v) ?? next[i] ?? 0; return next;
+                          })}
+                          darkMode={darkMode}
                         />
                       </td>
                       <td className="p-2 text-right">{formatPct(hiddenL[i] ?? 0)} / {formatPct(hiddenR[i] ?? 0)}</td>
@@ -4216,16 +4324,16 @@ const App = () => {
               </table>
             </div>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-              <div className="border rounded-2xl p-3">
-                <div className="text-slate-600">Final score</div>
+              <div className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
+                <div className={darkMode ? 'text-slate-400' : 'text-slate-600'}>Final score</div>
                 <div className="text-3xl font-semibold">{finalScore}</div>
               </div>
-              <div className="border rounded-2xl p-3">
-                <div className="text-slate-600">Shots</div>
+              <div className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
+                <div className={darkMode ? 'text-slate-400' : 'text-slate-600'}>Shots</div>
                 <div className="text-3xl font-semibold">{rows.length}</div>
               </div>
-              <div className="border rounded-2xl p-3">
-                <div className="text-slate-600">Total attempts</div>
+              <div className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
+                <div className={darkMode ? 'text-slate-400' : 'text-slate-600'}>Total attempts</div>
                 <div className="text-3xl font-semibold">{attemptCount}</div>
               </div>
             </div>
