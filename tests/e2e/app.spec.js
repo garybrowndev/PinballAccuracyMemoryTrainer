@@ -9,7 +9,7 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
     await page.screenshot({ path: 'test-results/01-initial-load.png', fullPage: true });
 
     // Wait for the app to load
-    await expect(page.getByText(/define shots and initial guessed percentages/i)).toBeVisible();
+    await expect(page.getByText(/define shots/i)).toBeVisible();
 
     // Take screenshot after load
     await page.screenshot({ path: 'test-results/02-app-loaded.png', fullPage: true });
@@ -53,7 +53,7 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
     await page.screenshot({ path: 'test-results/empty-state-first-load.png', fullPage: true });
 
     // Verify setup page is visible
-    await expect(page.getByText(/define shots and initial guessed percentages/i)).toBeVisible();
+    await expect(page.getByText(/define shots/i)).toBeVisible();
 
     // Verify Clear button is present (empty state still shows it)
     await expect(page.getByRole('button', { name: /clear all shots/i })).toBeVisible();
@@ -97,7 +97,7 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.reload();
 
     // Step 1: Verify we're on setup screen
-    await expect(page.getByText(/define shots and initial guessed percentages/i)).toBeVisible();
+    await expect(page.getByText(/define shots/i)).toBeVisible();
     await page.screenshot({ path: 'test-results/workflow-01-setup-screen.png', fullPage: true });
 
     // Step 2: Clear any existing shots
@@ -132,7 +132,7 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.screenshot({ path: 'test-results/workflow-06-seeded-enabled.png', fullPage: true });
 
     // Step 7: Start the practice session
-    const startButton = page.getByRole('button', { name: 'Practice' });
+    const startButton = page.getByRole('button', { name: 'Practice' }).first();
     await expect(startButton).toBeEnabled();
     await startButton.click();
 

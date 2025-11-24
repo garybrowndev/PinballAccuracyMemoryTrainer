@@ -55,6 +55,12 @@ const COLORS = {
 const BTN_SUCCESS = 'bg-emerald-600 hover:bg-emerald-700';
 const BTN_ICON = 'px-4 py-2 rounded-2xl text-white flex items-center gap-2';
 const BTN_BASE = 'px-4 py-2 rounded-2xl text-white';
+/* eslint-disable sonarjs/no-duplicate-string */
+const ICON_BTN_DARK = 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100';
+const ICON_BTN_LIGHT = 'bg-white border-slate-300 text-slate-600 hover:text-slate-900';
+const DARK_MODE_SWITCH_LIGHT = 'Switch to light mode';
+const DARK_MODE_SWITCH_DARK = 'Switch to dark mode';
+/* eslint-enable sonarjs/no-duplicate-string */
 
 // Helper functions to get themed classes
 const GetTextClass = (darkMode, variant = 'primary') => (darkMode ? COLORS.dark.text[variant] : COLORS.light.text[variant]);
@@ -65,7 +71,7 @@ const GetHoverClass = (darkMode) => (darkMode ? COLORS.dark.bg.hover : COLORS.li
 const GetHoverAltClass = (darkMode) => (darkMode ? COLORS.dark.bg.hoverAlt : COLORS.light.bg.hoverAlt);
 const GetIconButtonClass = (darkMode) => `w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} ${COLORS.dark.text.tertiary} hover:text-slate-100` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary} text-slate-600 hover:text-slate-900`}`;
 const GetSmallButtonClass = (darkMode) => `text-[11px] px-2 py-0.5 rounded-md ${GetButtonClass(darkMode)} text-slate-200 border ${GetBorderClass(darkMode)}`;
-const GetCheckboxClass = (darkMode) => `w-4 h-4 rounded ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} checked:bg-blue-600 checked:border-blue-600` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary}`}`;
+const GetCheckboxClass = (darkMode) => `w-4 h-4 rounded ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} checked:bg-blue-600 checked:border-blue-600 accent-blue-600 [color-scheme:dark]` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary} accent-blue-600`}`;
 const GetMetricBoxClass = (darkMode) => darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300';
 
 // ---------- helpers ----------
@@ -2550,7 +2556,7 @@ const App = () => {
         </div>
       ) : null}
       {/* Toast notifications */}
-      <div className="fixed top-16 right-4 z-50 flex flex-col gap-2">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 items-center">
         {toasts.map(t => (
           <div key={t.id} className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein">
             {t.msg}
@@ -2737,31 +2743,35 @@ const App = () => {
               // Precompute once per render; inexpensive for small row counts.
             })()}
             <Section
-              title="1) Define shots and initial guessed percentages"
+              title="1) Define shots"
               darkMode={darkMode}
               right={
-                <div className="flex gap-2">
-                  {Boolean(isStandalone) && (
-                    <button
-                      type="button"
-                      onClick={downloadStandalone}
-                      className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
-                      title="Download this standalone HTML file"
-                      aria-label="Download standalone"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <path d="M7 10l5 5 5-5" />
-                        <path d="M12 15V3" />
-                      </svg>
-                    </button>
-                  )}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isStandalone) {
+                        downloadStandalone();
+                      } else {
+                        _pushToast('Download only works in standalone mode');
+                      }
+                    }}
+                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? ICON_BTN_DARK : ICON_BTN_LIGHT} ${isStandalone ? '' : 'opacity-60'}`}
+                    title={isStandalone ? 'Download this standalone HTML file' : 'Download (only works in standalone mode)'}
+                    aria-label="Download standalone"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <path d="M7 10l5 5 5-5" />
+                      <path d="M12 15V3" />
+                    </svg>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setDarkMode(!darkMode)}
-                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
-                    title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                    aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : ICON_BTN_LIGHT}`}
+                    title={darkMode ? DARK_MODE_SWITCH_LIGHT : DARK_MODE_SWITCH_DARK}
+                    aria-label={darkMode ? DARK_MODE_SWITCH_LIGHT : DARK_MODE_SWITCH_DARK}
                   >
                     {darkMode ? (
                       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -2776,7 +2786,7 @@ const App = () => {
                   <button
                     type="button"
                     onClick={() => setShowInfoModal(true)}
-                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
+                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? ICON_BTN_DARK : ICON_BTN_LIGHT}`}
                     title="About this app"
                     aria-label="About"
                   >
@@ -2785,6 +2795,33 @@ const App = () => {
                       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                       <path d="M12 17h.01" />
                     </svg>
+                  </button>
+                  <button onClick={() => {
+                    if (initialized) {
+                      setFinalPhase(false);
+                    } else if (canStart) {
+                      startSession();
+                    }
+                  }} disabled={!initialized && !canStart} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS} ${!initialized && !canStart ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Practice
+                  </button>
+                  <button onClick={() => {
+                    if (initialized) {
+                      setFinalPhase(true);
+                    } else if (canStart) {
+                      startSession(); setFinalPhase(true);
+                    }
+                  }} disabled={!initialized && !canStart} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS} ${!initialized && !canStart ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                      <line x1="4" y1="22" x2="4" y2="15" />
+                    </svg>
+                    Finish
                   </button>
                 </div>
               }
@@ -3571,7 +3608,7 @@ const App = () => {
               {/* Clear all shots button below table removed; only in-canvas button remains */}
             </Section>
 
-            <Section title="2) Session parameters" darkMode={darkMode}>
+            <Section title="2) Practice parameters" darkMode={darkMode}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-3">
                   <span className="w-32 flex-shrink-0" title={'How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75.'}>Initial random steps</span>
@@ -3632,25 +3669,55 @@ const App = () => {
             darkMode={darkMode}
             right={
               <div className="flex items-center gap-3">
-                {/* Guess values & correct values toggles moved into feedback panel */}
-                <label className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}>
-                  <input
-                    type="checkbox"
-                    checked={showAttemptHistory}
-                    onChange={(e) => setShowAttemptHistory(e.target.checked)}
-                    className={GetCheckboxClass(darkMode)}
-                  />
-                  Attempt history
-                </label>
-                <label className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}>
-                  <input
-                    type="checkbox"
-                    checked={showFeedbackPanel}
-                    onChange={(e) => setShowFeedbackPanel(e.target.checked)}
-                    className={GetCheckboxClass(darkMode)}
-                  />
-                  Feedback
-                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isStandalone) {
+                      downloadStandalone();
+                    } else {
+                      _pushToast('Download only works in standalone mode');
+                    }
+                  }}
+                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'} ${isStandalone ? '' : 'opacity-60'}`}
+                  title={isStandalone ? 'Download this standalone HTML file' : 'Download (only works in standalone mode)'}
+                  aria-label="Download standalone"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <path d="M7 10l5 5 5-5" />
+                    <path d="M12 15V3" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
+                  title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {darkMode ? (
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowInfoModal(true)}
+                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
+                  title="Help & About"
+                  aria-label="Help & About"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                </button>
                 <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -3671,7 +3738,29 @@ const App = () => {
             <div className={`grid grid-cols-1 ${showFeedbackPanel ? 'lg:[grid-template-columns:60fr_40fr] lg:items-start' : ''} gap-4`}>
               {/* Left: selection and input */}
               <div className="lg:col-span-1 flex flex-col">
-                <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Current Attempt</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Current Attempt</h3>
+                  <div className="flex items-center gap-3">
+                    <label className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}>
+                      <input
+                        type="checkbox"
+                        checked={showAttemptHistory}
+                        onChange={(e) => setShowAttemptHistory(e.target.checked)}
+                        className={GetCheckboxClass(darkMode)}
+                      />
+                      Attempt history
+                    </label>
+                    <label className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}>
+                      <input
+                        type="checkbox"
+                        checked={showFeedbackPanel}
+                        onChange={(e) => setShowFeedbackPanel(e.target.checked)}
+                        className={GetCheckboxClass(darkMode)}
+                      />
+                      Feedback
+                    </label>
+                  </div>
+                </div>
                 <div className={`border rounded-2xl p-3 mb-4 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}>
                   <div className={`flex items-start gap-3 mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
                     <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}>Mode</span>
@@ -4324,6 +4413,55 @@ const App = () => {
             darkMode={darkMode}
             right={
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isStandalone) {
+                      downloadStandalone();
+                    } else {
+                      _pushToast('Download only works in standalone mode');
+                    }
+                  }}
+                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'} ${isStandalone ? '' : 'opacity-60'}`}
+                  title={isStandalone ? 'Download this standalone HTML file' : 'Download (only works in standalone mode)'}
+                  aria-label="Download standalone"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <path d="M7 10l5 5 5-5" />
+                    <path d="M12 15V3" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
+                  title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {darkMode ? (
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowInfoModal(true)}
+                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
+                  title="Help & About"
+                  aria-label="Help & About"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                </button>
                 <button onClick={() => setFinalPhase(false)} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="5 3 19 12 5 21 5 3" />

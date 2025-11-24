@@ -228,7 +228,7 @@ Locations can be omitted for base-element-only shots.
 
 All state persists automatically to browser localStorage:
 - Shot configurations (`pinball_rows_v1`)
-- Session parameters (`pinball_driftEvery_v1`, `pinball_driftMag_v1`, etc.)
+- Practice parameters (`pinball_driftEvery_v1`, `pinball_driftMag_v1`, etc.)
 - Practice state (hidden values, mental model, attempts)
 - UI preferences (fullscreen, panel visibility)
 
