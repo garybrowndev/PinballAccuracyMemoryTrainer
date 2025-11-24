@@ -105,8 +105,8 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'test-results/workflow-02-cleared.png', fullPage: true });
 
-    // Step 3: Click Reset to Example
-    await page.getByRole('button', { name: /reset to example/i }).click();
+    // Step 3: Click Example button to load example shots
+    await page.getByRole('button', { name: 'Load example shots' }).click();
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'test-results/workflow-03-example-loaded.png', fullPage: true });
 
@@ -131,8 +131,8 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.waitForTimeout(300);
     await page.screenshot({ path: 'test-results/workflow-06-seeded-enabled.png', fullPage: true });
 
-    // Step 7: Start the session
-    const startButton = page.getByRole('button', { name: /start session/i });
+    // Step 7: Start the practice session
+    const startButton = page.getByRole('button', { name: 'Practice' });
     await expect(startButton).toBeEnabled();
     await startButton.click();
 
