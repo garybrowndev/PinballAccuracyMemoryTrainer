@@ -47,5 +47,29 @@ export default defineConfig({
     api: {
       port: 8888, // Use a port outside Windows reserved ranges (51135-52005 are blocked by Windows)
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/dist-standalone/**',
+        '**/tests/**',
+        '**/test-results/**',
+        '**/playwright-report/**',
+        '**/*.config.js',
+        '**/*.config.ts',
+        '**/setupTests.js',
+        '**/build-standalone-complete.js',
+        '**/src/main.jsx', // Entry point, typically not unit tested
+      ],
+      include: ['src/**/*.{js,jsx,ts,tsx}'],
+      all: true,
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
+    },
   },
 });

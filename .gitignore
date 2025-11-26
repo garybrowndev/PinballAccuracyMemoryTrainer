@@ -6,6 +6,8 @@ dist-standalone
 test-results/
 playwright-report/
 .playwright/
+coverage/
+*.lcov
 
 # Editor directories and files
 .vscode/*
