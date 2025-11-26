@@ -66,8 +66,8 @@ const config = [
       'no-implied-eval': 'error',
       'no-return-await': 'error',
       // React-Specific
-      'react/prop-types': 'off',
-      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'error',
+      'react/react-in-jsx-scope': 'error',
       'react/jsx-no-target-blank': 'error',
       'react/jsx-key': 'error',
       'react/no-array-index-key': 'error',
@@ -187,8 +187,8 @@ const config = [
       'no-negated-condition': 'error',
       // Import Rules
       'import/no-duplicates': 'error',
-      'import/no-unresolved': 'off',
-      'import/named': 'off',
+      'import/no-unresolved': 'error',
+      'import/named': 'error',
       'import/first': 'error',
       'import/newline-after-import': 'error',
       'import/no-anonymous-default-export': 'error',
@@ -328,11 +328,26 @@ const config = [
         vi: 'readonly',
         global: 'readonly',
         process: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
       },
     },
     rules: {
       'no-empty-function': 'off',
       'unicorn/filename-case': 'off',
+      'import/named': 'off', // Disable named import checking for test files (Vitest globals)
+    },
+  },
+  // Config files configuration
+  {
+    files: ['vite.config.js', 'playwright.config.js', '*.config.js'],
+    rules: {
+      'import/no-unresolved': 'off', // Allow unresolved imports in config files
     },
   },
 ];

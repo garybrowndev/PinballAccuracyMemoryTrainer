@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -196,6 +197,14 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true, darkMode =
   );
 };
 
+ElementTile.propTypes = {
+  name: PropTypes.string.isRequired,
+  selected: PropTypes.bool.isRequired,
+  onSelect: PropTypes.func.isRequired,
+  hasSelection: PropTypes.bool,
+  darkMode: PropTypes.bool,
+};
+
 // Inline thumbnail used inside table cell (smaller API: no selection ring offset, but clickable area opens menu / toggles)
 const InlineElementThumb = ({ name, selected, onClick, darkMode = false }) => {
   const imgSrc = name ? getImageSrc(name) : null;
@@ -248,6 +257,14 @@ const InlineElementThumb = ({ name, selected, onClick, darkMode = false }) => {
     </button>
   );
 };
+
+InlineElementThumb.propTypes = {
+  name: PropTypes.string,
+  selected: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
+  darkMode: PropTypes.bool,
+};
+
 // New taxonomy: separate base element from location. All bases share the same location set.
 // Location 'Base' (or null) means unsuffixed (e.g. "Ramp").
 // BASE_ELEMENTS ordered (most common -> least common) as of 2025‑09‑26.
@@ -503,6 +520,13 @@ const Section = ({ title, children, right, darkMode = false }) => {
   );
 };
 
+Section.propTypes = {
+  title: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+  right: PropTypes.node,
+  darkMode: PropTypes.bool,
+};
+
 const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, step = 1, className = '', onKeyDown, darkMode = false }, ref) => {
   const inputClasses = darkMode
     ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} ${COLORS.dark.text.primary} focus:ring-slate-500`
@@ -522,6 +546,17 @@ const NumberInput = React.forwardRef(({ value, onChange, min = 0, max = 100, ste
   );
 });
 NumberInput.displayName = 'NumberInput';
+
+NumberInput.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onChange: PropTypes.func.isRequired,
+  min: PropTypes.number,
+  max: PropTypes.number,
+  step: PropTypes.number,
+  className: PropTypes.string,
+  onKeyDown: PropTypes.func,
+  darkMode: PropTypes.bool,
+};
 
 // Simple chip button (auto multi-line for 3+ word shot type labels)
 const Chip = ({ active, children, onClick, className = '', disabled = false, darkMode = false }) => {
@@ -561,6 +596,15 @@ const Chip = ({ active, children, onClick, className = '', disabled = false, dar
       {content}
     </button>
   );
+};
+
+Chip.propTypes = {
+  active: PropTypes.bool.isRequired,
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func.isRequired,
+  className: PropTypes.string,
+  disabled: PropTypes.bool,
+  darkMode: PropTypes.bool,
 };
 
 // Simple playfield editor for arranging shots spatially & adjusting flipper percentages
@@ -1108,6 +1152,25 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
   );
 };
 
+PlayfieldEditor.propTypes = {
+  rows: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    type: PropTypes.string,
+    initL: PropTypes.number,
+    initR: PropTypes.number,
+    x: PropTypes.number,
+    y: PropTypes.number,
+  })).isRequired,
+  setRows: PropTypes.func.isRequired,
+  selectedId: PropTypes.number,
+  setSelectedId: PropTypes.func.isRequired,
+  misorderedIds: PropTypes.instanceOf(Set),
+  onClear: PropTypes.func,
+  onExample: PropTypes.func,
+  advancedOptions: PropTypes.node,
+  darkMode: PropTypes.bool,
+};
+
 const PlayfieldScenery = ({ darkMode = false }) => {
   /* Simplified bottom: two basic elongated flippers only.
      Coordinate system: 1000x1000 viewBox.
@@ -1286,6 +1349,10 @@ const PlayfieldScenery = ({ darkMode = false }) => {
       </svg>
     </div>
   );
+};
+
+PlayfieldScenery.propTypes = {
+  darkMode: PropTypes.bool,
 };
 
 const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale, darkMode = false }) => {
@@ -1716,6 +1783,30 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
       </div>
     </div>
   );
+};
+
+PracticePlayfield.propTypes = {
+  rows: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    type: PropTypes.string,
+    initL: PropTypes.number,
+    initR: PropTypes.number,
+    x: PropTypes.number,
+    y: PropTypes.number,
+  })).isRequired,
+  selectedIdx: PropTypes.number.isRequired,
+  selectedSide: PropTypes.oneOf(['L', 'R']),
+  lastRecall: PropTypes.shape({
+    idx: PropTypes.number,
+    side: PropTypes.string,
+    input: PropTypes.string,
+    delta: PropTypes.number,
+    severity: PropTypes.string,
+    label: PropTypes.string,
+  }),
+  fullscreen: PropTypes.bool,
+  onScale: PropTypes.func.isRequired,
+  darkMode: PropTypes.bool,
 };
 
 // ---------- main component ----------
