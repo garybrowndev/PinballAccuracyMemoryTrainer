@@ -137,6 +137,13 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.waitForTimeout(300);
     await page.screenshot({ path: 'test-results/workflow-07-seeded-enabled.png', fullPage: true });
 
+    // Step 7.5: Close the Advanced options dialog by clicking away from it
+    await page.mouse.click(50, 50); // Click in upper left corner, away from the popup
+    // Wait for the backdrop to disappear
+    await page.waitForSelector('[aria-hidden="true"]', { state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: 'test-results/workflow-07b-dialog-closed.png', fullPage: true });
+
     // Step 8: Start the practice session
     const startButton = page.getByRole('button', { name: 'Practice' }).first();
     await expect(startButton).toBeEnabled();

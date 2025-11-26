@@ -1810,11 +1810,25 @@ PracticePlayfield.propTypes = {
 // eslint-disable-next-line sonarjs/cognitive-complexity, complexity, max-lines-per-function
 const App = () => {
   const [toasts, setToasts] = useState([]); // {id,msg}
+  const toastTimersRef = useRef(new Set());
   const _pushToast = useCallback((msg) => {
     const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
     setToasts(t => [...t, { id, msg }]);
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3200);
+    const timerId = setTimeout(() => {
+      setToasts(t => t.filter(x => x.id !== id));
+      toastTimersRef.current.delete(timerId);
+    }, 3200);
+    toastTimersRef.current.add(timerId);
   }, []);
+
+  // Cleanup all toast timers on unmount
+  useEffect(() => {
+    return () => {
+      toastTimersRef.current.forEach(timerId => clearTimeout(timerId));
+      toastTimersRef.current.clear();
+    };
+  }, []);
+
   // Setup state
   // Start with no shots by default; user must explicitly add via + Add shot.
   const [rowsRaw, setRowsRaw] = useLocalStorage('pinball_rows_v1', []);

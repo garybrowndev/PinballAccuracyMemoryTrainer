@@ -14,7 +14,7 @@ import globals from 'globals';
 
 const config = [
   {
-    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js', '.vscode/brave-debug-ephemeral', 'test-results', 'playwright-report', 'coverage'],
+    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'config/eslint.config.js', '.vscode/brave-debug-ephemeral', 'test-results', 'playwright-report', 'coverage'],
   },
   js.configs.recommended,
   reactHooks.configs['recommended-latest'],
@@ -350,9 +350,15 @@ const config = [
   },
   // Config files configuration
   {
-    files: ['vite.config.js', 'playwright.config.js', '*.config.js'],
+    files: ['config/vite.config.js', 'config/playwright.config.js', 'config/*.config.js'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+      },
+    },
     rules: {
       'import/no-unresolved': 'off', // Allow unresolved imports in config files
+      'no-undef': 'off', // Allow undefined variables in config files
     },
   },
 ];

@@ -10,17 +10,17 @@ import { defineConfig } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const packageJson = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
+const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 
 export default defineConfig({
   plugins: [react(), tailwind()],
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
-    // eslint-disable-next-line no-undef
+
     __BUILD_COMMIT__: JSON.stringify(process.env.BUILD_COMMIT || 'dev'),
-    // eslint-disable-next-line no-undef
+
     __BUILD_COMMIT_URL__: JSON.stringify(process.env.BUILD_COMMIT_URL || ''),
-    // eslint-disable-next-line no-undef
+
     __BUILD_WORKFLOW_URL__: JSON.stringify(process.env.BUILD_WORKFLOW_URL || ''),
   },
   build: {
@@ -34,7 +34,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/setupTests.js',
+    setupFiles: './tests/vitest/setupTests.js',
     css: true,
     include: ['tests/vitest/**/*.test.{js,jsx,ts,tsx}'],
     exclude: [

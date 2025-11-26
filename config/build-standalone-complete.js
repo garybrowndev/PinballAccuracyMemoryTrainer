@@ -8,12 +8,13 @@ import { build } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const rootDir = path.join(__dirname, '..');
 
 async function buildStandaloneWithAssets() {
   // eslint-disable-next-line no-console
   console.log('Running lint check...');
   try {
-    execSync('npm run lint', { stdio: 'inherit', cwd: __dirname });
+    execSync('npm run lint', { stdio: 'inherit', cwd: rootDir });
     // eslint-disable-next-line no-console
     console.log('Lint check passed!\n');
   } catch {
@@ -26,7 +27,7 @@ async function buildStandaloneWithAssets() {
   // eslint-disable-next-line no-console
   console.log('Running unit tests...');
   try {
-    execSync('npm run test:run', { stdio: 'inherit', cwd: __dirname });
+    execSync('npm run test:run', { stdio: 'inherit', cwd: rootDir });
     // eslint-disable-next-line no-console
     console.log('Unit tests passed!\n');
   } catch {
@@ -39,7 +40,7 @@ async function buildStandaloneWithAssets() {
   // eslint-disable-next-line no-console
   console.log('Running E2E tests...');
   try {
-    execSync('npm run test:e2e', { stdio: 'inherit', cwd: __dirname });
+    execSync('npm run test:e2e', { stdio: 'inherit', cwd: rootDir });
     // eslint-disable-next-line no-console
     console.log('E2E tests passed!\n');
   } catch {
@@ -63,7 +64,7 @@ async function buildStandaloneWithAssets() {
   });
 
   // Read built files
-  const distDir = path.join(__dirname, 'dist-standalone-temp');
+  const distDir = path.join(rootDir, 'dist-standalone-temp');
   const htmlPath = path.join(distDir, 'index.html');
   fs.readFileSync(htmlPath, 'utf8'); // Verify file exists
 
@@ -95,7 +96,7 @@ async function buildStandaloneWithAssets() {
   }
 
   // Embed all element images
-  const elementsDir = path.join(__dirname, 'public', 'images', 'elements');
+  const elementsDir = path.join(rootDir, 'public', 'images', 'elements');
   const imageFiles = fs.readdirSync(elementsDir).filter(f => f.endsWith('.webp'));
   const imageMap = {};
 
@@ -109,7 +110,7 @@ async function buildStandaloneWithAssets() {
   }
 
   // Embed all presets
-  const presetsDir = path.join(__dirname, 'public', 'presets');
+  const presetsDir = path.join(rootDir, 'public', 'presets');
   const presetFiles = fs.readdirSync(presetsDir).filter(f => f.endsWith('.json'));
   const presets = {};
   let presetIndex = [];
@@ -176,7 +177,7 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 </html>`;
 
   // Create output directory if it doesn't exist
-  const outputDir = path.join(__dirname, 'dist-standalone');
+  const outputDir = path.join(rootDir, 'dist-standalone');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
