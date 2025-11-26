@@ -847,29 +847,26 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
               <span className="hidden md:inline">Advanced</span>
             </button>
             {Boolean(showAdvancedPopover) && (
-              <div
-                role="presentation"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                // eslint-disable-next-line sonarjs/no-duplicate-string -- text-slate-200 used consistently for dark mode styling
-                className={`absolute right-0 top-full mt-2 rounded-xl shadow-xl border p-3 w-56 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className={`text-xs font-semibold ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Practice Options</h3>
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvancedPopover(false)}
-                    className={`p-1 rounded-md transition-colors ${darkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
-                    aria-label="Close"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 6L6 18" />
-                      <path d="M6 6l12 12" />
-                    </svg>
-                  </button>
+              <>
+                {/* Backdrop to close popup when clicking away */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowAdvancedPopover(false)}
+                  aria-hidden="true"
+                />
+                <div
+                  role="presentation"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  // eslint-disable-next-line sonarjs/no-duplicate-string -- text-slate-200 used consistently for dark mode styling
+                  className={`absolute right-0 top-full mt-2 rounded-xl shadow-xl border p-3 w-56 z-50 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                >
+                  <div className="mb-2">
+                    <h3 className={`text-xs font-semibold ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Practice Options</h3>
+                  </div>
+                  {advancedOptions}
                 </div>
-                {advancedOptions}
-              </div>
+              </>
             )}
           </div>
         )}
