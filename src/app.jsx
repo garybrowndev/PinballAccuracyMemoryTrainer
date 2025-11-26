@@ -1381,8 +1381,9 @@ PlayfieldScenery.propTypes = {
 const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale, darkMode = false }) => {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
-  // Track canvas width for responsive box sizing (both fullscreen and non-fullscreen)
+  // Track canvas dimensions for responsive box sizing (both fullscreen and non-fullscreen)
   const [canvasWidth, setCanvasWidth] = useState(800);
+  const [canvasHeight, setCanvasHeight] = useState(384);
   // Track which images have loaded (reused across shot tiles) keyed by row.id
   const [imageLoadedMap, setImageLoadedMap] = useState({});
   useEffect(() => {
@@ -1401,12 +1402,18 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
     if (first.width) {
       setCanvasWidth(first.width);
     }
+    if (first.height) {
+      setCanvasHeight(first.height);
+    }
 
     const ro = new ResizeObserver(entries => {
       for (const entry of entries) {
         const cr = entry.contentRect;
         if (cr.width > 0) {
           setCanvasWidth(cr.width);
+        }
+        if (cr.height > 0) {
+          setCanvasHeight(cr.height);
         }
       }
     });
@@ -1419,23 +1426,23 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   const selectedRow = rows[selectedIdx] || null;
   const n = rows.length;
 
-  // Calculate adaptive box size based on actual box positions and canvas width
-  // This ensures boxes never overlap regardless of how positions were calculated
+  // Calculate adaptive box size based on actual box positions and canvas dimensions
+  // This ensures boxes never overlap or get clipped regardless of canvas size
   const MIN_BOX_SIZE = 50;
   const MAX_BOX_SIZE = 120;
   const MIN_GAP = 8;
   const MIN_EDGE_MARGIN = 10;
   const baseBoxWidth = 80;
 
-  // Calculate the maximum box size that won't cause overlap
-  // Based on actual x positions of the rows and current canvas width
+  // Calculate the maximum box size that won't cause overlap or clipping
+  // Based on actual positions of the rows and current canvas dimensions
   let maxAllowedBoxSize = MAX_BOX_SIZE;
 
-  if (n > 0 && canvasWidth > 0) {
-    // Get sorted x positions
+  if (n > 0 && canvasWidth > 0 && canvasHeight > 0) {
+    // Get sorted x positions for horizontal constraints
     const xPositions = rows.map(r => r.x).sort((a, b) => a - b);
 
-    // Check edge constraints (leftmost and rightmost boxes)
+    // Check horizontal edge constraints (leftmost and rightmost boxes)
     const leftmostX = xPositions[0];
     const rightmostX = xPositions.at(-1);
 
@@ -1448,7 +1455,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
 
     maxAllowedBoxSize = Math.min(maxAllowedBoxSize, maxFromLeftEdge, maxFromRightEdge);
 
-    // Check spacing between adjacent boxes
+    // Check horizontal spacing between adjacent boxes
     if (n > 1) {
       for (let i = 1; i < xPositions.length; i++) {
         const gap = (xPositions[i] - xPositions[i - 1]) * canvasWidth;
@@ -1458,6 +1465,14 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
         maxAllowedBoxSize = Math.min(maxAllowedBoxSize, maxFromGap);
       }
     }
+
+    // Check vertical edge constraints (top clipping prevention)
+    // Find the topmost box (smallest y value)
+    const topmostY = Math.min(...rows.map(r => r.y));
+    // Max size based on top edge: box center is at topmostY * canvasHeight
+    // Half the box must fit between edge and center
+    const maxFromTopEdge = (topmostY * canvasHeight - MIN_EDGE_MARGIN) * 2;
+    maxAllowedBoxSize = Math.min(maxAllowedBoxSize, maxFromTopEdge);
   }
 
   // Clamp to min/max constraints
