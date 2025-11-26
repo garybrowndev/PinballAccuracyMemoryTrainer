@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import App from './app.jsx';
+import App from "../../src/app.jsx";
 
 describe('App - Additional Features', () => {
   beforeEach(() => {
