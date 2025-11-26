@@ -3,6 +3,7 @@
 [![Release](https://img.shields.io/github/v/release/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/releases)
 [![License](https://img.shields.io/github/license/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](LICENSE)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/garybrowndev/PinballAccuracyMemoryTrainer/auto-version-and-release.yml?branch=master&style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/actions)
+[![codecov](https://codecov.io/gh/garybrowndev/PinballAccuracyMemoryTrainer/branch/master/graph/badge.svg)](https://codecov.io/gh/garybrowndev/PinballAccuracyMemoryTrainer)
 [![Last Commit](https://img.shields.io/github/last-commit/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/commits/master)
 [![Issues](https://img.shields.io/github/issues/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues)
 [![Code Size](https://img.shields.io/github/languages/code-size/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer)
