@@ -3,9 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// eslint-disable-next-line import/no-deprecated
-import { build } from 'vite';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.join(__dirname, '..');
@@ -51,20 +48,27 @@ async function buildStandaloneWithAssets() {
   }
 
   // eslint-disable-next-line no-console
-  console.log('Building Vite bundle first...');
+  console.log('Building Vite bundle...');
 
-  // Build with Vite
-  await build({
-    build: {
-      outDir: 'dist-standalone-temp',
-      rollupOptions: {
-        input: './index.html',
-      },
-    },
-  });
+  // Clean any existing dist to force a fresh build
+  const distDir = path.join(rootDir, 'dist');
+  if (fs.existsSync(distDir)) {
+    fs.rmSync(distDir, { recursive: true, force: true });
+  }
 
-  // Read built files
-  const distDir = path.join(rootDir, 'dist-standalone-temp');
+  // Use execSync to run the build command normally (this ensures Tailwind processes correctly)
+  try {
+    execSync('npm run build', { stdio: 'inherit', cwd: rootDir });
+    // eslint-disable-next-line no-console
+    console.log('Build completed!\n');
+  } catch {
+    // eslint-disable-next-line no-console
+    console.error('Build failed.');
+    // eslint-disable-next-line no-undef
+    process.exit(1);
+  }
+
+  // Read built files from the standard dist directory
   const htmlPath = path.join(distDir, 'index.html');
   fs.readFileSync(htmlPath, 'utf8'); // Verify file exists
 
@@ -141,24 +145,23 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   js = `${embeddedAssets}\n${js}`;
 
   // Replace all image source references to use EMBEDDED_IMAGES
-  // Match various patterns for imgSrc construction
+  // The code is minified, so we need to handle both minified and non-minified patterns
+
+  // Replace IMAGE_BASE_URL assignments (both const and let, with various variable names)
   js = js.replaceAll(
-    /const\s+imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.webp`/g,
-    'const imgSrc = EMBEDDED_IMAGES[slug] || ""',
-  );
-  js = js.replaceAll(
-    /const\s+imgSrc\s*=\s*slug\s*\?\s*`\${IMAGE_BASE_URL}\/\${slug}\.webp`\s*:\s*null/g,
-    'const imgSrc = slug ? (EMBEDDED_IMAGES[slug] || "") : null',
-  );
-  js = js.replaceAll(
-    /imgSrc\s*=\s*`\${IMAGE_BASE_URL}\/\${slug}\.webp`/g,
-    'imgSrc = EMBEDDED_IMAGES[slug] || ""',
+    /([$A-Z_a-z][\w$]*)=["']\/images\/elements["']/g,
+    '$1=""',
   );
 
-  // Also replace IMAGE_BASE_URL definition to empty string so it doesn't interfere
+  // Also try to match non-minified patterns for safety
   js = js.replaceAll(
     /const\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g,
     'const IMAGE_BASE_URL = ""',
+  );
+
+  js = js.replaceAll(
+    /let\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g,
+    'let IMAGE_BASE_URL = ""',
   );
 
   // Create standalone HTML
@@ -186,8 +189,7 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   const outputPath = path.join(outputDir, 'pinball-trainer-standalone.html');
   fs.writeFileSync(outputPath, standaloneHtml, 'utf8');
 
-  // Clean up temp directory
-  fs.rmSync(distDir, { recursive: true, force: true });
+  // Note: We're using the regular dist build, so no temp directory to clean up
 
   const stats = fs.statSync(outputPath);
   // eslint-disable-next-line no-console
