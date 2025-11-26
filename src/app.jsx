@@ -666,61 +666,70 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
     if (rows.length === 0) {
       return;
     }
-    const endpointY = 550; const apexY = 100; const chord = 1000; const sagitta = endpointY - apexY; // 450
-    const R = (sagitta * sagitta + (chord / 2) * (chord / 2)) / (2 * sagitta);
-    const centerY = apexY + R; const centerX = 500;
+    // Arc geometry in virtual 1000-unit coordinate system
+    // Adjust apex based on box size to prevent clipping at top
+    const endpointY = 550;
+    const baseApexY = 100;
     const n = rows.length;
-    // Distribute evenly along horizontal span (x-axis) to ensure equal horizontal spacing
-    const baseBoxWidth = 80; // base box size in 1000-unit coordinate system
-    const minGap = 20; // minimum desired gap between boxes at full scale
-    const minMargin = baseBoxWidth / 2; // absolute minimum margin at full scale (40)
-    const comfortMargin = 120; // comfortable margin for small counts
-    const MIN_SCALE = 0.4; // Enforce minimum scale to prevent boxes from becoming too small/overlapping
 
-    // Step 1: Calculate if we can fit at full scale (1.0) with comfortable spacing
-    const totalBoxWidthAtFullScale = n * baseBoxWidth;
-    const neededGaps = (n - 1) * minGap;
-    const spaceNeededComfort = totalBoxWidthAtFullScale + neededGaps;
-    const maxMarginAtFullScale = Math.max(minMargin, (chord - spaceNeededComfort) / 2);
+    // Box sizing constraints (in pixels at actual canvas size)
+    const MIN_BOX_SIZE = 50; // minimum box size in pixels
+    const MAX_BOX_SIZE = 120; // maximum box size in pixels
+    const MIN_GAP = 8; // minimum gap between boxes in pixels
+    const MIN_EDGE_MARGIN = 10; // minimum margin from canvas edges to box edges in pixels
 
-    let scale = 1;
-    let margin = Math.min(comfortMargin, maxMarginAtFullScale);
+    // The edge margin needs to account for the fact that boxes are positioned by their CENTER
+    // So we need: edgeMargin + halfBoxSize for the center position of edge boxes
+    // Available width for box CENTERS = canvasWidth - 2*(MIN_EDGE_MARGIN + halfBoxSize)
+    // But we don't know box size yet, so we solve iteratively:
+    // Let's first calculate assuming max box size to get initial estimate
+    const halfMaxBox = MAX_BOX_SIZE / 2;
+    const availableForCenters = canvasWidth - 2 * (MIN_EDGE_MARGIN + halfMaxBox);
 
-    // Step 2: If comfortable margin isn't achievable, check if we fit with minimum margin
-    if (margin < minMargin) {
-      // Try to fit at full scale with minimum margins
-      const spaceNeededMin = totalBoxWidthAtFullScale + (n - 1) * minGap + 2 * minMargin;
-      if (spaceNeededMin > chord) {
-        // Need to scale down - calculate scale where boxes touch (zero gap) with minimum margins
-        // Available space: chord - 2*minMargin (scaled)
-        // Need to fit: n * boxWidth (scaled)
-        // Scale equation: n * (baseBoxWidth * scale) = chord - 2 * (minMargin * scale)
-        // n * baseBoxWidth * scale + 2 * minMargin * scale = chord
-        // scale * (n * baseBoxWidth + 2 * minMargin) = chord
-        scale = chord / (n * baseBoxWidth + 2 * minMargin);
-        // Enforce minimum scale to prevent excessive shrinkage
-        scale = Math.max(MIN_SCALE, scale);
-        margin = minMargin * scale;
-      } else {
-        margin = minMargin;
-      }
-    }
+    // Calculate ideal box size to fill available space
+    // n box centers spaced across availableForCenters, with MIN_GAP between box edges
+    // Gap between centers = boxSize + MIN_GAP
+    // Total span of centers = (n-1) * (boxSize + MIN_GAP)
+    // So: (n-1) * (boxSize + MIN_GAP) <= availableForCenters
+    // Solving: boxSize <= (availableForCenters / (n-1)) - MIN_GAP  [for n > 1]
+    // For single box, use max size; for multiple, calculate size that fills the space
+    const idealBoxSize = n === 1
+      ? MAX_BOX_SIZE
+      : (availableForCenters / (n - 1)) - MIN_GAP;
 
-    // Step 3: Apply additional scaling based on actual canvas width to prevent overlap
-    // The virtual coordinate system is 1000 units, but actual canvas may be narrower
-    // We need to scale boxes down proportionally if the canvas is narrower than expected
-    const virtualToActualRatio = canvasWidth / 1000;
-    const widthConstrainedScale = scale * virtualToActualRatio;
+    // Clamp box size to min/max constraints
+    const actualBoxSize = Math.max(MIN_BOX_SIZE, Math.min(MAX_BOX_SIZE, idealBoxSize));
 
-    // Choose the more restrictive scale (smaller of the two)
-    // But still enforce the minimum scale floor
-    const finalScale = Math.max(MIN_SCALE, Math.min(scale, widthConstrainedScale));
+    // Calculate the scale factor (base size is 80px)
+    const baseBoxWidth = 80;
+    const finalScale = actualBoxSize / baseBoxWidth;
 
-    const usableWidth = chord - (2 * margin);
+    // Now calculate the actual margin for box centers (half box from edge + edge margin)
+    const halfBox = actualBoxSize / 2;
+    const centerMargin = MIN_EDGE_MARGIN + halfBox; // This is where the CENTER of edge boxes should be
+
+    // Convert to virtual 1000-unit coordinate system for positioning
+    const virtualCenterMargin = (centerMargin / canvasWidth) * 1000;
+    const virtualUsableWidth = 1000 - (2 * virtualCenterMargin);
+
+    // Adjust apex Y position to prevent top clipping
+    // Half of the box in virtual units needs to fit above the apex
+    // Canvas height is 384px (h-96), so 1000 virtual units = 384px
+    const canvasHeight = 384; // h-96 = 24rem = 384px
+    const halfBoxVirtual = (actualBoxSize / 2) / canvasHeight * 1000;
+    const topPadding = 20; // extra padding in virtual units
+    const apexY = Math.max(baseApexY, halfBoxVirtual + topPadding);
+
+    const chord = 1000;
+    const sagitta = endpointY - apexY;
+    const R = (sagitta * sagitta + (chord / 2) * (chord / 2)) / (2 * sagitta);
+    const centerY = apexY + R;
+    const centerX = 500;
+
     const fracs = n === 1 ? [0.5] : Array.from({ length: n }, (_, i) => i / (n - 1));
     const newPositions = fracs.map(f => {
-      // Compute x-coordinate evenly spaced horizontally with adaptive margins
-      const xPos = margin + f * usableWidth;
+      // Compute x-coordinate: box centers evenly spaced with proper edge margins
+      const xPos = virtualCenterMargin + f * virtualUsableWidth;
       // Project x onto the arc to find corresponding y: solve circle equation for y given x
       // Circle: (x - centerX)^2 + (y - centerY)^2 = R^2
       // Solve for y (taking the upper part of circle - negative sqrt since arc curves upward)
@@ -936,6 +945,10 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
           const showImageAttempt = Boolean(imgSrc);
           const baseSize = 80; // base tile size
           const renderedSize = baseSize * boxScale;
+          // Scale font sizes proportionally with box size
+          const baseFontSize = 11;
+          const scaledFontSize = Math.max(9, Math.min(16, baseFontSize * boxScale));
+          const typeFontSize = Math.max(8, Math.min(14, 10 * boxScale));
           return (
             <div
               key={r.id}
@@ -982,7 +995,11 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
               ) : null}
               {/* Top overlay with type text when image present */}
               {imgVisible ? (
-                <div className="absolute top-0 left-0 right-0 bg-black/55 text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center truncate" title={r.type}>
+                <div
+                  className="absolute top-0 left-0 right-0 bg-black/55 text-white font-semibold px-1 py-[2px] leading-tight text-center truncate"
+                  style={{ fontSize: `${typeFontSize}px` }}
+                  title={r.type}
+                >
                   {r.type}
                 </div>
               ) : null}
@@ -991,7 +1008,10 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
                 const leftValue = formatInitValue(r.initL);
                 const rightValue = formatInitValue(r.initR);
                 return (
-                  <div className="absolute left-0 right-0 flex justify-between text-[11px] font-medium text-white drop-shadow pointer-events-none bg-black/35 backdrop-blur-[1px] px-1 py-[1px]" style={{ bottom: '1px' }}>
+                  <div
+                    className="absolute left-0 right-0 flex justify-between font-medium text-white drop-shadow pointer-events-none bg-black/35 backdrop-blur-[1px] px-1 py-[1px]"
+                    style={{ bottom: '1px', fontSize: `${scaledFontSize}px` }}
+                  >
                     <span>L {leftValue}</span>
                     <span>R {rightValue}</span>
                   </div>
@@ -1002,9 +1022,15 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
                 const leftValue = formatInitValue(r.initL);
                 const rightValue = formatInitValue(r.initR);
                 return (
-                  <div className="absolute inset-0 flex flex-col p-1 text-[11px]">
-                    <div className="font-medium truncate max-w-[70px] text-center mt-4 flex-1 flex items-start justify-center" title={r.type || 'Select type'}>{r.type || '— Type —'}</div>
-                    <div className="mt-auto flex justify-between text-[11px]">
+                  <div className="absolute inset-0 flex flex-col p-1" style={{ fontSize: `${scaledFontSize}px` }}>
+                    <div
+                      className="font-medium truncate text-center mt-4 flex-1 flex items-start justify-center"
+                      style={{ maxWidth: `${renderedSize - 10}px` }}
+                      title={r.type || 'Select type'}
+                    >
+                      {r.type || '— Type —'}
+                    </div>
+                    <div className="mt-auto flex justify-between">
                       <span className="px-1 rounded bg-slate-100">L {leftValue}</span>
                       <span className="px-1 rounded bg-slate-100">R {rightValue}</span>
                     </div>
@@ -1355,53 +1381,90 @@ PlayfieldScenery.propTypes = {
 const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale, darkMode = false }) => {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
-  const [size, setSize] = useState({ w: 0, h: 0 });
+  // Track canvas width for responsive box sizing (both fullscreen and non-fullscreen)
+  const [canvasWidth, setCanvasWidth] = useState(800);
   // Track which images have loaded (reused across shot tiles) keyed by row.id
   const [imageLoadedMap, setImageLoadedMap] = useState({});
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // ResizeObserver to track canvas dimensions
   useEffect(() => {
-    if (!fullscreen) {
-      // eslint-disable-next-line no-empty-function
-      return () => {};
-    }
     const el = canvasRef.current;
     if (!el) {
       // eslint-disable-next-line no-empty-function
       return () => {};
     }
-    // Immediate measurement so first render already scales
+    // Initial measurement
     const first = el.getBoundingClientRect();
-    setSize({ w: first.width, h: first.height });
+    if (first.width) {
+      setCanvasWidth(first.width);
+    }
+
     const ro = new ResizeObserver(entries => {
       for (const entry of entries) {
-        const cr = entry.contentRect; setSize({ w: cr.width, h: cr.height });
+        const cr = entry.contentRect;
+        if (cr.width > 0) {
+          setCanvasWidth(cr.width);
+        }
       }
     });
     ro.observe(el);
     return () => {
       ro.disconnect();
     };
-  }, [fullscreen]);
+  }, []);
+
   const selectedRow = rows[selectedIdx] || null;
-  // Default (non-fullscreen) canvas height is h-96 => 384px (24rem at 16px). Typical width in layout around ~800px.
-  // Scale shot boxes proportionally relative to BOTH dimensions so they enlarge meaningfully on large screens.
-  // Also allow shrinking below baseline for very small screens to prevent off-screen rendering.
-  let scale = 1;
-  if (fullscreen && size.w && size.h) {
-    const baseH = 384; // baseline small-mode height
-    const baseW = 800; // approximate mid-size width used in standard layout
-    scale = Math.min(size.h / baseH, size.w / baseW);
-    // Allow shrinking down to 0.4x for very small screens, but cap upper bound
-    if (scale < 0.4) {
-      scale = 0.4;
+  const n = rows.length;
+
+  // Calculate adaptive box size based on actual box positions and canvas width
+  // This ensures boxes never overlap regardless of how positions were calculated
+  const MIN_BOX_SIZE = 50;
+  const MAX_BOX_SIZE = 120;
+  const MIN_GAP = 8;
+  const MIN_EDGE_MARGIN = 10;
+  const baseBoxWidth = 80;
+
+  // Calculate the maximum box size that won't cause overlap
+  // Based on actual x positions of the rows and current canvas width
+  let maxAllowedBoxSize = MAX_BOX_SIZE;
+
+  if (n > 0 && canvasWidth > 0) {
+    // Get sorted x positions
+    const xPositions = rows.map(r => r.x).sort((a, b) => a - b);
+
+    // Check edge constraints (leftmost and rightmost boxes)
+    const leftmostX = xPositions[0];
+    const rightmostX = xPositions.at(-1);
+
+    // Max size based on left edge: box center is at leftmostX * canvasWidth
+    // Half the box must fit between edge and center
+    const maxFromLeftEdge = (leftmostX * canvasWidth - MIN_EDGE_MARGIN) * 2;
+
+    // Max size based on right edge
+    const maxFromRightEdge = ((1 - rightmostX) * canvasWidth - MIN_EDGE_MARGIN) * 2;
+
+    maxAllowedBoxSize = Math.min(maxAllowedBoxSize, maxFromLeftEdge, maxFromRightEdge);
+
+    // Check spacing between adjacent boxes
+    if (n > 1) {
+      for (let i = 1; i < xPositions.length; i++) {
+        const gap = (xPositions[i] - xPositions[i - 1]) * canvasWidth;
+        // Two half-boxes plus minimum gap must fit in this space
+        // gap >= boxSize + MIN_GAP  =>  boxSize <= gap - MIN_GAP
+        const maxFromGap = gap - MIN_GAP;
+        maxAllowedBoxSize = Math.min(maxAllowedBoxSize, maxFromGap);
+      }
     }
-    if (scale > 2.6) {
-      scale = 2.6;
-    } // prevent comically large boxes
   }
-  // Notify parent of scale when in fullscreen so ancillary UI (chips) can track size.
+
+  // Clamp to min/max constraints
+  const adaptiveBoxSize = Math.max(MIN_BOX_SIZE, Math.min(MAX_BOX_SIZE, maxAllowedBoxSize));
+  const scale = adaptiveBoxSize / baseBoxWidth;
+
+  // Notify parent of scale so ancillary UI (chips) can track size.
   useEffect(() => {
     if (fullscreen && typeof onScale === 'function') {
       onScale(scale);
@@ -1416,12 +1479,8 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
       >
         <PlayfieldScenery darkMode={darkMode} />
         {rows.map(r => {
-          // Practice playfield: NO L/R values. Show image tile if available (square 80x80), else fallback text box.
-          const styleBase = fullscreen ? {
-            left: `${r.x * 100}%`,
-            top: `${r.y * 100}%`,
-            transform: `translate(-50%, -50%) scale(${scale})`,
-          } : {
+          // Practice playfield: NO L/R values. Show image tile if available, else fallback text box.
+          const styleBase = {
             left: `${r.x * 100}%`,
             top: `${r.y * 100}%`,
             transform: 'translate(-50%, -50%)',
@@ -1431,9 +1490,11 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           // Image visibility tracked in parent map (imageLoadedMap) to avoid per-iteration hook misuse.
           const imgVisible = Boolean(imgSrc && imageLoadedMap[r.id]);
           const showImageAttempt = Boolean(imgSrc);
-          // Scale box size but enforce minimum to prevent excessive shrinkage
-          const baseBoxSize = 80; // match setup tile size when image
-          const boxSize = Math.max(32, baseBoxSize * scale); // Minimum 32px to stay readable
+          // Box size with adaptive scaling applied
+          const boxSize = Math.max(32, baseBoxWidth * scale);
+          // Font sizes scale with box
+          const typeFontSize = Math.max(7, 10 * scale);
+          const fallbackFontSize = Math.max(8, 11 * scale);
           if (showImageAttempt) {
             return (
               <div
@@ -1458,7 +1519,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 {imgVisible ? (
                   <div
                     className="absolute top-0 left-0 right-0 bg-black/55 text-white font-semibold px-1 py-[2px] leading-tight text-center truncate"
-                    style={{ fontSize: Math.max(7, 10 * scale) }}
+                    style={{ fontSize: typeFontSize }}
                     title={r.type}
                   >
                     {r.type || '—'}
@@ -1467,7 +1528,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 {!imgVisible && (
                   <div
                     className="absolute inset-0 flex items-center justify-center font-medium px-1 text-center"
-                    style={{ fontSize: Math.max(8, 11 * scale) }}
+                    style={{ fontSize: fallbackFontSize }}
                     title={r.type || '—'}
                   >
                     {r.type || '—'}
@@ -1476,16 +1537,22 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               </div>
             );
           }
-          // Fallback standard-size (previously w-24 h-20) text box (keep prior proportions) without L/R
+          // Fallback text box (no image) - also uses adaptive sizing
           return (
             <div
               key={r.id}
               data-shot-box={r.id}
-              style={styleBase}
-              className={`absolute z-20 select-none rounded-lg shadow border origin-center w-24 h-20 overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-300'} ${r === selectedRow ? 'ring-2 ring-blue-500' : ''}`}
+              style={{ ...styleBase, width: boxSize, height: boxSize }}
+              className={`absolute z-20 select-none rounded-lg shadow border origin-center overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-300'} ${r === selectedRow ? 'ring-2 ring-blue-500' : ''}`}
               title={r.type}
             >
-              <div className="absolute inset-0 flex items-center justify-center px-1 text-center text-[11px] font-medium" title={r.type || '—'}>{r.type || '—'}</div>
+              <div
+                className="absolute inset-0 flex items-center justify-center px-1 text-center font-medium"
+                style={{ fontSize: fallbackFontSize }}
+                title={r.type || '—'}
+              >
+                {r.type || '—'}
+              </div>
             </div>
           );
         })}
@@ -2605,6 +2672,19 @@ const App = () => {
   // Fullscreen playfield state
   const [playfieldFullscreen, setPlayfieldFullscreen] = useState(false);
   const [fullscreenScale, setFullscreenScale] = useState(1); // current scale reported by fullscreen playfield
+  const [windowWidth, setWindowWidth] = useState(typeof window === 'undefined' ? 800 : window.innerWidth);
+  // Track window width for responsive chip sizing in fullscreen mode
+  useEffect(() => {
+    if (playfieldFullscreen) {
+      const handleResize = () => setWindowWidth(window.innerWidth);
+      // Set initial value
+      setWindowWidth(window.innerWidth);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+    // eslint-disable-next-line no-empty-function
+    return () => {};
+  }, [playfieldFullscreen]);
   // Prevent body/document scrolling when fullscreen overlay is active (removes stray window scrollbar)
   useEffect(() => {
     if (!playfieldFullscreen) {
@@ -2613,11 +2693,15 @@ const App = () => {
     }
     const prevBodyOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevHtmlScrollbarGutter = document.documentElement.style.scrollbarGutter;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    // Prevent scrollbar gutter reservation that can cause white bar on right
+    document.documentElement.style.scrollbarGutter = 'auto';
     return () => {
       document.body.style.overflow = prevBodyOverflow;
       document.documentElement.style.overflow = prevHtmlOverflow;
+      document.documentElement.style.scrollbarGutter = prevHtmlScrollbarGutter;
     };
   }, [playfieldFullscreen]);
   // Allow pressing Escape to exit fullscreen (mirrors clicking Exit button)
@@ -4440,7 +4524,7 @@ const App = () => {
             </div>
           </Section>
           {playfieldFullscreen ? createPortal(
-            <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden">
+            <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden" style={{ scrollbarGutter: 'auto' }}>
               {(() => {
                 const s = fullscreenScale || 1;
                 const fontSize = Math.round(11 * s); // base 11px scaled
@@ -4523,7 +4607,7 @@ const App = () => {
                   })()}
                   <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} darkMode={darkMode} />
                 </div>
-                <div className="w-full mx-auto]">
+                <div className="w-full px-4">
                   {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
                   {(() => {
                     // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
@@ -4535,9 +4619,10 @@ const App = () => {
                     const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
                     const ordered = selectedSide === 'L' ? values : [...values].reverse();
                     const totalChips = 19; // numeric chips only (NP below)
-                    // Estimate inner horizontal padding (px). Container uses px-4 on parent (16px each side).
-                    const horizontalPadding = 32; // 16 left + 16 right
-                    const avail = Math.max(300, window.innerWidth - horizontalPadding); // safeguard
+                    // Use tracked windowWidth state for responsive sizing
+                    // Account for padding (px-4 = 32px) plus extra buffer for potential scrollbar space
+                    const horizontalPadding = 48; // 16 left + 16 right + 16 buffer for scrollbar reservation
+                    const avail = Math.max(300, windowWidth - horizontalPadding); // safeguard
                     // Increase overall size (~25%) and tighten spacing.
                     const maxDiameter = 112; // was 90
                     const minDiameter = 26;
