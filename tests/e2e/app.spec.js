@@ -153,52 +153,40 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'test-results/workflow-08b-feedback-enabled.png', fullPage: true });
 
-    // Step 9: Test different guess scenarios
+    // Step 9: Test different guess scenarios using quick recall buttons
     // The seeded random should give us predictable results with seed=42
+    // The UI uses circular buttons with values like "50", "55", etc. below the playfield
 
-    // Find the recall input and submit button
-    const recallInput = page.locator('input[type="number"]').first();
-    const submitButton = page.getByRole('button', { name: /submit/i });
-
-    // Test Case 1: Perfect guess (exact match)
-    // With seeded random, the first shot should be predictable
-    // Let's guess a value that should be close
-    await recallInput.fill('50');
-    await page.screenshot({ path: 'test-results/workflow-09-guess-1-entered.png', fullPage: true });
-    await submitButton.click();
+    // Test Case 1: Guess value 50
+    // Click the button with aria-label "Recall 50"
+    await page.getByRole('button', { name: 'Recall 50' }).click();
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'test-results/workflow-10-guess-1-result.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-09-guess-1-result.png', fullPage: true });
 
     // Verify feedback is shown
     await expect(page.getByText(/last shot/i)).toBeVisible();
 
-    // Test Case 2: Slight off guess (5-10% off)
-    await recallInput.fill('55');
-    await page.screenshot({ path: 'test-results/workflow-11-guess-2-entered.png', fullPage: true });
-    await submitButton.click();
+    // Test Case 2: Guess value 55
+    await page.getByRole('button', { name: 'Recall 55' }).click();
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'test-results/workflow-12-guess-2-result.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-10-guess-2-result.png', fullPage: true });
 
-    // Test Case 3: Fairly off guess (15-20% off)
-    await recallInput.fill('70');
-    await page.screenshot({ path: 'test-results/workflow-13-guess-3-entered.png', fullPage: true });
-    await submitButton.click();
+    // Test Case 3: Guess value 70
+    await page.getByRole('button', { name: 'Recall 70' }).click();
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'test-results/workflow-14-guess-3-result.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-11-guess-3-result.png', fullPage: true });
 
-    // Test Case 4: Very off guess (25%+ off)
-    await recallInput.fill('20');
-    await page.screenshot({ path: 'test-results/workflow-15-guess-4-entered.png', fullPage: true });
-    await submitButton.click();
+    // Test Case 4: Guess value 20
+    await page.getByRole('button', { name: 'Recall 20' }).click();
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'test-results/workflow-16-guess-4-result.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-12-guess-4-result.png', fullPage: true });
 
     // Verify that results are being tracked
     // Check for feedback panel showing results
     await expect(page.locator('text=Feedback').locator('..').getByText('Result').first()).toBeVisible();
 
     // Take final screenshot showing accumulated attempts
-    await page.screenshot({ path: 'test-results/workflow-17-final-state.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-13-final-state.png', fullPage: true });
 
     // Verify the feedback panel shows severity indicators
     // The exact text will depend on the guess accuracy, but we should see the feedback structure
@@ -206,6 +194,6 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await expect(feedbackSection).toBeVisible();
 
     // Final validation screenshot
-    await page.screenshot({ path: 'test-results/workflow-18-completed.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-14-completed.png', fullPage: true });
   });
 });

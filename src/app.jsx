@@ -146,7 +146,7 @@ function getImageSrc(name) {
 // Stable id generator for rows to prevent input remount/focus loss
 let ROW_ID_SEED = 1;
 // Square selectable tile for base element selection (replaces textual chips in popup)
-const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
+const ElementTile = ({ name, selected, onSelect, hasSelection = true, darkMode = false }) => {
   const imgSrc = getImageSrc(name);
   const [imgVisible, setImgVisible] = React.useState(false); // show only after successful load
   const size = 80; // consistent square image size
@@ -154,10 +154,18 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
     <button
       type="button"
       onClick={onSelect}
-      className={
-        `relative rounded-md bg-white shadow-sm transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ${
-          selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'}`
-      }
+      className={(() => {
+        const bgOffset = darkMode ? 'bg-slate-800 ring-offset-slate-800' : 'bg-white ring-offset-white';
+        let ringClass;
+        if (selected) {
+          ringClass = 'ring-2 ring-slate-900';
+        } else if (darkMode) {
+          ringClass = 'ring-1 ring-slate-600 hover:ring-slate-500';
+        } else {
+          ringClass = 'ring-1 ring-slate-300 hover:ring-slate-500';
+        }
+        return `relative rounded-md shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible ${bgOffset} ring-offset-1 ${ringClass}`;
+      })()}
       style={{
         width: size,
         height: size + 18,
@@ -167,7 +175,7 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
         {!imgVisible && (
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+          <div className={`absolute inset-0 flex items-center justify-center text-[10px] font-medium p-1 text-center leading-tight select-none ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
             {name}
           </div>
         )}
@@ -189,7 +197,7 @@ const ElementTile = ({ name, selected, onSelect, hasSelection = true }) => {
 };
 
 // Inline thumbnail used inside table cell (smaller API: no selection ring offset, but clickable area opens menu / toggles)
-const InlineElementThumb = ({ name, selected, onClick }) => {
+const InlineElementThumb = ({ name, selected, onClick, darkMode = false }) => {
   const imgSrc = name ? getImageSrc(name) : null;
   const [imgVisible, setImgVisible] = React.useState(false);
   const size = 80; // square image area
@@ -201,13 +209,24 @@ const InlineElementThumb = ({ name, selected, onClick }) => {
       type="button"
       onClick={onClick}
       data-shot-chip-thumb
-      className={`${selected ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-300 hover:ring-slate-500'} relative bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible`}
+      className={(() => {
+        let ringClass;
+        if (selected) {
+          ringClass = 'ring-2 ring-slate-900';
+        } else if (darkMode) {
+          ringClass = 'ring-1 ring-slate-600 hover:ring-slate-500';
+        } else {
+          ringClass = 'ring-1 ring-slate-300 hover:ring-slate-500';
+        }
+        const bgClass = darkMode ? 'bg-slate-800' : 'bg-white';
+        return `${ringClass} relative shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-900 rounded-md overflow-visible ${bgClass}`;
+      })()}
       style={{ width: size, height: size + 18 }} // extra space for hanging label
       aria-pressed={selected}
     >
       <div className="absolute top-0 left-0" style={{ width: size, height: size }}>
         {!imgVisible && (
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-medium text-slate-700 p-1 text-center leading-tight select-none">
+          <div className={`absolute inset-0 flex items-center justify-center text-[10px] font-medium p-1 text-center leading-tight select-none ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
             {name}
           </div>
         )}
@@ -788,10 +807,11 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
                 role="presentation"
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
-                className={`absolute right-0 top-full mt-2 rounded-xl shadow-xl border p-4 w-72 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                // eslint-disable-next-line sonarjs/no-duplicate-string -- text-slate-200 used consistently for dark mode styling
+                className={`absolute right-0 top-full mt-2 rounded-xl shadow-xl border p-3 w-56 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className={`text-sm font-semibold ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Practice Options</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className={`text-xs font-semibold ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Practice Options</h3>
                   <button
                     type="button"
                     onClick={() => setShowAdvancedPopover(false)}
@@ -880,7 +900,20 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
               key={r.id}
               style={{ left: `${r.x * 100}%`, top: `${r.y * 100}%`, transform: 'translate(-50%, -50%)', width: renderedSize, height: renderedSize }}
               onMouseDown={(e) => handleMouseDown(e, r.id)}
-              className={`absolute z-30 select-none rounded-md shadow border overflow-visible bg-white ${sel ? 'ring-2 ring-blue-500' : ''} ${misordered ? 'ring-2 ring-red-500 border-red-500' : 'border-slate-300'}`}
+              className={(() => {
+                const bgClass = darkMode ? 'bg-slate-800' : 'bg-white';
+                const base = `absolute z-30 select-none rounded-md shadow border overflow-visible ${bgClass}`;
+                const selRing = sel ? 'ring-2 ring-blue-500' : '';
+                let borderClass;
+                if (misordered) {
+                  borderClass = 'ring-2 ring-red-500 border-red-500';
+                } else if (darkMode) {
+                  borderClass = 'border-slate-700';
+                } else {
+                  borderClass = 'border-slate-300';
+                }
+                return `${base} ${selRing} ${borderClass}`;
+              })()}
               role="button"
               tabIndex={0}
               aria-label={`Shot ${r.type || 'element'}`}
@@ -1343,7 +1376,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
                 key={r.id}
                 data-shot-box={r.id}
                 style={{ ...styleBase, width: boxSize, height: boxSize }}
-                className={`absolute z-20 select-none rounded-md shadow border overflow-hidden bg-white border-slate-300 origin-center ${r === selectedRow ? 'ring-2 ring-blue-500' : ''}`}
+                className={`absolute z-20 select-none rounded-md shadow border overflow-hidden origin-center ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-300'} ${r === selectedRow ? 'ring-2 ring-blue-500' : ''}`}
                 title={r.type}
               >
                 <img
@@ -1385,7 +1418,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               key={r.id}
               data-shot-box={r.id}
               style={styleBase}
-              className={`absolute z-20 select-none rounded-lg shadow border bg-white border-slate-300 origin-center w-24 h-20 overflow-hidden ${r === selectedRow ? 'ring-2 ring-blue-500' : ''}`}
+              className={`absolute z-20 select-none rounded-lg shadow border origin-center w-24 h-20 overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-300'} ${r === selectedRow ? 'ring-2 ring-blue-500' : ''}`}
               title={r.type}
             >
               <div className="absolute inset-0 flex items-center justify-center px-1 text-center text-[11px] font-medium" title={r.type || '—'}>{r.type || '—'}</div>
@@ -2461,8 +2494,9 @@ const App = () => {
   const [dragOverIdx, setDragOverIdx] = useState(null);
   // Recall input ref for auto-focus
   const recallInputRef = useRef(null);
-  // Validation error message for recall input
-  const [recallError, setRecallError] = useState('');
+  // Validation error message for recall input (setter used for validation feedback)
+  // eslint-disable-next-line react/hook-use-state -- only setter is needed, value not displayed
+  const [, setRecallError] = useState('');
   // Fullscreen playfield state
   const [playfieldFullscreen, setPlayfieldFullscreen] = useState(false);
   const [fullscreenScale, setFullscreenScale] = useState(1); // current scale reported by fullscreen playfield
@@ -2632,11 +2666,14 @@ const App = () => {
       </div>
       {/* Detached popups (portals) for shot & location selection */}
       {shotMenuAnchor && openShotMenuId !== null ? createPortal(
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
         <div
-          className="absolute z-50 w-[360px] rounded-xl border bg-white shadow-xl p-3 grid grid-cols-4 gap-3"
+          className={`absolute z-50 w-[360px] rounded-xl border shadow-xl p-3 grid grid-cols-4 gap-3 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
           style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
           role="dialog"
           aria-label="Select shot type"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
         >
           {BASE_ELEMENTS.map(b => {
             const currentRow = rows.find(r => r.id === shotMenuAnchor.id);
@@ -2648,6 +2685,7 @@ const App = () => {
                 name={b}
                 selected={isSel}
                 hasSelection={hasSelection}
+                darkMode={darkMode}
                 onSelect={() => {
                   if (isSel) {
                   // Clicking the currently selected shot deselects it; keep menu open
@@ -2673,11 +2711,14 @@ const App = () => {
         document.body,
       ) : null}
       {locMenuAnchor && openLocMenuId !== null ? createPortal(
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
         <div
-          className="absolute z-50 w-48 rounded-xl border bg-white shadow-xl p-2 grid grid-cols-2 gap-2"
+          className={`absolute z-50 w-48 rounded-xl border shadow-xl p-2 grid grid-cols-2 gap-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
           style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
           role="dialog"
           aria-label="Select location"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
         >
           {LOCATIONS.map(loc => {
             const currentRow = rows.find(r => r.id === locMenuAnchor.id);
@@ -2704,7 +2745,17 @@ const App = () => {
                     setOpenLocMenuId(null); setLocMenuAnchor(null);
                   }
                 }}
-                className={`${isSel ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'} text-[11px] px-2 py-1 rounded-md text-left`}
+                className={(() => {
+                  let selClass;
+                  if (isSel) {
+                    selClass = 'bg-slate-900 text-white';
+                  } else if (darkMode) {
+                    selClass = 'bg-slate-700 hover:bg-slate-600 text-slate-200';
+                  } else {
+                    selClass = 'bg-slate-100 hover:bg-slate-200 text-slate-700';
+                  }
+                  return `${selClass} text-[11px] px-2 py-1 rounded-md text-left`;
+                })()}
               >{loc}</button>
             );
           })}
@@ -2712,18 +2763,21 @@ const App = () => {
         document.body,
       ) : null}
       {addCountAnchor && rows.length === 0 ? createPortal(
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
         <div
-          className="absolute z-50 w-44 rounded-xl border bg-white shadow-xl p-2"
+          className={`absolute z-50 w-44 rounded-xl border shadow-xl p-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
           style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
           role="dialog"
           aria-label="How many shots to add"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
         >
           <div className="grid grid-cols-4 gap-1">
             {Array.from({ length: 20 }, (_, k) => k + 1).map(n => (
               <button
                 key={n}
                 type="button"
-                className="text-[11px] px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
+                className={`text-[11px] px-2 py-1 rounded-md ${darkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
                 onClick={() => {
                   const count = n;
                   // eslint-disable-next-line unicorn/consistent-function-scoping
@@ -2747,18 +2801,18 @@ const App = () => {
                 }}
               >{n}</button>
             ))}
-            <div className="col-span-4 mt-1 text-[10px] text-slate-400 text-center">How many shots?</div>
+            <div className={`col-span-4 mt-1 text-[10px] text-center ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>How many shots?</div>
           </div>
           {availablePresets.length > 0 && (
-            <div className="mt-2 pt-2 border-t">
-              <div className="text-[10px] text-slate-400 text-center mb-1">Or load a preset:</div>
+            <div className={`mt-2 pt-2 border-t ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+              <div className={`text-[10px] text-center mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>Or load a preset:</div>
               <div className="relative">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation(); setPresetOpen(p => !p);
                   }}
-                  className="w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 flex items-center justify-between"
+                  className={`w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md flex items-center justify-between ${darkMode ? 'bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-300' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'}`}
                   aria-expanded={presetOpen}
                   aria-haspopup="listbox"
                   title={selectedPresetName || 'Select preset'}
@@ -2773,7 +2827,7 @@ const App = () => {
                     role="listbox"
                     aria-label="Available presets"
                     tabIndex={-1}
-                    className="absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 border-emerald-400 bg-white shadow-lg z-60 p-2"
+                    className={`absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 shadow-lg z-60 p-2 ${darkMode ? 'bg-slate-800 border-emerald-600' : 'bg-white border-emerald-400'}`}
                     onClick={e => e.stopPropagation()}
                     onKeyDown={e => e.stopPropagation()}
                     style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.25rem', maxWidth: 'calc(100vw - 2rem)', width: 'max-content' }}
@@ -2788,7 +2842,21 @@ const App = () => {
                           loadPreset(preset); setSelectedPresetName(preset.name); setPresetOpen(false); setAddCountAnchor(null);
                         }}
                         title={preset.name}
-                        className={`${selectedPresetName === preset.name ? 'bg-emerald-200 ring-2 ring-emerald-400' : 'ring-1 ring-emerald-200'} text-left whitespace-nowrap text-[11px] px-2 py-1 text-emerald-700 hover:bg-emerald-100 rounded-md transition`}
+                        className={(() => {
+                          const isSelected = selectedPresetName === preset.name;
+                          let ringClass;
+                          if (isSelected && darkMode) {
+                            ringClass = 'bg-emerald-800 ring-2 ring-emerald-500';
+                          } else if (isSelected) {
+                            ringClass = 'bg-emerald-200 ring-2 ring-emerald-400';
+                          } else if (darkMode) {
+                            ringClass = 'ring-1 ring-emerald-700';
+                          } else {
+                            ringClass = 'ring-1 ring-emerald-200';
+                          }
+                          const textClass = darkMode ? 'text-emerald-300 hover:bg-emerald-700/50' : 'text-emerald-700 hover:bg-emerald-100';
+                          return `${ringClass} text-left whitespace-nowrap text-[11px] px-2 py-1 rounded-md transition ${textClass}`;
+                        })()}
                       >
                         <span>{preset.name}</span>
                       </button>
@@ -2947,23 +3015,23 @@ const App = () => {
                       _pushToast('Loaded example shots');
                     }}
                     advancedOptions={
-                      <div className="space-y-3 text-xs">
-                        <div className="flex items-center justify-between gap-2">
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between gap-1">
                           <span className={`${GetTextClass(darkMode, 'secondary')}`} title="How far each correct value can start from your initial guess (in 5% steps)">Initial random (×5%)</span>
                           <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} darkMode={darkMode} />
                         </div>
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center justify-between gap-1">
                           <span className={`${GetTextClass(darkMode, 'secondary')}`} title="How often hidden values shift after attempts">Drift every N attempts</span>
                           <div className="flex items-center gap-1">
                             <NumberInput value={driftEvery} onChange={setDriftEvery} min={0} max={50} darkMode={darkMode} />
                           </div>
                         </div>
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center justify-between gap-1">
                           <span className={`${GetTextClass(darkMode, 'secondary')}`} title="Maximum distance (in 5% steps) a value can wander from its base during drift">Drift magnitude (×5%)</span>
                           <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} darkMode={darkMode} />
                         </div>
-                        <div className={`pt-2 border-t ${GetBorderClass(darkMode)}`}>
-                          <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className={`pt-1.5 border-t ${GetBorderClass(darkMode)}`}>
+                          <div className="flex items-center justify-between gap-1 mb-1.5">
                             <span className={`${GetTextClass(darkMode, 'secondary')}`} title="Manual lets you pick any shot & flipper; Random picks one for you">Mode</span>
                             <div className="flex gap-1">
                               <Chip active={mode === 'manual'} onClick={() => setMode('manual')} darkMode={darkMode} className="text-[10px] px-2 py-0.5">Manual</Chip>
@@ -3233,6 +3301,7 @@ const App = () => {
                                     <InlineElementThumb
                                       name={base}
                                       selected
+                                      darkMode={darkMode}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedIdx(i); setSelectedBlockId(r.id);
@@ -3259,11 +3328,11 @@ const App = () => {
                                           setOpenLocMenuId(null);
                                         }
                                       }}
-                                      className="relative rounded-md bg-white shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex items-center justify-center"
+                                      className={`relative rounded-md shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex items-center justify-center ${darkMode ? 'bg-slate-800' : 'bg-white'}`}
                                       style={{ width: 80, height: 98 }}
                                       aria-label="Select Shot"
                                     >
-                                      <span className="text-[13px] font-semibold text-slate-500 select-none">Select Shot</span>
+                                      <span className={`text-[13px] font-semibold select-none ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Select Shot</span>
                                     </button>
                                   )}
                                   <Chip
@@ -3900,7 +3969,7 @@ const App = () => {
                     </div>
                   </div>
 
-                  <div className={`flex items-start gap-3 mb-4 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+                  <div className="flex items-start gap-3">
                     <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}>Flipper</span>
                     <div className="flex gap-2">
                       <Chip
@@ -3917,66 +3986,7 @@ const App = () => {
                       >Right</Chip>
                     </div>
                   </div>
-
-                  <div className="mb-4">
-                    <div className="flex items-start gap-3">
-                      <span className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}>Recall</span>
-                      <div className="flex flex-col items-stretch">
-                        <div className="flex items-center gap-2">
-                          <NumberInput
-                            ref={recallInputRef}
-                            value={guess}
-                            min={0}
-                            max={100}
-                            className={recallError ? 'border-red-500 focus:ring-red-500' : ''}
-                            darkMode={darkMode}
-                            onChange={(v) => {
-                              if (v === '' || v === null || v === undefined) {
-                                setGuess('');
-                                if (recallError) {
-                                  setRecallError('');
-                                }
-                                return;
-                              }
-                              const n = Number(v);
-                              if (!Number.isFinite(n)) {
-                                return;
-                              }
-                              const clamped = Math.max(0, Math.min(100, n));
-                              setGuess(clamped);
-                              if (recallError) {
-                                setRecallError('');
-                              }
-                            }}
-                            step={5}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                submitAttempt();
-                              }
-                            }}
-                          />
-                        </div>
-                        {recallError ? <div className="mt-1 text-center text-[11px] leading-snug whitespace-pre-line text-red-600">
-                          {recallError}
-                        </div> : null}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      submitAttempt(); /* keep focus for rapid entry */ setTimeout(() => {
-                        recallInputRef.current?.focus(); recallInputRef.current?.select();
-                      }, 0);
-                    }}
-                    className={`px-4 py-2 rounded-2xl text-white ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
-                  >
-                    Submit
-                  </button>
                 </div>
-
-                {/* Guess values moved into feedback panel */}
               </div>
 
               {/* Right: feedback and stats (toggleable) */}
