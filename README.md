@@ -21,7 +21,7 @@
 </div>
 
 **✨ Features at a Glance:**
-- 🎮 Works completely offline with 39 preset pinball tables
+- 🎮 Works completely offline with 38 preset pinball tables
 - 🎯 Progressive training with dynamic drift mechanics
 - 📊 Real-time performance tracking and feedback
 - 💾 No download or installation required
@@ -60,7 +60,7 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 ### Shot Configuration
 - **Visual playfield editor** - Arrange shots spatially on an arc-based layout with visual flipper representations
 - **39 pinball preset tables** - Pre-configured shot layouts from classic and modern pinball machines (Addams Family, Medieval Madness, Attack from Mars, etc.)
-- **Custom shot creation** - Setup shots using 19 base elements (Ramp, Orbit, Drops, Spinner, etc.) combined with 8 location modifiers (Left, Right, Center, Side, Top, Upper, Bottom, Lower)
+- **Custom shot creation** - Setup shots using 20 base elements (Ramp, Orbit, Drops, Spinner, etc.) combined with 8 location modifiers (Left, Right, Center, Side, Top, Upper, Bottom, Lower)
 - **Image-based tiles** - Optional visual shot element thumbnails with 80×80px tiles (extensible with JPG images in `/public/images/elements/`)
 - **Export/import** - Save your custom shot configurations as JSON files
 
@@ -100,7 +100,7 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 - **No backend** - 100% client-side, offline-capable with localStorage persistence
 
 ### Code Structure
-- **Single-file app** - `src/app.jsx` (~3800 lines) containing all logic
+- **Single-file app** - `src/app.jsx` (~4700 lines) containing all logic
 - **Functional helpers** - Pure functions for percentage snapping, ordering, drift calculations
 - **Custom hooks** - `useLocalStorage` for automatic state persistence
 - **Isotonic regression** - Mathematical constraint solver for maintaining shot order during randomization/drift
@@ -192,7 +192,7 @@ The `build:standalone` script creates a self-contained HTML file (`pinball-train
 
 ## Presets
 
-The app includes 39 preset pinball tables (including `index.json`) with pre-configured shot layouts:
+The app includes 38 preset pinball tables with pre-configured shot layouts:
 - Classic tables: Addams Family, Medieval Madness, Twilight Zone, Funhouse
 - Modern Stern: Deadpool, Godzilla, Jurassic Park, JAWS
 - Williams/Bally classics: Attack from Mars, Monster Bash, White Water
@@ -217,7 +217,7 @@ Images display as 80×80px tiles with automatic fallback to text labels. The sta
 4. Preset will appear in the "+ Add Shot(s)" popup
 
 ### Element and Location Options
-**Base Elements (19):**
+**Base Elements (20):**
 Ramp, Standups, Orbit, Drops, Spinner, Scoop, Lane, Toy, Captive Ball, Saucer, Loop, Lock, VUK, Bumper, Deadend, Gate, Magnet, Rollover, Vari Target, Roto Target
 
 **Location Modifiers (8):**
@@ -239,7 +239,7 @@ Clear browser data to reset the app completely.
 
 - **Attempt history capped at 200** entries to prevent unbounded growth
 - **Efficient re-renders** via `useMemo` for expensive calculations (drift, ordering, visual layout)
-- **Single-file architecture** - Optimized for this scale (~3800 LOC), no component splitting overhead
+- **Single-file architecture** - Optimized for this scale (~4700 LOC), no component splitting overhead
 - **Minimal dependencies** - Only React 19, React-DOM, and Tailwind CSS
 - **Source maps enabled** - Full debugging support in development
 - **Strict linting** - 80+ ESLint rules enforced with zero warnings policy
@@ -263,6 +263,8 @@ Clear browser data to reset the app completely.
 - **`npm run test`** - Run Vitest unit tests in watch mode
 - **`npm run test:run`** - Run Vitest unit tests once
 - **`npm run test:ui`** - Run Vitest with interactive UI
+- **`npm run test:coverage`** - Run Vitest unit tests with coverage report
+- **`npm run test:coverage:ui`** - Run Vitest with interactive UI and coverage
 - **`npm run test:e2e`** - Run Playwright E2E tests
 - **`npm run test:e2e:ui`** - Run Playwright tests with interactive UI
 - **`npm run test:e2e:headed`** - Run Playwright tests in headed mode (visible browser)
@@ -312,30 +314,36 @@ All test failures block the build process to ensure code quality.
 ```
 ├── public/
 │   ├── images/elements/    # Shot element image tiles (JPG format)
-│   └── presets/            # 39 pre-configured table JSON files
+│   └── presets/            # 38 pre-configured table JSON files
 ├── src/
-│   ├── app.jsx             # Main application (~3800 lines)
+│   ├── app.jsx             # Main application (~4700 lines)
 │   ├── app.css             # Component-specific styles
 │   ├── main.jsx            # React entry point
 │   └── index.css           # Global styles and Tailwind imports
+├── config/
+│   ├── build-standalone-complete.js  # Standalone build script
+│   ├── eslint.config.js    # ESLint 9+ flat config with strict rules
+│   ├── vite.config.js      # Vite configuration
+│   └── playwright.config.js # Playwright E2E test configuration
+├── tests/
+│   ├── e2e/                # Playwright E2E tests
+│   └── vitest/             # Vitest unit tests
 ├── .vscode/
 │   ├── launch.json         # Debugger configuration (Brave browser)
 │   └── tasks.json          # VS Code task definitions
 ├── .github/
 │   └── copilot-instructions.md  # AI assistant development guidelines
-├── build-standalone-complete.js # Standalone build script
-├── eslint.config.js        # ESLint 9+ flat config with strict rules
-├── vite.config.js          # Vite configuration
 ├── package.json            # Dependencies and scripts
 └── index.html              # HTML entry point
 ```
 
 ### Key Files
 - **`src/app.jsx`** - Core application logic, state management, all components
-- **`build-standalone-complete.js`** - Custom build script that embeds all assets into a single HTML file
+- **`config/build-standalone-complete.js`** - Custom build script that embeds all assets into a single HTML file
+- **`config/vite.config.js`** - Vite config with React plugin, Tailwind integration, and source maps
+- **`config/eslint.config.js`** - Strict ESLint configuration with 80+ rules for code quality
+- **`config/playwright.config.js`** - Playwright E2E test configuration
 - **`.github/copilot-instructions.md`** - Comprehensive development guidelines for AI assistants
-- **`vite.config.js`** - Vite config with React plugin, Tailwind integration, and source maps
-- **`eslint.config.js`** - Strict ESLint configuration with 80+ rules for code quality
 
 ### Debugging
 Use the "Brave: Vite React (Single Tab)" launch configuration in VS Code:
