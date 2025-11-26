@@ -1823,9 +1823,12 @@ const App = () => {
 
   // Cleanup all toast timers on unmount
   useEffect(() => {
+    const timers = toastTimersRef.current;
     return () => {
-      toastTimersRef.current.forEach(timerId => clearTimeout(timerId));
-      toastTimersRef.current.clear();
+      for (const timerId of timers) {
+        clearTimeout(timerId);
+      }
+      timers.clear();
     };
   }, []);
 
