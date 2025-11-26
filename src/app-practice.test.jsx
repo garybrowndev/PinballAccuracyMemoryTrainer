@@ -95,7 +95,7 @@ describe('App - Additional Features', () => {
 
       const practiceButton = screen.getByRole('button', { name: /^practice$/i });
       const recallButton = screen.getByRole('button', { name: /recall/i });
-      
+
       expect(practiceButton).toBeDisabled();
       expect(recallButton).toBeDisabled();
     });
@@ -112,7 +112,7 @@ describe('App - Additional Features', () => {
 
       const advancedButton = screen.getByRole('button', { name: /advanced practice options/i });
       expect(advancedButton).toBeInTheDocument();
-      
+
       await user.click(advancedButton);
 
       // Dialog should open (checked by aria-expanded or presence of dialog content)

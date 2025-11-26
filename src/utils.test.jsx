@@ -57,9 +57,9 @@ describe('Utility Functions', () => {
     });
 
     it('should handle invalid inputs', () => {
-      expect(format2(NaN)).toBe('00');
+      expect(format2(Number.NaN)).toBe('00');
       expect(format2(Infinity)).toBe('00');
-      expect(format2(undefined)).toBe('00');
+      expect(format2()).toBe('00');
       expect(format2(null)).toBe('00');
     });
 
@@ -106,7 +106,7 @@ describe('Utility Functions', () => {
 
     it('should return dash for null/undefined', () => {
       expect(formatInitValue(null)).toBe('—');
-      expect(formatInitValue(undefined)).toBe('—');
+      expect(formatInitValue()).toBe('—');
     });
 
     it('should format valid numbers', () => {

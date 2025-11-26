@@ -14,7 +14,7 @@ import globals from 'globals';
 
 const config = [
   {
-    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js', '.vscode/brave-debug-ephemeral', 'test-results', 'playwright-report'],
+    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'eslint.config.js', '.vscode/brave-debug-ephemeral', 'test-results', 'playwright-report', 'coverage'],
   },
   js.configs.recommended,
   reactHooks.configs['recommended-latest'],
@@ -341,6 +341,11 @@ const config = [
       'no-empty-function': 'off',
       'unicorn/filename-case': 'off',
       'import/named': 'off', // Disable named import checking for test files (Vitest globals)
+      'no-await-in-loop': 'off', // Allow await in loops in tests
+      'no-promise-executor-return': 'off', // Allow promise executor returns in tests
+      'unicorn/consistent-function-scoping': 'off', // Allow nested test helper functions
+      'promise/prefer-await-to-callbacks': 'off', // Allow callbacks in tests (waitFor, etc.)
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }], // Allow unused vars in tests
     },
   },
   // Config files configuration

@@ -34,13 +34,13 @@ describe('App - Comprehensive Integration Tests', () => {
     await user.click(playfield);
 
     // Navigate to practice mode
-    const practiceButton = screen.getAllByRole('button').find(btn => 
-      btn.textContent.includes('Practice') && !btn.disabled
+    const practiceButton = screen.getAllByRole('button').find(btn =>
+      btn.textContent.includes('Practice') && !btn.disabled,
     );
 
     if (practiceButton) {
       await user.click(practiceButton);
-      
+
       // Verify we're in practice mode
       await waitFor(() => {
         // Should have changed the UI
@@ -121,7 +121,7 @@ describe('App - Comprehensive Integration Tests', () => {
 
     // Find dark mode toggle
     const darkModeButton = screen.getByRole('button', { name: /switch to light mode/i });
-    
+
     // Toggle to light mode
     await user.click(darkModeButton);
 
@@ -204,26 +204,26 @@ describe('App - Comprehensive Integration Tests', () => {
     });
 
     const playfield = screen.getByRole('region', { name: /playfield layout/i });
-    
+
     // Click multiple times on playfield
     await user.click(playfield);
     await user.click(playfield);
-    
+
     // Verify playfield is still there (no crash)
     expect(playfield).toBeInTheDocument();
   });
 
   it('should handle preset loading', async () => {
     const user = userEvent.setup();
-    
+
     // Mock fetch for presets
     global.fetch = vi.fn((url) => {
       if (url.includes('index.json')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve([
-            { id: 'test-preset', name: 'Test Preset', file: 'test-preset.json' }
-          ])
+            { id: 'test-preset', name: 'Test Preset', file: 'test-preset.json' },
+          ]),
         });
       }
       if (url.includes('test-preset.json')) {
@@ -231,9 +231,9 @@ describe('App - Comprehensive Integration Tests', () => {
           ok: true,
           json: () => Promise.resolve({
             shots: [
-              { id: 1, label: 'Test Shot', type: 'Ramp', left: 75, right: 25, initL: 75, initR: 25 }
-            ]
-          })
+              { id: 1, label: 'Test Shot', type: 'Ramp', left: 75, right: 25, initL: 75, initR: 25 },
+            ],
+          }),
         });
       }
       return Promise.reject(new Error('Not found'));
@@ -246,8 +246,8 @@ describe('App - Comprehensive Integration Tests', () => {
     });
 
     // Try to open presets
-    const presetsButtons = screen.queryAllByRole('button').filter(btn => 
-      btn.textContent.toLowerCase().includes('preset')
+    const presetsButtons = screen.queryAllByRole('button').filter(btn =>
+      btn.textContent.toLowerCase().includes('preset'),
     );
 
     if (presetsButtons.length > 0) {
@@ -272,17 +272,17 @@ describe('App - Comprehensive Integration Tests', () => {
     });
 
     // Get navigation buttons
-    const setupButton = screen.getAllByRole('button').find(btn => 
-      btn.textContent === 'Setup'
+    const setupButton = screen.getAllByRole('button').find(btn =>
+      btn.textContent === 'Setup',
     );
-    
+
     expect(setupButton).toBeInTheDocument();
 
     // Recall button should now be available after loading shots
-    const recallButton = screen.getAllByRole('button').find(btn => 
-      btn.textContent === 'Recall'
+    const recallButton = screen.getAllByRole('button').find(btn =>
+      btn.textContent === 'Recall',
     );
-    
+
     if (recallButton) {
       expect(recallButton).toBeInTheDocument();
       expect(recallButton).not.toBeDisabled();
@@ -299,10 +299,10 @@ describe('App - Comprehensive Integration Tests', () => {
 
     // Try pressing Tab to navigate
     await user.keyboard('{Tab}');
-    
+
     // Try pressing Enter on focused element
     await user.keyboard('{Enter}');
-    
+
     // App should still be functional
     expect(screen.getByText(/setup shots/i)).toBeInTheDocument();
   });
@@ -316,12 +316,12 @@ describe('App - Comprehensive Integration Tests', () => {
     });
 
     const exampleButton = screen.getByRole('button', { name: /load example shots/i });
-    
+
     // Rapid clicks
     await user.click(exampleButton);
     await user.click(exampleButton);
     await user.click(exampleButton);
-    
+
     // App should still be responsive
     await waitFor(() => {
       expect(screen.getByRole('table')).toBeInTheDocument();
