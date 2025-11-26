@@ -19,7 +19,7 @@ describe('App - Setup Page Clear Button', () => {
 
     // Wait for the app to load - check for the setup page heading
     await waitFor(() => {
-      expect(screen.getByText(/define shots/i)).toBeInTheDocument();
+      expect(screen.getByText(/setup shots/i)).toBeInTheDocument();
     });
 
     // Add a shot first so we have something to clear
@@ -59,7 +59,7 @@ describe('App - Setup Page Clear Button', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText(/define shots/i)).toBeInTheDocument();
+      expect(screen.getByText(/setup shots/i)).toBeInTheDocument();
     });
 
     // Verify that the setup page shows no shots
@@ -80,7 +80,7 @@ describe('App - Setup Page Clear Button', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText(/define shots/i)).toBeInTheDocument();
+      expect(screen.getByText(/setup shots/i)).toBeInTheDocument();
     });
 
     // Add multiple shots

@@ -59,7 +59,7 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 ### Shot Configuration
 - **Visual playfield editor** - Arrange shots spatially on an arc-based layout with visual flipper representations
 - **39 pinball preset tables** - Pre-configured shot layouts from classic and modern pinball machines (Addams Family, Medieval Madness, Attack from Mars, etc.)
-- **Custom shot creation** - Define shots using 19 base elements (Ramp, Orbit, Drops, Spinner, etc.) combined with 8 location modifiers (Left, Right, Center, Side, Top, Upper, Bottom, Lower)
+- **Custom shot creation** - Setup shots using 19 base elements (Ramp, Orbit, Drops, Spinner, etc.) combined with 8 location modifiers (Left, Right, Center, Side, Top, Upper, Bottom, Lower)
 - **Image-based tiles** - Optional visual shot element thumbnails with 80×80px tiles (extensible with JPG images in `/public/images/elements/`)
 - **Export/import** - Save your custom shot configurations as JSON files
 

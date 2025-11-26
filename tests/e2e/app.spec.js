@@ -9,7 +9,7 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
     await page.screenshot({ path: 'test-results/01-initial-load.png', fullPage: true });
 
     // Wait for the app to load
-    await expect(page.getByText(/define shots/i)).toBeVisible();
+    await expect(page.getByText(/setup shots/i)).toBeVisible();
 
     // Take screenshot after load
     await page.screenshot({ path: 'test-results/02-app-loaded.png', fullPage: true });
@@ -53,7 +53,7 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
     await page.screenshot({ path: 'test-results/empty-state-first-load.png', fullPage: true });
 
     // Verify setup page is visible
-    await expect(page.getByText(/define shots/i)).toBeVisible();
+    await expect(page.getByText(/setup shots/i)).toBeVisible();
 
     // Verify Clear button is present (empty state still shows it)
     await expect(page.getByRole('button', { name: /clear all shots/i })).toBeVisible();
@@ -97,7 +97,7 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.reload();
 
     // Step 1: Verify we're on setup screen
-    await expect(page.getByText(/define shots/i)).toBeVisible();
+    await expect(page.getByText(/setup shots/i)).toBeVisible();
     await page.screenshot({ path: 'test-results/workflow-01-setup-screen.png', fullPage: true });
 
     // Step 2: Clear any existing shots
@@ -119,35 +119,41 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     // Take screenshot showing all example shots
     await page.screenshot({ path: 'test-results/workflow-04-validated-shots.png', fullPage: true });
 
-    // Step 5: Click Random mode
+    // Step 5: Open Advanced options popover
+    const advancedButton = page.getByRole('button', { name: /advanced/i });
+    await advancedButton.click();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: 'test-results/workflow-05-advanced-open.png', fullPage: true });
+
+    // Step 6: Click Random mode (now inside the popover)
     const randomChip = page.getByRole('button', { name: 'Random' }).first();
     await randomChip.click();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/workflow-05-random-mode.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-06-random-mode.png', fullPage: true });
 
-    // Step 6: Enable Seeded checkbox
+    // Step 7: Enable Seeded checkbox
     const seededCheckbox = page.getByRole('checkbox', { name: /seeded/i });
     await seededCheckbox.check();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/workflow-06-seeded-enabled.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-07-seeded-enabled.png', fullPage: true });
 
-    // Step 7: Start the practice session
+    // Step 8: Start the practice session
     const startButton = page.getByRole('button', { name: 'Practice' }).first();
     await expect(startButton).toBeEnabled();
     await startButton.click();
 
-    // Wait for practice screen to load
-    await expect(page.getByText(/practice/i)).toBeVisible();
+    // Wait for practice screen to load (check for the heading specifically)
+    await expect(page.getByRole('heading', { name: /practice shots/i })).toBeVisible();
     await page.waitForTimeout(500);
-    await page.screenshot({ path: 'test-results/workflow-07-practice-screen.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-08-practice-screen.png', fullPage: true });
 
     // Enable the Feedback panel (it's hidden by default)
     const feedbackToggle = page.getByRole('checkbox', { name: /feedback/i });
     await feedbackToggle.check();
     await page.waitForTimeout(500);
-    await page.screenshot({ path: 'test-results/workflow-07b-feedback-enabled.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-08b-feedback-enabled.png', fullPage: true });
 
-    // Step 8: Test different guess scenarios
+    // Step 9: Test different guess scenarios
     // The seeded random should give us predictable results with seed=42
 
     // Find the recall input and submit button
@@ -158,41 +164,41 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     // With seeded random, the first shot should be predictable
     // Let's guess a value that should be close
     await recallInput.fill('50');
-    await page.screenshot({ path: 'test-results/workflow-08-guess-1-entered.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-09-guess-1-entered.png', fullPage: true });
     await submitButton.click();
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'test-results/workflow-09-guess-1-result.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-10-guess-1-result.png', fullPage: true });
 
     // Verify feedback is shown
     await expect(page.getByText(/last shot/i)).toBeVisible();
 
     // Test Case 2: Slight off guess (5-10% off)
     await recallInput.fill('55');
-    await page.screenshot({ path: 'test-results/workflow-10-guess-2-entered.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-11-guess-2-entered.png', fullPage: true });
     await submitButton.click();
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'test-results/workflow-11-guess-2-result.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-12-guess-2-result.png', fullPage: true });
 
     // Test Case 3: Fairly off guess (15-20% off)
     await recallInput.fill('70');
-    await page.screenshot({ path: 'test-results/workflow-12-guess-3-entered.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-13-guess-3-entered.png', fullPage: true });
     await submitButton.click();
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'test-results/workflow-13-guess-3-result.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-14-guess-3-result.png', fullPage: true });
 
     // Test Case 4: Very off guess (25%+ off)
     await recallInput.fill('20');
-    await page.screenshot({ path: 'test-results/workflow-14-guess-4-entered.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-15-guess-4-entered.png', fullPage: true });
     await submitButton.click();
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'test-results/workflow-15-guess-4-result.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-16-guess-4-result.png', fullPage: true });
 
     // Verify that results are being tracked
     // Check for feedback panel showing results
     await expect(page.locator('text=Feedback').locator('..').getByText('Result').first()).toBeVisible();
 
     // Take final screenshot showing accumulated attempts
-    await page.screenshot({ path: 'test-results/workflow-16-final-state.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-17-final-state.png', fullPage: true });
 
     // Verify the feedback panel shows severity indicators
     // The exact text will depend on the guess accuracy, but we should see the feedback structure
@@ -200,6 +206,6 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await expect(feedbackSection).toBeVisible();
 
     // Final validation screenshot
-    await page.screenshot({ path: 'test-results/workflow-17-completed.png', fullPage: true });
+    await page.screenshot({ path: 'test-results/workflow-18-completed.png', fullPage: true });
   });
 });

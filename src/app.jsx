@@ -545,8 +545,10 @@ const Chip = ({ active, children, onClick, className = '', disabled = false, dar
 };
 
 // Simple playfield editor for arranging shots spatially & adjusting flipper percentages
-const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedIds, onClear, onExample, darkMode = false }) => {
+const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedIds, onClear, onExample, advancedOptions, darkMode = false }) => {
   const canvasRef = React.useRef(null);
+  // Track advanced options popover visibility
+  const [showAdvancedPopover, setShowAdvancedPopover] = useState(false);
   // Track which shot images have successfully loaded (id -> true). Avoid per-item hooks inside map.
   const [imageLoadedMap, setImageLoadedMap] = useState({});
   // Track computed scale for rendering
@@ -741,6 +743,71 @@ const PlayfieldEditor = ({ rows, setRows, selectedId, setSelectedId, misorderedI
             </svg>
             <span className="hidden md:inline">Example</span>
           </button>
+        )}
+        {/* Advanced options button with popover in top-right */}
+        {Boolean(advancedOptions) && (
+          <div className="absolute right-3 top-3 z-40">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAdvancedPopover(prev => !prev);
+              }}
+              className={(() => {
+                const base = 'border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2';
+                if (showAdvancedPopover) {
+                  return darkMode
+                    ? `${base} bg-slate-600 border-slate-500 text-slate-100`
+                    : `${base} bg-slate-200 border-slate-400 text-slate-900`;
+                }
+                return darkMode
+                  ? `${base} bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600`
+                  : `${base} bg-white/90 hover:bg-white text-slate-700 border-slate-300`;
+              })()}
+              title="Advanced practice options"
+              aria-label="Advanced practice options"
+              aria-expanded={showAdvancedPopover}
+              aria-haspopup="dialog"
+            >
+              {/* Sliders/adjustments icon - indicates advanced options */}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
+                <line x1="1" y1="14" x2="7" y2="14" />
+                <line x1="9" y1="8" x2="15" y2="8" />
+                <line x1="17" y1="16" x2="23" y2="16" />
+              </svg>
+              <span className="hidden md:inline">Advanced</span>
+            </button>
+            {Boolean(showAdvancedPopover) && (
+              <div
+                role="presentation"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                className={`absolute right-0 top-full mt-2 rounded-xl shadow-xl border p-4 w-72 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-semibold ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Practice Options</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvancedPopover(false)}
+                    className={`p-1 rounded-md transition-colors ${darkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+                    aria-label="Close"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18" />
+                      <path d="M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                {advancedOptions}
+              </div>
+            )}
+          </div>
         )}
         {/* Underlay playfield primitives (slings, inlanes, outlanes, flippers). Coordinates are proportional to canvas size. */}
         <PlayfieldScenery darkMode={darkMode} />
@@ -2486,7 +2553,7 @@ const App = () => {
                 <div>
                   <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>How It Works</h3>
                   <ul className="space-y-2 list-disc list-inside">
-                    <li>Define shots on a virtual playfield with left and right flipper percentages</li>
+                    <li>Setup shots on a virtual playfield with left and right flipper percentages</li>
                     <li>Practice recalling those percentages from memory</li>
                     <li>Get immediate feedback on your accuracy</li>
                     <li>Track your improvement over time with detailed scoring</li>
@@ -2743,7 +2810,7 @@ const App = () => {
               // Precompute once per render; inexpensive for small row counts.
             })()}
             <Section
-              title="1) Define shots"
+              title="Setup Shots"
               darkMode={darkMode}
               right={
                 <div className="flex items-center gap-3">
@@ -2796,32 +2863,49 @@ const App = () => {
                       <path d="M12 17h.01" />
                     </svg>
                   </button>
-                  <button onClick={() => {
-                    if (initialized) {
-                      setFinalPhase(false);
-                    } else if (canStart) {
-                      startSession();
-                    }
-                  }} disabled={!initialized && !canStart} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS} ${!initialized && !canStart ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  <button
+                    type="button"
+                    disabled
+                    className={`${BTN_ICON} ${darkMode ? 'bg-blue-600 border-2 border-blue-400' : 'bg-blue-600 border-2 border-blue-400'} font-semibold`}
+                    title="Currently on Setup page"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Setup
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (canStart) {
+                        startSession();
+                      }
+                    }}
+                    disabled={!canStart}
+                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : 'opacity-50 cursor-not-allowed'}`}
+                    title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="5 3 19 12 5 21 5 3" />
                     </svg>
                     Practice
                   </button>
-                  <button onClick={() => {
-                    if (initialized) {
-                      setFinalPhase(true);
-                    } else if (canStart) {
-                      startSession(); setFinalPhase(true);
-                    }
-                  }} disabled={!initialized && !canStart} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS} ${!initialized && !canStart ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  <button
+                    onClick={() => {
+                      if (canStart) {
+                        startSession();
+                        setFinalPhase(true);
+                      }
+                    }}
+                    disabled={!canStart}
+                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : 'opacity-50 cursor-not-allowed'}`}
+                    title={canStart ? 'Go directly to final recall' : 'Complete Shot Type, Left & Right values for every shot'}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                       <line x1="4" y1="22" x2="4" y2="15" />
                     </svg>
-                    Finish
+                    Recall
                   </button>
                 </div>
               }
@@ -2862,17 +2946,55 @@ const App = () => {
                       ]);
                       _pushToast('Loaded example shots');
                     }}
+                    advancedOptions={
+                      <div className="space-y-3 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`${GetTextClass(darkMode, 'secondary')}`} title="How far each correct value can start from your initial guess (in 5% steps)">Initial random (×5%)</span>
+                          <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} darkMode={darkMode} />
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`${GetTextClass(darkMode, 'secondary')}`} title="How often hidden values shift after attempts">Drift every N attempts</span>
+                          <div className="flex items-center gap-1">
+                            <NumberInput value={driftEvery} onChange={setDriftEvery} min={0} max={50} darkMode={darkMode} />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`${GetTextClass(darkMode, 'secondary')}`} title="Maximum distance (in 5% steps) a value can wander from its base during drift">Drift magnitude (×5%)</span>
+                          <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} darkMode={darkMode} />
+                        </div>
+                        <div className={`pt-2 border-t ${GetBorderClass(darkMode)}`}>
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className={`${GetTextClass(darkMode, 'secondary')}`} title="Manual lets you pick any shot & flipper; Random picks one for you">Mode</span>
+                            <div className="flex gap-1">
+                              <Chip active={mode === 'manual'} onClick={() => setMode('manual')} darkMode={darkMode} className="text-[10px] px-2 py-0.5">Manual</Chip>
+                              <Chip active={mode === 'random'} onClick={() => setMode('random')} darkMode={darkMode} className="text-[10px] px-2 py-0.5">Random</Chip>
+                            </div>
+                          </div>
+                          {mode === 'random' && (
+                            <label className={`flex items-center justify-end gap-2 ${GetTextClass(darkMode, 'muted')}`}>
+                              <span>Seeded</span>
+                              <input
+                                type="checkbox"
+                                checked={useSeededRandom}
+                                onChange={(e) => setUseSeededRandom(e.target.checked)}
+                                className={GetCheckboxClass(darkMode)}
+                              />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                    }
                   />
                 );
               })()}
               <div className="overflow-auto">
                 <table className="w-full text-sm table-fixed">
                   <colgroup>
-                    <col className="w-46-/100" />
-                    <col className="w-35/100" />
-                    <col className="w-35/100" />
+                    <col className="w-[25%]" />
+                    <col className="w-[35%]" />
+                    <col className="w-[35%]" />
                     {/* Compact actions column for 3 stacked icons */}
-                    <col className="w-[30px]" />
+                    <col className="w-[5%]" />
                   </colgroup>
                   <thead>
                     <tr className={`text-left align-bottom ${GetTextClass(darkMode, 'secondary')}`}>
@@ -3607,65 +3729,13 @@ const App = () => {
               </div>
               {/* Clear all shots button below table removed; only in-canvas button remains */}
             </Section>
-
-            <Section title="2) Practice parameters" darkMode={darkMode}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-3">
-                  <span className="w-32 flex-shrink-0" title={'How far each correct values can start from your initial guess (in 5% steps).\nExample: 3 steps lets a 60 become anywhere from 45 to 75.'}>Initial random steps</span>
-                  <NumberInput value={initRandSteps} onChange={setInitRandSteps} min={0} max={4} darkMode={darkMode} />
-                  <span className="text-slate-500">(×5%)</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="w-32 flex-shrink-0" title={'How often hidden values shift after attempts.\nExample: 5 means every 5th attempt triggers a drift.'}>Drift every</span>
-                  <NumberInput value={driftEvery} onChange={setDriftEvery} min={0} max={50} darkMode={darkMode} />
-                  <span>attempts</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="w-32 flex-shrink-0" title={'Maximum distance (in 5% steps) a value can wander from its base during drift.\nExample: 2 means each shot stays within ±10 of its starting value.'}>Drift magnitude</span>
-                  <NumberInput value={driftMag} onChange={setDriftMag} min={0} max={10} step={0.5} darkMode={darkMode} />
-                  <span className="text-slate-500">(×5%)</span>
-                </div>
-                {/* Drift bias removed: drift band now directly based on magnitude (usable integer steps = floor(mag)) */}
-                <div className="flex items-start gap-3">
-                  <span className="w-32 flex-shrink-0 mt-1" title={'Manual lets you pick any shot & flipper; Random picks one for you each attempt to reduce bias.\nExample: Random may jump Ramp Left → Orbit Right.'}>Mode</span>
-                  <div className="flex gap-2 flex-wrap items-center flex-1 min-w-0">
-                    <Chip active={mode === 'manual'} onClick={() => setMode('manual')} darkMode={darkMode}>Manual</Chip>
-                    <Chip active={mode === 'random'} onClick={() => setMode('random')} darkMode={darkMode}>Random</Chip>
-                    {mode === 'random' && (
-                      <label className={`flex items-center gap-2 text-xs ml-2 whitespace-nowrap ${GetTextClass(darkMode, 'secondary')}`}>
-                        <input
-                          type="checkbox"
-                          checked={useSeededRandom}
-                          onChange={(e) => setUseSeededRandom(e.target.checked)}
-                          className={GetCheckboxClass(darkMode)}
-                        />
-                        Seeded
-                      </label>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-3">
-                <button
-                  onClick={canStart ? startSession : undefined}
-                  disabled={!canStart}
-                  title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
-                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${canStart ? BTN_SUCCESS : 'bg-emerald-400 opacity-60 cursor-not-allowed'}`}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                  Practice
-                </button>
-              </div>
-            </Section>
           </>
         )}
 
         {/* Practice */}
         {initialized && !finalPhase ? <>
           <Section
-            title="Practice"
+            title="Practice Shots"
             darkMode={darkMode}
             right={
               <div className="flex items-center gap-3">
@@ -3718,19 +3788,38 @@ const App = () => {
                     <line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                 </button>
-                <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
+                <button
+                  onClick={resetAll}
+                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                  title="Return to setup and reset session"
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                   Setup
                 </button>
-                <button onClick={endSession} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
+                <button
+                  type="button"
+                  disabled
+                  className={`${BTN_ICON} bg-blue-600 border-2 border-blue-400 font-semibold`}
+                  title="Currently on Practice page"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  Practice
+                </button>
+                <button
+                  onClick={endSession}
+                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                  title="Go to final recall"
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                     <line x1="4" y1="22" x2="4" y2="15" />
                   </svg>
-                  Finish
+                  Recall
                 </button>
               </div>
             }
@@ -4409,7 +4498,7 @@ const App = () => {
         {/* Final recall */}
         {initialized && finalPhase ? (
           <Section
-            title="Final Recall Challenge"
+            title="Recall Shots"
             darkMode={darkMode}
             right={
               <div className="flex items-center gap-3">
@@ -4462,18 +4551,38 @@ const App = () => {
                     <line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                 </button>
-                <button onClick={() => setFinalPhase(false)} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                  Practice
-                </button>
-                <button onClick={resetAll} className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}>
+                <button
+                  onClick={resetAll}
+                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                  title="Return to setup and reset session"
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                   Setup
+                </button>
+                <button
+                  onClick={() => setFinalPhase(false)}
+                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                  title="Return to practice session"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  Practice
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  className={`${BTN_ICON} bg-blue-600 border-2 border-blue-400 font-semibold`}
+                  title="Currently on Recall page"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                    <line x1="4" y1="22" x2="4" y2="15" />
+                  </svg>
+                  Recall
                 </button>
               </div>
             }

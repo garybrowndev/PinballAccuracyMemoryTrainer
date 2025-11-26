@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 /* Ensure minimum body width to prevent content from being drawn off-screen */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   min-width: 320px;
 }
