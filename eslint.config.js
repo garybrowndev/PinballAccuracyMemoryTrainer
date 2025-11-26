@@ -315,9 +315,9 @@ const config = [
       'jsdoc/check-syntax': 'error',
       'jsdoc/check-tag-names': 'error',
       'jsdoc/no-bad-blocks': 'error',
-      'jsdoc/no-undefined-types': 'off',
-      'jsdoc/require-param-description': 'off',
-      'jsdoc/require-returns-description': 'off',
+      'jsdoc/no-undefined-types': 'error',
+      'jsdoc/require-param-description': 'error',
+      'jsdoc/require-returns-description': 'error',
     },
   },
   // Test files configuration
