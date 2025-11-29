@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial GitHub community files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md)
+- Initial GitHub community files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, SUPPORT.md)
+- Dependabot configuration for automated npm and GitHub Actions updates
+- PR validation workflow with lint, unit tests, and E2E tests
+- Pull request template
+- CODEOWNERS file
 
 ---
 
