@@ -2,7 +2,50 @@
 
 # 🎯 Pinball Accuracy Memory Trainer
 
-**A memory training tool for pinball players to practice and improve flipper shot accuracy recall**
+### Train your brain. Master the shots. Dominate the table.
+
+<br>
+
+---
+
+## 🕹️ READY TO PLAY?
+
+### [![🎯 LAUNCH LIVE DEMO](https://img.shields.io/badge/▶_PLAY_NOW_IN_YOUR_BROWSER-Click_Here!-FF6B35?style=for-the-badge&logoColor=white&labelColor=1a1a2e)](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)
+
+**⚡ Instant access — No signup, no download, no install. Just click and play!**
+
+---
+
+<a href="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/">
+  <img src="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/app-screenshot.jpg" alt="Pinball Accuracy Memory Trainer Screenshot" width="700">
+</a>
+
+*👆 Click the screenshot to launch the app*
+
+---
+
+### 🎮 What You Get:
+
+| | |
+|:---:|:---:|
+| 🎰 **38+ Classic & Modern Tables** | 🧠 **Memory Training with Dynamic Drift** |
+| Addams Family, Medieval Madness, Attack from Mars, and more! | Values shift as you practice — no rote memorization! |
+| 📊 **Real-Time Performance Tracking** | 🌐 **Works 100% Offline** |
+| Instant feedback on accuracy with color-coded results | All data stored locally in your browser |
+
+<br>
+
+### 💡 Perfect for competitive pinball players who want to:
+**Memorize flipper positions** • **Build muscle memory** • **Train anywhere, anytime**
+
+---
+
+</div>
+
+<details>
+<summary><strong>📊 Project Status & Badges</strong></summary>
+
+<div align="center">
 
 [![Release](https://img.shields.io/github/v/release/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/garybrowndev/PinballAccuracyMemoryTrainer/auto-version-and-release.yml?branch=master&style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/actions)
@@ -43,24 +86,9 @@
 
 </div>
 
-## 🚀 Live Demo
+</details>
 
-<div align="center">
-  
-### [**🎯 Launch App**](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)
-
-[![App Screenshot](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/app-screenshot.jpg)](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)
-
-*Click the image above or the button to launch the app instantly in your browser*
-
-</div>
-
-**✨ Features at a Glance:**
-- 🎮 Works completely offline with 38 preset pinball tables
-- 🎯 Progressive training with dynamic drift mechanics
-- 📊 Real-time performance tracking and feedback
-- 💾 No download or installation required
-- 🔒 All data stored locally in your browser
+---
 
 ## A Note from the Author
 
@@ -85,7 +113,7 @@ A specialized memory training tool for pinball players to practice and improve f
 The trainer helps pinball players develop muscle memory for shot accuracy by:
 
 1. **Defining shot configurations** - Set up shots with specific base elements (Ramp, Orbit, Scoop, etc.) and locations (Left, Right, Center, etc.)
-2. **Guessing flipper percentages** - Each shot has accuracy percentages for both left and right flippers (0-100% in 5% increments)
+2. **Guessing flipper percentages** - Each shot has accuracy percentages for both left and right flippers (5-95% in 5% increments, or "NP" for Not Possible)
 3. **Testing recall** - After memorizing the percentages, the app hides the true values and you must recall them from memory
 4. **Dynamic difficulty** - True values gradually "drift" within bounds as you practice, preventing rote memorization
 5. **Performance tracking** - Detailed feedback on accuracy, adjustment quality, and overall performance
@@ -94,14 +122,14 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 
 ### Shot Configuration
 - **Visual playfield editor** - Arrange shots spatially on an arc-based layout with visual flipper representations
-- **39 pinball preset tables** - Pre-configured shot layouts from classic and modern pinball machines (Addams Family, Medieval Madness, Attack from Mars, etc.)
+- **38 pinball preset tables** - Pre-configured shot layouts from classic and modern pinball machines (Addams Family, Medieval Madness, Attack from Mars, etc.)
 - **Custom shot creation** - Setup shots using 20 base elements (Ramp, Orbit, Drops, Spinner, etc.) combined with 8 location modifiers (Left, Right, Center, Side, Top, Upper, Bottom, Lower)
-- **Image-based tiles** - Optional visual shot element thumbnails with 80×80px tiles (extensible with JPG images in `/public/images/elements/`)
+- **Image-based tiles** - Optional visual shot element thumbnails with 80×80px tiles (extensible with WebP images in `/public/images/elements/`)
 - **Export/import** - Save your custom shot configurations as JSON files
 
 ### Training Mechanics
 - **Ordering constraints** - Left flipper shots must be strictly increasing (harder shots = higher %), right flipper strictly decreasing
-- **0 = "Not Possible"** - Special semantic value for impossible shots from a specific flipper
+- **"NP" = Not Possible** - Special value (stored as 0) for shots that cannot be made from a specific flipper; valid percentage values are 5-95
 - **Drift system** - Hidden truth values shift periodically within ±20% bounds to keep you on your toes
 - **Two practice modes**:
   - **Manual** - Pick any shot/flipper combination to practice
@@ -135,7 +163,7 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 - **No backend** - 100% client-side, offline-capable with localStorage persistence
 
 ### Code Structure
-- **Single-file app** - `src/app.jsx` (~4700 lines) containing all logic
+- **Single-file app** - `src/app.jsx` (~5000 lines) containing all logic
 - **Functional helpers** - Pure functions for percentage snapping, ordering, drift calculations
 - **Custom hooks** - `useLocalStorage` for automatic state persistence
 - **Isotonic regression** - Mathematical constraint solver for maintaining shot order during randomization/drift
@@ -144,7 +172,7 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 ### Key Algorithms
 
 #### Percentage Snapping
-All values snap to 5% increments (0, 5, 10, ..., 100) to maintain consistency and prevent floating-point issues.
+All values snap to 5% increments. Valid values are 0 (Not Possible) or 5, 10, 15, ..., 90, 95. The value 0 is reserved for shots that cannot be made from a specific flipper.
 
 #### Ordering Constraints
 - **Left flipper**: Values must be strictly increasing top-to-bottom (index 0 < index 1 < ...)
@@ -192,7 +220,7 @@ npm run build:standalone
 The `build:standalone` script creates a self-contained HTML file (`pinball-trainer-standalone.html`) with:
 - All CSS and JavaScript inlined
 - All shot element images embedded as base64 data URIs
-- All 39 preset configurations embedded
+- All 38 preset configurations embedded
 - No external dependencies - works completely offline
 - Automatic lint check before build
 
@@ -212,7 +240,7 @@ The `build:standalone` script creates a self-contained HTML file (`pinball-train
 ### 2. Practice Phase
 1. Click "Start Session" (or press Enter)
 2. See the selected shot highlighted on the playfield
-3. Enter your percentage guess (0-100, where 0 = Not Possible)
+3. Enter your percentage guess (5-95 in 5% increments, or 0 for Not Possible)
 4. Receive instant feedback with color-coded accuracy
 5. View visual feedback line showing early/late direction
 6. Continue practicing as hidden values drift
@@ -238,10 +266,10 @@ Load presets from the "+ Add Shot(s)" popup in the setup screen.
 ## Customization
 
 ### Adding Shot Element Images
-Place JPG files in `/public/images/elements/` with kebab-case filenames matching element names:
-- `ramp.jpg` for "Ramp"
-- `left-orbit.jpg` for "Left Orbit"
-- `center-scoop.jpg` for "Center Scoop"
+Place WebP files in `/public/images/elements/` with kebab-case filenames matching element names:
+- `ramp.webp` for "Ramp"
+- `left-orbit.webp` for "Left Orbit"
+- `center-scoop.webp` for "Center Scoop"
 
 Images display as 80×80px tiles with automatic fallback to text labels. The standalone build automatically embeds all images as base64 data URIs.
 
@@ -274,7 +302,7 @@ Clear browser data to reset the app completely.
 
 - **Attempt history capped at 200** entries to prevent unbounded growth
 - **Efficient re-renders** via `useMemo` for expensive calculations (drift, ordering, visual layout)
-- **Single-file architecture** - Optimized for this scale (~4700 LOC), no component splitting overhead
+- **Single-file architecture** - Optimized for this scale (~5000 LOC), no component splitting overhead
 - **Minimal dependencies** - Only React 19, React-DOM, and Tailwind CSS
 - **Source maps enabled** - Full debugging support in development
 - **Strict linting** - 80+ ESLint rules enforced with zero warnings policy
@@ -325,7 +353,7 @@ The project includes two types of tests:
 
 #### Unit Tests (Vitest)
 - Fast, focused tests for individual functions and components
-- Located in `src/` with `.test.jsx` extension
+- Located in `tests/vitest/` with `.test.jsx` extension
 - Run with `npm run test` (watch mode) or `npm run test:run` (once)
 - Interactive UI available with `npm run test:ui`
 
@@ -348,10 +376,10 @@ All test failures block the build process to ensure code quality.
 ### Project Structure
 ```
 ├── public/
-│   ├── images/elements/    # Shot element image tiles (JPG format)
+│   ├── images/elements/    # Shot element image tiles (WebP format)
 │   └── presets/            # 38 pre-configured table JSON files
 ├── src/
-│   ├── app.jsx             # Main application (~4700 lines)
+│   ├── app.jsx             # Main application (~5000 lines)
 │   ├── app.css             # Component-specific styles
 │   ├── main.jsx            # React entry point
 │   └── index.css           # Global styles and Tailwind imports
