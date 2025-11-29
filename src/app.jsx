@@ -1778,7 +1778,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             </div>
           );
         })}
-        {/* eslint-disable-next-line sonarjs/cognitive-complexity */}
+        {/* eslint-disable-next-line sonarjs/cognitive-complexity, react-hooks/refs */}
         {mounted && selectedRow && selectedSide ? (() => {
           // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
           const rect = canvasRef.current?.getBoundingClientRect();

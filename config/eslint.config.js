@@ -17,7 +17,7 @@ const config = [
     ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'config/eslint.config.js', '.vscode/brave-debug-ephemeral', 'test-results', 'playwright-report', 'coverage'],
   },
   js.configs.recommended,
-  reactHooks.configs['recommended-latest'],
+  reactHooks.configs.flat['recommended-latest'],
   reactRefresh.configs.vite,
   jsxA11y.flatConfigs.recommended,
   {
