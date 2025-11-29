@@ -1,12 +1,47 @@
-# Pinball Accuracy Memory Trainer
+<div align="center">
+
+# 🎯 Pinball Accuracy Memory Trainer
+
+**A memory training tool for pinball players to practice and improve flipper shot accuracy recall**
 
 [![Release](https://img.shields.io/github/v/release/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/releases)
-[![License](https://img.shields.io/github/license/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](LICENSE)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/garybrowndev/PinballAccuracyMemoryTrainer/auto-version-and-release.yml?branch=master&style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/actions)
-[![codecov](https://codecov.io/gh/garybrowndev/PinballAccuracyMemoryTrainer/branch/master/graph/badge.svg)](https://codecov.io/gh/garybrowndev/PinballAccuracyMemoryTrainer)
+[![codecov](https://codecov.io/gh/garybrowndev/PinballAccuracyMemoryTrainer/branch/master/graph/badge.svg?style=flat-square)](https://codecov.io/gh/garybrowndev/PinballAccuracyMemoryTrainer)
+[![License](https://img.shields.io/github/license/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/demo-live-brightgreen?style=flat-square&logo=githubpages)](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)
+
+[![GitHub Stars](https://img.shields.io/github/stars/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square&logo=github)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square&logo=github)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/network/members)
+[![Issues](https://img.shields.io/github/issues/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square&logo=github)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/pulls)
+
+---
+
+### Built With
+
+[![React](https://img.shields.io/badge/React-19.1-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-7.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+
+### Tested With
+
+[![Vitest](https://img.shields.io/badge/Vitest-3.1-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E-45ba4b?style=flat-square&logo=playwright&logoColor=white)](https://playwright.dev/)
+[![ESLint](https://img.shields.io/badge/ESLint-9.35-4B32C3?style=flat-square&logo=eslint&logoColor=white)](https://eslint.org/)
+
+---
+
 [![Last Commit](https://img.shields.io/github/last-commit/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/commits/master)
-[![Issues](https://img.shields.io/github/issues/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues)
+[![Contributors](https://img.shields.io/github/contributors/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/graphs/contributors)
 [![Code Size](https://img.shields.io/github/languages/code-size/garybrowndev/PinballAccuracyMemoryTrainer?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer)
+[![Downloads](https://img.shields.io/github/downloads/garybrowndev/PinballAccuracyMemoryTrainer/total?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/releases)
+[![Node](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Maintenance](https://img.shields.io/badge/Maintained-yes-green?style=flat-square)](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/graphs/commit-activity)
+
+[![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red?style=flat-square)]()
+[![AI Coded](https://img.shields.io/badge/100%25-AI%20Vibe%20Coded-blueviolet?style=flat-square)]()
+
+</div>
 
 ## 🚀 Live Demo
 
