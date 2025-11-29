@@ -1,0 +1,53 @@
+title: "[Show & Tell] "
+labels:
+  - show-and-tell
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share your training progress, accuracy improvements, or how you're using the trainer! 🎯
+        We love seeing how the community uses this tool.
+
+  - type: textarea
+    id: share
+    attributes:
+      label: What are you sharing?
+      description: Tell us about your experience, progress, or achievement
+      placeholder: |
+        - Your training results
+        - Accuracy improvements over time
+        - Tournament preparation stories
+        - Custom preset configurations
+        - Tips and tricks you've discovered
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Any additional context or backstory
+      placeholder: |
+        - How long have you been training?
+        - What pinball tables are you focusing on?
+        - What improvement have you seen in real play?
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or Results
+      description: Share screenshots of your scores, progress charts, or the trainer in action
+      placeholder: Drag and drop images here or paste URLs...
+    validations:
+      required: false
+
+  - type: textarea
+    id: tips
+    attributes:
+      label: Tips for others
+      description: Any advice for fellow pinball players?
+      placeholder: Something that helped me was...
+    validations:
+      required: false

@@ -1,0 +1,46 @@
+title: "[Question] "
+labels:
+  - question
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking a question! Please provide as much detail as possible so we can help you.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: Describe your question clearly...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Any relevant background information
+      placeholder: |
+        - What are you trying to accomplish?
+        - What browser/device are you using?
+        - Any specific pinball table preset involved?
+    validations:
+      required: false
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you already tried?
+      description: Share any solutions you've attempted
+      placeholder: I've tried...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Before asking
+      options:
+        - label: I have searched existing discussions and issues for similar questions
+          required: true
