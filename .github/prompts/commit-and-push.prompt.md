@@ -1,14 +1,15 @@
 ---
-description: Lint, commit, and push changes to origin
+description: Lint, commit, push changes, and create PR to master
 name: commit-and-push
 argument-hint: Optional commit message
 agent: agent
 ---
 
-You are helping the user commit and push their changes to git. Follow this workflow exactly:
+You are helping the user commit and push their changes to git, then create a pull request. Follow this workflow exactly:
 
 ## Step 1: Review Current Changes
 - Use available tools to check what files have been modified
+- If there are no changes to commit, inform the user and stop
 - Provide a brief summary of the changes found
 
 ## Step 2: Generate Commit Message
@@ -48,21 +49,41 @@ Once tests pass (or user approves proceeding with test failures):
   - Report the build errors clearly
   - Do NOT proceed to commit
   - Suggest fixes or ask the user to resolve build errors
-- If build succeeds, confirm and proceed to commit
+- If build succeeds, confirm and proceed to branch creation
 
-## Step 6: Commit Locally
-Once build passes:
+## Step 6: Create Feature Branch (if on master)
+- Check current branch: `git branch --show-current`
+- If currently on `master` or `main`:
+  - Generate a short, descriptive branch name based on the commit type and summary
+  - Format: `<type>/<short-description>` (e.g., `feat/add-dark-mode`, `fix/login-validation`, `chore/update-deps`)
+  - Keep branch names lowercase with hyphens, no spaces
+  - Create and switch to the new branch: `git checkout -b <branch-name>`
+  - Report the new branch name
+- If already on a feature branch, continue with that branch
+
+## Step 7: Commit Locally
+Once on the correct branch:
 - Stage all changes: `git add .`
 - Commit with the approved message: `git commit -m "<message>"`
+- If there's nothing to commit (changes already committed), skip to push
 - Report the commit hash
 
-## Step 7: Push to Origin
-- Get the current branch name: `git branch --show-current`
-- Push to origin: `git push origin <branch-name>`
+## Step 8: Push Branch to Origin
+- Push the branch to origin: `git push -u origin <branch-name>`
+- If push fails, suggest the user may need to pull first
 - Confirm successful push
+
+## Step 9: Create Pull Request
+- Use GitHub tools to create a pull request:
+  - Base branch: `master`
+  - Head branch: the current feature branch
+  - Title: Use the commit message summary (first line)
+  - Body: Include the commit message body (bullet points) if present, or a brief description
+- Report the PR URL/number
 
 ## Error Handling
 - If any step fails, stop immediately and report the error
+- Don't create PR if push fails
 - Don't push if commit fails
 - Don't commit if build fails
 - Don't build if tests fail (unless user explicitly approves)
@@ -74,4 +95,6 @@ Once build passes:
 - User will review and approve the commit message before committing
 - The test step ensures all unit and E2E tests pass before building
 - The build step ensures the app compiles successfully before committing
+- Branch names are auto-generated from the commit type and description
+- PRs are always created against the `master` branch
 - Use PowerShell syntax for commands (semicolon `;` to chain commands, not `&&`)
