@@ -416,6 +416,20 @@ See `.github/copilot-instructions.md` for detailed development guidelines, inclu
 - Coding conventions (ESLint rules, formatting standards)
 - Build processes (standard and standalone builds)
 
+For contribution guidelines, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+
+## 💚 Support This Project
+
+**This project doesn't accept monetary donations.** The best way to support it is through your time and engagement:
+
+- ⭐ **Star the repo** — It helps others discover the project
+- 🐛 **Report bugs** — Help improve quality by [reporting issues](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues/new?template=bug_report.yml)
+- 💡 **Share ideas** — Suggest features via [GitHub Discussions](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/discussions)
+- 🎰 **Add presets** — Contribute shot configurations for pinball tables
+- 📣 **Spread the word** — Tell other pinball players about the trainer
+
+Your feedback, ideas, and contributions are worth more than any donation!
+
 ## License
 
 This project is licensed under the **MIT License** - one of the most permissive open source licenses available.
