@@ -21,8 +21,8 @@ updates:
       # Group all production dependencies together
       production-dependencies:
         patterns:
-          - "react"
-          - "react-dom"
+          - "react*"
+          - "react-dom*"
       # Group all dev dependencies together
       dev-dependencies:
         dependency-type: "development"
