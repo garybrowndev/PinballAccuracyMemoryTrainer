@@ -1,0 +1,32 @@
+# This CITATION.cff file was generated to help others cite this project.
+# https://citation-file-format.github.io/
+
+cff-version: 1.2.0
+title: Pinball Accuracy Memory Trainer
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - family-names: Brown
+    given-names: Gary
+    affiliation: Independent Developer
+repository-code: https://github.com/garybrowndev/PinballAccuracyMemoryTrainer
+url: https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/
+abstract: >-
+  A specialized memory training tool for pinball players to practice
+  and improve flipper shot accuracy recall. This progressive web
+  application helps players develop muscle memory for shot percentages
+  at different flipper angles, with dynamic difficulty through drift
+  mechanics and detailed performance feedback.
+keywords:
+  - pinball
+  - memory-trainer
+  - accuracy
+  - flipper
+  - react
+  - training
+  - competitive-pinball
+  - muscle-memory
+license: MIT
+date-released: 2025-09-01

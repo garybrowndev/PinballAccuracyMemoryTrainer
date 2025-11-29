@@ -1,0 +1,50 @@
+# Labeler configuration for auto-labeling PRs based on files changed
+# https://github.com/actions/labeler
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.md'
+          - 'docs/**'
+          - 'LICENSE'
+
+preset:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'public/presets/**'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'tests/**'
+
+ci/cd:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'package.json'
+          - 'package-lock.json'
+
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'config/**'
+          - '.editorconfig'
+          - '.gitignore'
+          - '.gitattributes'
+          - 'index.html'
+
+source:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/**'
+
+github:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - '!.github/workflows/**'

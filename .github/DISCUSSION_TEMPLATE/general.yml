@@ -1,0 +1,31 @@
+title: ""
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Welcome to the general discussion area! 🎰
+        
+        Use this space for:
+        - Pinball strategy discussions
+        - Tournament preparation tips
+        - General conversation about the project
+        - Anything that doesn't fit other categories
+
+  - type: textarea
+    id: discussion
+    attributes:
+      label: What's on your mind?
+      description: Start a conversation with the community
+      placeholder: Share your thoughts...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any extra information, links, or images
+      placeholder: Add any relevant details...
+    validations:
+      required: false

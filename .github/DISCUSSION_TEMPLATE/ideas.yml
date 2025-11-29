@@ -1,0 +1,60 @@
+title: "[Idea] "
+labels:
+  - idea
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to improve the Pinball Accuracy Memory Trainer? We'd love to hear it! 💡
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your Idea
+      description: Describe your idea or suggestion
+      placeholder: I think it would be great if...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem it solves
+      description: What problem or limitation does this address?
+      placeholder: Currently, when I try to... it's difficult because...
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How do you envision this working?
+      placeholder: The feature could work by...
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you've thought about?
+      placeholder: Another way to solve this might be...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What area does this idea relate to?
+      options:
+        - New pinball table preset
+        - Training features
+        - User interface
+        - Performance tracking
+        - Accessibility
+        - Documentation
+        - Other
+    validations:
+      required: true
