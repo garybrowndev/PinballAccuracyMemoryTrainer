@@ -13,7 +13,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -49,7 +49,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.check_tag.outputs.exists == 'false'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: steps.check_tag.outputs.exists == 'false'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage/lcov.info
           flags: unittests
@@ -134,7 +134,7 @@ jobs:
 
       - name: Create Release
         if: steps.check_tag.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.full_version }}
           name: Release ${{ steps.version.outputs.full_version }}
