@@ -1378,7 +1378,7 @@ PlayfieldScenery.propTypes = {
   darkMode: PropTypes.bool,
 };
 
-const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale, darkMode = false }) => {
+const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale, darkMode = false, animationEnabled = true }) => {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
   // Track canvas dimensions for responsive box sizing (both fullscreen and non-fullscreen)
@@ -1386,9 +1386,216 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   const [canvasHeight, setCanvasHeight] = useState(384);
   // Track which images have loaded (reused across shot tiles) keyed by row.id
   const [imageLoadedMap, setImageLoadedMap] = useState({});
+
+  // Ball animation state
+  const [ballAnim, setBallAnim] = useState(null); // { progress: 0-1, startX, startY, endX, endY, duration, startTime, recallId }
+  const [showFeedback, setShowFeedback] = useState(true); // Whether to show the feedback line/box
+  const lastRecallIdRef = useRef(null); // Track which recall we've animated
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Trigger ball animation when a new recall comes in
+  useEffect(() => {
+    if (!lastRecall || !animationEnabled) {
+      setShowFeedback(true);
+      return;
+    }
+
+    // Check if this is a new recall (different timestamp)
+    const recallId = lastRecall.t;
+    if (recallId === lastRecallIdRef.current) {
+      return; // Already animated this one
+    }
+    lastRecallIdRef.current = recallId;
+
+    // Get canvas dimensions
+    const el = canvasRef.current;
+    if (!el) {
+      setShowFeedback(true);
+      return;
+    }
+    const rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      setShowFeedback(true);
+      return;
+    }
+    const w = rect.width;
+    const h = rect.height;
+
+    // Calculate start position (flipper anchor at guess position)
+    const L_BASE = { x: 285, y: 785 };
+    const L_TIP = { x: 415, y: 920 };
+    const R_BASE = { x: 715, y: 785 };
+    const R_TIP = { x: 585, y: 920 };
+
+    function flipperTopEdge(base, tip, rBase, tipWidth, percent) {
+      const t = Math.min(1, Math.max(0, percent / 100));
+      const dx = tip.x - base.x;
+      const dy = tip.y - base.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len;
+      const uy = dy / len;
+      const px = -uy;
+      const py = ux;
+      const cx = base.x + dx * t;
+      const cy = base.y + dy * t;
+      const wBase = rBase * 2;
+      const wTip = tipWidth;
+      const width = wBase + (wTip - wBase) * t;
+      const half = width / 2;
+      const cand1 = { x: cx + px * half, y: cy + py * half };
+      const cand2 = { x: cx - px * half, y: cy - py * half };
+      return cand1.y < cand2.y ? cand1 : cand2;
+    }
+
+    const rawEdge = lastRecall.side === 'L'
+      ? flipperTopEdge(L_BASE, L_TIP, 27.5, 22, lastRecall.input)
+      : flipperTopEdge(R_BASE, R_TIP, 27.5, 22, lastRecall.input);
+
+    const startX = (rawEdge.x / 1000) * w;
+    const startY = (rawEdge.y / 1000) * h;
+
+    // Calculate end position - must match the feedback line endpoint
+    const targetRow = rows[lastRecall.idx];
+    if (!targetRow) {
+      setShowFeedback(true);
+      return;
+    }
+
+    // Get shot box dimensions (same logic as feedback line calculation)
+    const boxCX = targetRow.x * w;
+    const boxCY = targetRow.y * h;
+    let boxW = 120; // default
+    let boxH = 120; // default (boxes are square)
+    const shotEl = canvasRef.current?.querySelector(`[data-shot-box="${targetRow.id}"]`);
+    if (shotEl) {
+      try {
+        const br = shotEl.getBoundingClientRect();
+        if (br?.width) {
+          boxW = br.width;
+        }
+        if (br?.height) {
+          boxH = br.height;
+        }
+      } catch { /* swallow measurement errors */ }
+    }
+
+    // Calculate direction and offset (same logic as feedback line)
+    let dirLate = 0;
+    if (lastRecall.delta > 0) {
+      dirLate = 1;
+    } else if (lastRecall.delta < 0) {
+      dirLate = -1;
+    }
+    let shiftSign = 0;
+    if (dirLate !== 0) {
+      if (lastRecall.side === 'R') {
+        shiftSign = dirLate === -1 ? 1 : -1;
+      } else {
+        shiftSign = dirLate === -1 ? -1 : 1;
+      }
+    }
+    // Proportional factor based on severity
+    let factor = 0;
+    if (lastRecall.severity === 'slight') {
+      factor = 0.5;
+    } else if (lastRecall.severity === 'fairly') {
+      factor = 1;
+    } else if (lastRecall.severity === 'very') {
+      factor = 1.65;
+    }
+    const endX = boxCX + shiftSign * (factor * (boxW / 2));
+    const endY = boxCY + boxH / 2;
+
+    // Animation durations
+    const travelDuration = 1000; // 1 second to travel
+    // Shake/pause duration based on error - more error = longer shake
+    // Perfect shots get a brief pause so ball doesn't immediately disappear
+    const absError = Math.abs(lastRecall.delta);
+    // Perfect shot (0 error) = 300ms pause; otherwise 200ms base + up to 400ms more based on error
+    const shakeDuration = absError === 0 ? 300 : 200 + Math.min(400, absError * 8);
+
+    // Hide feedback and start animation
+    setShowFeedback(false);
+    setBallAnim({
+      progress: 0,
+      startX,
+      startY,
+      endX,
+      endY,
+      travelDuration,
+      shakeDuration,
+      totalDuration: travelDuration + shakeDuration,
+      startTime: performance.now(),
+      recallId,
+      absError,
+    });
+  }, [lastRecall, animationEnabled, rows]);
+
+  // Animation frame loop
+  useEffect(() => {
+    if (!ballAnim) {
+      // eslint-disable-next-line no-empty-function
+      return () => {};
+    }
+
+    let frameId;
+    const animate = (now) => {
+      const elapsed = now - ballAnim.startTime;
+
+      if (elapsed >= ballAnim.totalDuration) {
+        // Animation complete
+        setBallAnim(null);
+        setShowFeedback(true);
+      } else {
+        // Calculate travel progress (0-1 during travel phase)
+        const travelProgress = Math.min(1, elapsed / ballAnim.travelDuration);
+        // Calculate shake progress (0-1 during shake phase, only after travel)
+        let shakeProgress = 0;
+        if (elapsed > ballAnim.travelDuration && ballAnim.shakeDuration > 0) {
+          shakeProgress = (elapsed - ballAnim.travelDuration) / ballAnim.shakeDuration;
+        }
+        setBallAnim(prev => (prev ? { ...prev, travelProgress, shakeProgress } : null));
+        frameId = requestAnimationFrame(animate);
+      }
+    };
+
+    frameId = requestAnimationFrame(animate);
+    return () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+    };
+  }, [ballAnim]);
+
+  // Skip animation on click or keypress
+  useEffect(() => {
+    if (!ballAnim) {
+      // eslint-disable-next-line no-empty-function
+      return () => {};
+    }
+
+    const skip = () => {
+      setBallAnim(null);
+      setShowFeedback(true);
+    };
+
+    const handleClick = () => skip();
+    const handleKey = (e) => {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') {
+        skip();
+      }
+    };
+
+    window.addEventListener('click', handleClick);
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('click', handleClick);
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [ballAnim]);
 
   // ResizeObserver to track canvas dimensions
   useEffect(() => {
@@ -1852,12 +2059,83 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               <line x1={p100Top.x} y1={p100Top.y} x2={line2End} y2={boxBottom} stroke={stroke} strokeWidth={5} strokeLinecap="round" />
             </svg>
           );
-          const yellowLayer = recallNode && (
+          const yellowLayer = showFeedback && recallNode && (
             <svg className="absolute inset-0 pointer-events-none z-30" viewBox={`0 0 ${w} ${h}`}>
               {recallNode}
             </svg>
           );
-          return <>{greenLayer}{yellowLayer}</>;
+          // Ball animation layer
+          let ballLayer = null;
+          if (ballAnim) {
+            const { travelProgress = 0, shakeProgress = 0, startX, startY, endX, endY, absError = 0 } = ballAnim;
+
+            // Base position: linear interpolation along the straight line (capped at 1)
+            const travelT = Math.min(1, travelProgress);
+            let ballX = startX + (endX - startX) * travelT;
+            let ballY = startY + (endY - startY) * travelT;
+
+            // Add shake effect when travel is complete
+            if (travelT >= 1 && shakeProgress > 0 && shakeProgress < 1 && absError > 0) {
+              // Shake intensity based on error magnitude (0-50 range mapped to 0-15 pixels)
+              const shakeIntensity = Math.min(15, absError * 0.3) * scale;
+              // Shake frequency - faster shake
+              const shakeFreq = 25;
+              // Damping - shake reduces over time
+              const damping = 1 - shakeProgress;
+              // Random-ish shake using sin/cos at different frequencies
+              const shakeOffsetX = Math.sin(shakeProgress * Math.PI * shakeFreq) * shakeIntensity * damping;
+              const shakeOffsetY = Math.cos(shakeProgress * Math.PI * shakeFreq * 1.3) * shakeIntensity * 0.7 * damping;
+              ballX += shakeOffsetX;
+              ballY += shakeOffsetY;
+            }
+
+            // Ball size is 1/8 the flipper length
+            // Flipper coordinates: base (285,785) to tip (415,920) in 1000-unit space
+            // X delta: 130 units, Y delta: 135 units
+            // Convert to actual pixels using canvas dimensions
+            const flipperDeltaX = (130 / 1000) * w; // x component in pixels
+            const flipperDeltaY = (135 / 1000) * h; // y component in pixels
+            const flipperLengthPx = Math.hypot(flipperDeltaX, flipperDeltaY);
+            const ballRadius = flipperLengthPx / 8;
+
+            ballLayer = (
+              <svg className="absolute inset-0 pointer-events-none z-40" viewBox={`0 0 ${w} ${h}`}>
+                <defs>
+                  {/* Metallic silver ball gradient */}
+                  <radialGradient id="ballGradient" cx="30%" cy="30%">
+                    <stop offset="0%" stopColor="#f8fafc" />
+                    <stop offset="40%" stopColor="#cbd5e1" />
+                    <stop offset="100%" stopColor="#64748b" />
+                  </radialGradient>
+                </defs>
+                {/* Ball shadow */}
+                <ellipse
+                  cx={ballX + 2}
+                  cy={ballY + ballRadius * 0.3}
+                  rx={ballRadius * 0.8}
+                  ry={ballRadius * 0.3}
+                  fill="rgba(0,0,0,0.3)"
+                />
+                {/* Main ball */}
+                <circle
+                  cx={ballX}
+                  cy={ballY}
+                  r={ballRadius}
+                  fill="url(#ballGradient)"
+                  stroke="#475569"
+                  strokeWidth={1}
+                />
+                {/* Highlight */}
+                <circle
+                  cx={ballX - ballRadius * 0.3}
+                  cy={ballY - ballRadius * 0.3}
+                  r={ballRadius * 0.25}
+                  fill="rgba(255,255,255,0.7)"
+                />
+              </svg>
+            );
+          }
+          return <>{greenLayer}{yellowLayer}{ballLayer}</>;
         })() : null}
       </div>
     </div>
@@ -1882,10 +2160,12 @@ PracticePlayfield.propTypes = {
     delta: PropTypes.number,
     severity: PropTypes.string,
     label: PropTypes.string,
+    t: PropTypes.number, // timestamp for animation tracking
   }),
   fullscreen: PropTypes.bool,
-  onScale: PropTypes.func.isRequired,
+  onScale: PropTypes.func,
   darkMode: PropTypes.bool,
+  animationEnabled: PropTypes.bool,
 };
 
 // ---------- main component ----------
@@ -4541,7 +4821,10 @@ const App = () => {
           {playfieldFullscreen ? createPortal(
             <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden" style={{ scrollbarGutter: 'auto' }}>
               {(() => {
-                const s = fullscreenScale || 1;
+                // Scale based on both fullscreenScale (height-driven) and windowWidth
+                const heightScale = fullscreenScale || 1;
+                const widthScale = Math.min(1.5, windowWidth / 800);
+                const s = Math.min(heightScale, widthScale);
                 const fontSize = Math.round(11 * s); // base 11px scaled
                 const padY = 0.9 * s; // base 0.9 (~py-1.5 ≈6px) adjust
                 const padX = 1.2 * s; // base horizontal
@@ -4586,7 +4869,11 @@ const App = () => {
                 <div className="relative flex-1 flex flex-col min-h-0">
                   {/* Metric boxes positioned at bottom corners - scaled */}
                   {(() => {
-                    const s = fullscreenScale || 1;
+                    // Scale based on both fullscreenScale (height-driven) and windowWidth
+                    // Base reference: 800px width and scale of 1
+                    const heightScale = fullscreenScale || 1;
+                    const widthScale = Math.min(1.5, windowWidth / 800); // cap at 1.5 like height
+                    const s = Math.min(heightScale, widthScale); // use the smaller of the two
                     const boxSize = Math.round(72 * s); // base 72px (w-18 h-18)
                     const padding = Math.round(8 * s); // base p-2
                     const margin = Math.round(16 * s); // base bottom-4/left-4/right-4
