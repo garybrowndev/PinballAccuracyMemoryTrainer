@@ -1759,7 +1759,10 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
         tabIndex={0}
         onClick={handlePlayfieldClick}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === 'Enter') {
+            handlePlayfieldClick();
+          } else if (e.key === ' ') {
+            e.preventDefault();
             handlePlayfieldClick();
           }
         }}
