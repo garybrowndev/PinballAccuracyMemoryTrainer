@@ -56,6 +56,7 @@ const COLORS = {
 const BTN_SUCCESS = 'bg-emerald-600 hover:bg-emerald-700';
 const BTN_ICON = 'px-4 py-2 rounded-2xl text-white flex items-center gap-2';
 const BTN_BASE = 'px-4 py-2 rounded-2xl text-white';
+const DISABLED_CLASS = 'opacity-50 cursor-not-allowed';
 /* eslint-disable sonarjs/no-duplicate-string */
 const ICON_BTN_DARK = 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100';
 const ICON_BTN_LIGHT = 'bg-white border-slate-300 text-slate-600 hover:text-slate-900';
@@ -1378,7 +1379,7 @@ PlayfieldScenery.propTypes = {
   darkMode: PropTypes.bool,
 };
 
-const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale, darkMode = false, animationEnabled = true }) => {
+const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullscreen = false, onScale, darkMode = false, animationEnabled = true, awaitingNextShot = false, onAdvanceToNextShot }) => {
   const canvasRef = useRef(null);
   const [mounted, setMounted] = useState(false);
   // Track canvas dimensions for responsive box sizing (both fullscreen and non-fullscreen)
@@ -1387,14 +1388,25 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   // Track which images have loaded (reused across shot tiles) keyed by row.id
   const [imageLoadedMap, setImageLoadedMap] = useState({});
 
-  // Ball animation state
-  const [ballAnim, setBallAnim] = useState(null); // { progress: 0-1, startX, startY, endX, endY, duration, startTime, recallId }
+  // Ball animation state - use refs for smooth animation, counter state forces re-renders
+  const [ballAnimFrame, setBallAnimFrame] = useState(0); // Incrementing counter forces re-renders
+  const ballAnimRef = useRef(null); // Holds animation data: { startX, startY, endX, endY, travelDuration, shakeDuration, totalDuration, startTime, recallId, absError }
+  const ballProgressRef = useRef({ travelProgress: 0, shakeProgress: 0 }); // Current progress values
   const [showFeedback, setShowFeedback] = useState(true); // Whether to show the feedback line/box
   const lastRecallIdRef = useRef(null); // Track which recall we've animated
+  // Track final ball position to keep it visible after animation completes when awaiting next shot
+  const [finalBallPosition, setFinalBallPosition] = useState(null); // { x, y, radius }
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Clear final ball position when we're no longer awaiting next shot (user clicked to continue)
+  useEffect(() => {
+    if (!awaitingNextShot) {
+      setFinalBallPosition(null);
+    }
+  }, [awaitingNextShot]);
 
   // Trigger ball animation when a new recall comes in
   useEffect(() => {
@@ -1510,7 +1522,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
     const endY = boxCY + boxH / 2;
 
     // Animation durations
-    const travelDuration = 1000; // 1 second to travel
+    const travelDuration = 500; // 0.5 second to travel
     // Shake/pause duration based on error - more error = longer shake
     // Perfect shots get a brief pause so ball doesn't immediately disappear
     const absError = Math.abs(lastRecall.delta);
@@ -1519,8 +1531,8 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
 
     // Hide feedback and start animation
     setShowFeedback(false);
-    setBallAnim({
-      progress: 0,
+    // Store animation data in ref for smooth animation
+    ballAnimRef.current = {
       startX,
       startY,
       endX,
@@ -1531,33 +1543,56 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
       startTime: performance.now(),
       recallId,
       absError,
-    });
+    };
+    ballProgressRef.current = { travelProgress: 0, shakeProgress: 0 };
+    setBallAnimFrame(f => f + 1); // Trigger animation loop
   }, [lastRecall, animationEnabled, rows]);
 
-  // Animation frame loop
+  // Animation frame loop - uses refs for smooth 60fps animation
   useEffect(() => {
-    if (!ballAnim) {
+    if (!ballAnimRef.current) {
       // eslint-disable-next-line no-empty-function
       return () => {};
     }
 
     let frameId;
     const animate = (now) => {
-      const elapsed = now - ballAnim.startTime;
+      const anim = ballAnimRef.current;
+      if (!anim) {
+        return;
+      }
 
-      if (elapsed >= ballAnim.totalDuration) {
-        // Animation complete
-        setBallAnim(null);
+      const elapsed = now - anim.startTime;
+
+      if (elapsed >= anim.totalDuration) {
+        // Animation complete - save final position for persistent display
+        const el = canvasRef.current;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const w = rect.width;
+          const h = rect.height;
+          // Calculate ball radius (same logic as rendering)
+          const flipperDeltaX = (130 / 1000) * w;
+          const flipperDeltaY = (135 / 1000) * h;
+          const flipperLengthPx = Math.hypot(flipperDeltaX, flipperDeltaY);
+          const ballRadius = flipperLengthPx / 8;
+          setFinalBallPosition({ x: anim.endX, y: anim.endY, radius: ballRadius });
+        }
+        ballAnimRef.current = null;
+        ballProgressRef.current = { travelProgress: 0, shakeProgress: 0 };
         setShowFeedback(true);
       } else {
         // Calculate travel progress (0-1 during travel phase)
-        const travelProgress = Math.min(1, elapsed / ballAnim.travelDuration);
+        const travelProgress = Math.min(1, elapsed / anim.travelDuration);
         // Calculate shake progress (0-1 during shake phase, only after travel)
         let shakeProgress = 0;
-        if (elapsed > ballAnim.travelDuration && ballAnim.shakeDuration > 0) {
-          shakeProgress = (elapsed - ballAnim.travelDuration) / ballAnim.shakeDuration;
+        if (elapsed > anim.travelDuration && anim.shakeDuration > 0) {
+          shakeProgress = (elapsed - anim.travelDuration) / anim.shakeDuration;
         }
-        setBallAnim(prev => (prev ? { ...prev, travelProgress, shakeProgress } : null));
+        // Update progress ref and force re-render every frame
+        ballProgressRef.current = { travelProgress, shakeProgress };
+        setBallAnimFrame(f => f + 1); // Increment counter to force re-render
+
         frameId = requestAnimationFrame(animate);
       }
     };
@@ -1568,34 +1603,46 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
         cancelAnimationFrame(frameId);
       }
     };
-  }, [ballAnim]);
+  }, [ballAnimFrame]);
 
-  // Skip animation on click or keypress
+  // Skip animation on keypress
   useEffect(() => {
-    if (!ballAnim) {
+    if (!ballAnimRef.current) {
       // eslint-disable-next-line no-empty-function
       return () => {};
     }
 
     const skip = () => {
-      setBallAnim(null);
+      // Save final position before clearing animation
+      const el = canvasRef.current;
+      const anim = ballAnimRef.current;
+      if (el && anim) {
+        const rect = el.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        const flipperDeltaX = (130 / 1000) * w;
+        const flipperDeltaY = (135 / 1000) * h;
+        const flipperLengthPx = Math.hypot(flipperDeltaX, flipperDeltaY);
+        const ballRadius = flipperLengthPx / 8;
+        setFinalBallPosition({ x: anim.endX, y: anim.endY, radius: ballRadius });
+      }
+      ballAnimRef.current = null;
+      ballProgressRef.current = { travelProgress: 0, shakeProgress: 0 };
       setShowFeedback(true);
     };
 
-    const handleClick = () => skip();
     const handleKey = (e) => {
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') {
         skip();
       }
     };
 
-    window.addEventListener('click', handleClick);
+    // Only listen for keypress to skip (not click - click will be handled by playfield click handler)
     window.addEventListener('keydown', handleKey);
     return () => {
-      window.removeEventListener('click', handleClick);
       window.removeEventListener('keydown', handleKey);
     };
-  }, [ballAnim]);
+  }, [ballAnimFrame]);
 
   // ResizeObserver to track canvas dimensions
   useEffect(() => {
@@ -1631,6 +1678,10 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
   }, []);
 
   const selectedRow = rows[selectedIdx] || null;
+  // When awaiting next shot, show green guide on the shot from the last recall (not the pending next shot)
+  const activeGuideIdx = awaitingNextShot && lastRecall ? lastRecall.idx : selectedIdx;
+  const activeGuideSide = awaitingNextShot && lastRecall ? lastRecall.side : selectedSide;
+  const activeGuideRow = rows[activeGuideIdx] || null;
   const n = rows.length;
 
   // Calculate adaptive box size based on actual box positions and canvas dimensions
@@ -1692,12 +1743,27 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
       onScale(scale);
     }
   }, [scale, fullscreen, onScale]);
+  // Handle click on playfield to advance to next shot
+  const handlePlayfieldClick = useCallback(() => {
+    if (awaitingNextShot && onAdvanceToNextShot) {
+      onAdvanceToNextShot();
+    }
+  }, [awaitingNextShot, onAdvanceToNextShot]);
+
   return (
     <div className={fullscreen ? 'w-full h-full flex flex-col' : 'mt-8'}>
       {!fullscreen && <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Playfield</h3>}
       <div
         ref={canvasRef}
-        className={`relative border rounded-xl bg-gradient-to-b overflow-hidden ${darkMode ? 'from-slate-800 to-slate-900 border-slate-700' : 'from-slate-50 to-slate-100 border-slate-300'} ${fullscreen ? 'flex-1 min-h-0' : 'h-96'}`}
+        role="button"
+        tabIndex={0}
+        onClick={handlePlayfieldClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handlePlayfieldClick();
+          }
+        }}
+        className={`relative border rounded-xl bg-gradient-to-b overflow-hidden ${awaitingNextShot ? 'cursor-pointer' : ''} ${darkMode ? 'from-slate-800 to-slate-900 border-slate-700' : 'from-slate-50 to-slate-100 border-slate-300'} ${fullscreen ? 'flex-1 min-h-0' : 'h-96'}`}
       >
         <PlayfieldScenery darkMode={darkMode} />
         {rows.map(r => {
@@ -1778,8 +1844,8 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             </div>
           );
         })}
-        {/* eslint-disable-next-line sonarjs/cognitive-complexity, react-hooks/refs */}
-        {mounted && selectedRow && selectedSide ? (() => {
+        {/* eslint-disable-next-line sonarjs/cognitive-complexity, complexity, react-hooks/refs */}
+        {mounted && activeGuideRow && activeGuideSide ? (() => {
           // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
           const rect = canvasRef.current?.getBoundingClientRect();
           if (!rect || !rect.width || !rect.height) {
@@ -1787,7 +1853,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           }
           const w = rect.width; const h = rect.height;
           const BOX_HALF = 15 * scale; // approximate half-height scaled
-          const _bx = selectedRow.x * w; const _by = selectedRow.y * h + BOX_HALF; // bottom center of shot box
+          const _bx = activeGuideRow.x * w; const _by = activeGuideRow.y * h + BOX_HALF; // bottom center of shot box
           // Coordinate anchors (note mapping: 0=base,100=tip in editor, but we now need both extremes).
           const L_TIP = { x: 415, y: 920 }, L_BASE = { x: 285, y: 785 };
           const R_TIP = { x: 585, y: 920 }, R_BASE = { x: 715, y: 785 };
@@ -1799,11 +1865,15 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             x: (R_BASE.x + (R_TIP.x - R_BASE.x) * (p / 100)) / 1000 * w,
             y: (R_BASE.y + (R_TIP.y - R_BASE.y) * (p / 100)) / 1000 * h,
           });
-          // Unified green guide color for both flippers during practice
-          const stroke = '#10b981'; // emerald-500
+          // Guide color: neutral slate during aiming/animation, changes to severity color when result is shown
+          const defaultGuideColor = '#94a3b8'; // slate-400 - neutral gray for aiming state
+          const stroke = awaitingNextShot && showFeedback && lastRecall && lastRecall.severity
+            ? (SEVERITY_COLORS[lastRecall.severity] || defaultGuideColor)
+            : defaultGuideColor;
           // Determine anchor for showing last recall value (only one value shown at a time on the active flipper).
+          // Only show feedback when awaiting next shot - hide it after user advances to next shot
           let recallNode = null;
-          if (lastRecall && Number.isFinite(lastRecall.input)) {
+          if (awaitingNextShot && lastRecall && Number.isFinite(lastRecall.input)) {
             // Placeholder for feedback line/group before recall value label box; restored after refactor
             let lineEl = null;
             const prevRow = rows[lastRecall.idx];
@@ -2018,12 +2088,12 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               return { x: edge.x / 1000 * w, y: edge.y / 1000 * h };
             }
           }
-          const p0Top = topEdgePoint(selectedSide, 0);
-          const p100Top = topEdgePoint(selectedSide, 100);
+          const p0Top = topEdgePoint(activeGuideSide, 0);
+          const p100Top = topEdgePoint(activeGuideSide, 100);
           // Measure actual shot box dimensions to calculate accurate bottom corners
           let boxWidth = 96; // default w-24 (fallback text box)
           let boxHeight = 80; // default h-20
-          const shotEl = canvasRef.current?.querySelector(`[data-shot-box="${selectedRow.id}"]`);
+          const shotEl = canvasRef.current?.querySelector(`[data-shot-box="${activeGuideRow.id}"]`);
           if (shotEl) {
             try {
               const br = shotEl.getBoundingClientRect();
@@ -2034,19 +2104,19 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             } catch { /* swallow measurement errors */ }
           }
           // Calculate bottom corners of shot box
-          // Shot box is centered at (selectedRow.x * w, selectedRow.y * h)
-          const boxCenterX = selectedRow.x * w;
-          const boxCenterY = selectedRow.y * h;
+          // Shot box is centered at (activeGuideRow.x * w, activeGuideRow.y * h)
+          const boxCenterX = activeGuideRow.x * w;
+          const boxCenterY = activeGuideRow.y * h;
           const boxLeft = boxCenterX - boxWidth / 2;
           const boxRight = boxCenterX + boxWidth / 2;
           const boxBottom = boxCenterY + boxHeight / 2;
           // For proper polygon winding: Left flipper goes 0(left)->100(right), Right flipper goes 0(right)->100(left)
           // So left flipper connects: p0->p100->boxRight->boxLeft, right flipper connects: p0->p100->boxLeft->boxRight
-          const polygonPoints = selectedSide === 'L'
+          const polygonPoints = activeGuideSide === 'L'
             ? `${p0Top.x},${p0Top.y} ${p100Top.x},${p100Top.y} ${boxRight},${boxBottom} ${boxLeft},${boxBottom}`
             : `${p0Top.x},${p0Top.y} ${p100Top.x},${p100Top.y} ${boxLeft},${boxBottom} ${boxRight},${boxBottom}`;
-          const line1End = selectedSide === 'L' ? boxLeft : boxRight;
-          const line2End = selectedSide === 'L' ? boxRight : boxLeft;
+          const line1End = activeGuideSide === 'L' ? boxLeft : boxRight;
+          const line2End = activeGuideSide === 'L' ? boxRight : boxLeft;
           const greenLayer = (
             <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
               {/* Shaded wedge between anchors and shot box - now a quadrilateral connecting to bottom corners */}
@@ -2066,8 +2136,10 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
           );
           // Ball animation layer
           let ballLayer = null;
-          if (ballAnim) {
-            const { travelProgress = 0, shakeProgress = 0, startX, startY, endX, endY, absError = 0 } = ballAnim;
+          if (ballAnimRef.current) {
+            const anim = ballAnimRef.current;
+            const { travelProgress = 0, shakeProgress = 0 } = ballProgressRef.current;
+            const { startX, startY, endX, endY, absError = 0 } = anim;
 
             // Base position: linear interpolation along the straight line (capped at 1)
             const travelT = Math.min(1, travelProgress);
@@ -2135,7 +2207,47 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               </svg>
             );
           }
-          return <>{greenLayer}{yellowLayer}{ballLayer}</>;
+          // Static ball layer - shows ball at final position when awaiting next shot
+          let staticBallLayer = null;
+          if (!ballAnimRef.current && finalBallPosition && awaitingNextShot) {
+            const { x: ballX, y: ballY, radius: ballRadius } = finalBallPosition;
+            staticBallLayer = (
+              <svg className="absolute inset-0 pointer-events-none z-40" viewBox={`0 0 ${w} ${h}`}>
+                <defs>
+                  <radialGradient id="staticBallGradient" cx="30%" cy="30%">
+                    <stop offset="0%" stopColor="#f8fafc" />
+                    <stop offset="40%" stopColor="#cbd5e1" />
+                    <stop offset="100%" stopColor="#64748b" />
+                  </radialGradient>
+                </defs>
+                {/* Ball shadow */}
+                <ellipse
+                  cx={ballX + 2}
+                  cy={ballY + ballRadius * 0.3}
+                  rx={ballRadius * 0.8}
+                  ry={ballRadius * 0.3}
+                  fill="rgba(0,0,0,0.3)"
+                />
+                {/* Main ball */}
+                <circle
+                  cx={ballX}
+                  cy={ballY}
+                  r={ballRadius}
+                  fill="url(#staticBallGradient)"
+                  stroke="#475569"
+                  strokeWidth={1}
+                />
+                {/* Highlight */}
+                <circle
+                  cx={ballX - ballRadius * 0.3}
+                  cy={ballY - ballRadius * 0.3}
+                  r={ballRadius * 0.25}
+                  fill="rgba(255,255,255,0.7)"
+                />
+              </svg>
+            );
+          }
+          return <>{greenLayer}{yellowLayer}{ballLayer}{staticBallLayer}</>;
         })() : null}
       </div>
     </div>
@@ -2166,6 +2278,8 @@ PracticePlayfield.propTypes = {
   onScale: PropTypes.func,
   darkMode: PropTypes.bool,
   animationEnabled: PropTypes.bool,
+  awaitingNextShot: PropTypes.bool,
+  onAdvanceToNextShot: PropTypes.func,
 };
 
 // ---------- main component ----------
@@ -2350,6 +2464,11 @@ const App = () => {
   const [showAttemptHistory, setShowAttemptHistory] = useLocalStorage('pinball_showAttemptHistory_v1', false);
   const [showFeedbackPanel, setShowFeedbackPanel] = useLocalStorage('pinball_showFeedback_v1', false); // new toggle for Feedback table
   // Restore stacks removed (Not Possible is neutral now)
+  // State for click-to-continue flow: after a guess is made, we wait for user to click playfield before showing next shot
+  const [awaitingNextShot, setAwaitingNextShot] = useState(false);
+  // Pending next shot values (stored until user clicks to continue)
+  const [pendingNextIdx, setPendingNextIdx] = useState(null);
+  const [pendingNextSide, setPendingNextSide] = useState(null);
   // UI local (non-persisted) state: collapsed shot type rows (store ids)
   const [collapsedTypes, setCollapsedTypes] = useState([]); // Only shot type collapsing retained; flipper collapsing removed.
   // Playfield editor is always visible now; toggle removed
@@ -2789,16 +2908,40 @@ const App = () => {
       });
     }
 
-    // Prepare next random shot and flipper if in random mode
+    // Store pending next shot values (will be applied when user clicks to continue)
     if (mode === 'random') {
-      setSelectedIdx(pickRandomIdx());
-      setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
+      setPendingNextIdx(pickRandomIdx());
+      setPendingNextSide(seededRandom() < 0.5 ? 'L' : 'R');
+    } else {
+      // In manual mode, keep the same shot/side
+      setPendingNextIdx(selectedIdx);
+      setPendingNextSide(selectedSide);
     }
+    // Set awaiting state - user must click to advance to next shot
+    setAwaitingNextShot(true);
 
     // Clear guess so input resets for next attempt
     setGuess('');
     setRecallError('');
   }
+
+  // Function to advance to the next shot when user clicks on playfield
+  const advanceToNextShot = useCallback(() => {
+    if (!awaitingNextShot) {
+      return;
+    }
+    // Apply pending next shot values
+    if (pendingNextIdx !== null) {
+      setSelectedIdx(pendingNextIdx);
+    }
+    if (pendingNextSide !== null) {
+      setSelectedSide(pendingNextSide);
+    }
+    // Clear pending and awaiting states
+    setPendingNextIdx(null);
+    setPendingNextSide(null);
+    setAwaitingNextShot(false);
+  }, [awaitingNextShot, pendingNextIdx, pendingNextSide, setSelectedIdx, setSelectedSide]);
 
   const endSession = useCallback(() => {
     setFinalPhase(true);
@@ -3434,7 +3577,7 @@ const App = () => {
                       }
                     }}
                     disabled={!canStart}
-                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : 'opacity-50 cursor-not-allowed'}`}
+                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : DISABLED_CLASS}`}
                     title={canStart ? 'Start the practice session' : 'Complete Shot Type, Left & Right values for every shot'}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -3450,7 +3593,7 @@ const App = () => {
                       }
                     }}
                     disabled={!canStart}
-                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : 'opacity-50 cursor-not-allowed'}`}
+                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : DISABLED_CLASS}`}
                     title={canStart ? 'Go directly to final recall' : 'Complete Shot Type, Left & Right values for every shot'}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -3533,6 +3676,23 @@ const App = () => {
                               />
                             </label>
                           )}
+                        </div>
+                        <div className={`pt-1.5 border-t ${GetBorderClass(darkMode)}`}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInitRandSteps(2);
+                              setDriftEvery(4);
+                              setDriftMag(2);
+                              setMode('random');
+                              setUseSeededRandom(false);
+                              _pushToast('Advanced settings reset to defaults');
+                            }}
+                            className={`w-full text-center py-1 rounded-md text-[10px] ${darkMode ? 'bg-slate-700/90 hover:bg-slate-600 text-slate-200 border border-slate-600' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'}`}
+                            title="Reset all advanced settings to their default values"
+                          >
+                            Reset to Defaults
+                          </button>
                         </div>
                       </div>
                     }
@@ -4725,7 +4885,7 @@ const App = () => {
                     <div className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>{avgAbsErr.toFixed(1)}</div>
                   </div>
                 </div>
-                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} darkMode={darkMode} />
+                <PracticePlayfield rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} darkMode={darkMode} awaitingNextShot={awaitingNextShot} onAdvanceToNextShot={advanceToNextShot} />
               </div>
               {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below - responsive sizing */}
               <div className="w-full overflow-x-auto">
@@ -4744,7 +4904,8 @@ const App = () => {
                             key={v}
                             type="button"
                             onClick={() => submitAttempt(v)}
-                            className={`aspect-square rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-[clamp(10px,2.2vw,24px)] ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                            disabled={awaitingNextShot}
+                            className={`aspect-square rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-[clamp(10px,2.2vw,24px)] ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                             aria-label={`Recall ${format2(v)}`}
                           ><span className="relative" style={{ top: '-1px' }}>{format2(v)}</span></button>
                         ))}
@@ -4753,7 +4914,8 @@ const App = () => {
                         <button
                           type="button"
                           onClick={() => submitAttempt(0)}
-                          className={`px-2 py-0.5 rounded-xl border shadow active:scale-[0.95] transition-transform font-semibold text-[clamp(10px,2.2vw,24px)] ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+                          disabled={awaitingNextShot}
+                          className={`px-2 py-0.5 rounded-xl border shadow active:scale-[0.95] transition-transform font-semibold text-[clamp(10px,2.2vw,24px)] ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
                         ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                       </div>
                     </div>
@@ -4907,7 +5069,7 @@ const App = () => {
                       </>
                     );
                   })()}
-                  <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} darkMode={darkMode} />
+                  <PracticePlayfield fullscreen rows={rows} selectedIdx={selectedIdx} selectedSide={selectedSide} lastRecall={attempts[0] || null} onScale={s => setFullscreenScale(s)} darkMode={darkMode} awaitingNextShot={awaitingNextShot} onAdvanceToNextShot={advanceToNextShot} />
                 </div>
                 <div className="w-full px-4">
                   {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
@@ -4973,7 +5135,8 @@ const App = () => {
                               key={v}
                               type="button"
                               onClick={() => submitAttempt(v)}
-                              className={`rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                              disabled={awaitingNextShot}
+                              className={`rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0 ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                               style={{ width: diameter, height: diameter, fontSize: chipFont, lineHeight: 1, fontWeight: 600 }}
                               aria-label={`Recall ${format2(v)}`}
                             ><span className="relative" style={{ top: '-2px' }}>{format2(v)}</span></button>
@@ -4983,7 +5146,8 @@ const App = () => {
                           <button
                             type="button"
                             onClick={() => submitAttempt(0)}
-                            className={`px-1 rounded-xl border shadow active:scale-[0.97] transition-transform text-sm font-medium ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                            disabled={awaitingNextShot}
+                            className={`px-1 rounded-xl border shadow active:scale-[0.97] transition-transform text-sm font-medium ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                             style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
                           ><span className="relative" style={{ top: '-1px' }}>Not Possible</span></button>
                         </div>
