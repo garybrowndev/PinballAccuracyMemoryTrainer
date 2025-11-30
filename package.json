@@ -5,6 +5,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "postinstall": "npx --yes playwright install --with-deps",
     "dev": "vite --config config/vite.config.js",
     "build": "vite build --config config/vite.config.js",
     "build:standalone": "node config/build-standalone-complete.js",

@@ -1,6 +1,6 @@
 ---
 description: Lint, commit, push changes, and create PR to master
-name: commit-and-push
+name: push
 argument-hint: Optional commit message
 agent: agent
 ---

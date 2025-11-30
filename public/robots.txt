@@ -1,0 +1,11 @@
+# Robots.txt for Pinball Accuracy Memory Trainer
+# https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/sitemap.xml
+
+# Crawl-delay (optional, be nice to crawlers)
+Crawl-delay: 1

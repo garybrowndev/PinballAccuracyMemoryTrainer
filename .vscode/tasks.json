@@ -5,7 +5,7 @@
       "label": "Install Dependencies",
       "detail": "Installs all npm packages required for the project",
       "type": "shell",
-      "command": "if (-not (Test-Path 'node_modules')) { npm install } else { Write-Host 'Dependencies already installed' }",
+      "command": "npm install",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -16,10 +16,9 @@
       "label": "Lint",
       "detail": "Checks code for errors and style issues using ESLint",
       "type": "shell",
-      "command": "npm",
-      "args": ["run", "lint"],
-      "problemMatcher": ["$eslint-stylish"],
+      "command": "npm run lint",
       "dependsOn": ["Install Dependencies"],
+      "problemMatcher": ["$eslint-stylish"],
       "presentation": {
         "reveal": "always",
         "panel": "shared",
@@ -30,11 +29,9 @@
       "label": "Run Unit Tests",
       "detail": "Runs Vitest unit tests",
       "type": "shell",
-      "command": "npm",
-      "args": ["run", "test:run"],
+      "command": "npm run test:run",
+      "dependsOn": ["Install Dependencies"],
       "problemMatcher": [],
-      "dependsOn": ["Lint"],
-      "dependsOrder": "sequence",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -49,11 +46,9 @@
       "label": "Run E2E Tests",
       "detail": "Runs Playwright E2E tests",
       "type": "shell",
-      "command": "npm",
-      "args": ["run", "test:e2e"],
+      "command": "npm run test:e2e",
+      "dependsOn": ["Install Dependencies"],
       "problemMatcher": [],
-      "dependsOn": ["Run Unit Tests"],
-      "dependsOrder": "sequence",
       "group": "test",
       "presentation": {
         "reveal": "always",
@@ -67,17 +62,18 @@
       "dependsOn": ["Run Unit Tests", "Run E2E Tests"],
       "dependsOrder": "sequence",
       "group": "test",
+      "problemMatcher": [],
       "presentation": {
         "reveal": "always",
         "panel": "shared"
       }
     },
     {
-      "type": "shell",
-      "command": "npm",
-      "args": ["run", "dev"],
       "label": "npm: dev",
-      "detail": "Starts the Vite development server with hot reload (tests disabled for debugging)",
+      "detail": "Starts the Vite development server with hot reload",
+      "type": "shell",
+      "command": "npm run dev",
+      "dependsOn": ["Install Dependencies"],
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -96,12 +92,11 @@
       }
     },
     {
-      "type": "npm",
-      "script": "build:standalone",
       "label": "npm: build:standalone",
-      "detail": "Builds a single self-contained HTML file with all assets embedded for offline use (includes lint and test checks)",
+      "detail": "Builds a single self-contained HTML file with all assets embedded for offline use",
+      "type": "shell",
+      "command": "npm run build:standalone",
       "dependsOn": ["Install Dependencies"],
-      "dependsOrder": "sequence",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -113,6 +108,7 @@
       "detail": "Terminates all running Node.js processes for Vite dev server",
       "type": "shell",
       "command": "Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'node.exe' -and ($_.CommandLine -like '*vite*' -or $_.CommandLine -like '*npm*dev*') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
+      "problemMatcher": [],
       "presentation": {
         "reveal": "never",
         "panel": "shared"
@@ -122,7 +118,7 @@
       "label": "Ensure dev server is running",
       "detail": "Checks if Vite dev server is running, starts it if not",
       "type": "shell",
-      "command": "$response = try { Invoke-WebRequest -Uri 'http://localhost:5173' -Method Head -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop; $true } catch { $false }; if (-not $response) { Write-Host 'Dev server not running, please start it manually or wait...'; Start-Sleep -Seconds 2; exit 1 } else { Write-Host 'Dev server is already running' }",
+      "command": "$response = try { Invoke-WebRequest -Uri 'http://127.0.0.1:5173' -Method Head -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop; $true } catch { $false }; if (-not $response) { Write-Host 'Dev server not running, please start it manually or wait...'; Start-Sleep -Seconds 2; exit 1 } else { Write-Host 'Dev server is already running' }",
       "problemMatcher": [],
       "presentation": {
         "reveal": "never",
@@ -134,10 +130,9 @@
       "label": "Start dev server for debugging",
       "detail": "Ensures dependencies are installed and starts the Vite dev server",
       "type": "shell",
-      "command": "npm",
-      "args": ["run", "dev"],
-      "isBackground": true,
+      "command": "npm run dev",
       "dependsOn": ["Install Dependencies"],
+      "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
         "pattern": {
