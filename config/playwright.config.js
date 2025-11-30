@@ -13,8 +13,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
-    screenshot: 'on', // Always take screenshots (changed from only-on-failure)
-    video: 'on', // Always record video (changed from retain-on-failure)
+    screenshot: 'only-on-failure', // Only take screenshots on failure for speed
+    video: 'retain-on-failure', // Only record video on failure for speed
   },
 
   projects: [

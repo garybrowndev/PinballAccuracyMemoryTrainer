@@ -35,8 +35,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './tests/vitest/setupTests.js',
-    css: true,
+    css: false, // Disable CSS processing for faster tests
     include: ['tests/vitest/**/*.test.{js,jsx,ts,tsx}'],
+    pool: 'threads', // Use worker threads for parallelism
+    testTimeout: 10000, // 10s default timeout
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

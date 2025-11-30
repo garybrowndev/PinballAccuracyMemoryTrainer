@@ -1755,17 +1755,19 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
       {!fullscreen && <h3 className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>Playfield</h3>}
       <div
         ref={canvasRef}
-        role="button"
-        tabIndex={0}
-        onClick={handlePlayfieldClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            handlePlayfieldClick();
-          } else if (e.key === ' ') {
-            e.preventDefault();
-            handlePlayfieldClick();
-          }
-        }}
+        {...(awaitingNextShot ? {
+          role: 'button',
+          tabIndex: 0,
+          onClick: handlePlayfieldClick,
+          onKeyDown: (e) => {
+            if (e.key === 'Enter') {
+              handlePlayfieldClick();
+            } else if (e.key === ' ') {
+              e.preventDefault();
+              handlePlayfieldClick();
+            }
+          },
+        } : {})}
         className={`relative border rounded-xl bg-gradient-to-b overflow-hidden ${awaitingNextShot ? 'cursor-pointer' : ''} ${darkMode ? 'from-slate-800 to-slate-900 border-slate-700' : 'from-slate-50 to-slate-100 border-slate-300'} ${fullscreen ? 'flex-1 min-h-0' : 'h-96'}`}
       >
         <PlayfieldScenery darkMode={darkMode} />
@@ -2944,7 +2946,7 @@ const App = () => {
     setPendingNextIdx(null);
     setPendingNextSide(null);
     setAwaitingNextShot(false);
-  }, [awaitingNextShot, pendingNextIdx, pendingNextSide, setSelectedIdx, setSelectedSide]);
+  }, [awaitingNextShot, pendingNextIdx, pendingNextSide]); // eslint-disable-line react-hooks/exhaustive-deps -- setState functions are stable
 
   const endSession = useCallback(() => {
     setFinalPhase(true);
