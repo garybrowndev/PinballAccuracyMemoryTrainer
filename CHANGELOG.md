@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Mobile fullscreen support** - Browser Fullscreen API integration to hide URL bar and navigation when entering fullscreen practice mode
+- **PWA manifest** - Web app manifest enabling "Add to Home Screen" installation for true fullscreen experience without browser chrome
+- **Mobile meta tags** - Added `apple-mobile-web-app-capable`, `mobile-web-app-capable`, and theme color meta tags for improved mobile experience
+- **Safe area support** - CSS safe-area-inset padding for devices with notches and rounded corners (iPhone X+, modern Android)
 - Initial GitHub community files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, SUPPORT.md)
 - Dependabot configuration for automated npm and GitHub Actions updates
 - PR validation workflow with lint, unit tests, and E2E tests

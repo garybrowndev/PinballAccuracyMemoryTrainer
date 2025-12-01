@@ -124,8 +124,9 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 - **Final recall test** - Complete memory test of all shots at session end
 
 ### UI/UX
-- **Fullscreen playfield mode** - Practice with an uncluttered, immersive view
-- **Responsive design** - Works on desktop and tablet devices
+- **Fullscreen playfield mode** - Practice with an uncluttered, immersive view; uses browser Fullscreen API to hide URL bar and navigation on mobile
+- **Progressive Web App (PWA)** - Install to home screen for true fullscreen experience without browser chrome
+- **Responsive design** - Works on desktop, tablet, and mobile devices with safe-area support for notched screens
 - **Visual shot lines** - See percentage markers on flippers during practice
 - **Drag-and-drop reordering** - Reorganize shot sequences in setup (with visual insertion indicators)
 - **Mental model tracking** - Optional display of your evolving accuracy guesses
