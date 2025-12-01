@@ -71,7 +71,7 @@ describe('App - Click-to-Continue Coverage Tests', () => {
       expect(svgs.length).toBeGreaterThan(0);
     }, { timeout: 2000 });
 
-    // Check for circle elements (ball) 
+    // Check for circle elements (ball)
     const circles = document.querySelectorAll('circle');
     expect(circles.length).toBeGreaterThan(0);
   }, 25000);
@@ -243,7 +243,7 @@ describe('App - Click-to-Continue Coverage Tests', () => {
 
     // Find playfield and try to click it before making any guess
     const playfield = document.querySelector(PLAYFIELD_SELECTOR);
-    
+
     // Click playfield - should not cause any issues since we're not awaiting
     if (playfield) {
       await user.click(playfield);
@@ -356,7 +356,7 @@ describe('App - Reset to Defaults Button Coverage', () => {
 
     if (advancedButton) {
       await user.click(advancedButton);
-      
+
       // Wait for advanced options to appear
       await waitFor(() => {
         expect(screen.getByText(/reset to defaults/i)).toBeInTheDocument();

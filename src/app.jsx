@@ -2252,7 +2252,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
               </svg>
             );
           }
-          return <>{greenLayer}{yellowLayer}{ballLayer}{staticBallLayer}</>;
+          return <>{guideLayer}{yellowLayer}{ballLayer}{staticBallLayer}</>;
         })() : null}
       </div>
     </div>
