@@ -173,15 +173,27 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     // Verify feedback is shown
     await expect(page.getByText(/last shot/i)).toBeVisible();
 
+    // Click playfield to advance to next shot (click-to-continue flow)
+    await page.locator('.relative.border.rounded-xl').first().click();
+    await page.waitForTimeout(500);
+
     // Test Case 2: Guess value 55
     await page.getByRole('button', { name: 'Recall 55' }).click();
     await page.waitForTimeout(1000);
     await page.screenshot({ path: 'test-results/workflow-10-guess-2-result.png', fullPage: true });
 
+    // Click playfield to advance to next shot
+    await page.locator('.relative.border.rounded-xl').first().click();
+    await page.waitForTimeout(500);
+
     // Test Case 3: Guess value 70
     await page.getByRole('button', { name: 'Recall 70' }).click();
     await page.waitForTimeout(1000);
     await page.screenshot({ path: 'test-results/workflow-11-guess-3-result.png', fullPage: true });
+
+    // Click playfield to advance to next shot
+    await page.locator('.relative.border.rounded-xl').first().click();
+    await page.waitForTimeout(500);
 
     // Test Case 4: Guess value 20
     await page.getByRole('button', { name: 'Recall 20' }).click();
