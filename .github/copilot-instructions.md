@@ -59,8 +59,11 @@ Ephemeral UI Anchors / Menus:
 
 ## 7. Fullscreen & Overlay Behavior
 - Controlled by `playfieldFullscreen` (custom overlay). Esc closes (listener in `useEffect`).
+- **Browser Fullscreen API**: When `playfieldFullscreen` is true, the app also requests browser fullscreen via `requestBrowserFullscreen()` helper, hiding URL bar and navigation on mobile. On exit, `exitBrowserFullscreen()` is called.
+- **Fullscreen change listener**: App listens for `fullscreenchange` events to sync React state when user exits fullscreen via browser controls (swipe down, hardware button).
 - Scaling cap ~2.6 to prevent oversized boxes; scale computed relative to baseline width/height numbers.
 - Avoid adding document-level listeners outside dedicated effects with cleanup.
+- **PWA mode**: The app includes a web manifest (`public/manifest.json`) with `"display": "fullscreen"` for true fullscreen when installed to home screen.
 
 ## 8. Performance Guidelines
 - Refrain from splitting into many small components unless a contained performance problem is measured (profiling first). Extra abstraction may hurt due to prop churn.

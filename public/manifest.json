@@ -1,0 +1,20 @@
+{
+  "name": "Pinball Accuracy Memory Trainer",
+  "short_name": "Pinball Trainer",
+  "description": "A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "education"],
+  "lang": "en"
+}

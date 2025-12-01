@@ -126,6 +126,50 @@ const SEVERITY_COLORS = {
   very: '#dc2626', // bright red (red-600)
 };
 
+// --- Browser Fullscreen API helpers ---
+// Request true browser fullscreen (hides URL bar, navigation on mobile)
+async function requestBrowserFullscreen(element = document.documentElement) {
+  try {
+    if (element.requestFullscreen) {
+      await element.requestFullscreen();
+    } else if (element.webkitRequestFullscreen) {
+      // Safari/iOS
+      await element.webkitRequestFullscreen();
+    } else if (element.mozRequestFullScreen) {
+      // Firefox
+      await element.mozRequestFullScreen();
+    } else if (element.msRequestFullscreen) {
+      // IE/Edge
+      await element.msRequestFullscreen();
+    }
+  } catch {
+    // Fullscreen request failed (user gesture required, or not supported)
+    // Silently fail - the CSS fullscreen overlay will still work
+  }
+}
+
+// Exit browser fullscreen mode
+async function exitBrowserFullscreen() {
+  try {
+    if (document.exitFullscreen) {
+      await document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      await document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      await document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+      await document.msExitFullscreen();
+    }
+  } catch {
+    // Exit fullscreen failed - silently ignore
+  }
+}
+
+// Check if browser is currently in fullscreen mode
+function isBrowserFullscreen() {
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+}
+
 // --- Image infrastructure for shot base element tiles ---
 // In future you will host WebP images at a backend/static path. For now we attempt to load them optimistically.
 // Convention: filename derived from element slug (lowercase, spaces -> dashes): e.g. "Left Ramp" -> "left-ramp.webp".
@@ -3128,6 +3172,40 @@ const App = () => {
     // eslint-disable-next-line no-empty-function
     return () => {};
   }, [playfieldFullscreen]);
+
+  // Request/exit browser fullscreen API when playfieldFullscreen changes
+  // This hides the URL bar and navigation on mobile devices
+  useEffect(() => {
+    if (playfieldFullscreen) {
+      // Request browser fullscreen when entering fullscreen mode
+      requestBrowserFullscreen();
+    } else if (isBrowserFullscreen()) {
+      // Exit browser fullscreen when exiting our fullscreen mode
+      exitBrowserFullscreen();
+    }
+  }, [playfieldFullscreen]);
+
+  // Listen for browser fullscreen exit (e.g., user swipes down on mobile or presses Esc via browser)
+  // and sync our state accordingly
+  useEffect(() => {
+    function handleFullscreenChange() {
+      // If browser exited fullscreen but our state still thinks we're fullscreen, sync it
+      if (!isBrowserFullscreen() && playfieldFullscreen) {
+        setPlayfieldFullscreen(false);
+      }
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, [playfieldFullscreen]);
+
   // Prevent body/document scrolling when fullscreen overlay is active (removes stray window scrollbar)
   useEffect(() => {
     if (!playfieldFullscreen) {
@@ -4986,7 +5064,7 @@ const App = () => {
             </div>
           </Section>
           {playfieldFullscreen ? createPortal(
-            <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden" style={{ scrollbarGutter: 'auto' }}>
+            <div className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden fullscreen-safe-area" style={{ scrollbarGutter: 'auto' }}>
               {(() => {
                 // Scale based on both fullscreenScale (height-driven) and windowWidth
                 const heightScale = fullscreenScale || 1;
