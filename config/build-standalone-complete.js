@@ -8,44 +8,8 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.join(__dirname, '..');
 
 async function buildStandaloneWithAssets() {
-  // eslint-disable-next-line no-console
-  console.log('Running lint check...');
-  try {
-    execSync('npm run lint', { stdio: 'inherit', cwd: rootDir });
-    // eslint-disable-next-line no-console
-    console.log('Lint check passed!\n');
-  } catch {
-    // eslint-disable-next-line no-console
-    console.error('Lint check failed. Please fix linting errors before building.');
-    // eslint-disable-next-line no-undef
-    process.exit(1);
-  }
-
-  // eslint-disable-next-line no-console
-  console.log('Running unit tests...');
-  try {
-    execSync('npm run test:run', { stdio: 'inherit', cwd: rootDir });
-    // eslint-disable-next-line no-console
-    console.log('Unit tests passed!\n');
-  } catch {
-    // eslint-disable-next-line no-console
-    console.error('Unit tests failed. Please fix test failures before building.');
-    // eslint-disable-next-line no-undef
-    process.exit(1);
-  }
-
-  // eslint-disable-next-line no-console
-  console.log('Running E2E tests...');
-  try {
-    execSync('npm run test:e2e', { stdio: 'inherit', cwd: rootDir });
-    // eslint-disable-next-line no-console
-    console.log('E2E tests passed!\n');
-  } catch {
-    // eslint-disable-next-line no-console
-    console.error('E2E tests failed. Please fix test failures before building.');
-    // eslint-disable-next-line no-undef
-    process.exit(1);
-  }
+  // Note: Lint and tests are run by the CI workflow before this script is called.
+  // Running them again here would be redundant and could cause issues with generated files.
 
   // eslint-disable-next-line no-console
   console.log('Building Vite bundle...');

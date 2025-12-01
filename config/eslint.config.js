@@ -14,7 +14,18 @@ import globals from 'globals';
 
 const config = [
   {
-    ignores: ['dist', 'dist-standalone', 'dist-standalone-temp', 'config/eslint.config.js', '.vscode/brave-debug-ephemeral', 'test-results', 'playwright-report', 'coverage'],
+    ignores: [
+      'dist',
+      'dist-standalone',
+      'dist-standalone-temp',
+      'config/eslint.config.js',
+      '.vscode/brave-debug-ephemeral',
+      'test-results',
+      'playwright-report',
+      '**/playwright-report',
+      'coverage',
+      '.vitest',
+    ],
   },
   js.configs.recommended,
   reactHooks.configs.flat['recommended-latest'],
