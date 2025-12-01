@@ -2122,7 +2122,7 @@ const PracticePlayfield = ({ rows, selectedIdx, selectedSide, lastRecall, fullsc
             : `${p0Top.x},${p0Top.y} ${p100Top.x},${p100Top.y} ${boxLeft},${boxBottom} ${boxRight},${boxBottom}`;
           const line1End = activeGuideSide === 'L' ? boxLeft : boxRight;
           const line2End = activeGuideSide === 'L' ? boxRight : boxLeft;
-          const greenLayer = (
+          const guideLayer = (
             <svg className="absolute inset-0 pointer-events-none z-0" viewBox={`0 0 ${w} ${h}`}>
               {/* Shaded wedge between anchors and shot box - now a quadrilateral connecting to bottom corners */}
               <polygon
