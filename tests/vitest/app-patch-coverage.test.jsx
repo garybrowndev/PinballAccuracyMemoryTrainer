@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import App from '../../src/app.jsx';
 
 const PLAYFIELD_SELECTOR = '.relative.border.rounded-xl';
+const INTERACTIVE_PLAYFIELD_SELECTOR = '[role="button"][tabindex="0"]';
 
 async function setupAndGoToPractice(user) {
   render(<App />);
@@ -196,7 +197,7 @@ describe('App - Playfield Interaction Coverage', () => {
     }, { timeout: 3000 });
 
     // Find playfield and click it multiple times to exercise the callback
-    const playfield = document.querySelector('[role="button"][tabindex="0"]');
+    const playfield = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
     if (playfield) {
       await user.click(playfield);
 
@@ -219,7 +220,7 @@ describe('App - Playfield Interaction Coverage', () => {
     }, { timeout: 3000 });
 
     // Test Enter key
-    const playfield = document.querySelector('[role="button"][tabindex="0"]');
+    const playfield = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
     if (playfield) {
       playfield.focus();
       fireEvent.keyDown(playfield, { key: 'Enter' });
@@ -243,7 +244,7 @@ describe('App - Playfield Interaction Coverage', () => {
     }, { timeout: 3000 });
 
     // Test Space key
-    const playfield = document.querySelector('[role="button"][tabindex="0"]');
+    const playfield = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
     if (playfield) {
       playfield.focus();
       fireEvent.keyDown(playfield, { key: ' ' });
@@ -325,9 +326,9 @@ describe('App - advanceToNextShot Callback Coverage', () => {
 
     // The advanceToNextShot callback should return early when awaitingNextShot is false
     // We can test this by attempting to interact with playfield before any guess
-    
+
     // Before making a guess, playfield shouldn't have role=button
-    const interactivePlayfield = document.querySelector('[role="button"][tabindex="0"]');
+    const interactivePlayfield = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
     expect(interactivePlayfield).toBeNull();
 
     // Make a guess to trigger awaiting state
@@ -336,7 +337,7 @@ describe('App - advanceToNextShot Callback Coverage', () => {
 
     // Now playfield should be interactive
     await waitFor(() => {
-      const interactive = document.querySelector('[role="button"][tabindex="0"]');
+      const interactive = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
       expect(interactive).not.toBeNull();
     }, { timeout: 3000 });
   }, 15000);
@@ -359,7 +360,7 @@ describe('App - advanceToNextShot Callback Coverage', () => {
     }, { timeout: 3000 });
 
     // Click playfield to apply pending values
-    const playfield = document.querySelector('[role="button"][tabindex="0"]');
+    const playfield = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
     if (playfield) {
       await user.click(playfield);
 
@@ -430,7 +431,7 @@ describe('App - Clear Final Ball Position Coverage', () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Click playfield to clear awaiting state (which should clear final ball position)
-    const playfield = document.querySelector('[role="button"][tabindex="0"]');
+    const playfield = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
     if (playfield) {
       await user.click(playfield);
 
@@ -468,7 +469,7 @@ describe('App - Animation Skip Final Position Coverage', () => {
     expect(circles.length).toBeGreaterThan(0);
 
     // Click playfield to continue
-    const playfield = document.querySelector('[role="button"][tabindex="0"]');
+    const playfield = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
     if (playfield) {
       await user.click(playfield);
     }
@@ -492,7 +493,7 @@ describe('App - Animation Skip Final Position Coverage', () => {
     }, { timeout: 2000 });
 
     // Continue
-    const playfield = document.querySelector('[role="button"][tabindex="0"]');
+    const playfield = document.querySelector(INTERACTIVE_PLAYFIELD_SELECTOR);
     if (playfield) {
       await user.click(playfield);
     }
