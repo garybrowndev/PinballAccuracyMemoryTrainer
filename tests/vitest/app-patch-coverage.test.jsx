@@ -325,7 +325,6 @@ describe('App - advanceToNextShot Callback Coverage', () => {
 
     // The advanceToNextShot callback should return early when awaitingNextShot is false
     // We can test this by attempting to interact with playfield before any guess
-    const playfield = document.querySelector(PLAYFIELD_SELECTOR);
     
     // Before making a guess, playfield shouldn't have role=button
     const interactivePlayfield = document.querySelector('[role="button"][tabindex="0"]');
