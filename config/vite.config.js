@@ -78,7 +78,7 @@ export default defineConfig({
 
     __BUILD_WORKFLOW_URL__: JSON.stringify(process.env.BUILD_WORKFLOW_URL || ''),
 
-    __RELEASE_URL__: JSON.stringify(process.env.RELEASE_URL || `https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/releases/tag/v${packageJson.version}`),
+    __RELEASE_URL__: JSON.stringify(process.env.RELEASE_URL || ''),
   },
   build: {
     sourcemap: true,
