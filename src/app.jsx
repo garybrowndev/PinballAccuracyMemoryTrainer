@@ -3328,7 +3328,18 @@ const App = () => {
                 </div>
                 <div className="pt-4 border-t text-sm text-slate-500">
                   <p>
-                    Version {typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__}
+                    Version {(() => {
+                      const version = typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__;
+                      const releaseUrl = typeof __RELEASE_URL__ === 'undefined' ? '' : __RELEASE_URL__;
+                      if (releaseUrl) {
+                        return (
+                          <a href={releaseUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" title="View release notes">
+                            {version}
+                          </a>
+                        );
+                      }
+                      return version;
+                    })()}
                     {(() => {
                       if (typeof __BUILD_COMMIT__ === 'undefined' || !__BUILD_COMMIT__) {
                         return null;
