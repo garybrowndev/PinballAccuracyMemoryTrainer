@@ -71,8 +71,7 @@ jobs:
 
       - name: Run Lighthouse CI
         run: |
-          npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.js
+          npx @lhci/cli autorun --config=config/lighthouserc.js
         continue-on-error: true
 
       - name: Upload Playwright report

@@ -59,16 +59,12 @@ npm run test:run
 
 # Run with coverage
 npm run test:coverage
+
 ## Test Statistics
 
 - **Total Tests**: 217
 - **Test Files**: 13
 - **Coverage**: ~65% (Statements: 64.35%, Branches: 60.27%, Functions: 75.77%, Lines: 65.67%)
-## Test Statistics
-
-- **Total Tests**: 82
-- **Test Files**: 8
-- **Coverage Target**: >90%
 
 ## Writing Tests
 
