@@ -66,6 +66,7 @@ const config = [
         __BUILD_COMMIT__: 'readonly',
         __BUILD_COMMIT_URL__: 'readonly',
         __BUILD_WORKFLOW_URL__: 'readonly',
+        __RELEASE_URL__: 'readonly',
       },
       parserOptions: {
         ecmaVersion: 'latest',
