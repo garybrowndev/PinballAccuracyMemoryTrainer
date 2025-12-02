@@ -4,11 +4,23 @@
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all",
+    "last 2 versions",
+    "Firefox ESR"
+  ],
   "scripts": {
     "postinstall": "npx --yes playwright install --with-deps",
     "dev": "vite --config config/vite.config.js",
     "build": "vite build --config config/vite.config.js",
     "build:standalone": "node config/build-standalone-complete.js",
+    "analyze": "vite build --config config/vite.config.js && start dist/stats.html",
     "lint": "eslint . --config config/eslint.config.js --max-warnings 0",
     "test": "vitest --config config/vite.config.js",
     "test:ui": "vitest --ui --config config/vite.config.js",
@@ -26,14 +38,15 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/vite": "^4.1.17",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
-    "@vitejs/plugin-react": "^5.1.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.0.14",
     "@vitest/ui": "^4.0.14",
     "eslint": "^9.35.0",
@@ -50,8 +63,10 @@
     "globals": "^16.5.0",
     "jsdom": "^27.2.0",
     "playwright": "^1.56.1",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^4.1.13",
     "vite": "^7.2.6",
+    "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.14"
   }
 }

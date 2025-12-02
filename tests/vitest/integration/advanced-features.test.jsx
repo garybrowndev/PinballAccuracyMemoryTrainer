@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import App from '../../src/app.jsx';
+import App from '../../../src/app.jsx';
 
 // Helper to setup app with example data
 async function setupAppWithShots(user) {

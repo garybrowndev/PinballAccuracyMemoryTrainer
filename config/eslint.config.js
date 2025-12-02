@@ -25,7 +25,18 @@ const config = [
       '**/playwright-report',
       'coverage',
       '.vitest',
+      'dev-dist',
     ],
+  },
+  // CommonJS config files (lighthouserc.js)
+  {
+    files: ['**/lighthouserc.js'],
+    languageOptions: {
+      globals: {
+        module: 'readonly',
+        require: 'readonly',
+      },
+    },
   },
   js.configs.recommended,
   reactHooks.configs.flat['recommended-latest'],

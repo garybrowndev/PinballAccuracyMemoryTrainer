@@ -1,6 +1,13 @@
 node_modules
 dist
 dist-standalone
+dev-dist
+
+# Bundle analysis
+dist/stats.html
+
+# Lighthouse CI
+.lighthouseci/
 
 # Test results and reports
 test-results/

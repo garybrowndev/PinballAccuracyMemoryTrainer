@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import App from '../../src/app.jsx';
+import App from '../../../src/app.jsx';
 
 describe('App - Recall Mode Tests', () => {
   beforeEach(() => {

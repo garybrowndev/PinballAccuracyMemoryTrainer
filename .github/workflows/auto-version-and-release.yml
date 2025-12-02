@@ -51,12 +51,29 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
         if: steps.check_tag.outputs.exists == 'false'
         run: npm ci
+
+      - name: Security audit
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm audit --audit-level=moderate
+        continue-on-error: false
+
+      - name: Generate security audit report
+        if: failure() && steps.check_tag.outputs.exists == 'false'
+        run: npm audit --json > audit-report.json
+
+      - name: Upload security audit report
+        if: failure() && steps.check_tag.outputs.exists == 'false'
+        uses: actions/upload-artifact@v5
+        with:
+          name: security-audit-report
+          path: audit-report.json
+          retention-days: 7
 
       - name: Run linter
         if: steps.check_tag.outputs.exists == 'false'
