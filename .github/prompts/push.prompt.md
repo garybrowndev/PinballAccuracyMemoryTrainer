@@ -8,8 +8,11 @@ agent: agent
 You are helping the user commit and push their changes to git, then create a pull request. Follow this workflow exactly:
 
 ## Step 1: Review Current Changes
+- If you are on master and there are committed changes not yet pushed, create a branch and proceed to step 3
 - Use available tools to check what files have been modified
-- If there are no changes to commit, inform the user and stop
+- If there are no changes to commit, check to see if there are unpushed commits
+  - If there are unpushed commits, proceed to step 3
+  - If there are no changes or unpushed commits, exit gracefully with a message
 - Provide a brief summary of the changes found
 
 ## Step 2: Generate Commit Message

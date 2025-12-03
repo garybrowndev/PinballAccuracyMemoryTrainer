@@ -31,13 +31,13 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@v4.31.6
         with:
           languages: javascript-typescript
           # Use extended security queries for more comprehensive analysis
           queries: security-extended
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@v4.31.6
         with:
           category: "/language:javascript-typescript"
