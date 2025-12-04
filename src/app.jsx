@@ -82,6 +82,23 @@ function snap5(v) {
   return Math.min(100, Math.max(0, Math.round(v / 5) * 5));
 }
 
+// Calculate smart dropdown position - opens upward if not enough space below
+// Returns {x, y, openUp} where y is the anchor point (trigger bottom when opening down, trigger top when opening up)
+function calcDropdownAnchor(triggerRect, dropdownHeight = 300) {
+  const spaceBelow = window.innerHeight - triggerRect.bottom;
+  const spaceAbove = triggerRect.top;
+  // Open upward if there's not enough space below AND more space above
+  const openUp = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+  const x = triggerRect.left + window.scrollX;
+  // y is always where the dropdown anchors from:
+  // - Opening down: anchor at bottom of trigger (dropdown grows downward)
+  // - Opening up: anchor at top of trigger (dropdown will use transform to grow upward)
+  const y = openUp
+    ? triggerRect.top + window.scrollY - 4
+    : triggerRect.bottom + window.scrollY + 4;
+  return { x, y, openUp };
+}
+
 // Seeded random number generator (Mulberry32)
 const FIXED_SEED = 42; // Fixed seed value for reproducible randomness
 let rngState = null;
@@ -2424,21 +2441,24 @@ const App = () => {
           const el = document.querySelector(`[data-shot-chip="${openShotMenuId}"]`);
           if (el) {
             const r = el.getBoundingClientRect();
-            setShotMenuAnchor(a => a && a.id === openShotMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
+            const anchor = calcDropdownAnchor(r, 400); // Shot menu is ~400px tall
+            setShotMenuAnchor(a => a && a.id === openShotMenuId ? { ...a, x: anchor.x, y: anchor.y, openUp: anchor.openUp } : a);
           }
         }
         if (openLocMenuId !== null) {
           const el = document.querySelector(`[data-loc-chip="${openLocMenuId}"]`);
           if (el) {
             const r = el.getBoundingClientRect();
-            setLocMenuAnchor(a => a && a.id === openLocMenuId ? { ...a, x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 } : a);
+            const anchor = calcDropdownAnchor(r, 200); // Location menu is ~200px tall
+            setLocMenuAnchor(a => a && a.id === openLocMenuId ? { ...a, x: anchor.x, y: anchor.y, openUp: anchor.openUp } : a);
           }
         }
         if (addCountAnchor) {
           const el = document.querySelector('[data-add-multi]');
           if (el) {
             const r = el.getBoundingClientRect();
-            setAddCountAnchor({ x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 });
+            const anchor = calcDropdownAnchor(r, 350); // Add count menu is ~350px tall with presets
+            setAddCountAnchor({ x: anchor.x, y: anchor.y, openUp: anchor.openUp });
           }
         }
       });
@@ -3390,7 +3410,11 @@ const App = () => {
         // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
         <div
           className={`absolute z-50 w-[360px] rounded-xl border shadow-xl p-3 grid grid-cols-4 gap-3 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
-          style={{ left: `${Math.max(8, shotMenuAnchor.x)}px`, top: `${shotMenuAnchor.y}px` }}
+          style={{
+            left: `${Math.max(8, shotMenuAnchor.x)}px`,
+            top: `${Math.max(0, shotMenuAnchor.y)}px`,
+            ...(shotMenuAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
+          }}
           role="dialog"
           aria-label="Select shot type"
           onClick={(e) => e.stopPropagation()}
@@ -3435,7 +3459,11 @@ const App = () => {
         // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
         <div
           className={`absolute z-50 w-48 rounded-xl border shadow-xl p-2 grid grid-cols-2 gap-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
-          style={{ left: `${Math.max(8, locMenuAnchor.x)}px`, top: `${locMenuAnchor.y}px` }}
+          style={{
+            left: `${Math.max(8, locMenuAnchor.x)}px`,
+            top: `${Math.max(0, locMenuAnchor.y)}px`,
+            ...(locMenuAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
+          }}
           role="dialog"
           aria-label="Select location"
           onClick={(e) => e.stopPropagation()}
@@ -3487,7 +3515,11 @@ const App = () => {
         // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
         <div
           className={`absolute z-50 w-44 rounded-xl border shadow-xl p-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
-          style={{ left: `${Math.max(8, addCountAnchor.x)}px`, top: `${addCountAnchor.y}px` }}
+          style={{
+            left: `${Math.max(8, addCountAnchor.x)}px`,
+            top: `${Math.max(0, addCountAnchor.y)}px`,
+            ...(addCountAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
+          }}
           role="dialog"
           aria-label="How many shots to add"
           onClick={(e) => e.stopPropagation()}
@@ -3972,7 +4004,8 @@ const App = () => {
                                 setAddCountAnchor(null); return;
                               }
                               const r = e.currentTarget.getBoundingClientRect();
-                              setAddCountAnchor({ x: r.left + window.scrollX, y: r.bottom + window.scrollY + 4 });
+                              const anchor = calcDropdownAnchor(r, 350);
+                              setAddCountAnchor({ x: anchor.x, y: anchor.y, openUp: anchor.openUp });
                             }}
                             className={`px-4 py-2 rounded-xl text-white text-sm ${darkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-900 hover:bg-slate-800'}`}
                           >+ Add Shot(s)</button>
@@ -4045,7 +4078,8 @@ const App = () => {
                                         setSelectedIdx(i); setSelectedBlockId(r.id);
                                         // Only open the shot menu, do not clear selection
                                         const rect = e.currentTarget.getBoundingClientRect();
-                                        setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY - ((rect.bottom - rect.top) * 0.7) });
+                                        const anchor = calcDropdownAnchor(rect, 400);
+                                        setShotMenuAnchor({ id: r.id, x: anchor.x, y: anchor.y, openUp: anchor.openUp });
                                         setOpenShotMenuId(r.id);
                                         setOpenLocMenuId(null);
                                       }}
@@ -4061,7 +4095,8 @@ const App = () => {
                                           closeMenus();
                                         } else {
                                           const rect = e.currentTarget.getBoundingClientRect();
-                                          setShotMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
+                                          const anchor = calcDropdownAnchor(rect, 400);
+                                          setShotMenuAnchor({ id: r.id, x: anchor.x, y: anchor.y, openUp: anchor.openUp });
                                           setOpenShotMenuId(r.id);
                                           setOpenLocMenuId(null);
                                         }
@@ -4084,7 +4119,8 @@ const App = () => {
                                         closeMenus();
                                       } else {
                                         const rect = e.currentTarget.getBoundingClientRect();
-                                        setLocMenuAnchor({ id: r.id, x: rect.left + window.scrollX, y: rect.bottom + window.scrollY + 4 });
+                                        const anchor = calcDropdownAnchor(rect, 200);
+                                        setLocMenuAnchor({ id: r.id, x: anchor.x, y: anchor.y, openUp: anchor.openUp });
                                         setOpenLocMenuId(r.id);
                                         setOpenShotMenuId(null);
                                       }
