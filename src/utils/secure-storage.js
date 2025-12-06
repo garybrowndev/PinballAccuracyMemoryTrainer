@@ -23,14 +23,28 @@ const ALLOWED_KEYS = [
 function sanitizeString(str) {
   if (typeof str !== 'string') return str;
 
-  // Remove potentially dangerous characters and patterns
-  /* eslint-disable security/detect-unsafe-regex */
-  return str
-    .replaceAll(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replaceAll(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replaceAll(/javascript:/gi, '')
-    .replaceAll(/on\w+\s*=/gi, ''); // Remove inline event handlers
-  /* eslint-enable security/detect-unsafe-regex */
+  // Iteratively remove dangerous patterns to handle overlapping/nested cases
+  let sanitized = str;
+  let previousLength;
+
+  // Keep sanitizing until no more changes occur (handles nested/overlapping patterns)
+  do {
+    previousLength = sanitized.length;
+
+    // Remove script tags (with any spacing/attributes)
+    sanitized = sanitized.replaceAll(/<script\s*[^>]*>.*?<\/script\s*>/gis, '');
+
+    // Remove iframe tags (with any spacing/attributes)
+    sanitized = sanitized.replaceAll(/<iframe\s*[^>]*>.*?<\/iframe\s*>/gis, '');
+
+    // Remove dangerous URL schemes (case-insensitive, handles spaces)
+    sanitized = sanitized.replaceAll(/\b(javascript|data|vbscript)\s*:/gi, '');
+
+    // Remove inline event handlers
+    sanitized = sanitized.replaceAll(/\bon\w+\s*=/gi, '');
+  } while (sanitized.length !== previousLength);
+
+  return sanitized;
 }
 
 /**
