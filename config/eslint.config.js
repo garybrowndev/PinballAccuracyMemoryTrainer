@@ -30,9 +30,9 @@ const config = [
       'dev-dist',
     ],
   },
-  // CommonJS config files (lighthouserc.js)
+  // CommonJS config files (lighthouserc.cjs)
   {
-    files: ['**/lighthouserc.js'],
+    files: ['**/lighthouserc.cjs'],
     languageOptions: {
       globals: {
         module: 'readonly',
