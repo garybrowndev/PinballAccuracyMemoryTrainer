@@ -181,7 +181,9 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await expect(page.getByText(/last shot/i)).toBeVisible();
 
     // Click playfield to advance to next shot (click-to-continue flow)
-    await page.locator('.relative.border.rounded-xl').first().click();
+    const playfield1 = page.locator('.relative.border.rounded-xl').first();
+    await playfield1.waitFor({ state: 'visible', timeout: 10000 });
+    await playfield1.click({ timeout: 10000 });
     await page.waitForTimeout(500);
 
     // Test Case 2: Guess value 55
@@ -190,7 +192,9 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.screenshot({ path: 'test-results/workflow-10-guess-2-result.png', fullPage: true });
 
     // Click playfield to advance to next shot
-    await page.locator('.relative.border.rounded-xl').first().click();
+    const playfield2 = page.locator('.relative.border.rounded-xl').first();
+    await playfield2.waitFor({ state: 'visible', timeout: 10000 });
+    await playfield2.click({ timeout: 10000 });
     await page.waitForTimeout(500);
 
     // Test Case 3: Guess value 70
@@ -199,7 +203,9 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await page.screenshot({ path: 'test-results/workflow-11-guess-3-result.png', fullPage: true });
 
     // Click playfield to advance to next shot
-    await page.locator('.relative.border.rounded-xl').first().click();
+    const playfield3 = page.locator('.relative.border.rounded-xl').first();
+    await playfield3.waitFor({ state: 'visible', timeout: 10000 });
+    await playfield3.click({ timeout: 10000 });
     await page.waitForTimeout(500);
 
     // Test Case 4: Guess value 20
