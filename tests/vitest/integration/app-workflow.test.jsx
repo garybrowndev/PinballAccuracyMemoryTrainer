@@ -34,18 +34,21 @@ describe('App - Comprehensive Integration Tests', () => {
     await user.click(playfield);
 
     // Navigate to practice mode
-    const practiceButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent.includes('Practice') && !btn.disabled,
-    );
+    const practiceButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent.includes('Practice') && !btn.disabled);
 
     if (practiceButton) {
       await user.click(practiceButton);
 
       // Verify we're in practice mode
-      await waitFor(() => {
-        // Should have changed the UI
-        expect(screen.queryByText(/setup shots/i)).not.toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          // Should have changed the UI
+          expect(screen.queryByText(/setup shots/i)).not.toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     }
   }, 15000);
 
@@ -62,13 +65,16 @@ describe('App - Comprehensive Integration Tests', () => {
     await user.click(addButton);
 
     // Wait for the modal or inline form to appear and select "5" shots
-    await waitFor(() => {
-      const button5 = screen.queryByRole('button', { name: '5' });
-      if (button5) {
-        return button5;
-      }
-      throw new Error('Button not found');
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        const button5 = screen.queryByRole('button', { name: '5' });
+        if (button5) {
+          return button5;
+        }
+        throw new Error('Button not found');
+      },
+      { timeout: 2000 }
+    );
 
     const button5 = screen.getByRole('button', { name: '5' });
     await user.click(button5);
@@ -221,19 +227,27 @@ describe('App - Comprehensive Integration Tests', () => {
       if (url.includes('index.json')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve([
-            { id: 'test-preset', name: 'Test Preset', file: 'test-preset.json' },
-          ]),
+          json: () =>
+            Promise.resolve([{ id: 'test-preset', name: 'Test Preset', file: 'test-preset.json' }]),
         });
       }
       if (url.includes('test-preset.json')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            shots: [
-              { id: 1, label: 'Test Shot', type: 'Ramp', left: 75, right: 25, initL: 75, initR: 25 },
-            ],
-          }),
+          json: () =>
+            Promise.resolve({
+              shots: [
+                {
+                  id: 1,
+                  label: 'Test Shot',
+                  type: 'Ramp',
+                  left: 75,
+                  right: 25,
+                  initL: 75,
+                  initR: 25,
+                },
+              ],
+            }),
         });
       }
       return Promise.reject(new Error('Not found'));
@@ -246,9 +260,9 @@ describe('App - Comprehensive Integration Tests', () => {
     });
 
     // Try to open presets
-    const presetsButtons = screen.queryAllByRole('button').filter(btn =>
-      btn.textContent.toLowerCase().includes('preset'),
-    );
+    const presetsButtons = screen
+      .queryAllByRole('button')
+      .filter((btn) => btn.textContent.toLowerCase().includes('preset'));
 
     if (presetsButtons.length > 0) {
       await user.click(presetsButtons[0]);
@@ -272,16 +286,12 @@ describe('App - Comprehensive Integration Tests', () => {
     });
 
     // Get navigation buttons
-    const setupButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Setup',
-    );
+    const setupButton = screen.getAllByRole('button').find((btn) => btn.textContent === 'Setup');
 
     expect(setupButton).toBeInTheDocument();
 
     // Recall button should now be available after loading shots
-    const recallButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Recall',
-    );
+    const recallButton = screen.getAllByRole('button').find((btn) => btn.textContent === 'Recall');
 
     if (recallButton) {
       expect(recallButton).toBeInTheDocument();

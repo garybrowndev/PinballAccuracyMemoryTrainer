@@ -90,7 +90,9 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
 });
 
 test.describe('Full Practice Workflow with Example Shots', () => {
-  test('should reset to example, configure random mode, and validate guess results', async ({ page }) => {
+  test('should reset to example, configure random mode, and validate guess results', async ({
+    page,
+  }) => {
     // Navigate and clear state
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
@@ -140,7 +142,9 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     // Step 7.5: Close the Advanced options dialog by clicking away from it
     await page.mouse.click(50, 50); // Click in upper left corner, away from the popup
     // Wait for the backdrop to disappear
-    await page.waitForSelector('[aria-hidden="true"]', { state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page
+      .waitForSelector('[aria-hidden="true"]', { state: 'hidden', timeout: 5000 })
+      .catch(() => {});
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'test-results/workflow-07b-dialog-closed.png', fullPage: true });
 
@@ -158,7 +162,10 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     const feedbackToggle = page.getByRole('checkbox', { name: /feedback/i });
     await feedbackToggle.check();
     await page.waitForTimeout(500);
-    await page.screenshot({ path: 'test-results/workflow-08b-feedback-enabled.png', fullPage: true });
+    await page.screenshot({
+      path: 'test-results/workflow-08b-feedback-enabled.png',
+      fullPage: true,
+    });
 
     // Step 9: Test different guess scenarios using quick recall buttons
     // The seeded random should give us predictable results with seed=42
@@ -202,7 +209,9 @@ test.describe('Full Practice Workflow with Example Shots', () => {
 
     // Verify that results are being tracked
     // Check for feedback panel showing results
-    await expect(page.locator('text=Feedback').locator('..').getByText('Result').first()).toBeVisible();
+    await expect(
+      page.locator('text=Feedback').locator('..').getByText('Result').first()
+    ).toBeVisible();
 
     // Take final screenshot showing accumulated attempts
     await page.screenshot({ path: 'test-results/workflow-13-final-state.png', fullPage: true });

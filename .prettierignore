@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+dist-standalone/
+dev-dist/
+build/
+
+# Coverage and test reports
+coverage/
+test-results/
+playwright-report/
+.lighthouseci/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Config that should maintain specific formatting
+.all-contributorsrc

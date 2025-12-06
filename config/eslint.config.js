@@ -1,7 +1,9 @@
 import js from '@eslint/js';
+import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
 import jsdoc from 'eslint-plugin-jsdoc';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import prettier from 'eslint-plugin-prettier';
 import promise from 'eslint-plugin-promise';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -46,12 +48,13 @@ const config = [
     files: ['**/*.{js,jsx}'],
     plugins: {
       react,
-      'import': importPlugin,
+      import: importPlugin,
       sonarjs,
       unicorn,
       promise,
       security,
       jsdoc,
+      prettier,
     },
     settings: {
       react: {
@@ -76,14 +79,16 @@ const config = [
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Prettier integration
+      'prettier/prettier': 'error',
       // Code Quality & Best Practices
-      'eqeqeq': ['error', 'always'],
+      eqeqeq: ['error', 'always'],
       'no-var': 'error',
       'prefer-const': 'error',
       'no-console': 'error',
       'no-debugger': 'error',
       'no-alert': 'error',
-      'curly': ['error', 'all'],
+      curly: ['error', 'all'],
       'default-case': 'error',
       'no-eval': 'error',
       'no-implied-eval': 'error',
@@ -100,9 +105,9 @@ const config = [
       'react/no-unused-state': 'error',
       'react/jsx-no-constructed-context-values': 'error',
       // Code Style & Consistency
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      'semi': ['error', 'always'],
-      'indent': ['error', 2],
+      quotes: ['error', 'single', { avoidEscape: true }],
+      semi: ['error', 'always'],
+      indent: ['error', 2],
       'comma-dangle': ['error', 'always-multiline'],
       'arrow-spacing': 'error',
       'object-shorthand': 'error',
@@ -141,7 +146,7 @@ const config = [
       'prefer-arrow-callback': 'error',
       'prefer-rest-params': 'error',
       'prefer-spread': 'error',
-      'yoda': 'error',
+      yoda: 'error',
       'no-constructor-return': 'error',
       'no-unreachable-loop': 'error',
       'no-unsafe-optional-chaining': 'error',
@@ -159,7 +164,10 @@ const config = [
       'no-trailing-spaces': 'error',
       'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 0 }],
       'space-before-blocks': 'error',
-      'space-before-function-paren': ['error', { anonymous: 'always', named: 'never', asyncArrow: 'always' }],
+      'space-before-function-paren': [
+        'error',
+        { anonymous: 'always', named: 'never', asyncArrow: 'always' },
+      ],
       'space-in-parens': ['error', 'never'],
       'space-infix-ops': 'error',
       'object-curly-spacing': ['error', 'always'],
@@ -183,7 +191,10 @@ const config = [
       'react/no-direct-mutation-state': 'error',
       'react/no-unescaped-entities': 'error',
       'react/void-dom-elements-no-children': 'error',
-      'react/jsx-no-bind': ['error', { allowArrowFunctions: true, allowBind: false, ignoreRefs: true }],
+      'react/jsx-no-bind': [
+        'error',
+        { allowArrowFunctions: true, allowBind: false, ignoreRefs: true },
+      ],
       'react/no-multi-comp': ['warn', { ignoreStateless: true }],
       // Advanced Error Prevention
       'no-async-promise-executor': 'error',
@@ -192,11 +203,11 @@ const config = [
       'require-atomic-updates': 'error',
       'max-depth': ['error', 5],
       'max-lines-per-function': ['error', { max: 2520, skipBlankLines: true, skipComments: true }],
-      'complexity': ['error', 60],
+      complexity: ['error', 60],
       // Performance & Modern JS
       'no-nested-ternary': 'error',
       'prefer-destructuring': ['error', { array: false, object: true }],
-      'radix': 'error',
+      radix: 'error',
       'prefer-exponentiation-operator': 'error',
       // Additional React Rules
       'react/jsx-no-leaked-render': 'error',
@@ -218,11 +229,14 @@ const config = [
       'import/no-cycle': 'error',
       'import/no-deprecated': 'error',
       'import/no-mutable-exports': 'error',
-      'import/order': ['error', {
-        'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-        'newlines-between': 'always',
-        'alphabetize': { order: 'asc', caseInsensitive: true },
-      }],
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          'newlines-between': 'always',
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
+      ],
       'import/no-self-import': 'error',
       'import/no-useless-path-segments': 'error',
       'import/no-webpack-loader-syntax': 'error',
@@ -384,6 +398,7 @@ const config = [
       'no-undef': 'off', // Allow undefined variables in config files
     },
   },
+  prettierConfig,
 ];
 
 export default config;

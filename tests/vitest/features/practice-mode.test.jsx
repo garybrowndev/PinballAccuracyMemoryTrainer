@@ -26,18 +26,21 @@ describe('App - Practice Mode Comprehensive Tests', () => {
     });
 
     // Navigate to Practice mode
-    const practiceButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Practice' && !btn.disabled,
-    );
+    const practiceButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
     if (practiceButton) {
       await user.click(practiceButton);
 
       // Wait for practice mode UI to load
-      await waitFor(() => {
-        // Check that we're no longer in setup
-        expect(screen.queryByText(/setup shots/i)).not.toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          // Check that we're no longer in setup
+          expect(screen.queryByText(/setup shots/i)).not.toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     }
   }
 
@@ -58,8 +61,8 @@ describe('App - Practice Mode Comprehensive Tests', () => {
 
     // Look for Manual/Random mode chips
     const allButtons = screen.getAllByRole('button');
-    const manualButton = allButtons.find(btn => btn.textContent === 'Manual');
-    const randomButton = allButtons.find(btn => btn.textContent === 'Random');
+    const manualButton = allButtons.find((btn) => btn.textContent === 'Manual');
+    const randomButton = allButtons.find((btn) => btn.textContent === 'Random');
 
     if (manualButton && randomButton) {
       // Toggle to random mode
@@ -76,10 +79,8 @@ describe('App - Practice Mode Comprehensive Tests', () => {
 
     // In manual mode, should be able to click different shot chips
     const allButtons = screen.getAllByRole('button');
-    const shotButtons = allButtons.filter(btn =>
-      ['Ramp', 'Loop', 'Orbit', 'Target', 'Spinner'].some(type =>
-        btn.textContent.includes(type),
-      ),
+    const shotButtons = allButtons.filter((btn) =>
+      ['Ramp', 'Loop', 'Orbit', 'Target', 'Spinner'].some((type) => btn.textContent.includes(type))
     );
 
     if (shotButtons.length > 1) {
@@ -94,8 +95,8 @@ describe('App - Practice Mode Comprehensive Tests', () => {
 
     // Look for flipper selection buttons
     const allButtons = screen.getAllByRole('button');
-    const leftButton = allButtons.find(btn => btn.textContent === 'Left');
-    const rightButton = allButtons.find(btn => btn.textContent === 'Right');
+    const leftButton = allButtons.find((btn) => btn.textContent === 'Left');
+    const rightButton = allButtons.find((btn) => btn.textContent === 'Right');
 
     if (leftButton && rightButton) {
       await user.click(leftButton);
@@ -132,14 +133,14 @@ describe('App - Practice Mode Comprehensive Tests', () => {
 
     // Switch to random mode first
     const allButtons = screen.getAllByRole('button');
-    const randomButton = allButtons.find(btn => btn.textContent === 'Random');
+    const randomButton = allButtons.find((btn) => btn.textContent === 'Random');
 
     if (randomButton) {
       await user.click(randomButton);
 
       // Look for seeded checkbox
       const checkboxes = screen.getAllByRole('checkbox');
-      const seededCheckbox = checkboxes.find(cb => {
+      const seededCheckbox = checkboxes.find((cb) => {
         const label = cb.closest('label');
         return label?.textContent.includes('Seeded');
       });
@@ -157,7 +158,7 @@ describe('App - Practice Mode Comprehensive Tests', () => {
 
     // Look for feedback checkbox
     const checkboxes = screen.getAllByRole('checkbox');
-    const feedbackCheckbox = checkboxes.find(cb => {
+    const feedbackCheckbox = checkboxes.find((cb) => {
       const label = cb.closest('label');
       return label?.textContent.includes('Feedback');
     });
@@ -174,7 +175,7 @@ describe('App - Practice Mode Comprehensive Tests', () => {
 
     // Look for attempt history checkbox
     const checkboxes = screen.getAllByRole('checkbox');
-    const historyCheckbox = checkboxes.find(cb => {
+    const historyCheckbox = checkboxes.find((cb) => {
       const label = cb.closest('label');
       return label?.textContent.includes('Attempt history');
     });
@@ -191,13 +192,13 @@ describe('App - Practice Mode Comprehensive Tests', () => {
 
     // Switch to random mode
     const allButtons = screen.getAllByRole('button');
-    const randomButton = allButtons.find(btn => btn.textContent === 'Random');
+    const randomButton = allButtons.find((btn) => btn.textContent === 'Random');
 
     if (randomButton) {
       await user.click(randomButton);
 
       // Look for the random shot button (↻)
-      const randomShotButton = allButtons.find(btn => btn.textContent.includes('↻'));
+      const randomShotButton = allButtons.find((btn) => btn.textContent.includes('↻'));
 
       if (randomShotButton) {
         await user.click(randomShotButton);
@@ -212,7 +213,7 @@ describe('App - Practice Mode Comprehensive Tests', () => {
 
     // Click setup button to go back
     const allButtons = screen.getAllByRole('button');
-    const setupButton = allButtons.find(btn => btn.textContent === 'Setup');
+    const setupButton = allButtons.find((btn) => btn.textContent === 'Setup');
 
     if (setupButton) {
       await user.click(setupButton);
@@ -238,7 +239,7 @@ describe('App - Practice Mode Comprehensive Tests', () => {
     if (recallButtons.length > 0) {
       for (let i = 0; i < Math.min(3, recallButtons.length); i++) {
         await user.click(recallButtons[i]);
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     }
   }, 20000);
@@ -258,7 +259,8 @@ describe('App - Practice Mode Comprehensive Tests', () => {
       await user.click(recallButtons[0]);
       await user.click(recallButtons[Math.min(1, recallButtons.length - 1)]);
     }
-  }, 15000); it('should toggle all checkboxes in practice mode', async () => {
+  }, 15000);
+  it('should toggle all checkboxes in practice mode', async () => {
     const user = userEvent.setup();
     await setupAndGoToPractice(user);
 
@@ -280,8 +282,8 @@ describe('App - Practice Mode Comprehensive Tests', () => {
     await setupAndGoToPractice(user);
 
     const allButtons = screen.getAllByRole('button');
-    const manualButton = allButtons.find(btn => btn.textContent === 'Manual');
-    const randomButton = allButtons.find(btn => btn.textContent === 'Random');
+    const manualButton = allButtons.find((btn) => btn.textContent === 'Manual');
+    const randomButton = allButtons.find((btn) => btn.textContent === 'Random');
 
     // Get recall buttons for making attempts
     const recallButtons = screen.queryAllByRole('button', { name: /recall \d+/i });

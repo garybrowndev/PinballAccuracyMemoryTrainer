@@ -16,19 +16,22 @@ async function setupAppWithShots(user) {
   const exampleButton = screen.getByRole('button', { name: /load example shots/i });
   await user.click(exampleButton);
 
-  await waitFor(() => {
-    const table = screen.getByRole('table');
-    expect(table).toBeInTheDocument();
-  }, { timeout: 3000 });
+  await waitFor(
+    () => {
+      const table = screen.getByRole('table');
+      expect(table).toBeInTheDocument();
+    },
+    { timeout: 3000 }
+  );
 
   return user;
 }
 
 // Helper to navigate to practice mode
 async function goToPractice(user) {
-  const practiceButton = screen.getAllByRole('button').find(btn =>
-    btn.textContent === 'Practice' && !btn.disabled,
-  );
+  const practiceButton = screen
+    .getAllByRole('button')
+    .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
   if (practiceButton) {
     await user.click(practiceButton);
@@ -62,7 +65,7 @@ describe('App - Deep Coverage Tests', () => {
       if (deleteButtons.length > 0) {
         // Click delete on first shot box
         await user.click(deleteButtons[0]);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       // Verify one shot was removed
@@ -81,11 +84,13 @@ describe('App - Deep Coverage Tests', () => {
       const playfield = screen.getByRole('region', { name: /playfield layout/i });
 
       // Find shot boxes (they have specific classes)
-      const shotBoxes = playfield.querySelectorAll('[class*="absolute"][class*="z-30"][class*="select-none"]');
+      const shotBoxes = playfield.querySelectorAll(
+        '[class*="absolute"][class*="z-30"][class*="select-none"]'
+      );
 
       for (const box of shotBoxes) {
         fireEvent.mouseDown(box);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 15000);
 
@@ -101,11 +106,11 @@ describe('App - Deep Coverage Tests', () => {
       for (const img of images) {
         // Trigger load event
         fireEvent.load(img);
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Trigger error event
         fireEvent.error(img);
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     }, 15000);
   });
@@ -125,7 +130,7 @@ describe('App - Deep Coverage Tests', () => {
         for (const path of paths) {
           // Try clicking on the path
           fireEvent.mouseDown(path);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
     }, 15000);
@@ -143,17 +148,17 @@ describe('App - Deep Coverage Tests', () => {
         // Click left flipper area multiple times
         if (paths[0]) {
           fireEvent.mouseDown(paths[0]);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
           fireEvent.mouseDown(paths[0]);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         // Click right flipper area
         if (paths[1]) {
           fireEvent.mouseDown(paths[1]);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
           fireEvent.mouseDown(paths[1]);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
     }, 15000);
@@ -168,18 +173,22 @@ describe('App - Deep Coverage Tests', () => {
       const headers = within(table).getAllByRole('columnheader');
 
       // Find L and R headers
-      const lHeader = headers.find(h => h.textContent?.trim() === 'L' || h.textContent?.includes('Left'));
-      const rHeader = headers.find(h => h.textContent?.trim() === 'R' || h.textContent?.includes('Right'));
+      const lHeader = headers.find(
+        (h) => h.textContent?.trim() === 'L' || h.textContent?.includes('Left')
+      );
+      const rHeader = headers.find(
+        (h) => h.textContent?.trim() === 'R' || h.textContent?.includes('Right')
+      );
 
       if (lHeader) {
         fireEvent.mouseEnter(lHeader);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         fireEvent.mouseLeave(lHeader);
       }
 
       if (rHeader) {
         fireEvent.mouseEnter(rHeader);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         fireEvent.mouseLeave(rHeader);
       }
     }, 15000);
@@ -196,13 +205,16 @@ describe('App - Deep Coverage Tests', () => {
 
       for (const cell of cells.slice(0, 3)) {
         const buttons = within(cell).queryAllByRole('button');
-        const shotTypeBtn = buttons.find(btn =>
-          btn.getAttribute('data-shot-chip') || btn.textContent?.includes('Orbit') || btn.textContent?.includes('Ramp'),
+        const shotTypeBtn = buttons.find(
+          (btn) =>
+            btn.getAttribute('data-shot-chip') ||
+            btn.textContent?.includes('Orbit') ||
+            btn.textContent?.includes('Ramp')
         );
 
         if (shotTypeBtn) {
           await user.click(shotTypeBtn);
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
 
           // Press various keys
           await user.keyboard('{ArrowDown}');
@@ -232,26 +244,30 @@ describe('App - Deep Coverage Tests', () => {
         // Find location cell/button
         for (const cell of cells) {
           const buttons = within(cell).queryAllByRole('button');
-          const locButton = buttons.find(btn =>
-            btn.textContent?.includes('Left') ||
-            btn.textContent?.includes('Right') ||
-            btn.textContent?.includes('Center') ||
-            btn.textContent?.includes('Upper') ||
-            btn.getAttribute('data-loc-chip'),
+          const locButton = buttons.find(
+            (btn) =>
+              btn.textContent?.includes('Left') ||
+              btn.textContent?.includes('Right') ||
+              btn.textContent?.includes('Center') ||
+              btn.textContent?.includes('Upper') ||
+              btn.getAttribute('data-loc-chip')
           );
 
           if (locButton) {
             await user.click(locButton);
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 200));
 
             // Look for location options
-            const locationOptions = screen.queryAllByRole('button').filter(btn =>
-              btn.textContent === 'Left' ||
-              btn.textContent === 'Right' ||
-              btn.textContent === 'Center' ||
-              btn.textContent === 'Upper' ||
-              btn.textContent === 'Lower',
-            );
+            const locationOptions = screen
+              .queryAllByRole('button')
+              .filter(
+                (btn) =>
+                  btn.textContent === 'Left' ||
+                  btn.textContent === 'Right' ||
+                  btn.textContent === 'Center' ||
+                  btn.textContent === 'Upper' ||
+                  btn.textContent === 'Lower'
+              );
 
             if (locationOptions.length > 0) {
               await user.click(locationOptions[0]);
@@ -271,30 +287,31 @@ describe('App - Deep Coverage Tests', () => {
       await goToPractice(user);
 
       // Find the recall input
-      const recallInput = screen.queryByRole('textbox', { name: /recall/i }) ||
-                          screen.queryByPlaceholderText(/0-100/i) ||
-                          screen.queryByDisplayValue('');
+      const recallInput =
+        screen.queryByRole('textbox', { name: /recall/i }) ||
+        screen.queryByPlaceholderText(/0-100/i) ||
+        screen.queryByDisplayValue('');
 
       if (recallInput) {
         // Focus
         await user.click(recallInput);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Type and submit
         await user.type(recallInput, '50');
         await user.keyboard('{Enter}');
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Clear and type invalid
         await user.clear(recallInput);
         await user.type(recallInput, 'invalid');
         await user.keyboard('{Enter}');
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Clear and leave empty, submit
         await user.clear(recallInput);
         await user.keyboard('{Enter}');
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 20000);
   });
@@ -309,7 +326,7 @@ describe('App - Deep Coverage Tests', () => {
       const submitButton = screen.queryByRole('button', { name: /submit/i });
       if (submitButton) {
         await user.click(submitButton);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Error message should appear
         screen.queryByText(/0–100|0-100/);
@@ -328,32 +345,32 @@ describe('App - Deep Coverage Tests', () => {
       const recallButtons = screen.queryAllByRole('button', { name: /recall \d+/i });
       if (recallButtons.length > 0) {
         await user.click(recallButtons[5]);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       // Select different shots manually
-      const manualChip = screen.queryAllByRole('button').find(btn =>
-        btn.textContent === 'Manual',
-      );
+      const manualChip = screen
+        .queryAllByRole('button')
+        .find((btn) => btn.textContent === 'Manual');
       if (manualChip) {
         await user.click(manualChip);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Click on shot chips to select different rows
-      const shotChips = screen.queryAllByRole('button').filter(btn => {
+      const shotChips = screen.queryAllByRole('button').filter((btn) => {
         const text = btn.textContent || '';
         return text.includes('Orbit') || text.includes('Ramp') || text.includes('Target');
       });
 
       for (const chip of shotChips.slice(0, 3)) {
         await user.click(chip);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Make attempt with this selection
         if (recallButtons[3]) {
           await user.click(recallButtons[3]);
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
       }
     }, 30000);
@@ -368,20 +385,20 @@ describe('App - Deep Coverage Tests', () => {
 
       const valuesToTest = [0, 5, 10, 15, 50, 85, 90, 95];
       for (const value of valuesToTest) {
-        const buttonIndex = value === 0 ? -1 : (value / 5) - 1;
+        const buttonIndex = value === 0 ? -1 : value / 5 - 1;
 
         if (value === 0) {
           // Click Not Possible
-          const npBtn = screen.queryAllByRole('button').find(btn =>
-            btn.textContent === 'Not Possible',
-          );
+          const npBtn = screen
+            .queryAllByRole('button')
+            .find((btn) => btn.textContent === 'Not Possible');
           if (npBtn) {
             await user.click(npBtn);
           }
         } else if (recallButtons[buttonIndex]) {
           await user.click(recallButtons[buttonIndex]);
         }
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 30000);
   });
@@ -404,13 +421,13 @@ describe('App - Deep Coverage Tests', () => {
       }
 
       // Make attempts with different flipper selections
-      const flipperChips = screen.queryAllByRole('button').filter(btn =>
-        btn.textContent === 'Left' || btn.textContent === 'Right',
-      );
+      const flipperChips = screen
+        .queryAllByRole('button')
+        .filter((btn) => btn.textContent === 'Left' || btn.textContent === 'Right');
 
       for (const chip of flipperChips) {
         await user.click(chip);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     }, 20000);
   });
@@ -427,11 +444,11 @@ describe('App - Deep Coverage Tests', () => {
       if (recallButtons.length > 0) {
         // Very early
         await user.click(recallButtons[0]); // 05
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Very late
         await user.click(recallButtons[18]); // 95
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Check for SVG feedback elements
         const playfields = document.querySelectorAll('[class*="relative"]');
@@ -452,14 +469,14 @@ describe('App - Deep Coverage Tests', () => {
       const fullscreenBtn = screen.queryByRole('button', { name: /fullscreen/i });
       if (fullscreenBtn) {
         await user.click(fullscreenBtn);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Make some attempts to update metrics
         const recallButtons = screen.queryAllByRole('button', { name: /recall \d+/i });
         for (let i = 0; i < 5; i++) {
           if (recallButtons[i * 3]) {
             await user.click(recallButtons[i * 3]);
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
           }
         }
 
@@ -482,7 +499,7 @@ describe('App - Deep Coverage Tests', () => {
 
       for (const btn of resetButtons) {
         await user.click(btn);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 15000);
   });
@@ -499,7 +516,7 @@ describe('App - Deep Coverage Tests', () => {
       const infoBtn = screen.queryByRole('button', { name: /help|about|info/i });
       if (infoBtn) {
         await user.click(infoBtn);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Look for version information
         screen.queryByRole('dialog');
@@ -534,7 +551,7 @@ describe('App - Deep Coverage Tests', () => {
       for (let i = 0; i < Math.min(sliders.length, 16); i += 2) {
         const value = i % 4 === 0 ? '80' : '20';
         fireEvent.change(sliders[i], { target: { value } });
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       // Now go to practice to trigger hidden value initialization
@@ -553,7 +570,7 @@ describe('App - Deep Coverage Tests', () => {
       for (let i = 1; i < Math.min(sliders.length, 8); i += 2) {
         const value = String(20 + i * 10);
         fireEvent.change(sliders[i], { target: { value } });
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     }, 15000);
   });
@@ -597,7 +614,7 @@ describe('App - Deep Coverage Tests', () => {
         fireEvent.drop(rows[1], { dataTransfer, preventDefault: vi.fn() });
         fireEvent.dragEnd(dragHandles.at(-1));
 
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Check for red highlighting on playfield
         screen.getByRole('region', { name: /playfield layout/i });
@@ -609,11 +626,41 @@ describe('App - Deep Coverage Tests', () => {
   describe('Auto-Collapse on Initial Load', () => {
     it('should auto-collapse shot type rows on initial load', async () => {
       // Pre-populate localStorage with shots
-      localStorage.setItem('pinball_rows_v1', JSON.stringify([
-        { id: 1, base: 'Ramp', location: 'Left', type: 'Left Ramp', initL: 25, initR: 75, x: 0.3, y: 0.3 },
-        { id: 2, base: 'Target', location: 'Center', type: 'Center Target', initL: 50, initR: 50, x: 0.5, y: 0.3 },
-        { id: 3, base: 'Orbit', location: 'Right', type: 'Right Orbit', initL: 75, initR: 25, x: 0.7, y: 0.3 },
-      ]));
+      localStorage.setItem(
+        'pinball_rows_v1',
+        JSON.stringify([
+          {
+            id: 1,
+            base: 'Ramp',
+            location: 'Left',
+            type: 'Left Ramp',
+            initL: 25,
+            initR: 75,
+            x: 0.3,
+            y: 0.3,
+          },
+          {
+            id: 2,
+            base: 'Target',
+            location: 'Center',
+            type: 'Center Target',
+            initL: 50,
+            initR: 50,
+            x: 0.5,
+            y: 0.3,
+          },
+          {
+            id: 3,
+            base: 'Orbit',
+            location: 'Right',
+            type: 'Right Orbit',
+            initL: 75,
+            initR: 25,
+            x: 0.7,
+            y: 0.3,
+          },
+        ])
+      );
 
       render(<App />);
 
@@ -622,7 +669,7 @@ describe('App - Deep Coverage Tests', () => {
       });
 
       // Should load with collapsed shot type rows
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const table = screen.queryByRole('table');
       expect(table).toBeInTheDocument();
@@ -642,10 +689,12 @@ describe('App - Deep Coverage Tests', () => {
       });
 
       // Toggle dark mode
-      const darkModeBtn = screen.queryByRole('button', { name: /switch to dark mode|switch to light mode/i });
+      const darkModeBtn = screen.queryByRole('button', {
+        name: /switch to dark mode|switch to light mode/i,
+      });
       if (darkModeBtn) {
         await user.click(darkModeBtn);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Verify localStorage was updated
         localStorage.getItem('pinball_darkMode_v1');
@@ -662,9 +711,13 @@ describe('App - Deep Coverage Tests', () => {
       // Trigger resize multiple times
       for (let i = 0; i < 5; i++) {
         const width = 400 + i * 200;
-        Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: width });
+        Object.defineProperty(window, 'innerWidth', {
+          writable: true,
+          configurable: true,
+          value: width,
+        });
         fireEvent.resize(window);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       await goToPractice(user);
@@ -672,9 +725,13 @@ describe('App - Deep Coverage Tests', () => {
       // More resizes in practice mode
       for (let i = 0; i < 5; i++) {
         const width = 800 + i * 100;
-        Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: width });
+        Object.defineProperty(window, 'innerWidth', {
+          writable: true,
+          configurable: true,
+          value: width,
+        });
         fireEvent.resize(window);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 20000);
   });
@@ -695,27 +752,27 @@ describe('App - Deep Coverage Tests', () => {
       await user.click(addButton);
       const button1 = await screen.findByRole('button', { name: '1' });
       await user.click(button1);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Clear and add more shots
       const clearBtns = screen.queryAllByRole('button', { name: /clear all shots/i });
       if (clearBtns.length > 0) {
         await user.click(clearBtns[0]);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       await user.click(addButton);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Find available number buttons and click one
-      const numberButtons = screen.queryAllByRole('button').filter(btn =>
-        /^([1-9]|10)$/.test(btn.textContent || ''),
-      );
+      const numberButtons = screen
+        .queryAllByRole('button')
+        .filter((btn) => /^([1-9]|10)$/.test(btn.textContent || ''));
 
       if (numberButtons.length > 0) {
         // Click the highest number available
         await user.click(numberButtons.at(-1));
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       // Verify table has rows

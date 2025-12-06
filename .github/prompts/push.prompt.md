@@ -8,6 +8,7 @@ agent: agent
 You are helping the user commit and push their changes to git, then create a pull request. Follow this workflow exactly:
 
 ## Step 1: Review Current Changes
+
 - If you are on master and there are committed changes not yet pushed, create a branch and proceed to step 3
 - Use available tools to check what files have been modified
 - If there are no changes to commit, check to see if there are unpushed commits
@@ -16,6 +17,7 @@ You are helping the user commit and push their changes to git, then create a pul
 - Provide a brief summary of the changes found
 
 ## Step 2: Generate Commit Message
+
 - Analyze the changes and create a commit message following conventional commit format:
   - Format: `<type>: <description>`
   - Types: `feat` (new feature), `fix` (bug fix), `docs` (documentation), `style` (formatting/styling), `refactor` (code restructuring), `perf` (performance), `test` (tests), `chore` (build/dependencies)
@@ -24,6 +26,7 @@ You are helping the user commit and push their changes to git, then create a pul
 - Present the proposed commit message and ask for user approval or modification
 
 ## Step 3: Run Lint
+
 - Execute: `npm run lint`
 - If lint fails, attempt auto-fix: `npm run lint -- --fix`
 - If errors remain after auto-fix:
@@ -32,7 +35,9 @@ You are helping the user commit and push their changes to git, then create a pul
   - Only proceed to tests if user explicitly approves
 
 ## Step 4: Run Tests
+
 Once lint passes (or user approves proceeding with warnings):
+
 - Execute unit tests: `npm run test:run`
 - If unit tests fail:
   - Report the test failures clearly
@@ -46,7 +51,9 @@ Once lint passes (or user approves proceeding with warnings):
 - If all tests pass, confirm and proceed to build
 
 ## Step 5: Build App
+
 Once tests pass (or user approves proceeding with test failures):
+
 - Execute: `npm run build`
 - If build fails:
   - Report the build errors clearly
@@ -55,6 +62,7 @@ Once tests pass (or user approves proceeding with test failures):
 - If build succeeds, confirm and proceed to branch creation
 
 ## Step 6: Create Feature Branch (if on master)
+
 - Check current branch: `git branch --show-current`
 - If currently on `master` or `main`:
   - Generate a short, descriptive branch name based on the commit type and summary
@@ -65,18 +73,22 @@ Once tests pass (or user approves proceeding with test failures):
 - If already on a feature branch, continue with that branch
 
 ## Step 7: Commit Locally
+
 Once on the correct branch:
+
 - Stage all changes: `git add .`
 - Commit with the approved message: `git commit -m "<message>"`
 - If there's nothing to commit (changes already committed), skip to push
 - Report the commit hash
 
 ## Step 8: Push Branch to Origin
+
 - Push the branch to origin: `git push -u origin <branch-name>`
 - If push fails, suggest the user may need to pull first
 - Confirm successful push
 
 ## Step 9: Create Pull Request
+
 - Use GitHub tools to create a pull request:
   - Base branch: `master`
   - Head branch: the current feature branch
@@ -85,6 +97,7 @@ Once on the correct branch:
 - Report the PR URL/number
 
 ## Error Handling
+
 - If any step fails, stop immediately and report the error
 - Don't create PR if push fails
 - Don't push if commit fails
@@ -94,6 +107,7 @@ Once on the correct branch:
 - If push fails, suggest the user may need to pull first
 
 ## Notes
+
 - All changes will be staged (including untracked files)
 - User will review and approve the commit message before committing
 - The test step ensures all unit and E2E tests pass before building

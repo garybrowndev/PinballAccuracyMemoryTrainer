@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -126,17 +126,17 @@ jobs:
         run: |
           # Create a temporary directory for GitHub Pages
           mkdir -p gh-pages-deploy
-          
+
           # Copy standalone build to root (latest version) and rename to index.html
           cp dist-standalone/pinball-trainer-standalone.html gh-pages-deploy/index.html
-          
+
           # Copy screenshot to root for README display
           cp public/images/app-screenshot.jpg gh-pages-deploy/app-screenshot.jpg
-          
+
           # Copy standalone build to versioned release directory (keep original name)
           mkdir -p gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}
           cp -r dist-standalone/* gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
-          
+
           echo "📦 Prepared deployment structure:"
           ls -la gh-pages-deploy/
           echo "📦 Versioned release:"
@@ -163,29 +163,29 @@ jobs:
             dist-standalone/pinball-trainer-standalone.html
           body: |
             ## Pinball Accuracy Memory Trainer v${{ steps.version.outputs.full_version }}
-            
+
             A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall.
-            
+
             ### 🚀 Try it Online
-            
+
             **[Launch Latest Version →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)**
-            
+
             **[Launch This Release (v${{ steps.version.outputs.full_version }}) →](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/releases/${{ steps.version.outputs.full_version }}/pinball-trainer-standalone.html)**
-            
+
             ### 💾 Or Download
-            
+
             Download the standalone HTML file below and open it in your browser. No installation or internet connection required - all assets are embedded.
-            
+
             ### What's Included
-            
+
             - 39 preset pinball tables (Addams Family, Medieval Madness, Attack from Mars, and more)
             - Progressive training with drift mechanics
             - Visual playfield editor
             - Performance tracking and feedback
             - Fully offline-capable
-            
+
             ### Usage
-            
+
             1. Click the "Launch Latest Version" link above to use the most recent version, OR
             2. Click the "Launch This Release" link to use this specific version, OR
             3. Download `pinball-trainer-standalone.html` below
