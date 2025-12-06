@@ -34,6 +34,8 @@
     "test:coverage:ui": "vitest --ui --coverage --config config/vite.config.js",
     "test:e2e": "playwright test --config config/playwright.config.js",
     "test:e2e:a11y": "playwright test --config config/playwright.config.js tests/e2e/accessibility.spec.js",
+    "test:e2e:visual": "playwright test --config config/playwright.config.js tests/e2e/visual-regression.spec.js",
+    "test:e2e:visual:update": "playwright test --config config/playwright.config.js tests/e2e/visual-regression.spec.js --update-snapshots",
     "test:e2e:ui": "playwright test --ui --config config/playwright.config.js",
     "test:e2e:headed": "playwright test --headed --config config/playwright.config.js",
     "test:e2e:debug": "playwright test --debug --config config/playwright.config.js",

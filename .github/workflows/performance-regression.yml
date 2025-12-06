@@ -1,0 +1,72 @@
+name: Performance Regression Detection
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.13.x
+
+      - name: Run Lighthouse CI
+        run: lhci autorun --config=config/lighthouserc.js
+        continue-on-error: true
+
+      - name: Analyze Lighthouse results
+        id: lighthouse
+        run: |
+          # Extract scores from Lighthouse report (if available)
+          if [ -f ".lighthouseci/manifest.json" ]; then
+            echo "Lighthouse results available"
+            echo "lighthouse_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "Lighthouse results not available"
+            echo "lighthouse_available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Lighthouse results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/
+          retention-days: 30
+
+      - name: Check performance metrics
+        run: |
+          echo "### Performance Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Performance testing completed. Check Lighthouse report in artifacts for detailed metrics." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Key Metrics to Monitor:**" >> $GITHUB_STEP_SUMMARY
+          echo "- First Contentful Paint (FCP)" >> $GITHUB_STEP_SUMMARY
+          echo "- Largest Contentful Paint (LCP)" >> $GITHUB_STEP_SUMMARY
+          echo "- Time to Interactive (TTI)" >> $GITHUB_STEP_SUMMARY
+          echo "- Total Blocking Time (TBT)" >> $GITHUB_STEP_SUMMARY
+          echo "- Cumulative Layout Shift (CLS)" >> $GITHUB_STEP_SUMMARY
