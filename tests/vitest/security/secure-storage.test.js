@@ -7,7 +7,7 @@ import {
   secureRemoveItem,
   secureSetItem,
   getWhitelistedKeys,
-} from '../../src/utils/secure-storage';
+} from '../../src/utils/secure-storage.js';
 /* eslint-enable import/named, import/no-unresolved */
 
 describe('Secure Storage - XSS Prevention', () => {

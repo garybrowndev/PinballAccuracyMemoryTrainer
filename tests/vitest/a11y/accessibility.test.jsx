@@ -4,7 +4,7 @@ import { axe } from 'jest-axe';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 
-import App from '../../src/app';
+import App from '../../src/app.jsx';
 /* eslint-enable import/no-unresolved */
 
 describe('Accessibility - WCAG 2.1 AAA Compliance', () => {
