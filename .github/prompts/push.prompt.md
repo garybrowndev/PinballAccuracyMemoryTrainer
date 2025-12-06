@@ -45,11 +45,21 @@ Once lint passes (or user approves proceeding with warnings):
 - Execute unit tests: `npm run test:run`
 - If unit tests fail:
   - Report the test failures clearly
-  - Do NOT proceed to E2E tests
+  - Do NOT proceed to accessibility tests
   - Suggest fixes or ask the user to resolve test failures
-- If unit tests pass, execute E2E tests: `npm run test:e2e`
+- If unit tests pass, execute accessibility unit tests: `npm run test:a11y`
+- If accessibility tests fail:
+  - Report the violations clearly (WCAG 2.1 AAA violations)
+  - Do NOT proceed to E2E tests
+  - Suggest fixes or ask the user to resolve accessibility issues
+- If accessibility unit tests pass, execute E2E tests: `npm run test:e2e`
 - If E2E tests fail:
   - Report the test failures clearly
+  - Ask if the user wants to proceed anyway or fix manually
+  - Only proceed to E2E accessibility tests if user explicitly approves
+- If E2E tests pass, execute E2E accessibility tests: `npm run test:e2e:a11y`
+- If E2E accessibility tests fail:
+  - Report the accessibility violations clearly
   - Ask if the user wants to proceed anyway or fix manually
   - Only proceed to build if user explicitly approves
 - If all tests pass, confirm and proceed to build

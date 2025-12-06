@@ -1,4 +1,8 @@
 import '@testing-library/jest-dom';
+import { configureAxe, toHaveNoViolations } from 'jest-axe';
+
+// Extend Jest matchers with jest-axe
+expect.extend(toHaveNoViolations);
 
 // Mock localStorage
 const localStorageMock = {
@@ -38,4 +42,19 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
+});
+
+// Configure axe for WCAG 2.1 AAA compliance
+export const axe = configureAxe({
+  rules: {
+    // Enable all WCAG 2.1 AAA rules
+    'color-contrast-enhanced': { enabled: true },
+    'link-in-text-block': { enabled: true },
+    'meta-refresh': { enabled: true },
+    'meta-viewport-large': { enabled: true },
+    'meta-viewport': { enabled: true },
+    'page-has-heading-one': { enabled: true },
+    region: { enabled: true },
+    'skip-link': { enabled: true },
+  },
 });
