@@ -25,14 +25,18 @@ You are helping the user commit and push their changes to git, then create a pul
 - Add bullet points in the body if multiple significant changes exist
 - Present the proposed commit message and ask for user approval or modification
 
-## Step 3: Run Lint
+## Step 3: Run Lint and Format Check
 
 - Execute: `npm run lint`
 - If lint fails, attempt auto-fix: `npm run lint -- --fix`
+- Execute: `npm run format:check` to verify Prettier formatting
+- If format check fails, suggest running: `npm run format` to auto-format
 - If errors remain after auto-fix:
   - Report the errors clearly
   - Ask if the user wants to proceed anyway or fix manually
   - Only proceed to tests if user explicitly approves
+
+**Note:** When committing, Husky pre-commit hooks will automatically run lint and format checks. Pre-push hooks will run tests.
 
 ## Step 4: Run Tests
 
@@ -78,12 +82,18 @@ Once on the correct branch:
 
 - Stage all changes: `git add .`
 - Commit with the approved message: `git commit -m "<message>"`
+- **Note:** Husky hooks will automatically run:
+  - `commit-msg` hook: Validates commit message format (conventional commits)
+  - `pre-commit` hook: Runs lint and format checks
+  - If hooks fail, the commit will be blocked - fix issues and try again
 - If there's nothing to commit (changes already committed), skip to push
 - Report the commit hash
 
 ## Step 8: Push Branch to Origin
 
 - Push the branch to origin: `git push -u origin <branch-name>`
+- **Note:** Husky `pre-push` hook will automatically run all tests before pushing
+- If pre-push hook fails, the push will be blocked - fix test failures and try again
 - If push fails, suggest the user may need to pull first
 - Confirm successful push
 

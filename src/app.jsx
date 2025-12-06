@@ -1631,11 +1631,13 @@ const PlayfieldScenery = ({ darkMode = false }) => {
           strokeLinecap="round"
           strokeDasharray="8 10"
         />
+        {/* eslint-disable jsdoc/check-alignment */}
         {/**
          * Flippers: single capsule/tapered objects with rounded circular ends.
          * We approximate each flipper by a constant-width capsule along the base->tip vector.
          * Earlier logic (anchors in PlayfieldEditor) still uses BASE/TIP points below.
          */}
+        {/* eslint-enable jsdoc/check-alignment */}
         {(() => {
           // Reversed flipper orientation per request:
           //   Circle (wide end) now at the HIGH / outer side ("base" argument) and
@@ -2301,7 +2303,7 @@ const PracticePlayfield = ({
             </div>
           );
         })}
-        {/* eslint-disable-next-line sonarjs/cognitive-complexity, complexity, react-hooks/refs */}
+        {/* eslint-disable sonarjs/cognitive-complexity, complexity, react-hooks/refs */}
         {mounted && activeGuideRow && activeGuideSide
           ? (() => {
               // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
@@ -2844,6 +2846,7 @@ const PracticePlayfield = ({
               );
             })()
           : null}
+        {/* eslint-enable sonarjs/cognitive-complexity, complexity, react-hooks/refs */}
       </div>
     </div>
   );
@@ -4823,9 +4826,18 @@ const App = () => {
                           )}
                         </div>
                       </th>
-                      {/* eslint-disable-next-line no-nested-ternary */}
                       <th
-                        className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-sky-900/30' : 'bg-sky-50') : ''}`}
+                        className={`p-2 ${
+                          /* eslint-disable-next-line no-nested-ternary */
+                          selectedBlockId === 'FLIPPER_L' ||
+                          selectedBlockId === 'FLIPPER_BOTH' ||
+                          hoverFlipperColumn === 'L' ||
+                          hoverFlipperColumn === 'BOTH'
+                            ? darkMode
+                              ? 'bg-sky-900/30'
+                              : 'bg-sky-50'
+                            : ''
+                        }`}
                       >
                         <div className="flex items-center gap-2">
                           <span
@@ -4886,9 +4898,18 @@ const App = () => {
                           )}
                         </div>
                       </th>
-                      {/* eslint-disable-next-line no-nested-ternary */}
                       <th
-                        className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-rose-900/30' : 'bg-rose-50') : ''}`}
+                        className={`p-2 ${
+                          /* eslint-disable-next-line no-nested-ternary */
+                          selectedBlockId === 'FLIPPER_R' ||
+                          selectedBlockId === 'FLIPPER_BOTH' ||
+                          hoverFlipperColumn === 'R' ||
+                          hoverFlipperColumn === 'BOTH'
+                            ? darkMode
+                              ? 'bg-rose-900/30'
+                              : 'bg-rose-50'
+                            : ''
+                        }`}
                       >
                         <div className="flex items-center gap-2">
                           <span
@@ -5176,9 +5197,18 @@ const App = () => {
                               );
                             })()}
                           </td>
-                          {/* eslint-disable-next-line no-nested-ternary */}
                           <td
-                            className={`p-2 ${selectedBlockId === 'FLIPPER_L' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'L' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-sky-900/30' : 'bg-sky-50') : ''}`}
+                            className={`p-2 ${
+                              /* eslint-disable-next-line no-nested-ternary */
+                              selectedBlockId === 'FLIPPER_L' ||
+                              selectedBlockId === 'FLIPPER_BOTH' ||
+                              hoverFlipperColumn === 'L' ||
+                              hoverFlipperColumn === 'BOTH'
+                                ? darkMode
+                                  ? 'bg-sky-900/30'
+                                  : 'bg-sky-50'
+                                : ''
+                            }`}
                           >
                             <div className="flex flex-col gap-1 w-full px-[10px]">
                               {(() => {
@@ -5328,9 +5358,18 @@ const App = () => {
                               </div>
                             </div>
                           </td>
-                          {/* eslint-disable-next-line no-nested-ternary */}
                           <td
-                            className={`p-2 ${selectedBlockId === 'FLIPPER_R' || selectedBlockId === 'FLIPPER_BOTH' || hoverFlipperColumn === 'R' || hoverFlipperColumn === 'BOTH' ? (darkMode ? 'bg-rose-900/30' : 'bg-rose-50') : ''}`}
+                            className={`p-2 ${
+                              /* eslint-disable-next-line no-nested-ternary */
+                              selectedBlockId === 'FLIPPER_R' ||
+                              selectedBlockId === 'FLIPPER_BOTH' ||
+                              hoverFlipperColumn === 'R' ||
+                              hoverFlipperColumn === 'BOTH'
+                                ? darkMode
+                                  ? 'bg-rose-900/30'
+                                  : 'bg-rose-50'
+                                : ''
+                            }`}
                           >
                             <div className="flex flex-col gap-1 w-full px-[10px]">
                               {(() => {
