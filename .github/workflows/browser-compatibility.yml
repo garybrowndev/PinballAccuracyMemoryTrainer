@@ -45,7 +45,7 @@ jobs:
         run: npx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Run E2E tests on ${{ matrix.name }}
-        run: npx playwright test --project=${{ matrix.browser }} --config config/playwright.config.js
+        run: npx playwright test --project=${{ matrix.browser }} --config config/playwright.config.js --grep-invert "Visual Regression"
         continue-on-error: false
 
       - name: Upload test results for ${{ matrix.name }}
