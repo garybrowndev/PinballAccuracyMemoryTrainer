@@ -1,11 +1,9 @@
-/* eslint-disable import/no-unresolved */
 import { render } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 
-import App from '../../src/app.jsx';
-/* eslint-enable import/no-unresolved */
+import App from '../../../src/app.jsx';
 
 describe('Accessibility - WCAG 2.1 AAA Compliance', () => {
   it('should not have any accessibility violations in main app', async () => {

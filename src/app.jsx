@@ -3964,1875 +3964,1101 @@ const App = () => {
     <div
       className={`min-h-screen bg-gradient-to-b transition-colors ${darkMode ? 'dark from-slate-900 to-slate-950 text-slate-100' : 'from-slate-100 to-slate-200 text-slate-900'}`}
     >
-      {/* Info Modal */}
-      {showInfoModal ? (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-          <button
-            type="button"
-            onClick={() => setShowInfoModal(false)}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-default"
-            aria-label="Close modal"
-            tabIndex={-1}
-          />
+      <main>
+        {/* Info Modal */}
+        {showInfoModal ? (
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="info-modal-title"
-            className={`relative rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800 text-slate-100' : 'bg-white text-slate-900'}`}
+            role="presentation"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="p-6 md:p-8">
-              <div className="flex items-start justify-between mb-6">
-                <h2
-                  id="info-modal-title"
-                  className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                >
-                  About This App
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setShowInfoModal(false)}
-                  className={`p-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
-                  aria-label="Close"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-6 h-6"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+            <button
+              type="button"
+              onClick={() => setShowInfoModal(false)}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-default"
+              aria-label="Close modal"
+              tabIndex={-1}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="info-modal-title"
+              className={`relative rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800 text-slate-100' : 'bg-white text-slate-900'}`}
+            >
+              <div className="p-6 md:p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <h2
+                    id="info-modal-title"
+                    className={`text-2xl md:text-3xl font-bold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
                   >
-                    <path d="M18 6L6 18" />
-                    <path d="M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className={`space-y-6 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                <div>
-                  <h3
-                    className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                    About This App
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setShowInfoModal(false)}
+                    className={`p-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-100'}`}
+                    aria-label="Close"
                   >
-                    Pinball Accuracy Memory Trainer
-                  </h3>
-                  <p className="leading-relaxed">
-                    A training tool designed to help pinball players improve their shot accuracy
-                    estimation and mental model of flipper-to-target percentages. Practice recalling
-                    and adjusting your guesses to build muscle memory for real-world pinball play.
-                  </p>
-                </div>
-                <div>
-                  <h3
-                    className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                  >
-                    How It Works
-                  </h3>
-                  <ul className="space-y-2 list-disc list-inside">
-                    <li>
-                      Setup shots on a virtual playfield with left and right flipper percentages
-                    </li>
-                    <li>Practice recalling those percentages from memory</li>
-                    <li>Get immediate feedback on your accuracy</li>
-                    <li>Track your improvement over time with detailed scoring</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3
-                    className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                  >
-                    Author
-                  </h3>
-                  <p className="leading-relaxed">
-                    Created by Gary Brown for the pinball community. This tool runs entirely in your
-                    browser with no data sent to any server - all your practice data stays local.
-                  </p>
-                </div>
-                <div>
-                  <h3
-                    className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                  >
-                    Open Source
-                  </h3>
-                  <p className="leading-relaxed mb-3">
-                    This project is open source and available on GitHub. Contributions, feedback,
-                    and suggestions are welcome!
-                  </p>
-                  <a
-                    href="https://github.com/garybrowndev/PinballAccuracyMemoryTrainer"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${darkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      className="w-6 h-6"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M18 6L6 18" />
+                      <path d="M6 6l12 12" />
                     </svg>
-                    View on GitHub
-                  </a>
+                  </button>
                 </div>
-                <div className="pt-4 border-t text-sm text-slate-500">
-                  <p>
-                    Version{' '}
-                    {(() => {
-                      const version =
-                        typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__;
-                      const releaseUrl =
-                        typeof __RELEASE_URL__ === 'undefined' ? '' : __RELEASE_URL__;
-                      if (releaseUrl) {
-                        return (
-                          <a
-                            href={releaseUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                            title="View release notes"
-                          >
-                            {version}
-                          </a>
-                        );
-                      }
-                      return version;
-                    })()}
-                    {(() => {
-                      if (typeof __BUILD_COMMIT__ === 'undefined' || !__BUILD_COMMIT__) {
-                        return null;
-                      }
-                      if (__BUILD_COMMIT__ === 'dev') {
-                        return (
-                          <span className="ml-2 text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded">
-                            Development Build
-                          </span>
-                        );
-                      }
-                      return (
-                        <span className="ml-2">
-                          (
-                          {typeof __BUILD_COMMIT_URL__ !== 'undefined' && __BUILD_COMMIT_URL__ ? (
+                <div className={`space-y-6 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  <div>
+                    <h3
+                      className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                    >
+                      Pinball Accuracy Memory Trainer
+                    </h3>
+                    <p className="leading-relaxed">
+                      A training tool designed to help pinball players improve their shot accuracy
+                      estimation and mental model of flipper-to-target percentages. Practice
+                      recalling and adjusting your guesses to build muscle memory for real-world
+                      pinball play.
+                    </p>
+                  </div>
+                  <div>
+                    <h3
+                      className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                    >
+                      How It Works
+                    </h3>
+                    <ul className="space-y-2 list-disc list-inside">
+                      <li>
+                        Setup shots on a virtual playfield with left and right flipper percentages
+                      </li>
+                      <li>Practice recalling those percentages from memory</li>
+                      <li>Get immediate feedback on your accuracy</li>
+                      <li>Track your improvement over time with detailed scoring</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3
+                      className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                    >
+                      Author
+                    </h3>
+                    <p className="leading-relaxed">
+                      Created by Gary Brown for the pinball community. This tool runs entirely in
+                      your browser with no data sent to any server - all your practice data stays
+                      local.
+                    </p>
+                  </div>
+                  <div>
+                    <h3
+                      className={`text-lg font-semibold mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                    >
+                      Open Source
+                    </h3>
+                    <p className="leading-relaxed mb-3">
+                      This project is open source and available on GitHub. Contributions, feedback,
+                      and suggestions are welcome!
+                    </p>
+                    <a
+                      href="https://github.com/garybrowndev/PinballAccuracyMemoryTrainer"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${darkMode ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                      </svg>
+                      View on GitHub
+                    </a>
+                  </div>
+                  <div className="pt-4 border-t text-sm text-slate-500">
+                    <p>
+                      Version{' '}
+                      {(() => {
+                        const version =
+                          typeof __APP_VERSION__ === 'undefined' ? '0.0.1' : __APP_VERSION__;
+                        const releaseUrl =
+                          typeof __RELEASE_URL__ === 'undefined' ? '' : __RELEASE_URL__;
+                        if (releaseUrl) {
+                          return (
                             <a
-                              href={__BUILD_COMMIT_URL__}
+                              href={releaseUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline"
-                              title="View commit on GitHub"
+                              title="View release notes"
                             >
-                              {__BUILD_COMMIT__}
+                              {version}
                             </a>
-                          ) : (
-                            <span>{__BUILD_COMMIT__}</span>
-                          )}
-                          {Boolean(
-                            typeof __BUILD_WORKFLOW_URL__ !== 'undefined' && __BUILD_WORKFLOW_URL__
-                          ) && (
-                            <>
-                              {' • '}
+                          );
+                        }
+                        return version;
+                      })()}
+                      {(() => {
+                        if (typeof __BUILD_COMMIT__ === 'undefined' || !__BUILD_COMMIT__) {
+                          return null;
+                        }
+                        if (__BUILD_COMMIT__ === 'dev') {
+                          return (
+                            <span className="ml-2 text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded">
+                              Development Build
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="ml-2">
+                            (
+                            {typeof __BUILD_COMMIT_URL__ !== 'undefined' && __BUILD_COMMIT_URL__ ? (
                               <a
-                                href={__BUILD_WORKFLOW_URL__}
+                                href={__BUILD_COMMIT_URL__}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline"
-                                title="View build workflow"
+                                title="View commit on GitHub"
                               >
-                                build
+                                {__BUILD_COMMIT__}
                               </a>
-                            </>
-                          )}
-                          )
-                        </span>
-                      );
-                    })()}
-                  </p>
-                  <p className="mt-1">Built with React + Vite + Tailwind CSS</p>
+                            ) : (
+                              <span>{__BUILD_COMMIT__}</span>
+                            )}
+                            {Boolean(
+                              typeof __BUILD_WORKFLOW_URL__ !== 'undefined' &&
+                              __BUILD_WORKFLOW_URL__
+                            ) && (
+                              <>
+                                {' • '}
+                                <a
+                                  href={__BUILD_WORKFLOW_URL__}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline"
+                                  title="View build workflow"
+                                >
+                                  build
+                                </a>
+                              </>
+                            )}
+                            )
+                          </span>
+                        );
+                      })()}
+                    </p>
+                    <p className="mt-1">Built with React + Vite + Tailwind CSS</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        ) : null}
+        {/* Toast notifications */}
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 items-center">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein"
+            >
+              {t.msg}
+            </div>
+          ))}
         </div>
-      ) : null}
-      {/* Toast notifications */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 items-center">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            className="bg-slate-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg animate-fadein"
-          >
-            {t.msg}
-          </div>
-        ))}
-      </div>
-      {/* Detached popups (portals) for shot & location selection */}
-      {shotMenuAnchor && openShotMenuId !== null
-        ? createPortal(
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
-            <div
-              className={`absolute z-50 w-[360px] rounded-xl border shadow-xl p-3 grid grid-cols-4 gap-3 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
-              style={{
-                left: `${Math.max(8, shotMenuAnchor.x)}px`,
-                top: `${Math.max(0, shotMenuAnchor.y)}px`,
-                ...(shotMenuAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
-              }}
-              role="dialog"
-              aria-label="Select shot type"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              {BASE_ELEMENTS.map((b) => {
-                const currentRow = rows.find((r) => r.id === shotMenuAnchor.id);
-                const isSel = currentRow?.base === b;
-                const hasSelection = Boolean(currentRow?.base);
-                return (
-                  <ElementTile
-                    key={b}
-                    name={b}
-                    selected={isSel}
-                    hasSelection={hasSelection}
-                    darkMode={darkMode}
-                    onSelect={() => {
-                      if (isSel) {
-                        // Clicking the currently selected shot deselects it; keep menu open
-                        setRows((prev) => {
-                          const next = [...prev];
-                          const idx = prev.findIndex((r) => r.id === shotMenuAnchor.id);
-                          if (idx > -1) {
-                            next[idx] = { ...next[idx], base: '', type: '' };
-                          }
-                          return next;
-                        });
-                      } else {
-                        // Selecting a new shot; close menu
-                        setRows((prev) => {
-                          const next = [...prev];
-                          const idx = prev.findIndex((r) => r.id === shotMenuAnchor.id);
-                          if (idx > -1) {
-                            next[idx] = {
-                              ...next[idx],
-                              base: b,
-                              type: buildType(b, next[idx].location || ''),
-                            };
-                          }
-                          return next;
-                        });
-                        setOpenShotMenuId(null);
-                        setShotMenuAnchor(null);
-                      }
-                    }}
-                  />
-                );
-              })}
-            </div>,
-            document.body
-          )
-        : null}
-      {locMenuAnchor && openLocMenuId !== null
-        ? createPortal(
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
-            <div
-              className={`absolute z-50 w-48 rounded-xl border shadow-xl p-2 grid grid-cols-2 gap-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
-              style={{
-                left: `${Math.max(8, locMenuAnchor.x)}px`,
-                top: `${Math.max(0, locMenuAnchor.y)}px`,
-                ...(locMenuAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
-              }}
-              role="dialog"
-              aria-label="Select location"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              {LOCATIONS.map((loc) => {
-                const currentRow = rows.find((r) => r.id === locMenuAnchor.id);
-                const isSel = currentRow?.location === loc;
-                return (
-                  <button
-                    key={loc}
-                    type="button"
-                    onClick={() => {
-                      if (isSel) {
-                        // Clicking the currently selected location deselects it; keep menu open
-                        setRows((prev) => {
-                          const next = [...prev];
-                          const idx = prev.findIndex((r) => r.id === locMenuAnchor.id);
-                          if (idx > -1) {
-                            const base = next[idx].base || '';
-                            next[idx] = { ...next[idx], location: '', type: buildType(base, '') };
-                          }
-                          return next;
-                        });
-                      } else {
-                        // Selecting a new location; close menu
-                        setRows((prev) => {
-                          const next = [...prev];
-                          const idx = prev.findIndex((r) => r.id === locMenuAnchor.id);
-                          if (idx > -1) {
-                            const base = next[idx].base || '';
-                            next[idx] = { ...next[idx], location: loc, type: buildType(base, loc) };
-                          }
-                          return next;
-                        });
-                        setOpenLocMenuId(null);
-                        setLocMenuAnchor(null);
-                      }
-                    }}
-                    className={(() => {
-                      let selClass;
-                      if (isSel) {
-                        selClass = 'bg-slate-900 text-white';
-                      } else if (darkMode) {
-                        selClass = 'bg-slate-700 hover:bg-slate-600 text-slate-200';
-                      } else {
-                        selClass = 'bg-slate-100 hover:bg-slate-200 text-slate-700';
-                      }
-                      return `${selClass} text-[11px] px-2 py-1 rounded-md text-left`;
-                    })()}
-                  >
-                    {loc}
-                  </button>
-                );
-              })}
-            </div>,
-            document.body
-          )
-        : null}
-      {addCountAnchor && rows.length === 0
-        ? createPortal(
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
-            <div
-              className={`absolute z-50 w-44 rounded-xl border shadow-xl p-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
-              style={{
-                left: `${Math.max(8, addCountAnchor.x)}px`,
-                top: `${Math.max(0, addCountAnchor.y)}px`,
-                ...(addCountAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
-              }}
-              role="dialog"
-              aria-label="How many shots to add"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <div className="grid grid-cols-4 gap-1">
-                {Array.from({ length: 20 }, (_, k) => k + 1).map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    className={`text-[11px] px-2 py-1 rounded-md ${darkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-                    onClick={() => {
-                      const count = n;
-                      // eslint-disable-next-line unicorn/consistent-function-scoping
-                      const buildRows = (cnt) => {
-                        const asc = Array.from({ length: cnt }, (_, i) =>
-                          snap5(((i + 1) / (cnt + 1)) * 100)
-                        );
-                        for (let i = 1; i < asc.length; i++) {
-                          if (asc[i] <= asc[i - 1]) {
-                            asc[i] = Math.min(100, asc[i - 1] + 5);
-                          }
+        {/* Detached popups (portals) for shot & location selection */}
+        {shotMenuAnchor && openShotMenuId !== null
+          ? createPortal(
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
+              <div
+                className={`absolute z-50 w-[360px] rounded-xl border shadow-xl p-3 grid grid-cols-4 gap-3 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                style={{
+                  left: `${Math.max(8, shotMenuAnchor.x)}px`,
+                  top: `${Math.max(0, shotMenuAnchor.y)}px`,
+                  ...(shotMenuAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
+                }}
+                role="dialog"
+                aria-label="Select shot type"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                {BASE_ELEMENTS.map((b) => {
+                  const currentRow = rows.find((r) => r.id === shotMenuAnchor.id);
+                  const isSel = currentRow?.base === b;
+                  const hasSelection = Boolean(currentRow?.base);
+                  return (
+                    <ElementTile
+                      key={b}
+                      name={b}
+                      selected={isSel}
+                      hasSelection={hasSelection}
+                      darkMode={darkMode}
+                      onSelect={() => {
+                        if (isSel) {
+                          // Clicking the currently selected shot deselects it; keep menu open
+                          setRows((prev) => {
+                            const next = [...prev];
+                            const idx = prev.findIndex((r) => r.id === shotMenuAnchor.id);
+                            if (idx > -1) {
+                              next[idx] = { ...next[idx], base: '', type: '' };
+                            }
+                            return next;
+                          });
+                        } else {
+                          // Selecting a new shot; close menu
+                          setRows((prev) => {
+                            const next = [...prev];
+                            const idx = prev.findIndex((r) => r.id === shotMenuAnchor.id);
+                            if (idx > -1) {
+                              next[idx] = {
+                                ...next[idx],
+                                base: b,
+                                type: buildType(b, next[idx].location || ''),
+                              };
+                            }
+                            return next;
+                          });
+                          setOpenShotMenuId(null);
+                          setShotMenuAnchor(null);
                         }
-                        for (let i = asc.length - 2; i >= 0; i--) {
-                          if (asc[i] >= asc[i + 1]) {
-                            asc[i] = Math.max(5, asc[i + 1] - 5);
-                          }
+                      }}
+                    />
+                  );
+                })}
+              </div>,
+              document.body
+            )
+          : null}
+        {locMenuAnchor && openLocMenuId !== null
+          ? createPortal(
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
+              <div
+                className={`absolute z-50 w-48 rounded-xl border shadow-xl p-2 grid grid-cols-2 gap-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                style={{
+                  left: `${Math.max(8, locMenuAnchor.x)}px`,
+                  top: `${Math.max(0, locMenuAnchor.y)}px`,
+                  ...(locMenuAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
+                }}
+                role="dialog"
+                aria-label="Select location"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                {LOCATIONS.map((loc) => {
+                  const currentRow = rows.find((r) => r.id === locMenuAnchor.id);
+                  const isSel = currentRow?.location === loc;
+                  return (
+                    <button
+                      key={loc}
+                      type="button"
+                      onClick={() => {
+                        if (isSel) {
+                          // Clicking the currently selected location deselects it; keep menu open
+                          setRows((prev) => {
+                            const next = [...prev];
+                            const idx = prev.findIndex((r) => r.id === locMenuAnchor.id);
+                            if (idx > -1) {
+                              const base = next[idx].base || '';
+                              next[idx] = { ...next[idx], location: '', type: buildType(base, '') };
+                            }
+                            return next;
+                          });
+                        } else {
+                          // Selecting a new location; close menu
+                          setRows((prev) => {
+                            const next = [...prev];
+                            const idx = prev.findIndex((r) => r.id === locMenuAnchor.id);
+                            if (idx > -1) {
+                              const base = next[idx].base || '';
+                              next[idx] = {
+                                ...next[idx],
+                                location: loc,
+                                type: buildType(base, loc),
+                              };
+                            }
+                            return next;
+                          });
+                          setOpenLocMenuId(null);
+                          setLocMenuAnchor(null);
                         }
-                        const desc = [...asc].reverse();
-                        return asc.map((v, i) => newRow({ initL: v, initR: desc[i] }, i));
-                      };
-                      setRows(buildRows(count));
-                      setAddCountAnchor(null);
-                    }}
-                  >
-                    {n}
-                  </button>
-                ))}
-                <div
-                  className={`col-span-4 mt-1 text-[10px] text-center ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}
-                >
-                  How many shots?
-                </div>
-              </div>
-              {availablePresets.length > 0 && (
-                <div
-                  className={`mt-2 pt-2 border-t ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}
-                >
+                      }}
+                      className={(() => {
+                        let selClass;
+                        if (isSel) {
+                          selClass = 'bg-slate-900 text-white';
+                        } else if (darkMode) {
+                          selClass = 'bg-slate-700 hover:bg-slate-600 text-slate-200';
+                        } else {
+                          selClass = 'bg-slate-100 hover:bg-slate-200 text-slate-700';
+                        }
+                        return `${selClass} text-[11px] px-2 py-1 rounded-md text-left`;
+                      })()}
+                    >
+                      {loc}
+                    </button>
+                  );
+                })}
+              </div>,
+              document.body
+            )
+          : null}
+        {addCountAnchor && rows.length === 0
+          ? createPortal(
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- container for interactive buttons
+              <div
+                className={`absolute z-50 w-44 rounded-xl border shadow-xl p-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                style={{
+                  left: `${Math.max(8, addCountAnchor.x)}px`,
+                  top: `${Math.max(0, addCountAnchor.y)}px`,
+                  ...(addCountAnchor.openUp ? { transform: 'translateY(-100%)' } : {}),
+                }}
+                role="dialog"
+                aria-label="How many shots to add"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                <div className="grid grid-cols-4 gap-1">
+                  {Array.from({ length: 20 }, (_, k) => k + 1).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`text-[11px] px-2 py-1 rounded-md ${darkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                      onClick={() => {
+                        const count = n;
+                        // eslint-disable-next-line unicorn/consistent-function-scoping
+                        const buildRows = (cnt) => {
+                          const asc = Array.from({ length: cnt }, (_, i) =>
+                            snap5(((i + 1) / (cnt + 1)) * 100)
+                          );
+                          for (let i = 1; i < asc.length; i++) {
+                            if (asc[i] <= asc[i - 1]) {
+                              asc[i] = Math.min(100, asc[i - 1] + 5);
+                            }
+                          }
+                          for (let i = asc.length - 2; i >= 0; i--) {
+                            if (asc[i] >= asc[i + 1]) {
+                              asc[i] = Math.max(5, asc[i + 1] - 5);
+                            }
+                          }
+                          const desc = [...asc].reverse();
+                          return asc.map((v, i) => newRow({ initL: v, initR: desc[i] }, i));
+                        };
+                        setRows(buildRows(count));
+                        setAddCountAnchor(null);
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
                   <div
-                    className={`text-[10px] text-center mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}
+                    className={`col-span-4 mt-1 text-[10px] text-center ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}
                   >
-                    Or load a preset:
+                    How many shots?
                   </div>
-                  <div className="relative">
+                </div>
+                {availablePresets.length > 0 && (
+                  <div
+                    className={`mt-2 pt-2 border-t ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}
+                  >
+                    <div
+                      className={`text-[10px] text-center mb-1 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}
+                    >
+                      Or load a preset:
+                    </div>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPresetOpen((p) => !p);
+                        }}
+                        className={`w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md flex items-center justify-between ${darkMode ? 'bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-300' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'}`}
+                        aria-expanded={presetOpen}
+                        aria-haspopup="listbox"
+                        title={selectedPresetName || 'Select preset'}
+                      >
+                        <span className="truncate block" style={{ maxWidth: '80%' }}>
+                          {selectedPresetName || 'Choose preset...'}
+                        </span>
+                        <svg
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          stroke="currentColor"
+                          className="w-4 h-4 ml-2"
+                        >
+                          <path
+                            d="M6 8l4 4 4-4"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                      {presetOpen ? (
+                        <div
+                          role="listbox"
+                          aria-label="Available presets"
+                          tabIndex={-1}
+                          className={`absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 shadow-lg z-60 p-2 ${darkMode ? 'bg-slate-800 border-emerald-600' : 'bg-white border-emerald-400'}`}
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                            gap: '0.25rem',
+                            maxWidth: 'calc(100vw - 2rem)',
+                            width: 'max-content',
+                          }}
+                        >
+                          {availablePresets.map((preset) => (
+                            <button
+                              key={preset.filename}
+                              type="button"
+                              role="option"
+                              aria-selected={selectedPresetName === preset.name}
+                              onClick={() => {
+                                loadPreset(preset);
+                                setSelectedPresetName(preset.name);
+                                setPresetOpen(false);
+                                setAddCountAnchor(null);
+                              }}
+                              title={preset.name}
+                              className={(() => {
+                                const isSelected = selectedPresetName === preset.name;
+                                let ringClass;
+                                if (isSelected && darkMode) {
+                                  ringClass = 'bg-emerald-800 ring-2 ring-emerald-500';
+                                } else if (isSelected) {
+                                  ringClass = 'bg-emerald-200 ring-2 ring-emerald-400';
+                                } else if (darkMode) {
+                                  ringClass = 'ring-1 ring-emerald-700';
+                                } else {
+                                  ringClass = 'ring-1 ring-emerald-200';
+                                }
+                                const textClass = darkMode
+                                  ? 'text-emerald-300 hover:bg-emerald-700/50'
+                                  : 'text-emerald-700 hover:bg-emerald-100';
+                                return `${ringClass} text-left whitespace-nowrap text-[11px] px-2 py-1 rounded-md transition ${textClass}`;
+                              })()}
+                            >
+                              <span>{preset.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                )}
+              </div>,
+              document.body
+            )
+          : null}
+        <div className="max-w-4xl mx-auto p-4 md:p-8">
+          {/* Setup */}
+          {!initialized && (
+            <>
+              {/* Compute misordered shot IDs: any row whose sequence index differs from its rank in ascending x coordinate. */}
+              {(() => {
+                // Precompute once per render; inexpensive for small row counts.
+              })()}
+              <Section
+                title="Setup Shots"
+                darkMode={darkMode}
+                right={
+                  <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPresetOpen((p) => !p);
+                      onClick={() => {
+                        if (isStandalone) {
+                          downloadStandalone();
+                        } else {
+                          _pushToast('Download only works in standalone mode');
+                        }
                       }}
-                      className={`w-full text-left overflow-hidden whitespace-nowrap text-[11px] px-2 py-1 rounded-md flex items-center justify-between ${darkMode ? 'bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-300' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'}`}
-                      aria-expanded={presetOpen}
-                      aria-haspopup="listbox"
-                      title={selectedPresetName || 'Select preset'}
+                      className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? ICON_BTN_DARK : ICON_BTN_LIGHT} ${isStandalone ? '' : 'opacity-60'}`}
+                      title={
+                        isStandalone
+                          ? 'Download this standalone HTML file'
+                          : 'Download (only works in standalone mode)'
+                      }
+                      aria-label="Download standalone"
                     >
-                      <span className="truncate block" style={{ maxWidth: '80%' }}>
-                        {selectedPresetName || 'Choose preset...'}
-                      </span>
                       <svg
-                        viewBox="0 0 20 20"
+                        viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        className="w-4 h-4 ml-2"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        <path
-                          d="M6 8l4 4 4-4"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <path d="M7 10l5 5 5-5" />
+                        <path d="M12 15V3" />
                       </svg>
                     </button>
-                    {presetOpen ? (
-                      <div
-                        role="listbox"
-                        aria-label="Available presets"
-                        tabIndex={-1}
-                        className={`absolute left-0 bottom-full mb-1 overflow-visible rounded-xl border-2 shadow-lg z-60 p-2 ${darkMode ? 'bg-slate-800 border-emerald-600' : 'bg-white border-emerald-400'}`}
-                        onClick={(e) => e.stopPropagation()}
-                        onKeyDown={(e) => e.stopPropagation()}
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                          gap: '0.25rem',
-                          maxWidth: 'calc(100vw - 2rem)',
-                          width: 'max-content',
-                        }}
-                      >
-                        {availablePresets.map((preset) => (
-                          <button
-                            key={preset.filename}
-                            type="button"
-                            role="option"
-                            aria-selected={selectedPresetName === preset.name}
-                            onClick={() => {
-                              loadPreset(preset);
-                              setSelectedPresetName(preset.name);
-                              setPresetOpen(false);
-                              setAddCountAnchor(null);
-                            }}
-                            title={preset.name}
-                            className={(() => {
-                              const isSelected = selectedPresetName === preset.name;
-                              let ringClass;
-                              if (isSelected && darkMode) {
-                                ringClass = 'bg-emerald-800 ring-2 ring-emerald-500';
-                              } else if (isSelected) {
-                                ringClass = 'bg-emerald-200 ring-2 ring-emerald-400';
-                              } else if (darkMode) {
-                                ringClass = 'ring-1 ring-emerald-700';
-                              } else {
-                                ringClass = 'ring-1 ring-emerald-200';
-                              }
-                              const textClass = darkMode
-                                ? 'text-emerald-300 hover:bg-emerald-700/50'
-                                : 'text-emerald-700 hover:bg-emerald-100';
-                              return `${ringClass} text-left whitespace-nowrap text-[11px] px-2 py-1 rounded-md transition ${textClass}`;
-                            })()}
-                          >
-                            <span>{preset.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              )}
-            </div>,
-            document.body
-          )
-        : null}
-      <div className="max-w-4xl mx-auto p-4 md:p-8">
-        {/* Setup */}
-        {!initialized && (
-          <>
-            {/* Compute misordered shot IDs: any row whose sequence index differs from its rank in ascending x coordinate. */}
-            {(() => {
-              // Precompute once per render; inexpensive for small row counts.
-            })()}
-            <Section
-              title="Setup Shots"
-              darkMode={darkMode}
-              right={
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isStandalone) {
-                        downloadStandalone();
-                      } else {
-                        _pushToast('Download only works in standalone mode');
-                      }
-                    }}
-                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? ICON_BTN_DARK : ICON_BTN_LIGHT} ${isStandalone ? '' : 'opacity-60'}`}
-                    title={
-                      isStandalone
-                        ? 'Download this standalone HTML file'
-                        : 'Download (only works in standalone mode)'
-                    }
-                    aria-label="Download standalone"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                    <button
+                      type="button"
+                      onClick={() => setDarkMode(!darkMode)}
+                      className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : ICON_BTN_LIGHT}`}
+                      title={darkMode ? DARK_MODE_SWITCH_LIGHT : DARK_MODE_SWITCH_DARK}
+                      aria-label={darkMode ? DARK_MODE_SWITCH_LIGHT : DARK_MODE_SWITCH_DARK}
                     >
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <path d="M7 10l5 5 5-5" />
-                      <path d="M12 15V3" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : ICON_BTN_LIGHT}`}
-                    title={darkMode ? DARK_MODE_SWITCH_LIGHT : DARK_MODE_SWITCH_DARK}
-                    aria-label={darkMode ? DARK_MODE_SWITCH_LIGHT : DARK_MODE_SWITCH_DARK}
-                  >
-                    {darkMode ? (
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                        <path
-                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          fill="none"
-                        />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                      </svg>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowInfoModal(true)}
-                    className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? ICON_BTN_DARK : ICON_BTN_LIGHT}`}
-                    title="About this app"
-                    aria-label="About"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                      <path d="M12 17h.01" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    disabled
-                    className={`${BTN_ICON} ${darkMode ? 'bg-blue-600 border-2 border-blue-400' : 'bg-blue-600 border-2 border-blue-400'} font-semibold`}
-                    title="Currently on Setup page"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    Setup
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (canStart) {
-                        startSession();
-                      }
-                    }}
-                    disabled={!canStart}
-                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : DISABLED_CLASS}`}
-                    title={
-                      canStart
-                        ? 'Start the practice session'
-                        : 'Complete Shot Type, Left & Right values for every shot'
-                    }
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                    Practice
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (canStart) {
-                        startSession();
-                        setFinalPhase(true);
-                      }
-                    }}
-                    disabled={!canStart}
-                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : DISABLED_CLASS}`}
-                    title={
-                      canStart
-                        ? 'Go directly to final recall'
-                        : 'Complete Shot Type, Left & Right values for every shot'
-                    }
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                      <line x1="4" y1="22" x2="4" y2="15" />
-                    </svg>
-                    Recall
-                  </button>
-                </div>
-              }
-            >
-              <div className={`mb-4 text-xs ${GetTextClass(darkMode, 'secondary')}`}>
-                Spatial arrangement helps visualize logical ordering. Misordered shots (array order
-                vs left→right) are highlighted in red.
-              </div>
-              {(() => {
-                const misorderedIds = (() => {
-                  if (rows.length === 0) {
-                    return new Set();
-                  }
-                  const byX = [...rows].sort((a, b) => a.x - b.x).map((r) => r.id);
-                  const mis = new Set();
-                  for (const [i, row] of rows.entries()) {
-                    if (row.id !== byX[i]) {
-                      mis.add(row.id);
-                    }
-                  }
-                  return mis;
-                })();
-                return (
-                  <PlayfieldEditor
-                    rows={rows}
-                    setRows={setRows}
-                    selectedId={selectedBlockId}
-                    setSelectedId={setSelectedBlockId}
-                    misorderedIds={misorderedIds}
-                    darkMode={darkMode}
-                    onClear={() => {
-                      setRows([]);
-                      setCollapsedTypes([]);
-                      _pushToast('Cleared all shots');
-                    }}
-                    onExample={() => {
-                      setRows([
-                        newRow({ base: 'Orbit', location: 'Left', initL: 25, initR: 75 }, 0),
-                        newRow({ base: 'Ramp', location: 'Center', initL: 50, initR: 50 }, 1),
-                        newRow({ base: 'Orbit', location: 'Right', initL: 75, initR: 25 }, 2),
-                      ]);
-                      _pushToast('Loaded example shots');
-                    }}
-                    advancedOptions={
-                      <div className="space-y-1.5 text-xs">
-                        <div className="flex items-center justify-between gap-1">
-                          <span
-                            className={`${GetTextClass(darkMode, 'secondary')}`}
-                            title="How far each correct value can start from your initial guess (in 5% steps)"
-                          >
-                            Initial random (×5%)
-                          </span>
-                          <NumberInput
-                            value={initRandSteps}
-                            onChange={setInitRandSteps}
-                            min={0}
-                            max={4}
-                            darkMode={darkMode}
+                      {darkMode ? (
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                          <path
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
                           />
-                        </div>
-                        <div className="flex items-center justify-between gap-1">
-                          <span
-                            className={`${GetTextClass(darkMode, 'secondary')}`}
-                            title="How often hidden values shift after attempts"
-                          >
-                            Drift every N attempts
-                          </span>
-                          <div className="flex items-center gap-1">
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowInfoModal(true)}
+                      className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? ICON_BTN_DARK : ICON_BTN_LIGHT}`}
+                      title="About this app"
+                      aria-label="About"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <path d="M12 17h.01" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      disabled
+                      className={`${BTN_ICON} ${darkMode ? 'bg-blue-600 border-2 border-blue-400' : 'bg-blue-600 border-2 border-blue-400'} font-semibold`}
+                      title="Currently on Setup page"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                      Setup
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (canStart) {
+                          startSession();
+                        }
+                      }}
+                      disabled={!canStart}
+                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : DISABLED_CLASS}`}
+                      title={
+                        canStart
+                          ? 'Start the practice session'
+                          : 'Complete Shot Type, Left & Right values for every shot'
+                      }
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                      Practice
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (canStart) {
+                          startSession();
+                          setFinalPhase(true);
+                        }
+                      }}
+                      disabled={!canStart}
+                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : DISABLED_CLASS}`}
+                      title={
+                        canStart
+                          ? 'Go directly to final recall'
+                          : 'Complete Shot Type, Left & Right values for every shot'
+                      }
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                        <line x1="4" y1="22" x2="4" y2="15" />
+                      </svg>
+                      Recall
+                    </button>
+                  </div>
+                }
+              >
+                <div className={`mb-4 text-xs ${GetTextClass(darkMode, 'secondary')}`}>
+                  Spatial arrangement helps visualize logical ordering. Misordered shots (array
+                  order vs left→right) are highlighted in red.
+                </div>
+                {(() => {
+                  const misorderedIds = (() => {
+                    if (rows.length === 0) {
+                      return new Set();
+                    }
+                    const byX = [...rows].sort((a, b) => a.x - b.x).map((r) => r.id);
+                    const mis = new Set();
+                    for (const [i, row] of rows.entries()) {
+                      if (row.id !== byX[i]) {
+                        mis.add(row.id);
+                      }
+                    }
+                    return mis;
+                  })();
+                  return (
+                    <PlayfieldEditor
+                      rows={rows}
+                      setRows={setRows}
+                      selectedId={selectedBlockId}
+                      setSelectedId={setSelectedBlockId}
+                      misorderedIds={misorderedIds}
+                      darkMode={darkMode}
+                      onClear={() => {
+                        setRows([]);
+                        setCollapsedTypes([]);
+                        _pushToast('Cleared all shots');
+                      }}
+                      onExample={() => {
+                        setRows([
+                          newRow({ base: 'Orbit', location: 'Left', initL: 25, initR: 75 }, 0),
+                          newRow({ base: 'Ramp', location: 'Center', initL: 50, initR: 50 }, 1),
+                          newRow({ base: 'Orbit', location: 'Right', initL: 75, initR: 25 }, 2),
+                        ]);
+                        _pushToast('Loaded example shots');
+                      }}
+                      advancedOptions={
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex items-center justify-between gap-1">
+                            <span
+                              className={`${GetTextClass(darkMode, 'secondary')}`}
+                              title="How far each correct value can start from your initial guess (in 5% steps)"
+                            >
+                              Initial random (×5%)
+                            </span>
                             <NumberInput
-                              value={driftEvery}
-                              onChange={setDriftEvery}
+                              value={initRandSteps}
+                              onChange={setInitRandSteps}
                               min={0}
-                              max={50}
+                              max={4}
                               darkMode={darkMode}
                             />
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between gap-1">
-                          <span
-                            className={`${GetTextClass(darkMode, 'secondary')}`}
-                            title="Maximum distance (in 5% steps) a value can wander from its base during drift"
-                          >
-                            Drift magnitude (×5%)
-                          </span>
-                          <NumberInput
-                            value={driftMag}
-                            onChange={setDriftMag}
-                            min={0}
-                            max={10}
-                            step={0.5}
-                            darkMode={darkMode}
-                          />
-                        </div>
-                        <div className={`pt-1.5 border-t ${GetBorderClass(darkMode)}`}>
-                          <div className="flex items-center justify-between gap-1 mb-1.5">
+                          <div className="flex items-center justify-between gap-1">
                             <span
                               className={`${GetTextClass(darkMode, 'secondary')}`}
-                              title="Manual lets you pick any shot & flipper; Random picks one for you"
+                              title="How often hidden values shift after attempts"
                             >
-                              Mode
+                              Drift every N attempts
                             </span>
-                            <div className="flex gap-1">
-                              <Chip
-                                active={mode === 'manual'}
-                                onClick={() => setMode('manual')}
+                            <div className="flex items-center gap-1">
+                              <NumberInput
+                                value={driftEvery}
+                                onChange={setDriftEvery}
+                                min={0}
+                                max={50}
                                 darkMode={darkMode}
-                                className="text-[10px] px-2 py-0.5"
-                              >
-                                Manual
-                              </Chip>
-                              <Chip
-                                active={mode === 'random'}
-                                onClick={() => setMode('random')}
-                                darkMode={darkMode}
-                                className="text-[10px] px-2 py-0.5"
-                              >
-                                Random
-                              </Chip>
+                              />
                             </div>
                           </div>
-                          {mode === 'random' && (
-                            <label
-                              className={`flex items-center justify-end gap-2 ${GetTextClass(darkMode, 'muted')}`}
+                          <div className="flex items-center justify-between gap-1">
+                            <span
+                              className={`${GetTextClass(darkMode, 'secondary')}`}
+                              title="Maximum distance (in 5% steps) a value can wander from its base during drift"
                             >
-                              <span>Seeded</span>
-                              <input
-                                type="checkbox"
-                                checked={useSeededRandom}
-                                onChange={(e) => setUseSeededRandom(e.target.checked)}
-                                className={GetCheckboxClass(darkMode)}
-                              />
-                            </label>
-                          )}
-                        </div>
-                        <div className={`pt-1.5 border-t ${GetBorderClass(darkMode)}`}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setInitRandSteps(2);
-                              setDriftEvery(4);
-                              setDriftMag(2);
-                              setMode('random');
-                              setUseSeededRandom(false);
-                              _pushToast('Advanced settings reset to defaults');
-                            }}
-                            className={`w-full text-center py-1 rounded-md text-[10px] ${darkMode ? 'bg-slate-700/90 hover:bg-slate-600 text-slate-200 border border-slate-600' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'}`}
-                            title="Reset all advanced settings to their default values"
-                          >
-                            Reset to Defaults
-                          </button>
-                        </div>
-                      </div>
-                    }
-                  />
-                );
-              })()}
-              <div className="overflow-auto">
-                <table className="w-full text-sm table-fixed">
-                  <colgroup>
-                    <col className="w-[25%]" />
-                    <col className="w-[35%]" />
-                    <col className="w-[35%]" />
-                    {/* Compact actions column for 3 stacked icons */}
-                    <col className="w-[5%]" />
-                  </colgroup>
-                  <thead>
-                    <tr className={`text-left align-bottom ${GetTextClass(darkMode, 'secondary')}`}>
-                      <th
-                        className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? GetBgClass(darkMode, 'primary') : ''}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => {
-                              if (selectedBlockId !== 'FLIPPER_BOTH') {
-                                setSelectedBlockId('FLIPPER_BOTH');
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (
-                                (e.key === 'Enter' || e.key === ' ') &&
-                                selectedBlockId !== 'FLIPPER_BOTH'
-                              ) {
-                                setSelectedBlockId('FLIPPER_BOTH');
-                              }
-                            }}
-                            onMouseEnter={() => setHoverFlipperColumn('BOTH')}
-                            onMouseLeave={() => setHoverFlipperColumn(null)}
-                            className={`rounded px-1 cursor-pointer select-none ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}
-                            title="Select Both Flippers"
-                          >
-                            Shot Type
-                          </span>
-                          {rows.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setRows((prev) =>
-                                  prev.map((rw) => ({
-                                    ...rw,
-                                    base: '',
-                                    location: '',
-                                    type: '',
-                                    initL: rw.initL,
-                                    initR: rw.initR,
-                                  }))
-                                );
-                                setCollapsedTypes([]);
-                              }}
-                              className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
-                              title="Clear all shot type selections"
-                            >
-                              Clear
-                            </button>
-                          )}
-                        </div>
-                      </th>
-                      <th
-                        className={`p-2 ${
-                          /* eslint-disable-next-line no-nested-ternary */
-                          selectedBlockId === 'FLIPPER_L' ||
-                          selectedBlockId === 'FLIPPER_BOTH' ||
-                          hoverFlipperColumn === 'L' ||
-                          hoverFlipperColumn === 'BOTH'
-                            ? darkMode
-                              ? 'bg-sky-900/30'
-                              : 'bg-sky-50'
-                            : ''
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => {
-                              if (selectedBlockId !== 'FLIPPER_L') {
-                                setSelectedSide('L');
-                                setSelectedBlockId('FLIPPER_L');
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (
-                                (e.key === 'Enter' || e.key === ' ') &&
-                                selectedBlockId !== 'FLIPPER_L'
-                              ) {
-                                setSelectedSide('L');
-                                setSelectedBlockId('FLIPPER_L');
-                              }
-                            }}
-                            onMouseEnter={() => setHoverFlipperColumn('L')}
-                            onMouseLeave={() => setHoverFlipperColumn(null)}
-                            className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
-                            title="Select Left Flipper"
-                          >
-                            Left Flipper
-                          </span>
-                          {rows.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setRows((prev) => {
-                                  const n = prev.length;
-                                  if (!n) {
-                                    return prev;
-                                  }
-                                  const asc = Array.from({ length: n }, (_, i) =>
-                                    snap5(((i + 1) / (n + 1)) * 100)
-                                  );
-                                  for (let k = 1; k < asc.length; k++) {
-                                    if (asc[k] <= asc[k - 1]) {
-                                      asc[k] = Math.min(100, asc[k - 1] + 5);
-                                    }
-                                  }
-                                  for (let k = asc.length - 2; k >= 0; k--) {
-                                    if (asc[k] >= asc[k + 1]) {
-                                      asc[k] = Math.max(5, asc[k + 1] - 5);
-                                    }
-                                  }
-                                  return prev.map((rw, idx) => ({ ...rw, initL: asc[idx] }));
-                                });
-                              }}
-                              className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
-                              title="Auto-fill evenly spaced ascending values starting near center for left flipper"
-                            >
-                              Reset
-                            </button>
-                          )}
-                        </div>
-                      </th>
-                      <th
-                        className={`p-2 ${
-                          /* eslint-disable-next-line no-nested-ternary */
-                          selectedBlockId === 'FLIPPER_R' ||
-                          selectedBlockId === 'FLIPPER_BOTH' ||
-                          hoverFlipperColumn === 'R' ||
-                          hoverFlipperColumn === 'BOTH'
-                            ? darkMode
-                              ? 'bg-rose-900/30'
-                              : 'bg-rose-50'
-                            : ''
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => {
-                              if (selectedBlockId !== 'FLIPPER_R') {
-                                setSelectedSide('R');
-                                setSelectedBlockId('FLIPPER_R');
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (
-                                (e.key === 'Enter' || e.key === ' ') &&
-                                selectedBlockId !== 'FLIPPER_R'
-                              ) {
-                                setSelectedSide('R');
-                                setSelectedBlockId('FLIPPER_R');
-                              }
-                            }}
-                            onMouseEnter={() => setHoverFlipperColumn('R')}
-                            onMouseLeave={() => setHoverFlipperColumn(null)}
-                            className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
-                            title="Select Right Flipper"
-                          >
-                            Right Flipper
-                          </span>
-                          {rows.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setRows((prev) => {
-                                  const n = prev.length;
-                                  if (!n) {
-                                    return prev;
-                                  }
-                                  const asc = Array.from({ length: n }, (_, i) =>
-                                    snap5(((i + 1) / (n + 1)) * 100)
-                                  );
-                                  for (let k = 1; k < asc.length; k++) {
-                                    if (asc[k] <= asc[k - 1]) {
-                                      asc[k] = Math.min(100, asc[k - 1] + 5);
-                                    }
-                                  }
-                                  for (let k = asc.length - 2; k >= 0; k--) {
-                                    if (asc[k] >= asc[k + 1]) {
-                                      asc[k] = Math.max(5, asc[k + 1] - 5);
-                                    }
-                                  }
-                                  const desc = [...asc].reverse();
-                                  return prev.map((rw, idx) => ({ ...rw, initR: desc[idx] }));
-                                });
-                              }}
-                              className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
-                              title="Auto-fill evenly spaced descending values (high→low) for right flipper"
-                            >
-                              Reset
-                            </button>
-                          )}
-                        </div>
-                      </th>
-                      <th className="p-2 text-left align-bottom">
-                        <div className="flex flex-col items-end">
-                          {rows.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={exportPreset}
-                              className="cursor-pointer text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                              title="Export shots as JSON"
-                              aria-label="Export shots"
-                            >
-                              {/* Standard export/upload icon: arrow up out of tray */}
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                className="w-5 h-5"
+                              Drift magnitude (×5%)
+                            </span>
+                            <NumberInput
+                              value={driftMag}
+                              onChange={setDriftMag}
+                              min={0}
+                              max={10}
+                              step={0.5}
+                              darkMode={darkMode}
+                            />
+                          </div>
+                          <div className={`pt-1.5 border-t ${GetBorderClass(darkMode)}`}>
+                            <div className="flex items-center justify-between gap-1 mb-1.5">
+                              <span
+                                className={`${GetTextClass(darkMode, 'secondary')}`}
+                                title="Manual lets you pick any shot & flipper; Random picks one for you"
                               >
-                                <path
-                                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
+                                Mode
+                              </span>
+                              <div className="flex gap-1">
+                                <Chip
+                                  active={mode === 'manual'}
+                                  onClick={() => setMode('manual')}
+                                  darkMode={darkMode}
+                                  className="text-[10px] px-2 py-0.5"
+                                >
+                                  Manual
+                                </Chip>
+                                <Chip
+                                  active={mode === 'random'}
+                                  onClick={() => setMode('random')}
+                                  darkMode={darkMode}
+                                  className="text-[10px] px-2 py-0.5"
+                                >
+                                  Random
+                                </Chip>
+                              </div>
+                            </div>
+                            {mode === 'random' && (
+                              <label
+                                className={`flex items-center justify-end gap-2 ${GetTextClass(darkMode, 'muted')}`}
+                              >
+                                <span>Seeded</span>
+                                <input
+                                  type="checkbox"
+                                  checked={useSeededRandom}
+                                  onChange={(e) => setUseSeededRandom(e.target.checked)}
+                                  className={GetCheckboxClass(darkMode)}
                                 />
-                                <path
-                                  d="M7 10l5-5 5 5"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                                <path
-                                  d="M12 5v11"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
+                              </label>
+                            )}
+                          </div>
+                          <div className={`pt-1.5 border-t ${GetBorderClass(darkMode)}`}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setInitRandSteps(2);
+                                setDriftEvery(4);
+                                setDriftMag(2);
+                                setMode('random');
+                                setUseSeededRandom(false);
+                                _pushToast('Advanced settings reset to defaults');
+                              }}
+                              className={`w-full text-center py-1 rounded-md text-[10px] ${darkMode ? 'bg-slate-700/90 hover:bg-slate-600 text-slate-200 border border-slate-600' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'}`}
+                              title="Reset all advanced settings to their default values"
+                            >
+                              Reset to Defaults
                             </button>
-                          )}
+                          </div>
                         </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className={`p-8 text-center text-sm ${GetTextClass(darkMode, 'secondary')}`}
+                      }
+                    />
+                  );
+                })()}
+                <div className="overflow-auto">
+                  <table className="w-full text-sm table-fixed">
+                    <colgroup>
+                      <col className="w-[25%]" />
+                      <col className="w-[35%]" />
+                      <col className="w-[35%]" />
+                      {/* Compact actions column for 3 stacked icons */}
+                      <col className="w-[5%]" />
+                    </colgroup>
+                    <thead>
+                      <tr
+                        className={`text-left align-bottom ${GetTextClass(darkMode, 'secondary')}`}
+                      >
+                        <th
+                          className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? GetBgClass(darkMode, 'primary') : ''}`}
                         >
-                          <button
-                            type="button"
-                            data-add-multi
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (addCountAnchor) {
-                                setAddCountAnchor(null);
-                                return;
-                              }
-                              const r = e.currentTarget.getBoundingClientRect();
-                              const anchor = calcDropdownAnchor(r, 350);
-                              setAddCountAnchor({
-                                x: anchor.x,
-                                y: anchor.y,
-                                openUp: anchor.openUp,
-                              });
-                            }}
-                            className={`px-4 py-2 rounded-xl text-white text-sm ${darkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-900 hover:bg-slate-800'}`}
-                          >
-                            + Add Shot(s)
-                          </button>
-                        </td>
-                      </tr>
-                    )}
-                    {rows.map((r, i) => (
-                      <React.Fragment key={r.id}>
-                        {/* Insertion marker BEFORE row i (visible when dragging and target is i) */}
-                        {dragRowIdx !== null && dragOverIdx === i && (
-                          <tr aria-hidden className="pointer-events-none">
-                            <td colSpan={4} className="p-0">
-                              <div className="h-2 relative">
-                                <div className="absolute inset-0 flex items-center">
-                                  <div className="w-full h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)] animate-pulse" />
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                        <tr
-                          className={(() => {
-                            const baseClasses = 'border-t align-top cursor-default';
-                            const dragClass =
-                              dragRowIdx === i ? 'bg-emerald-50 ring-1 ring-emerald-300' : '';
-                            const selectedBg = GetBgClass(darkMode, 'primary');
-                            const selectedClass =
-                              selectedBlockId === r.id && dragRowIdx !== i ? selectedBg : '';
-                            const hoverBg = GetHoverClass(darkMode);
-                            const hoverClass = selectedBlockId === r.id ? '' : hoverBg;
-                            return `${baseClasses} ${dragClass} ${selectedClass} ${hoverClass}`;
-                          })()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedIdx(i);
-                            setSelectedBlockId(r.id);
-                            // Close any open menus when clicking the row
-                            setOpenShotMenuId(null);
-                            setOpenLocMenuId(null);
-                            setShotMenuAnchor(null);
-                            setLocMenuAnchor(null);
-                          }}
-                          onDragOver={(e) => {
-                            if (initialized) {
-                              return;
-                            }
-                            e.preventDefault();
-                            setDragOverIdx(i);
-                          }}
-                          onDrop={(e) => {
-                            if (initialized) {
-                              return;
-                            }
-                            e.preventDefault();
-                            handleRowReorder(dragRowIdx, i);
-                            setDragOverIdx(null);
-                          }}
-                        >
-                          <td className="pt-2 pr-2 pl-2 pb-2 align-top relative">
-                            {(() => {
-                              const base = r.base || '';
-                              const location = r.location || '';
-                              const shotMenuOpen = openShotMenuId === r.id;
-                              const locMenuOpen = openLocMenuId === r.id;
-                              const closeMenus = () => {
-                                setOpenShotMenuId(null);
-                                setOpenLocMenuId(null);
-                                setShotMenuAnchor(null);
-                                setLocMenuAnchor(null);
-                              };
-                              return (
-                                <div className="flex items-center gap-2 relative">
-                                  {base ? (
-                                    <InlineElementThumb
-                                      name={base}
-                                      selected
-                                      darkMode={darkMode}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedIdx(i);
-                                        setSelectedBlockId(r.id);
-                                        // Only open the shot menu, do not clear selection
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        const anchor = calcDropdownAnchor(rect, 400);
-                                        setShotMenuAnchor({
-                                          id: r.id,
-                                          x: anchor.x,
-                                          y: anchor.y,
-                                          openUp: anchor.openUp,
-                                        });
-                                        setOpenShotMenuId(r.id);
-                                        setOpenLocMenuId(null);
-                                      }}
-                                    />
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      data-shot-chip={r.id}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedIdx(i);
-                                        setSelectedBlockId(r.id);
-                                        if (shotMenuOpen) {
-                                          closeMenus();
-                                        } else {
-                                          const rect = e.currentTarget.getBoundingClientRect();
-                                          const anchor = calcDropdownAnchor(rect, 400);
-                                          setShotMenuAnchor({
-                                            id: r.id,
-                                            x: anchor.x,
-                                            y: anchor.y,
-                                            openUp: anchor.openUp,
-                                          });
-                                          setOpenShotMenuId(r.id);
-                                          setOpenLocMenuId(null);
-                                        }
-                                      }}
-                                      className={`relative rounded-md shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex items-center justify-center ${darkMode ? 'bg-slate-800' : 'bg-white'}`}
-                                      style={{ width: 80, height: 98 }}
-                                      aria-label="Select Shot"
-                                    >
-                                      <span
-                                        className={`text-[13px] font-semibold select-none ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
-                                      >
-                                        Select Shot
-                                      </span>
-                                    </button>
-                                  )}
-                                  <Chip
-                                    active={Boolean(location)}
-                                    data-loc-chip={r.id}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedIdx(i);
-                                      setSelectedBlockId(r.id);
-                                      // Always open menu, don't clear location on click
-                                      if (locMenuOpen) {
-                                        closeMenus();
-                                      } else {
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        const anchor = calcDropdownAnchor(rect, 200);
-                                        setLocMenuAnchor({
-                                          id: r.id,
-                                          x: anchor.x,
-                                          y: anchor.y,
-                                          openUp: anchor.openUp,
-                                        });
-                                        setOpenLocMenuId(r.id);
-                                        setOpenShotMenuId(null);
-                                      }
-                                    }}
-                                  >
-                                    {location || 'Location'}
-                                  </Chip>
-                                  {/* Popup menus rendered outside table to avoid layout shift */}
-                                </div>
-                              );
-                            })()}
-                          </td>
-                          <td
-                            className={`p-2 ${
-                              /* eslint-disable-next-line no-nested-ternary */
-                              selectedBlockId === 'FLIPPER_L' ||
-                              selectedBlockId === 'FLIPPER_BOTH' ||
-                              hoverFlipperColumn === 'L' ||
-                              hoverFlipperColumn === 'BOTH'
-                                ? darkMode
-                                  ? 'bg-sky-900/30'
-                                  : 'bg-sky-50'
-                                : ''
-                            }`}
-                          >
-                            <div className="flex flex-col gap-1 w-full px-[10px]">
-                              {(() => {
-                                const range = computeAllowedRange(rows, 'L', i);
-                                const rawAllowedMin = range ? range[0] : 5;
-                                const rawAllowedMax = range ? range[1] : 100;
-                                // Clamp to new visual/domain max of 95
-                                const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
-                                const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
-                                let actual = r.initL && r.initL > 0 ? r.initL : null;
-                                if (actual === null) {
-                                  // No value set
-                                } else {
-                                  if (actual > allowedMax) {
-                                    actual = allowedMax;
-                                  } // clamp any legacy 100s down to 95 visually
-                                  if (actual < allowedMin) {
-                                    actual = allowedMin;
-                                  }
+                          <div className="flex items-center gap-2">
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                if (selectedBlockId !== 'FLIPPER_BOTH') {
+                                  setSelectedBlockId('FLIPPER_BOTH');
                                 }
-                                const sliderMin = 5;
-                                const sliderMax = 95;
-                                const displayVal = actual === null ? 50 : actual;
-                                // Ascending visual (05 -> 95). Grey before allowedMin and after allowedMax.
-                                const span = 95 - 5; // 90
-                                const leftGreyPct = ((allowedMin - 5) / span) * 100;
-                                const rightGreyStartPct = ((allowedMax - 5) / span) * 100;
-                                const trackBg = range
-                                  ? `linear-gradient(to right,
-                                rgba(55,65,81,0.70) 0%,
-                                rgba(55,65,81,0.70) ${leftGreyPct}%,
-                                rgba(14,165,233,0.35) ${leftGreyPct}%,
-                                rgba(14,165,233,0.35) ${rightGreyStartPct}%,
-                                rgba(55,65,81,0.70) ${rightGreyStartPct}%,
-                                rgba(55,65,81,0.70) 100%)`
-                                  : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
-                                return (
-                                  <div className="flex flex-col gap-1">
-                                    <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
-                                      <span>05</span>
-                                      <span>95</span>
-                                    </div>
-                                    <div className="relative">
-                                      <input
-                                        data-slider
-                                        type="range"
-                                        min={sliderMin}
-                                        max={sliderMax}
-                                        step={5}
-                                        value={Math.min(
-                                          Math.max(
-                                            actual === null ? displayVal : actual,
-                                            sliderMin
-                                          ),
-                                          sliderMax
-                                        )}
-                                        onMouseDown={(e) => {
-                                          e.stopPropagation();
-                                        }}
-                                        onPointerDown={(e) => {
-                                          e.stopPropagation();
-                                        }}
-                                        onDragStart={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                        }}
-                                        onChange={(e) => {
-                                          let newActual = Number(e.target.value);
-                                          if (newActual > allowedMax) {
-                                            newActual = allowedMax;
-                                          }
-                                          if (newActual < allowedMin) {
-                                            newActual = allowedMin;
-                                          }
-                                          setRows((prev) => {
-                                            const next = [...prev];
-                                            next[i] = { ...next[i], initL: newActual };
-                                            return next;
-                                          });
-                                        }}
-                                        style={{ background: trackBg }}
-                                        className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"
-                                      />
-                                      {range && !(allowedMin === 5 && allowedMax === 95)
-                                        ? (() => {
-                                            return (
-                                              <>
-                                                <div
-                                                  className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700"
-                                                  style={{ left: `${leftGreyPct}%` }}
-                                                >
-                                                  {format2(allowedMin)}
-                                                </div>
-                                                <div
-                                                  className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700"
-                                                  style={{ left: `${rightGreyStartPct}%` }}
-                                                >
-                                                  {format2(allowedMax)}
-                                                </div>
-                                              </>
-                                            );
-                                          })()
-                                        : null}
-                                      {actual !== null && range
-                                        ? (() => {
-                                            const pct = ((actual - 5) / span) * 100;
-                                            return (
-                                              <div
-                                                className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center"
-                                                style={{ left: `${pct}%` }}
-                                              >
-                                                {format2(actual)}
-                                              </div>
-                                            );
-                                          })()
-                                        : null}
-                                    </div>
-                                  </div>
-                                );
-                              })()}
-                              <div className="flex flex-col items-center mt-[15px]">
-                                <Chip
-                                  active={r.initL === 0}
-                                  darkMode={darkMode}
-                                  onClick={() => {
-                                    const range = computeAllowedRange(rows, 'L', i);
-                                    if (r.initL === 0) {
-                                      if (range) {
-                                        const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
-                                        setRows((prev) => {
-                                          const next = [...prev];
-                                          next[i] = { ...next[i], initL: mid };
-                                          return next;
-                                        });
-                                      }
-                                    } else {
-                                      setRows((prev) => {
-                                        const next = [...prev];
-                                        next[i] = { ...next[i], initL: 0 };
-                                        return next;
-                                      });
-                                    }
-                                  }}
-                                >
-                                  Not Possible
-                                </Chip>
-                              </div>
-                            </div>
-                          </td>
-                          <td
-                            className={`p-2 ${
-                              /* eslint-disable-next-line no-nested-ternary */
-                              selectedBlockId === 'FLIPPER_R' ||
-                              selectedBlockId === 'FLIPPER_BOTH' ||
-                              hoverFlipperColumn === 'R' ||
-                              hoverFlipperColumn === 'BOTH'
-                                ? darkMode
-                                  ? 'bg-rose-900/30'
-                                  : 'bg-rose-50'
-                                : ''
-                            }`}
-                          >
-                            <div className="flex flex-col gap-1 w-full px-[10px]">
-                              {(() => {
-                                const range = computeAllowedRange(rows, 'R', i);
-                                const rawAllowedMin = range ? range[0] : 5;
-                                const rawAllowedMax = range ? range[1] : 100;
-                                // Clamp both ends to 95 domain
-                                const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
-                                const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
-                                let actual = r.initR && r.initR > 0 ? r.initR : null;
-                                if (actual === null) {
-                                  // No value set
-                                } else {
-                                  if (actual > allowedMax) {
-                                    actual = allowedMax;
-                                  } // clamp legacy 100
-                                  if (actual < allowedMin) {
-                                    actual = allowedMin;
-                                  }
+                              }}
+                              onKeyDown={(e) => {
+                                if (
+                                  (e.key === 'Enter' || e.key === ' ') &&
+                                  selectedBlockId !== 'FLIPPER_BOTH'
+                                ) {
+                                  setSelectedBlockId('FLIPPER_BOTH');
                                 }
-                                const sliderMin = 5;
-                                const sliderMax = 95; // reversed visual
-                                const displayVal = actual === null ? 50 : actual;
-                                // Descending visual (95 -> 05). Grey left (values > allowedMax after reversal) and right (values < allowedMin).
-                                const span = 95 - 5; // 90
-                                const leftStopPct = ((95 - allowedMax) / span) * 100;
-                                const rightStartPct = ((95 - allowedMin) / span) * 100;
-                                const trackBg = range
-                                  ? `linear-gradient(to right,
-                                rgba(55,65,81,0.70) 0%,
-                                rgba(55,65,81,0.70) ${leftStopPct}%,
-                                rgba(244,63,94,0.35) ${leftStopPct}%,
-                                rgba(244,63,94,0.35) ${rightStartPct}%,
-                                rgba(55,65,81,0.70) ${rightStartPct}%,
-                                rgba(55,65,81,0.70) 100%)`
-                                  : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
-                                return (
-                                  <div className="flex flex-col gap-1">
-                                    <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
-                                      <span>95</span>
-                                      <span>05</span>
-                                    </div>
-                                    <div className="relative">
-                                      <input
-                                        data-slider
-                                        type="range"
-                                        min={sliderMin}
-                                        max={sliderMax}
-                                        step={5}
-                                        value={Math.min(
-                                          Math.max(
-                                            100 - (actual === null ? displayVal : actual),
-                                            sliderMin
-                                          ),
-                                          sliderMax
-                                        )}
-                                        onMouseDown={(e) => {
-                                          e.stopPropagation();
-                                        }}
-                                        onPointerDown={(e) => {
-                                          e.stopPropagation();
-                                        }}
-                                        onDragStart={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                        }}
-                                        onChange={(e) => {
-                                          const raw = Number(e.target.value);
-                                          let newActual = 100 - raw;
-                                          if (newActual > allowedMax) {
-                                            newActual = allowedMax;
-                                          }
-                                          if (newActual < allowedMin) {
-                                            newActual = allowedMin;
-                                          }
-                                          setRows((prev) => {
-                                            const next = [...prev];
-                                            next[i] = { ...next[i], initR: newActual };
-                                            return next;
-                                          });
-                                        }}
-                                        style={{ background: trackBg }}
-                                        className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"
-                                      />
-                                      {range && !(allowedMin === 5 && allowedMax === 95)
-                                        ? (() => {
-                                            return (
-                                              <>
-                                                <div
-                                                  className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700"
-                                                  style={{ left: `${leftStopPct}%` }}
-                                                >
-                                                  {format2(allowedMax)}
-                                                </div>
-                                                <div
-                                                  className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700"
-                                                  style={{ left: `${rightStartPct}%` }}
-                                                >
-                                                  {format2(allowedMin)}
-                                                </div>
-                                              </>
-                                            );
-                                          })()
-                                        : null}
-                                      {actual !== null && range
-                                        ? (() => {
-                                            const pct = ((95 - actual) / span) * 100;
-                                            return (
-                                              <div
-                                                className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center"
-                                                style={{ left: `${pct}%` }}
-                                              >
-                                                {format2(actual)}
-                                              </div>
-                                            );
-                                          })()
-                                        : null}
-                                    </div>
-                                  </div>
-                                );
-                              })()}
-                              <div className="flex flex-col items-center mt-[15px]">
-                                <Chip
-                                  active={r.initR === 0}
-                                  darkMode={darkMode}
-                                  onClick={() => {
-                                    const range = computeAllowedRange(rows, 'R', i);
-                                    if (r.initR === 0) {
-                                      if (range) {
-                                        const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
-                                        setRows((prev) => {
-                                          const next = [...prev];
-                                          next[i] = { ...next[i], initR: mid };
-                                          return next;
-                                        });
-                                      }
-                                    } else {
-                                      setRows((prev) => {
-                                        const next = [...prev];
-                                        next[i] = { ...next[i], initR: 0 };
-                                        return next;
-                                      });
-                                    }
-                                  }}
-                                >
-                                  Not Possible
-                                </Chip>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-0.5 text-left align-bottom">
-                            <div className="flex flex-col items-end">
+                              }}
+                              onMouseEnter={() => setHoverFlipperColumn('BOTH')}
+                              onMouseLeave={() => setHoverFlipperColumn(null)}
+                              className={`rounded px-1 cursor-pointer select-none ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}
+                              title="Select Both Flippers"
+                            >
+                              Shot Type
+                            </span>
+                            {rows.length > 0 && (
                               <button
+                                type="button"
+                                onClick={() => {
+                                  setRows((prev) =>
+                                    prev.map((rw) => ({
+                                      ...rw,
+                                      base: '',
+                                      location: '',
+                                      type: '',
+                                      initL: rw.initL,
+                                      initR: rw.initR,
+                                    }))
+                                  );
+                                  setCollapsedTypes([]);
+                                }}
+                                className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
+                                title="Clear all shot type selections"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          className={`p-2 ${
+                            /* eslint-disable-next-line no-nested-ternary */
+                            selectedBlockId === 'FLIPPER_L' ||
+                            selectedBlockId === 'FLIPPER_BOTH' ||
+                            hoverFlipperColumn === 'L' ||
+                            hoverFlipperColumn === 'BOTH'
+                              ? darkMode
+                                ? 'bg-sky-900/30'
+                                : 'bg-sky-50'
+                              : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                if (selectedBlockId !== 'FLIPPER_L') {
+                                  setSelectedSide('L');
+                                  setSelectedBlockId('FLIPPER_L');
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (
+                                  (e.key === 'Enter' || e.key === ' ') &&
+                                  selectedBlockId !== 'FLIPPER_L'
+                                ) {
+                                  setSelectedSide('L');
+                                  setSelectedBlockId('FLIPPER_L');
+                                }
+                              }}
+                              onMouseEnter={() => setHoverFlipperColumn('L')}
+                              onMouseLeave={() => setHoverFlipperColumn(null)}
+                              className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
+                              title="Select Left Flipper"
+                            >
+                              Left Flipper
+                            </span>
+                            {rows.length > 0 && (
+                              <button
+                                type="button"
                                 onClick={() => {
                                   setRows((prev) => {
-                                    const next = prev.filter((_, k) => k !== i);
-                                    // Compute new selected index
-                                    let newIdx = selectedIdx;
-                                    if (selectedIdx === i) {
-                                      // Deleted currently selected row: clear selection entirely
-                                      newIdx = -1;
-                                    } else if (i < selectedIdx) {
-                                      // A row above the current selection was removed; shift selection index left
-                                      newIdx = Math.max(0, selectedIdx - 1);
+                                    const n = prev.length;
+                                    if (!n) {
+                                      return prev;
                                     }
-                                    // Clamp when list becomes empty
-                                    if (next.length === 0) {
-                                      newIdx = -1;
-                                      setSelectedBlockId(null);
-                                      setSelectedIdx(-1);
-                                      return next;
-                                    }
-                                    // Apply selection updates referencing the NEW array so ids align
-                                    if (newIdx === -1) {
-                                      setSelectedIdx(-1);
-                                      setSelectedBlockId(null);
-                                    } else {
-                                      if (newIdx < 0) {
-                                        newIdx = 0;
-                                      } // safety
-                                      if (newIdx >= next.length) {
-                                        newIdx = next.length - 1;
+                                    const asc = Array.from({ length: n }, (_, i) =>
+                                      snap5(((i + 1) / (n + 1)) * 100)
+                                    );
+                                    for (let k = 1; k < asc.length; k++) {
+                                      if (asc[k] <= asc[k - 1]) {
+                                        asc[k] = Math.min(100, asc[k - 1] + 5);
                                       }
-                                      setSelectedIdx(newIdx);
-                                      setSelectedBlockId(next[newIdx]?.id ?? null);
                                     }
-                                    return next;
+                                    for (let k = asc.length - 2; k >= 0; k--) {
+                                      if (asc[k] >= asc[k + 1]) {
+                                        asc[k] = Math.max(5, asc[k + 1] - 5);
+                                      }
+                                    }
+                                    return prev.map((rw, idx) => ({ ...rw, initL: asc[idx] }));
                                   });
                                 }}
-                                className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer"
-                                title="Remove shot"
-                                aria-label="Remove shot"
+                                className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
+                                title="Auto-fill evenly spaced ascending values starting near center for left flipper"
                               >
-                                {/* Circle X delete icon */}
+                                Reset
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          className={`p-2 ${
+                            /* eslint-disable-next-line no-nested-ternary */
+                            selectedBlockId === 'FLIPPER_R' ||
+                            selectedBlockId === 'FLIPPER_BOTH' ||
+                            hoverFlipperColumn === 'R' ||
+                            hoverFlipperColumn === 'BOTH'
+                              ? darkMode
+                                ? 'bg-rose-900/30'
+                                : 'bg-rose-50'
+                              : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                if (selectedBlockId !== 'FLIPPER_R') {
+                                  setSelectedSide('R');
+                                  setSelectedBlockId('FLIPPER_R');
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (
+                                  (e.key === 'Enter' || e.key === ' ') &&
+                                  selectedBlockId !== 'FLIPPER_R'
+                                ) {
+                                  setSelectedSide('R');
+                                  setSelectedBlockId('FLIPPER_R');
+                                }
+                              }}
+                              onMouseEnter={() => setHoverFlipperColumn('R')}
+                              onMouseLeave={() => setHoverFlipperColumn(null)}
+                              className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
+                              title="Select Right Flipper"
+                            >
+                              Right Flipper
+                            </span>
+                            {rows.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRows((prev) => {
+                                    const n = prev.length;
+                                    if (!n) {
+                                      return prev;
+                                    }
+                                    const asc = Array.from({ length: n }, (_, i) =>
+                                      snap5(((i + 1) / (n + 1)) * 100)
+                                    );
+                                    for (let k = 1; k < asc.length; k++) {
+                                      if (asc[k] <= asc[k - 1]) {
+                                        asc[k] = Math.min(100, asc[k - 1] + 5);
+                                      }
+                                    }
+                                    for (let k = asc.length - 2; k >= 0; k--) {
+                                      if (asc[k] >= asc[k + 1]) {
+                                        asc[k] = Math.max(5, asc[k + 1] - 5);
+                                      }
+                                    }
+                                    const desc = [...asc].reverse();
+                                    return prev.map((rw, idx) => ({ ...rw, initR: desc[idx] }));
+                                  });
+                                }}
+                                className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
+                                title="Auto-fill evenly spaced descending values (high→low) for right flipper"
+                              >
+                                Reset
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                        <th className="p-2 text-left align-bottom">
+                          <span className="sr-only">Actions</span>
+                          <div className="flex flex-col items-end">
+                            {rows.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={exportPreset}
+                                className="cursor-pointer text-slate-500 hover:text-slate-700 rounded-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                                title="Export shots as JSON"
+                                aria-label="Export shots"
+                              >
+                                {/* Standard export/upload icon: arrow up out of tray */}
                                 <svg
                                   viewBox="0 0 24 24"
                                   fill="none"
                                   stroke="currentColor"
                                   className="w-5 h-5"
-                                  strokeWidth="1.8"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
                                 >
-                                  <circle cx="12" cy="12" r="9" />
-                                  <path d="M9 9l6 6" />
-                                  <path d="M15 9l-6 6" />
+                                  <path
+                                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M7 10l5-5 5 5"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M12 5v11"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
                                 </svg>
                               </button>
-                              {!initialized && (
-                                <button
-                                  type="button"
-                                  aria-label="Drag to reorder"
-                                  draggable
-                                  onDragStart={(e) => {
-                                    if (initialized) {
-                                      return;
-                                    }
-                                    setDragRowIdx(i);
-                                    setDragOverIdx(i);
-                                    e.dataTransfer.effectAllowed = 'move';
-                                  }}
-                                  onDragEnd={() => {
-                                    setDragRowIdx(null);
-                                    setDragOverIdx(null);
-                                  }}
-                                  className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100/60 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-                                  title="Drag to reorder"
-                                >
-                                  {/* Circular dotted drag handle icon */}
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    className="w-5 h-5"
-                                    strokeWidth="1.6"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <circle cx="12" cy="12" r="9" />
-                                    <circle
-                                      cx="9"
-                                      cy="9"
-                                      r="0.9"
-                                      fill="currentColor"
-                                      stroke="none"
-                                    />
-                                    <circle
-                                      cx="15"
-                                      cy="9"
-                                      r="0.9"
-                                      fill="currentColor"
-                                      stroke="none"
-                                    />
-                                    <circle
-                                      cx="9"
-                                      cy="15"
-                                      r="0.9"
-                                      fill="currentColor"
-                                      stroke="none"
-                                    />
-                                    <circle
-                                      cx="15"
-                                      cy="15"
-                                      r="0.9"
-                                      fill="currentColor"
-                                      stroke="none"
-                                    />
-                                    <circle
-                                      cx="9"
-                                      cy="12"
-                                      r="0.9"
-                                      fill="currentColor"
-                                      stroke="none"
-                                    />
-                                    <circle
-                                      cx="15"
-                                      cy="12"
-                                      r="0.9"
-                                      fill="currentColor"
-                                      stroke="none"
-                                    />
-                                  </svg>
-                                </button>
-                              )}
-                              {!initialized && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setRows((prev) => {
-                                      const next = [...prev];
-                                      const aboveIdx = i; // row above insertion point
-                                      const belowIdx = i + 1 < prev.length ? i + 1 : null;
-                                      // eslint-disable-next-line sonarjs/cognitive-complexity
-                                      const computeInsertValue = (side) => {
-                                        if (side === 'L') {
-                                          let upIdx = aboveIdx;
-                                          while (upIdx >= 0 && prev[upIdx].initL <= 0) {
-                                            upIdx--;
-                                          }
-                                          let downIdx = belowIdx;
-                                          while (
-                                            downIdx !== null &&
-                                            downIdx < prev.length &&
-                                            prev[downIdx].initL <= 0
-                                          ) {
-                                            downIdx++;
-                                          }
-                                          const haveUpper = upIdx >= 0;
-                                          const haveLower =
-                                            downIdx !== null && downIdx < prev.length;
-                                          if (!haveUpper && !haveLower) {
-                                            return 0;
-                                          }
-                                          if (haveUpper && !haveLower) {
-                                            const aboveVal = prev[upIdx].initL;
-                                            if (aboveVal <= 0) {
-                                              return 0;
-                                            }
-                                            if (aboveVal === 95) {
-                                              return 100;
-                                            }
-                                            if (aboveVal === 100) {
-                                              return 0;
-                                            }
-                                            const gap = 100 - aboveVal;
-                                            if (gap <= 5) {
-                                              return 0;
-                                            }
-                                            let mid = Math.round((aboveVal + 100) / 2 / 5) * 5;
-                                            if (mid <= aboveVal) {
-                                              mid = aboveVal + 5;
-                                            }
-                                            if (mid >= 100) {
-                                              mid = 95;
-                                            }
-                                            if (mid <= aboveVal || mid >= 100) {
-                                              return 0;
-                                            }
-                                            return clamp(mid, 5, 100);
-                                          }
-                                          if (!haveUpper && haveLower) {
-                                            return 0;
-                                          }
-                                          const aboveVal = prev[upIdx].initL;
-                                          const belowVal = prev[downIdx].initL;
-                                          const gap = belowVal - aboveVal;
-                                          if ((aboveVal <= 0 && belowVal <= 0) || gap <= 5) {
-                                            return 0;
-                                          }
-                                          let mid = Math.round((aboveVal + belowVal) / 2 / 5) * 5;
-                                          if (mid <= aboveVal) {
-                                            mid = aboveVal + 5;
-                                          }
-                                          if (mid >= belowVal) {
-                                            mid = belowVal - 5;
-                                          }
-                                          if (mid <= aboveVal || mid >= belowVal) {
-                                            return 0;
-                                          }
-                                          return clamp(mid, 5, 100);
-                                        } else {
-                                          let upIdx = aboveIdx;
-                                          while (upIdx >= 0 && prev[upIdx].initR <= 0) {
-                                            upIdx--;
-                                          }
-                                          let downIdx = belowIdx;
-                                          while (
-                                            downIdx !== null &&
-                                            downIdx < prev.length &&
-                                            prev[downIdx].initR <= 0
-                                          ) {
-                                            downIdx++;
-                                          }
-                                          const haveUpper = upIdx >= 0;
-                                          const haveLower =
-                                            downIdx !== null && downIdx < prev.length;
-                                          if (!haveUpper && !haveLower) {
-                                            return 0;
-                                          }
-                                          if (haveUpper && !haveLower) {
-                                            const aboveVal = prev[upIdx].initR;
-                                            if (aboveVal <= 0) {
-                                              return 0;
-                                            }
-                                            if (aboveVal === 10) {
-                                              return 5;
-                                            }
-                                            if (aboveVal === 5) {
-                                              return 0;
-                                            }
-                                            const gap = aboveVal - 5;
-                                            if (gap <= 5) {
-                                              return 0;
-                                            }
-                                            let mid = Math.round((aboveVal + 5) / 2 / 5) * 5;
-                                            if (mid >= aboveVal) {
-                                              mid = aboveVal - 5;
-                                            }
-                                            if (mid <= 5) {
-                                              mid = 10;
-                                            }
-                                            if (mid >= aboveVal || mid <= 5) {
-                                              return 0;
-                                            }
-                                            return clamp(mid, 5, 100);
-                                          }
-                                          if (!haveUpper && haveLower) {
-                                            return 0;
-                                          }
-                                          const aboveVal = prev[upIdx].initR;
-                                          const belowVal = prev[downIdx].initR;
-                                          const gap = aboveVal - belowVal;
-                                          if ((aboveVal <= 0 && belowVal <= 0) || gap <= 5) {
-                                            return 0;
-                                          }
-                                          let mid = Math.round((aboveVal + belowVal) / 2 / 5) * 5;
-                                          if (mid >= aboveVal) {
-                                            mid = aboveVal - 5;
-                                          }
-                                          if (mid <= belowVal) {
-                                            mid = belowVal + 5;
-                                          }
-                                          if (!(mid < aboveVal && mid > belowVal)) {
-                                            return 0;
-                                          }
-                                          return clamp(mid, 5, 100);
-                                        }
-                                      };
-                                      const midL = computeInsertValue('L');
-                                      const midR = computeInsertValue('R');
-                                      const row = newRow({ initL: midL, initR: midR }, prev.length);
-                                      next.splice(i + 1, 0, row);
-                                      return next;
-                                    });
-                                  }}
-                                  className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 hover:bg-slate-100/60 cursor-copy"
-                                  aria-label="Insert shot below"
-                                  title="Insert shot below"
-                                >
-                                  {/* Plus inside circle icon */}
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    className="w-5 h-5"
-                                    strokeWidth="1.8"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <circle cx="12" cy="12" r="9" />
-                                    <path d="M12 8v8" />
-                                    <path d="M8 12h8" />
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
+                            )}
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className={`p-8 text-center text-sm ${GetTextClass(darkMode, 'secondary')}`}
+                          >
+                            <button
+                              type="button"
+                              data-add-multi
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (addCountAnchor) {
+                                  setAddCountAnchor(null);
+                                  return;
+                                }
+                                const r = e.currentTarget.getBoundingClientRect();
+                                const anchor = calcDropdownAnchor(r, 350);
+                                setAddCountAnchor({
+                                  x: anchor.x,
+                                  y: anchor.y,
+                                  openUp: anchor.openUp,
+                                });
+                              }}
+                              className={`px-4 py-2 rounded-xl text-white text-sm ${darkMode ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-900 hover:bg-slate-800'}`}
+                            >
+                              + Add Shot(s)
+                            </button>
                           </td>
                         </tr>
-                        {/* If dragging to end: show marker after last row */}
-                        {dragRowIdx !== null &&
-                          i === rows.length - 1 &&
-                          dragOverIdx === rows.length && (
+                      )}
+                      {rows.map((r, i) => (
+                        <React.Fragment key={r.id}>
+                          {/* Insertion marker BEFORE row i (visible when dragging and target is i) */}
+                          {dragRowIdx !== null && dragOverIdx === i && (
                             <tr aria-hidden className="pointer-events-none">
                               <td colSpan={4} className="p-0">
                                 <div className="h-2 relative">
@@ -5843,33 +5069,2077 @@ const App = () => {
                               </td>
                             </tr>
                           )}
-                      </React.Fragment>
-                    ))}
-                    {/* Standalone insertion marker at list end when dragging over empty space below */}
-                    {dragRowIdx !== null && dragOverIdx === rows.length && (
-                      <tr aria-hidden className="pointer-events-none">
-                        <td colSpan={4} className="p-0">
-                          <div className="h-2 relative">
-                            <div className="absolute inset-0 flex items-center">
-                              <div className="w-full h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)] animate-pulse" />
+                          <tr
+                            className={(() => {
+                              const baseClasses = 'border-t align-top cursor-default';
+                              const dragClass =
+                                dragRowIdx === i ? 'bg-emerald-50 ring-1 ring-emerald-300' : '';
+                              const selectedBg = GetBgClass(darkMode, 'primary');
+                              const selectedClass =
+                                selectedBlockId === r.id && dragRowIdx !== i ? selectedBg : '';
+                              const hoverBg = GetHoverClass(darkMode);
+                              const hoverClass = selectedBlockId === r.id ? '' : hoverBg;
+                              return `${baseClasses} ${dragClass} ${selectedClass} ${hoverClass}`;
+                            })()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedIdx(i);
+                              setSelectedBlockId(r.id);
+                              // Close any open menus when clicking the row
+                              setOpenShotMenuId(null);
+                              setOpenLocMenuId(null);
+                              setShotMenuAnchor(null);
+                              setLocMenuAnchor(null);
+                            }}
+                            onDragOver={(e) => {
+                              if (initialized) {
+                                return;
+                              }
+                              e.preventDefault();
+                              setDragOverIdx(i);
+                            }}
+                            onDrop={(e) => {
+                              if (initialized) {
+                                return;
+                              }
+                              e.preventDefault();
+                              handleRowReorder(dragRowIdx, i);
+                              setDragOverIdx(null);
+                            }}
+                          >
+                            <td className="pt-2 pr-2 pl-2 pb-2 align-top relative">
+                              {(() => {
+                                const base = r.base || '';
+                                const location = r.location || '';
+                                const shotMenuOpen = openShotMenuId === r.id;
+                                const locMenuOpen = openLocMenuId === r.id;
+                                const closeMenus = () => {
+                                  setOpenShotMenuId(null);
+                                  setOpenLocMenuId(null);
+                                  setShotMenuAnchor(null);
+                                  setLocMenuAnchor(null);
+                                };
+                                return (
+                                  <div className="flex items-center gap-2 relative">
+                                    {base ? (
+                                      <InlineElementThumb
+                                        name={base}
+                                        selected
+                                        darkMode={darkMode}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedIdx(i);
+                                          setSelectedBlockId(r.id);
+                                          // Only open the shot menu, do not clear selection
+                                          const rect = e.currentTarget.getBoundingClientRect();
+                                          const anchor = calcDropdownAnchor(rect, 400);
+                                          setShotMenuAnchor({
+                                            id: r.id,
+                                            x: anchor.x,
+                                            y: anchor.y,
+                                            openUp: anchor.openUp,
+                                          });
+                                          setOpenShotMenuId(r.id);
+                                          setOpenLocMenuId(null);
+                                        }}
+                                      />
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        data-shot-chip={r.id}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedIdx(i);
+                                          setSelectedBlockId(r.id);
+                                          if (shotMenuOpen) {
+                                            closeMenus();
+                                          } else {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const anchor = calcDropdownAnchor(rect, 400);
+                                            setShotMenuAnchor({
+                                              id: r.id,
+                                              x: anchor.x,
+                                              y: anchor.y,
+                                              openUp: anchor.openUp,
+                                            });
+                                            setOpenShotMenuId(r.id);
+                                            setOpenLocMenuId(null);
+                                          }
+                                        }}
+                                        className={`relative rounded-md shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex items-center justify-center ${darkMode ? 'bg-slate-800' : 'bg-white'}`}
+                                        style={{ width: 80, height: 98 }}
+                                        aria-label="Select Shot"
+                                      >
+                                        <span
+                                          className={`text-[13px] font-semibold select-none ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
+                                        >
+                                          Select Shot
+                                        </span>
+                                      </button>
+                                    )}
+                                    <Chip
+                                      active={Boolean(location)}
+                                      data-loc-chip={r.id}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedIdx(i);
+                                        setSelectedBlockId(r.id);
+                                        // Always open menu, don't clear location on click
+                                        if (locMenuOpen) {
+                                          closeMenus();
+                                        } else {
+                                          const rect = e.currentTarget.getBoundingClientRect();
+                                          const anchor = calcDropdownAnchor(rect, 200);
+                                          setLocMenuAnchor({
+                                            id: r.id,
+                                            x: anchor.x,
+                                            y: anchor.y,
+                                            openUp: anchor.openUp,
+                                          });
+                                          setOpenLocMenuId(r.id);
+                                          setOpenShotMenuId(null);
+                                        }
+                                      }}
+                                    >
+                                      {location || 'Location'}
+                                    </Chip>
+                                    {/* Popup menus rendered outside table to avoid layout shift */}
+                                  </div>
+                                );
+                              })()}
+                            </td>
+                            <td
+                              className={`p-2 ${
+                                /* eslint-disable-next-line no-nested-ternary */
+                                selectedBlockId === 'FLIPPER_L' ||
+                                selectedBlockId === 'FLIPPER_BOTH' ||
+                                hoverFlipperColumn === 'L' ||
+                                hoverFlipperColumn === 'BOTH'
+                                  ? darkMode
+                                    ? 'bg-sky-900/30'
+                                    : 'bg-sky-50'
+                                  : ''
+                              }`}
+                            >
+                              <div className="flex flex-col gap-1 w-full px-[10px]">
+                                {(() => {
+                                  const range = computeAllowedRange(rows, 'L', i);
+                                  const rawAllowedMin = range ? range[0] : 5;
+                                  const rawAllowedMax = range ? range[1] : 100;
+                                  // Clamp to new visual/domain max of 95
+                                  const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
+                                  const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
+                                  let actual = r.initL && r.initL > 0 ? r.initL : null;
+                                  if (actual === null) {
+                                    // No value set
+                                  } else {
+                                    if (actual > allowedMax) {
+                                      actual = allowedMax;
+                                    } // clamp any legacy 100s down to 95 visually
+                                    if (actual < allowedMin) {
+                                      actual = allowedMin;
+                                    }
+                                  }
+                                  const sliderMin = 5;
+                                  const sliderMax = 95;
+                                  const displayVal = actual === null ? 50 : actual;
+                                  // Ascending visual (05 -> 95). Grey before allowedMin and after allowedMax.
+                                  const span = 95 - 5; // 90
+                                  const leftGreyPct = ((allowedMin - 5) / span) * 100;
+                                  const rightGreyStartPct = ((allowedMax - 5) / span) * 100;
+                                  const trackBg = range
+                                    ? `linear-gradient(to right,
+                                rgba(55,65,81,0.70) 0%,
+                                rgba(55,65,81,0.70) ${leftGreyPct}%,
+                                rgba(14,165,233,0.35) ${leftGreyPct}%,
+                                rgba(14,165,233,0.35) ${rightGreyStartPct}%,
+                                rgba(55,65,81,0.70) ${rightGreyStartPct}%,
+                                rgba(55,65,81,0.70) 100%)`
+                                    : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
+                                  return (
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
+                                        <span>05</span>
+                                        <span>95</span>
+                                      </div>
+                                      <div className="relative">
+                                        <input
+                                          data-slider
+                                          type="range"
+                                          min={sliderMin}
+                                          max={sliderMax}
+                                          step={5}
+                                          value={Math.min(
+                                            Math.max(
+                                              actual === null ? displayVal : actual,
+                                              sliderMin
+                                            ),
+                                            sliderMax
+                                          )}
+                                          onMouseDown={(e) => {
+                                            e.stopPropagation();
+                                          }}
+                                          onPointerDown={(e) => {
+                                            e.stopPropagation();
+                                          }}
+                                          onDragStart={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                          }}
+                                          onChange={(e) => {
+                                            let newActual = Number(e.target.value);
+                                            if (newActual > allowedMax) {
+                                              newActual = allowedMax;
+                                            }
+                                            if (newActual < allowedMin) {
+                                              newActual = allowedMin;
+                                            }
+                                            setRows((prev) => {
+                                              const next = [...prev];
+                                              next[i] = { ...next[i], initL: newActual };
+                                              return next;
+                                            });
+                                          }}
+                                          style={{ background: trackBg }}
+                                          className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"
+                                        />
+                                        {range && !(allowedMin === 5 && allowedMax === 95)
+                                          ? (() => {
+                                              return (
+                                                <>
+                                                  <div
+                                                    className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700"
+                                                    style={{ left: `${leftGreyPct}%` }}
+                                                  >
+                                                    {format2(allowedMin)}
+                                                  </div>
+                                                  <div
+                                                    className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-sky-700"
+                                                    style={{ left: `${rightGreyStartPct}%` }}
+                                                  >
+                                                    {format2(allowedMax)}
+                                                  </div>
+                                                </>
+                                              );
+                                            })()
+                                          : null}
+                                        {actual !== null && range
+                                          ? (() => {
+                                              const pct = ((actual - 5) / span) * 100;
+                                              return (
+                                                <div
+                                                  className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-sky-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center"
+                                                  style={{ left: `${pct}%` }}
+                                                >
+                                                  {format2(actual)}
+                                                </div>
+                                              );
+                                            })()
+                                          : null}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                                <div className="flex flex-col items-center mt-[15px]">
+                                  <Chip
+                                    active={r.initL === 0}
+                                    darkMode={darkMode}
+                                    onClick={() => {
+                                      const range = computeAllowedRange(rows, 'L', i);
+                                      if (r.initL === 0) {
+                                        if (range) {
+                                          const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
+                                          setRows((prev) => {
+                                            const next = [...prev];
+                                            next[i] = { ...next[i], initL: mid };
+                                            return next;
+                                          });
+                                        }
+                                      } else {
+                                        setRows((prev) => {
+                                          const next = [...prev];
+                                          next[i] = { ...next[i], initL: 0 };
+                                          return next;
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    Not Possible
+                                  </Chip>
+                                </div>
+                              </div>
+                            </td>
+                            <td
+                              className={`p-2 ${
+                                /* eslint-disable-next-line no-nested-ternary */
+                                selectedBlockId === 'FLIPPER_R' ||
+                                selectedBlockId === 'FLIPPER_BOTH' ||
+                                hoverFlipperColumn === 'R' ||
+                                hoverFlipperColumn === 'BOTH'
+                                  ? darkMode
+                                    ? 'bg-rose-900/30'
+                                    : 'bg-rose-50'
+                                  : ''
+                              }`}
+                            >
+                              <div className="flex flex-col gap-1 w-full px-[10px]">
+                                {(() => {
+                                  const range = computeAllowedRange(rows, 'R', i);
+                                  const rawAllowedMin = range ? range[0] : 5;
+                                  const rawAllowedMax = range ? range[1] : 100;
+                                  // Clamp both ends to 95 domain
+                                  const allowedMin = Math.max(5, Math.min(95, rawAllowedMin));
+                                  const allowedMax = Math.max(5, Math.min(95, rawAllowedMax));
+                                  let actual = r.initR && r.initR > 0 ? r.initR : null;
+                                  if (actual === null) {
+                                    // No value set
+                                  } else {
+                                    if (actual > allowedMax) {
+                                      actual = allowedMax;
+                                    } // clamp legacy 100
+                                    if (actual < allowedMin) {
+                                      actual = allowedMin;
+                                    }
+                                  }
+                                  const sliderMin = 5;
+                                  const sliderMax = 95; // reversed visual
+                                  const displayVal = actual === null ? 50 : actual;
+                                  // Descending visual (95 -> 05). Grey left (values > allowedMax after reversal) and right (values < allowedMin).
+                                  const span = 95 - 5; // 90
+                                  const leftStopPct = ((95 - allowedMax) / span) * 100;
+                                  const rightStartPct = ((95 - allowedMin) / span) * 100;
+                                  const trackBg = range
+                                    ? `linear-gradient(to right,
+                                rgba(55,65,81,0.70) 0%,
+                                rgba(55,65,81,0.70) ${leftStopPct}%,
+                                rgba(244,63,94,0.35) ${leftStopPct}%,
+                                rgba(244,63,94,0.35) ${rightStartPct}%,
+                                rgba(55,65,81,0.70) ${rightStartPct}%,
+                                rgba(55,65,81,0.70) 100%)`
+                                    : 'linear-gradient(to right, rgba(55,65,81,0.70), rgba(55,65,81,0.70))';
+                                  return (
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex justify-between text-[10px] text-slate-500 -mb-1">
+                                        <span>95</span>
+                                        <span>05</span>
+                                      </div>
+                                      <div className="relative">
+                                        <input
+                                          data-slider
+                                          type="range"
+                                          min={sliderMin}
+                                          max={sliderMax}
+                                          step={5}
+                                          value={Math.min(
+                                            Math.max(
+                                              100 - (actual === null ? displayVal : actual),
+                                              sliderMin
+                                            ),
+                                            sliderMax
+                                          )}
+                                          onMouseDown={(e) => {
+                                            e.stopPropagation();
+                                          }}
+                                          onPointerDown={(e) => {
+                                            e.stopPropagation();
+                                          }}
+                                          onDragStart={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                          }}
+                                          onChange={(e) => {
+                                            const raw = Number(e.target.value);
+                                            let newActual = 100 - raw;
+                                            if (newActual > allowedMax) {
+                                              newActual = allowedMax;
+                                            }
+                                            if (newActual < allowedMin) {
+                                              newActual = allowedMin;
+                                            }
+                                            setRows((prev) => {
+                                              const next = [...prev];
+                                              next[i] = { ...next[i], initR: newActual };
+                                              return next;
+                                            });
+                                          }}
+                                          style={{ background: trackBg }}
+                                          className="w-full appearance-none focus:outline-none [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:h-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-webkit-slider-thumb]:bg-transparent [&::-webkit-slider-thumb]:shadow-none [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-transparent"
+                                        />
+                                        {range && !(allowedMin === 5 && allowedMax === 95)
+                                          ? (() => {
+                                              return (
+                                                <>
+                                                  <div
+                                                    className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700"
+                                                    style={{ left: `${leftStopPct}%` }}
+                                                  >
+                                                    {format2(allowedMax)}
+                                                  </div>
+                                                  <div
+                                                    className="pointer-events-none absolute top-full mt-1 translate-x-[-50%] text-[10px] text-rose-700"
+                                                    style={{ left: `${rightStartPct}%` }}
+                                                  >
+                                                    {format2(allowedMin)}
+                                                  </div>
+                                                </>
+                                              );
+                                            })()
+                                          : null}
+                                        {actual !== null && range
+                                          ? (() => {
+                                              const pct = ((95 - actual) / span) * 100;
+                                              return (
+                                                <div
+                                                  className="pointer-events-none absolute top-1/2 -translate-y-1/2 translate-x-[-50%] text-[10px] font-medium bg-rose-600 text-white px-2 py-1 rounded-md shadow min-w-[30px] text-center"
+                                                  style={{ left: `${pct}%` }}
+                                                >
+                                                  {format2(actual)}
+                                                </div>
+                                              );
+                                            })()
+                                          : null}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                                <div className="flex flex-col items-center mt-[15px]">
+                                  <Chip
+                                    active={r.initR === 0}
+                                    darkMode={darkMode}
+                                    onClick={() => {
+                                      const range = computeAllowedRange(rows, 'R', i);
+                                      if (r.initR === 0) {
+                                        if (range) {
+                                          const mid = Math.round((range[0] + range[1]) / 2 / 5) * 5;
+                                          setRows((prev) => {
+                                            const next = [...prev];
+                                            next[i] = { ...next[i], initR: mid };
+                                            return next;
+                                          });
+                                        }
+                                      } else {
+                                        setRows((prev) => {
+                                          const next = [...prev];
+                                          next[i] = { ...next[i], initR: 0 };
+                                          return next;
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    Not Possible
+                                  </Chip>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-0.5 text-left align-bottom">
+                              <div className="flex flex-col items-end">
+                                <button
+                                  onClick={() => {
+                                    setRows((prev) => {
+                                      const next = prev.filter((_, k) => k !== i);
+                                      // Compute new selected index
+                                      let newIdx = selectedIdx;
+                                      if (selectedIdx === i) {
+                                        // Deleted currently selected row: clear selection entirely
+                                        newIdx = -1;
+                                      } else if (i < selectedIdx) {
+                                        // A row above the current selection was removed; shift selection index left
+                                        newIdx = Math.max(0, selectedIdx - 1);
+                                      }
+                                      // Clamp when list becomes empty
+                                      if (next.length === 0) {
+                                        newIdx = -1;
+                                        setSelectedBlockId(null);
+                                        setSelectedIdx(-1);
+                                        return next;
+                                      }
+                                      // Apply selection updates referencing the NEW array so ids align
+                                      if (newIdx === -1) {
+                                        setSelectedIdx(-1);
+                                        setSelectedBlockId(null);
+                                      } else {
+                                        if (newIdx < 0) {
+                                          newIdx = 0;
+                                        } // safety
+                                        if (newIdx >= next.length) {
+                                          newIdx = next.length - 1;
+                                        }
+                                        setSelectedIdx(newIdx);
+                                        setSelectedBlockId(next[newIdx]?.id ?? null);
+                                      }
+                                      return next;
+                                    });
+                                  }}
+                                  className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer"
+                                  title="Remove shot"
+                                  aria-label="Remove shot"
+                                >
+                                  {/* Circle X delete icon */}
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M9 9l6 6" />
+                                    <path d="M15 9l-6 6" />
+                                  </svg>
+                                </button>
+                                {!initialized && (
+                                  <button
+                                    type="button"
+                                    aria-label="Drag to reorder"
+                                    draggable
+                                    onDragStart={(e) => {
+                                      if (initialized) {
+                                        return;
+                                      }
+                                      setDragRowIdx(i);
+                                      setDragOverIdx(i);
+                                      e.dataTransfer.effectAllowed = 'move';
+                                    }}
+                                    onDragEnd={() => {
+                                      setDragRowIdx(null);
+                                      setDragOverIdx(null);
+                                    }}
+                                    className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100/60 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                    title="Drag to reorder"
+                                  >
+                                    {/* Circular dotted drag handle icon */}
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      className="w-5 h-5"
+                                      strokeWidth="1.6"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <circle cx="12" cy="12" r="9" />
+                                      <circle
+                                        cx="9"
+                                        cy="9"
+                                        r="0.9"
+                                        fill="currentColor"
+                                        stroke="none"
+                                      />
+                                      <circle
+                                        cx="15"
+                                        cy="9"
+                                        r="0.9"
+                                        fill="currentColor"
+                                        stroke="none"
+                                      />
+                                      <circle
+                                        cx="9"
+                                        cy="15"
+                                        r="0.9"
+                                        fill="currentColor"
+                                        stroke="none"
+                                      />
+                                      <circle
+                                        cx="15"
+                                        cy="15"
+                                        r="0.9"
+                                        fill="currentColor"
+                                        stroke="none"
+                                      />
+                                      <circle
+                                        cx="9"
+                                        cy="12"
+                                        r="0.9"
+                                        fill="currentColor"
+                                        stroke="none"
+                                      />
+                                      <circle
+                                        cx="15"
+                                        cy="12"
+                                        r="0.9"
+                                        fill="currentColor"
+                                        stroke="none"
+                                      />
+                                    </svg>
+                                  </button>
+                                )}
+                                {!initialized && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setRows((prev) => {
+                                        const next = [...prev];
+                                        const aboveIdx = i; // row above insertion point
+                                        const belowIdx = i + 1 < prev.length ? i + 1 : null;
+                                        // eslint-disable-next-line sonarjs/cognitive-complexity
+                                        const computeInsertValue = (side) => {
+                                          if (side === 'L') {
+                                            let upIdx = aboveIdx;
+                                            while (upIdx >= 0 && prev[upIdx].initL <= 0) {
+                                              upIdx--;
+                                            }
+                                            let downIdx = belowIdx;
+                                            while (
+                                              downIdx !== null &&
+                                              downIdx < prev.length &&
+                                              prev[downIdx].initL <= 0
+                                            ) {
+                                              downIdx++;
+                                            }
+                                            const haveUpper = upIdx >= 0;
+                                            const haveLower =
+                                              downIdx !== null && downIdx < prev.length;
+                                            if (!haveUpper && !haveLower) {
+                                              return 0;
+                                            }
+                                            if (haveUpper && !haveLower) {
+                                              const aboveVal = prev[upIdx].initL;
+                                              if (aboveVal <= 0) {
+                                                return 0;
+                                              }
+                                              if (aboveVal === 95) {
+                                                return 100;
+                                              }
+                                              if (aboveVal === 100) {
+                                                return 0;
+                                              }
+                                              const gap = 100 - aboveVal;
+                                              if (gap <= 5) {
+                                                return 0;
+                                              }
+                                              let mid = Math.round((aboveVal + 100) / 2 / 5) * 5;
+                                              if (mid <= aboveVal) {
+                                                mid = aboveVal + 5;
+                                              }
+                                              if (mid >= 100) {
+                                                mid = 95;
+                                              }
+                                              if (mid <= aboveVal || mid >= 100) {
+                                                return 0;
+                                              }
+                                              return clamp(mid, 5, 100);
+                                            }
+                                            if (!haveUpper && haveLower) {
+                                              return 0;
+                                            }
+                                            const aboveVal = prev[upIdx].initL;
+                                            const belowVal = prev[downIdx].initL;
+                                            const gap = belowVal - aboveVal;
+                                            if ((aboveVal <= 0 && belowVal <= 0) || gap <= 5) {
+                                              return 0;
+                                            }
+                                            let mid = Math.round((aboveVal + belowVal) / 2 / 5) * 5;
+                                            if (mid <= aboveVal) {
+                                              mid = aboveVal + 5;
+                                            }
+                                            if (mid >= belowVal) {
+                                              mid = belowVal - 5;
+                                            }
+                                            if (mid <= aboveVal || mid >= belowVal) {
+                                              return 0;
+                                            }
+                                            return clamp(mid, 5, 100);
+                                          } else {
+                                            let upIdx = aboveIdx;
+                                            while (upIdx >= 0 && prev[upIdx].initR <= 0) {
+                                              upIdx--;
+                                            }
+                                            let downIdx = belowIdx;
+                                            while (
+                                              downIdx !== null &&
+                                              downIdx < prev.length &&
+                                              prev[downIdx].initR <= 0
+                                            ) {
+                                              downIdx++;
+                                            }
+                                            const haveUpper = upIdx >= 0;
+                                            const haveLower =
+                                              downIdx !== null && downIdx < prev.length;
+                                            if (!haveUpper && !haveLower) {
+                                              return 0;
+                                            }
+                                            if (haveUpper && !haveLower) {
+                                              const aboveVal = prev[upIdx].initR;
+                                              if (aboveVal <= 0) {
+                                                return 0;
+                                              }
+                                              if (aboveVal === 10) {
+                                                return 5;
+                                              }
+                                              if (aboveVal === 5) {
+                                                return 0;
+                                              }
+                                              const gap = aboveVal - 5;
+                                              if (gap <= 5) {
+                                                return 0;
+                                              }
+                                              let mid = Math.round((aboveVal + 5) / 2 / 5) * 5;
+                                              if (mid >= aboveVal) {
+                                                mid = aboveVal - 5;
+                                              }
+                                              if (mid <= 5) {
+                                                mid = 10;
+                                              }
+                                              if (mid >= aboveVal || mid <= 5) {
+                                                return 0;
+                                              }
+                                              return clamp(mid, 5, 100);
+                                            }
+                                            if (!haveUpper && haveLower) {
+                                              return 0;
+                                            }
+                                            const aboveVal = prev[upIdx].initR;
+                                            const belowVal = prev[downIdx].initR;
+                                            const gap = aboveVal - belowVal;
+                                            if ((aboveVal <= 0 && belowVal <= 0) || gap <= 5) {
+                                              return 0;
+                                            }
+                                            let mid = Math.round((aboveVal + belowVal) / 2 / 5) * 5;
+                                            if (mid >= aboveVal) {
+                                              mid = aboveVal - 5;
+                                            }
+                                            if (mid <= belowVal) {
+                                              mid = belowVal + 5;
+                                            }
+                                            if (!(mid < aboveVal && mid > belowVal)) {
+                                              return 0;
+                                            }
+                                            return clamp(mid, 5, 100);
+                                          }
+                                        };
+                                        const midL = computeInsertValue('L');
+                                        const midR = computeInsertValue('R');
+                                        const row = newRow(
+                                          { initL: midL, initR: midR },
+                                          prev.length
+                                        );
+                                        next.splice(i + 1, 0, row);
+                                        return next;
+                                      });
+                                    }}
+                                    className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 hover:bg-slate-100/60 cursor-copy"
+                                    aria-label="Insert shot below"
+                                    title="Insert shot below"
+                                  >
+                                    {/* Plus inside circle icon */}
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      className="w-5 h-5"
+                                      strokeWidth="1.8"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <circle cx="12" cy="12" r="9" />
+                                      <path d="M12 8v8" />
+                                      <path d="M8 12h8" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                          {/* If dragging to end: show marker after last row */}
+                          {dragRowIdx !== null &&
+                            i === rows.length - 1 &&
+                            dragOverIdx === rows.length && (
+                              <tr aria-hidden className="pointer-events-none">
+                                <td colSpan={4} className="p-0">
+                                  <div className="h-2 relative">
+                                    <div className="absolute inset-0 flex items-center">
+                                      <div className="w-full h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)] animate-pulse" />
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                        </React.Fragment>
+                      ))}
+                      {/* Standalone insertion marker at list end when dragging over empty space below */}
+                      {dragRowIdx !== null && dragOverIdx === rows.length && (
+                        <tr aria-hidden className="pointer-events-none">
+                          <td colSpan={4} className="p-0">
+                            <div className="h-2 relative">
+                              <div className="absolute inset-0 flex items-center">
+                                <div className="w-full h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)] animate-pulse" />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Clear all shots button below table removed; only in-canvas button remains */}
+              </Section>
+            </>
+          )}
+
+          {/* Practice */}
+          {initialized && !finalPhase ? (
+            <>
+              <Section
+                title="Practice Shots"
+                darkMode={darkMode}
+                right={
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isStandalone) {
+                          downloadStandalone();
+                        } else {
+                          _pushToast('Download only works in standalone mode');
+                        }
+                      }}
+                      className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'} ${isStandalone ? '' : 'opacity-60'}`}
+                      title={
+                        isStandalone
+                          ? 'Download this standalone HTML file'
+                          : 'Download (only works in standalone mode)'
+                      }
+                      aria-label="Download standalone"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <path d="M7 10l5 5 5-5" />
+                        <path d="M12 15V3" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDarkMode(!darkMode)}
+                      className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
+                      title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                      aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                    >
+                      {darkMode ? (
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                          <path
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowInfoModal(true)}
+                      className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
+                      title="Help & About"
+                      aria-label="Help & About"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={resetAll}
+                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                      title="Return to setup and reset session"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                      Setup
+                    </button>
+                    <button
+                      type="button"
+                      disabled
+                      className={`${BTN_ICON} bg-blue-600 border-2 border-blue-400 font-semibold`}
+                      title="Currently on Practice page"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                      Practice
+                    </button>
+                    <button
+                      onClick={endSession}
+                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                      title="Go to final recall"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                        <line x1="4" y1="22" x2="4" y2="15" />
+                      </svg>
+                      Recall
+                    </button>
+                  </div>
+                }
+              >
+                <div
+                  className={`grid grid-cols-1 ${showFeedbackPanel ? 'lg:[grid-template-columns:60fr_40fr] lg:items-start' : ''} gap-4`}
+                >
+                  {/* Left: selection and input */}
+                  <div className="lg:col-span-1 flex flex-col">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3
+                        className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}
+                      >
+                        Current Attempt
+                      </h3>
+                      <div className="flex items-center gap-3">
+                        <label
+                          className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={showAttemptHistory}
+                            onChange={(e) => setShowAttemptHistory(e.target.checked)}
+                            className={GetCheckboxClass(darkMode)}
+                          />
+                          Attempt history
+                        </label>
+                        <label
+                          className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={showFeedbackPanel}
+                            onChange={(e) => setShowFeedbackPanel(e.target.checked)}
+                            className={GetCheckboxClass(darkMode)}
+                          />
+                          Feedback
+                        </label>
+                      </div>
+                    </div>
+                    <div
+                      className={`border rounded-2xl p-3 mb-4 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
+                    >
+                      <div
+                        className={`flex items-start gap-3 mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}
+                      >
+                        <span
+                          className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}
+                        >
+                          Mode
+                        </span>
+                        <div className="flex gap-2 flex-wrap items-center">
+                          <Chip
+                            active={mode === 'manual'}
+                            onClick={() => setMode('manual')}
+                            darkMode={darkMode}
+                          >
+                            Manual
+                          </Chip>
+                          <div className="flex items-center gap-2">
+                            <Chip
+                              active={mode === 'random'}
+                              onClick={() => setMode('random')}
+                              darkMode={darkMode}
+                            >
+                              Random
+                            </Chip>
+                            {mode === 'random' && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setSelectedIdx(pickRandomIdx());
+                                    setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
+                                  }}
+                                  className={`w-8 h-8 rounded-full border flex items-center justify-center text-lg ${darkMode ? 'border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300' : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-700'}`}
+                                  title="Random new shot & flipper"
+                                >
+                                  ↻
+                                </button>
+                                <label
+                                  className={`flex items-center gap-2 text-xs ml-2 ${GetTextClass(darkMode, 'secondary')}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={useSeededRandom}
+                                    onChange={(e) => setUseSeededRandom(e.target.checked)}
+                                    className={GetCheckboxClass(darkMode)}
+                                  />
+                                  Seeded
+                                </label>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}
+                      >
+                        <div className="flex items-start gap-3 mb-2">
+                          <span
+                            className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}
+                          >
+                            Shot
+                          </span>
+                          <div className="flex gap-2 flex-wrap">
+                            {rows.map((r, i) => (
+                              <Chip
+                                key={r.id}
+                                active={selectedIdx === i}
+                                onClick={() => (mode === 'manual' ? setSelectedIdx(i) : undefined)}
+                                disabled={mode === 'random'}
+                                darkMode={darkMode}
+                              >
+                                {r.type}
+                              </Chip>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}
+                        >
+                          Flipper
+                        </span>
+                        <div className="flex gap-2">
+                          <Chip
+                            active={selectedSide === 'L'}
+                            onClick={() => (mode === 'manual' ? setSelectedSide('L') : undefined)}
+                            disabled={mode === 'random'}
+                            darkMode={darkMode}
+                          >
+                            Left
+                          </Chip>
+                          <Chip
+                            active={selectedSide === 'R'}
+                            onClick={() => (mode === 'manual' ? setSelectedSide('R') : undefined)}
+                            disabled={mode === 'random'}
+                            darkMode={darkMode}
+                          >
+                            Right
+                          </Chip>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: feedback and stats (toggleable) */}
+                  {showFeedbackPanel ? (
+                    <div className="lg:col-span-1 flex flex-col">
+                      <h3
+                        className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}
+                      >
+                        Feedback
+                      </h3>
+                      <div
+                        className={`border rounded-2xl p-3 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
+                      >
+                        <div className="text-sm">
+                          {/* eslint-disable-next-line sonarjs/cognitive-complexity */}
+                          {(() => {
+                            const a = attempts[0];
+                            const has = Boolean(a);
+                            return (
+                              <>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Last shot
+                                  </div>
+                                  <div
+                                    className="font-medium"
+                                    style={{
+                                      color: has
+                                        ? SEVERITY_COLORS[a.severity] ||
+                                          (darkMode ? '#cbd5e1' : '#334155')
+                                        : undefined,
+                                    }}
+                                  >
+                                    {has ? rowDisplayWithSide(rows[a.idx], a.side) : '—'}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Result
+                                  </div>
+                                  <div className="font-medium capitalize">
+                                    {has ? (
+                                      <>
+                                        {a.label}{' '}
+                                        <span
+                                          className={darkMode ? 'text-slate-500' : 'text-slate-500'}
+                                        >
+                                          (
+                                        </span>
+                                        <span
+                                          style={{
+                                            color:
+                                              SEVERITY_COLORS[a.severity] ||
+                                              (darkMode ? '#cbd5e1' : '#334155'),
+                                          }}
+                                        >
+                                          {a.severity}
+                                        </span>{' '}
+                                        <span
+                                          className={darkMode ? 'text-slate-500' : 'text-slate-500'}
+                                        >
+                                          {a.delta > 0 ? '+' : ''}
+                                          {format2(Math.abs(a.delta))}%)
+                                        </span>
+                                      </>
+                                    ) : (
+                                      'N/A'
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Guess
+                                  </div>
+                                  <div>{has ? formatPct(a.input) : '—'}</div>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Prev guess
+                                  </div>
+                                  <div>
+                                    {(() => {
+                                      if (!showMentalModel) {
+                                        return '—';
+                                      }
+                                      if (!has || a.prevInput === null) {
+                                        return '—';
+                                      }
+                                      return formatPct(a.prevInput);
+                                    })()}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Guess delta
+                                  </div>
+                                  <div>
+                                    {(() => {
+                                      if (!has) {
+                                        return 'N/A';
+                                      }
+                                      if (a.prevInput === null) {
+                                        return 'N/A';
+                                      }
+                                      const diff = Math.round((a.input ?? 0) - (a.prevInput ?? 0));
+                                      return `${diff > 0 ? '+' : ''}${format2(Math.abs(diff))}%`;
+                                    })()}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Adjustment needed
+                                  </div>
+                                  <div className="capitalize">
+                                    {(() => {
+                                      if (!has) {
+                                        return 'N/A';
+                                      }
+                                      if (!a.adjustRequired) {
+                                        return 'N/A';
+                                      }
+                                      if (a.requiredDir === -1) {
+                                        return 'Lower';
+                                      }
+                                      if (a.requiredDir === 1) {
+                                        return 'Higher';
+                                      }
+                                      return 'None';
+                                    })()}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Adjustment result
+                                  </div>
+                                  <div
+                                    className={(() => {
+                                      if (!has || !a.adjustRequired) {
+                                        return 'text-slate-400';
+                                      }
+                                      return a.adjustCorrect ? 'text-emerald-600' : 'text-red-600';
+                                    })()}
+                                  >
+                                    {(() => {
+                                      if (!has) {
+                                        return 'N/A';
+                                      }
+                                      if (!a.adjustRequired) {
+                                        return 'N/A';
+                                      }
+                                      return a.adjustCorrect ? 'Correct' : 'Missed';
+                                    })()}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Starting
+                                  </div>
+                                  <div>
+                                    {(() => {
+                                      if (!showBaseValues) {
+                                        return '—';
+                                      }
+                                      if (!has) {
+                                        return '—';
+                                      }
+                                      return formatPct(
+                                        (a.side === 'L' ? baseL[a.idx] : baseR[a.idx]) ?? 0
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between mb-1">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Correct
+                                  </div>
+                                  <div>
+                                    {(() => {
+                                      if (!showTruth) {
+                                        return '—';
+                                      }
+                                      if (!has) {
+                                        return '—';
+                                      }
+                                      return formatPct(a.truth);
+                                    })()}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between mt-2 pt-2 border-t">
+                                  <div
+                                    className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                                  >
+                                    Points
+                                  </div>
+                                  <div className="text-right">
+                                    <div>{has ? `${a.points} pts` : '—'}</div>
+                                    {has && a.basePoints !== null ? (
+                                      <div className="text-[11px] text-slate-500">
+                                        Base {a.basePoints}
+                                        {a.adjustPenalty ? ` − Adj Penalty ${a.adjustPenalty}` : ''}
+                                      </div>
+                                    ) : (
+                                      <div className="text-[11px] text-slate-400">
+                                        Awaiting first attempt
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="mt-4 pt-4 border-t">
+                                  <div
+                                    className={`text-sm font-medium mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}
+                                  >
+                                    View Shot Values
+                                  </div>
+                                  <div className="flex flex-wrap gap-4 items-center mb-3">
+                                    <label
+                                      className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={showBaseValues}
+                                        onChange={(e) => setShowBaseValues(e.target.checked)}
+                                        className={GetCheckboxClass(darkMode)}
+                                      />
+                                      Starting
+                                    </label>
+                                    <label
+                                      className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={showMentalModel}
+                                        onChange={(e) => {
+                                          const v = e.target.checked;
+                                          setShowMentalModel(v);
+                                        }}
+                                        className={GetCheckboxClass(darkMode)}
+                                      />
+                                      Guess
+                                    </label>
+                                    <label
+                                      className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={showTruth}
+                                        onChange={(e) => setShowTruth(e.target.checked)}
+                                        className={GetCheckboxClass(darkMode)}
+                                      />
+                                      Correct
+                                    </label>
+                                  </div>
+                                  {showMentalModel || showBaseValues || showTruth ? (
+                                    <div>
+                                      <div className="rounded-xl border overflow-hidden">
+                                        <table className="w-full text-[11px] md:text-xs">
+                                          <thead>
+                                            <tr
+                                              className={
+                                                darkMode
+                                                  ? 'bg-slate-700 text-slate-300 font-semibold'
+                                                  : 'bg-slate-100 text-slate-700 font-semibold'
+                                              }
+                                            >
+                                              <th className="p-1.5 text-left" rowSpan="2">
+                                                Shot
+                                              </th>
+                                              {(() => {
+                                                const leftCols = [
+                                                  showMentalModel,
+                                                  showBaseValues,
+                                                  showTruth,
+                                                ].filter(Boolean).length;
+                                                const rightCols = leftCols; // same columns for right
+                                                return (
+                                                  <>
+                                                    {leftCols > 0 && (
+                                                      <th
+                                                        className={`p-1.5 text-center ${darkMode ? 'border-r border-slate-600' : 'border-r border-slate-300'}`}
+                                                        colSpan={leftCols}
+                                                      >
+                                                        Left Flipper
+                                                      </th>
+                                                    )}
+                                                    {rightCols > 0 && (
+                                                      <th
+                                                        className="p-1.5 text-center"
+                                                        colSpan={rightCols}
+                                                      >
+                                                        Right Flipper
+                                                      </th>
+                                                    )}
+                                                  </>
+                                                );
+                                              })()}
+                                            </tr>
+                                            <tr
+                                              className={
+                                                darkMode
+                                                  ? 'bg-slate-700 text-slate-300'
+                                                  : 'bg-slate-50 text-slate-600'
+                                              }
+                                            >
+                                              {showBaseValues ? (
+                                                <th className="p-1.5 text-right" title="Starting">
+                                                  Str
+                                                </th>
+                                              ) : null}
+                                              {showMentalModel ? (
+                                                <th className="p-1.5 text-right" title="Guess">
+                                                  Gss
+                                                </th>
+                                              ) : null}
+                                              {showTruth ? (
+                                                <th
+                                                  className={`p-1.5 text-right ${darkMode ? 'border-r border-slate-600' : 'border-r border-slate-300'}`}
+                                                  title="Correct"
+                                                >
+                                                  Cor
+                                                </th>
+                                              ) : null}
+                                              {showBaseValues ? (
+                                                <th className="p-1.5 text-right" title="Starting">
+                                                  Str
+                                                </th>
+                                              ) : null}
+                                              {showMentalModel ? (
+                                                <th className="p-1.5 text-right" title="Guess">
+                                                  Gss
+                                                </th>
+                                              ) : null}
+                                              {showTruth ? (
+                                                <th className="p-1.5 text-right" title="Correct">
+                                                  Cor
+                                                </th>
+                                              ) : null}
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {rows.map((r, i) => (
+                                              <tr key={r.id} className="border-t">
+                                                <td
+                                                  className="p-1.5 whitespace-nowrap max-w-[120px] truncate"
+                                                  title={r.type}
+                                                >
+                                                  {r.type}
+                                                </td>
+                                                {showBaseValues ? (
+                                                  <td
+                                                    className={`p-1.5 text-right ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}
+                                                  >
+                                                    {formatPct(baseL[i] ?? 0)}
+                                                  </td>
+                                                ) : null}
+                                                {showMentalModel ? (
+                                                  <td className="p-1.5 text-right">
+                                                    {formatPct(mentalL[i] ?? 0)}
+                                                  </td>
+                                                ) : null}
+                                                {showTruth ? (
+                                                  <td
+                                                    className={`p-1.5 text-right ${darkMode ? 'text-slate-400 border-r border-slate-600' : 'text-slate-600 border-r border-slate-300'}`}
+                                                  >
+                                                    {formatPct(hiddenL[i] ?? 0)}
+                                                  </td>
+                                                ) : null}
+                                                {showBaseValues ? (
+                                                  <td
+                                                    className={`p-1.5 text-right ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}
+                                                  >
+                                                    {formatPct(baseR[i] ?? 0)}
+                                                  </td>
+                                                ) : null}
+                                                {showMentalModel ? (
+                                                  <td className="p-1.5 text-right">
+                                                    {formatPct(mentalR[i] ?? 0)}
+                                                  </td>
+                                                ) : null}
+                                                {showTruth ? (
+                                                  <td
+                                                    className={`p-1.5 text-right ${GetTextClass(darkMode, 'secondary')}`}
+                                                  >
+                                                    {formatPct(hiddenR[i] ?? 0)}
+                                                  </td>
+                                                ) : null}
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="mt-6">
+                  {/* Practice playfield (read-only visual) */}
+                  <div className="relative">
+                    {/* Fullscreen toggle button (enter) */}
+                    {!playfieldFullscreen && (
+                      <button
+                        type="button"
+                        onClick={() => setPlayfieldFullscreen(true)}
+                        title="Fullscreen"
+                        className={`absolute top-1 right-1 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1 ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300'}`}
+                      >
+                        {/* Enter fullscreen icon */}
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                          <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+                          <path d="M21 16v3a2 2 0 0 1-2 2h-3" />
+                          <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                          <path d="M8 8H5V5" />
+                          <path d="M16 8h3V5" />
+                          <path d="M16 16h3v3" />
+                          <path d="M8 16H5v3" />
+                        </svg>
+                        Fullscreen
+                      </button>
+                    )}
+                    {/* Metric boxes positioned at bottom corners - responsive sizing */}
+                    <div className="absolute bottom-2 left-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:left-4">
+                      <div
+                        className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
+                      >
+                        <div
+                          className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
+                        >
+                          Last attempt
+                        </div>
+                        <div
+                          className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                        >
+                          {attempts[0] ? attempts[0].points : '—'}
+                        </div>
+                      </div>
+                      <div
+                        className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
+                      >
+                        <div
+                          className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
+                        >
+                          Attempts
+                        </div>
+                        <div
+                          className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                        >
+                          {attemptCount}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-2 right-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:right-4">
+                      <div
+                        className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
+                      >
+                        <div
+                          className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
+                        >
+                          Total points
+                        </div>
+                        <div
+                          className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                        >
+                          {totalPoints}
+                        </div>
+                      </div>
+                      <div
+                        className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
+                      >
+                        <div
+                          className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
+                        >
+                          Avg abs error
+                        </div>
+                        <div
+                          className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                        >
+                          {avgAbsErr.toFixed(1)}
+                        </div>
+                      </div>
+                    </div>
+                    <PracticePlayfield
+                      rows={rows}
+                      selectedIdx={selectedIdx}
+                      selectedSide={selectedSide}
+                      lastRecall={attempts[0] || null}
+                      darkMode={darkMode}
+                      awaitingNextShot={awaitingNextShot}
+                      onAdvanceToNextShot={advanceToNextShot}
+                    />
+                  </div>
+                  {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below - responsive sizing */}
+                  <div className="w-full overflow-x-auto">
+                    {(() => {
+                      const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
+                      const ordered = selectedSide === 'L' ? values : [...values].reverse();
+                      // Responsive font size using clamp for smooth scaling
+                      return (
+                        <div className="select-none flex flex-col items-stretch min-w-[320px]">
+                          <div
+                            className="grid w-full gap-[2px]"
+                            style={{
+                              gridTemplateColumns: `repeat(${ordered.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {ordered.map((v) => (
+                              <button
+                                key={v}
+                                type="button"
+                                onClick={() => submitAttempt(v)}
+                                disabled={awaitingNextShot}
+                                className={`aspect-square rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-[clamp(10px,2.2vw,24px)] ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                                aria-label={`Recall ${format2(v)}`}
+                              >
+                                <span className="relative" style={{ top: '-1px' }}>
+                                  {format2(v)}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                          <div className="flex justify-center mt-1">
+                            <button
+                              type="button"
+                              onClick={() => submitAttempt(0)}
+                              disabled={awaitingNextShot}
+                              className={`px-2 py-0.5 rounded-xl border shadow active:scale-[0.95] transition-transform font-semibold text-[clamp(10px,2.2vw,24px)] ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+                            >
+                              <span className="relative" style={{ top: '-1px' }}>
+                                Not Possible
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  {showAttemptHistory ? (
+                    <>
+                      {/* Attempt history below playfield */}
+                      <h3
+                        className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}
+                      >
+                        Attempt history
+                      </h3>
+                      <div className="overflow-auto border rounded-2xl">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr
+                              className={
+                                darkMode
+                                  ? 'bg-slate-700 text-slate-300 font-semibold'
+                                  : 'bg-slate-100 text-slate-700 font-semibold'
+                              }
+                            >
+                              <th className="p-2 text-left">Time</th>
+                              <th className="p-2 text-left">Shot</th>
+                              <th className="p-2 text-right">Recall</th>
+                              <th className="p-2 text-right">Truth</th>
+                              <th className="p-2 text-right">Prev</th>
+                              <th className="p-2 text-right">Delta</th>
+                              <th className="p-2 text-right">Adj?</th>
+                              <th className="p-2 text-right">Dir</th>
+                              <th className="p-2 text-right">AdjPen</th>
+                              <th className="p-2 text-right">Label</th>
+                              <th className="p-2 text-right">Points</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {attempts.map((a) => (
+                              <tr key={a.t} className="border-t">
+                                <td className="p-2">{new Date(a.t).toLocaleTimeString()}</td>
+                                <td className="p-2">{rowDisplayWithSide(rows[a.idx], a.side)}</td>
+                                <td className="p-2 text-right">{formatPct(a.input)}</td>
+                                <td className="p-2 text-right">{formatPct(a.truth)}</td>
+                                <td className="p-2 text-right">
+                                  {a.prevInput === null ? '—' : formatPct(a.prevInput)}
+                                </td>
+                                <td className="p-2 text-right">
+                                  {a.delta > 0 ? '+' : ''}
+                                  {a.delta}
+                                </td>
+                                <td className="p-2 text-right">
+                                  {(() => {
+                                    if (!a.adjustRequired) {
+                                      return '—';
+                                    }
+                                    return a.adjustCorrect ? '✔' : '✖';
+                                  })()}
+                                </td>
+                                <td className="p-2 text-right">
+                                  {(() => {
+                                    if (!a.adjustRequired) {
+                                      return '—';
+                                    }
+                                    if (a.requiredDir === -1) {
+                                      return '↓';
+                                    }
+                                    if (a.requiredDir === 1) {
+                                      return '↑';
+                                    }
+                                    return '';
+                                  })()}
+                                </td>
+                                <td className="p-2 text-right">
+                                  {a.adjustPenalty ? a.adjustPenalty : 0}
+                                </td>
+                                <td className="p-2 text-right capitalize">{a.label}</td>
+                                <td className="p-2 text-right">{a.points}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              </Section>
+              {playfieldFullscreen
+                ? createPortal(
+                    <div
+                      className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden fullscreen-safe-area"
+                      style={{ scrollbarGutter: 'auto' }}
+                    >
+                      {(() => {
+                        // Scale based on both fullscreenScale (height-driven) and windowWidth
+                        const heightScale = fullscreenScale || 1;
+                        const widthScale = Math.min(1.5, windowWidth / 800);
+                        const s = Math.min(heightScale, widthScale);
+                        const fontSize = Math.round(11 * s); // base 11px scaled
+                        const padY = 0.9 * s; // base 0.9 (~py-1.5 ≈6px) adjust
+                        const padX = 1.2 * s; // base horizontal
+                        const gap = 6 * s; // base gap 6px
+                        const iconSize = Math.max(14, Math.round(14 * s));
+                        return (
+                          <div
+                            className="flex items-center justify-between px-4 py-2 text-slate-200"
+                            style={{ fontSize }}
+                          >
+                            <div
+                              className="font-medium"
+                              style={{ fontSize: Math.round(fontSize * 1.05) }}
+                            >
+                              Practice Playfield
+                            </div>
+                            <div className="flex items-center" style={{ gap }}>
+                              <button
+                                type="button"
+                                onClick={() => setPlayfieldFullscreen(false)}
+                                title="Exit fullscreen (Esc)"
+                                style={{
+                                  padding: `${padY}px ${padX * 8}px`,
+                                  fontSize: fontSize * 0.9,
+                                  lineHeight: 1.1,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: `${Math.round(4 * s)}px`,
+                                  borderWidth: 1,
+                                }}
+                                className="rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 transition-colors"
+                              >
+                                {/* Standard fullscreen exit: arrows pointing inward */}
+                                <svg
+                                  width={iconSize}
+                                  height={iconSize}
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth={2}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M9 3H5a2 2 0 0 0-2 2v4" />
+                                  <path d="M15 3h4a2 2 0 0 1 2 2v4" />
+                                  <path d="M9 21H5a2 2 0 0 1-2-2v-4" />
+                                  <path d="M15 21h4a2 2 0 0 0 2-2v-4" />
+                                  <path d="M10 14v4h4v-4" />
+                                  <path d="M10 10V6h4v4" />
+                                </svg>
+                                <span>Exit</span>
+                              </button>
                             </div>
                           </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {/* Clear all shots button below table removed; only in-canvas button remains */}
-            </Section>
-          </>
-        )}
+                        );
+                      })()}
+                      {/* Main fullscreen content column. Use overflow-hidden to avoid phantom scrollbar when content fits. */}
+                      <div className="flex-1 flex flex-col items-stretch overflow-hidden">
+                        <div className="relative flex-1 flex flex-col min-h-0">
+                          {/* Metric boxes positioned at bottom corners - scaled */}
+                          {(() => {
+                            // Scale based on both fullscreenScale (height-driven) and windowWidth
+                            // Base reference: 800px width and scale of 1
+                            const heightScale = fullscreenScale || 1;
+                            const widthScale = Math.min(1.5, windowWidth / 800); // cap at 1.5 like height
+                            const s = Math.min(heightScale, widthScale); // use the smaller of the two
+                            const boxSize = Math.round(72 * s); // base 72px (w-18 h-18)
+                            const padding = Math.round(8 * s); // base p-2
+                            const margin = Math.round(16 * s); // base bottom-4/left-4/right-4
+                            const gap = Math.round(8 * s); // base gap-2
+                            const labelFont = Math.max(8, Math.round(9 * s)); // base text-[9px]
+                            const valueFont = Math.max(12, Math.round(16 * s)); // base text-base (16px)
+                            const borderRadius = Math.round(12 * s); // base rounded-xl
 
-        {/* Practice */}
-        {initialized && !finalPhase ? (
-          <>
+                            return (
+                              <>
+                                <div
+                                  className="absolute z-30 flex"
+                                  style={{ bottom: margin, left: margin, gap }}
+                                >
+                                  <div
+                                    className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
+                                    style={{
+                                      width: boxSize,
+                                      height: boxSize,
+                                      padding,
+                                      borderRadius,
+                                    }}
+                                  >
+                                    <div
+                                      className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
+                                      style={{
+                                        fontSize: labelFont,
+                                        marginBottom: Math.round(2 * s),
+                                      }}
+                                    >
+                                      Last attempt
+                                    </div>
+                                    <div
+                                      className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                                      style={{ fontSize: valueFont }}
+                                    >
+                                      {attempts[0] ? attempts[0].points : '—'}
+                                    </div>
+                                  </div>
+                                  <div
+                                    className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
+                                    style={{
+                                      width: boxSize,
+                                      height: boxSize,
+                                      padding,
+                                      borderRadius,
+                                    }}
+                                  >
+                                    <div
+                                      className={GetTextClass(darkMode, 'secondary')}
+                                      style={{
+                                        fontSize: labelFont,
+                                        marginBottom: Math.round(2 * s),
+                                      }}
+                                    >
+                                      Attempts
+                                    </div>
+                                    <div
+                                      className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                                      style={{ fontSize: valueFont }}
+                                    >
+                                      {attemptCount}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div
+                                  className="absolute z-30 flex"
+                                  style={{ bottom: margin, right: margin, gap }}
+                                >
+                                  <div
+                                    className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
+                                    style={{
+                                      width: boxSize,
+                                      height: boxSize,
+                                      padding,
+                                      borderRadius,
+                                    }}
+                                  >
+                                    <div
+                                      className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
+                                      style={{
+                                        fontSize: labelFont,
+                                        marginBottom: Math.round(2 * s),
+                                      }}
+                                    >
+                                      Total points
+                                    </div>
+                                    <div
+                                      className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                                      style={{ fontSize: valueFont }}
+                                    >
+                                      {totalPoints}
+                                    </div>
+                                  </div>
+                                  <div
+                                    className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
+                                    style={{
+                                      width: boxSize,
+                                      height: boxSize,
+                                      padding,
+                                      borderRadius,
+                                    }}
+                                  >
+                                    <div
+                                      className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
+                                      style={{
+                                        fontSize: labelFont,
+                                        marginBottom: Math.round(2 * s),
+                                      }}
+                                    >
+                                      Avg abs error
+                                    </div>
+                                    <div
+                                      className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
+                                      style={{ fontSize: valueFont }}
+                                    >
+                                      {avgAbsErr.toFixed(1)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
+                          <PracticePlayfield
+                            fullscreen
+                            rows={rows}
+                            selectedIdx={selectedIdx}
+                            selectedSide={selectedSide}
+                            lastRecall={attempts[0] || null}
+                            onScale={(s) => setFullscreenScale(s)}
+                            darkMode={darkMode}
+                            awaitingNextShot={awaitingNextShot}
+                            onAdvanceToNextShot={advanceToNextShot}
+                          />
+                        </div>
+                        <div className="w-full px-4">
+                          {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
+                          {(() => {
+                            // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
+                            // Strategy:
+                            // 1. Measure available container width (window.innerWidth minus side padding ~32px).
+                            // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
+                            //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
+                            // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
+                            const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
+                            const ordered = selectedSide === 'L' ? values : [...values].reverse();
+                            const totalChips = 19; // numeric chips only (NP below)
+                            // Use tracked windowWidth state for responsive sizing
+                            // Account for padding (px-4 = 32px) plus extra buffer for potential scrollbar space
+                            const horizontalPadding = 48; // 16 left + 16 right + 16 buffer for scrollbar reservation
+                            const avail = Math.max(300, windowWidth - horizontalPadding); // safeguard
+                            // Increase overall size (~25%) and tighten spacing.
+                            const maxDiameter = 112; // was 90
+                            const minDiameter = 26;
+                            const baseGap = 3 * fullscreenScale; // target very tight spacing (~2-3px final)
+                            // First pass assume gap = baseGap => candidate diameter
+                            let gap = baseGap;
+                            let d = (avail - (totalChips - 1) * gap) / totalChips;
+                            if (d > maxDiameter) {
+                              // Grow gap to consume extra space while keeping diameter at cap
+                              d = maxDiameter;
+                              gap = (avail - totalChips * d) / (totalChips - 1);
+                            }
+                            if (d < minDiameter) {
+                              // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
+                              gap = 4; // minimal aesthetic gap
+                              d = (avail - (totalChips - 1) * gap) / totalChips;
+                              if (d < 20) {
+                                d = 20;
+                              } // absolute floor
+                            }
+                            // Final safety clamp
+                            d = Math.max(20, Math.min(maxDiameter, d));
+                            // Recompute gap precisely to fill width (avoid leftover). Bound gap min/max after recompute.
+                            gap = (avail - totalChips * d) / (totalChips - 1);
+                            const minGap = 2,
+                              maxGap = 24; // allow tighter minimum
+                            if (gap < minGap) {
+                              // Reduce diameter slightly so gap hits minGap.
+                              const targetD = (avail - (totalChips - 1) * minGap) / totalChips;
+                              d = Math.max(20, Math.min(maxDiameter, targetD));
+                              gap = minGap;
+                            } else if (gap > maxGap) {
+                              // Increase diameter so gap hits maxGap.
+                              const targetD = (avail - (totalChips - 1) * maxGap) / totalChips;
+                              d = Math.max(20, Math.min(maxDiameter, targetD));
+                              gap = maxGap;
+                            }
+                            const diameter = Math.round(d);
+                            const chipFont = Math.round(diameter * 0.65); // enlarge ~25% more from 0.52
+                            // Container style: use exact width so chips line up flush without overflow/underflow.
+                            const containerStyle = { width: avail, margin: '0 auto' };
+                            return (
+                              <div className="w-full select-none" style={containerStyle}>
+                                <div className="flex items-center" style={{ gap: Math.round(gap) }}>
+                                  {ordered.map((v) => (
+                                    <button
+                                      key={v}
+                                      type="button"
+                                      onClick={() => submitAttempt(v)}
+                                      disabled={awaitingNextShot}
+                                      className={`rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0 ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                                      style={{
+                                        width: diameter,
+                                        height: diameter,
+                                        fontSize: chipFont,
+                                        lineHeight: 1,
+                                        fontWeight: 600,
+                                      }}
+                                      aria-label={`Recall ${format2(v)}`}
+                                    >
+                                      <span className="relative" style={{ top: '-2px' }}>
+                                        {format2(v)}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                                <div className="mt-[2px] flex justify-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => submitAttempt(0)}
+                                    disabled={awaitingNextShot}
+                                    className={`px-1 rounded-xl border shadow active:scale-[0.97] transition-transform text-sm font-medium ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                                    style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
+                                  >
+                                    <span className="relative" style={{ top: '-1px' }}>
+                                      Not Possible
+                                    </span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>,
+                    document.body
+                  )
+                : null}
+            </>
+          ) : null}
+
+          {/* Final recall */}
+          {initialized && finalPhase ? (
             <Section
-              title="Practice Shots"
+              title="Recall Shots"
               darkMode={darkMode}
               right={
                 <div className="flex items-center gap-3">
@@ -5969,10 +7239,9 @@ const App = () => {
                     Setup
                   </button>
                   <button
-                    type="button"
-                    disabled
-                    className={`${BTN_ICON} bg-blue-600 border-2 border-blue-400 font-semibold`}
-                    title="Currently on Practice page"
+                    onClick={() => setFinalPhase(false)}
+                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                    title="Return to practice session"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -5988,9 +7257,10 @@ const App = () => {
                     Practice
                   </button>
                   <button
-                    onClick={endSession}
-                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
-                    title="Go to final recall"
+                    type="button"
+                    disabled
+                    className={`${BTN_ICON} bg-blue-600 border-2 border-blue-400 font-semibold`}
+                    title="Currently on Recall page"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -6009,1314 +7279,94 @@ const App = () => {
                 </div>
               }
             >
-              <div
-                className={`grid grid-cols-1 ${showFeedbackPanel ? 'lg:[grid-template-columns:60fr_40fr] lg:items-start' : ''} gap-4`}
-              >
-                {/* Left: selection and input */}
-                <div className="lg:col-span-1 flex flex-col">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className={`font-medium ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>
-                      Current Attempt
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <label
-                        className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={showAttemptHistory}
-                          onChange={(e) => setShowAttemptHistory(e.target.checked)}
-                          className={GetCheckboxClass(darkMode)}
-                        />
-                        Attempt history
-                      </label>
-                      <label
-                        className={`flex items-center gap-2 text-xs ${GetTextClass(darkMode, 'secondary')}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={showFeedbackPanel}
-                          onChange={(e) => setShowFeedbackPanel(e.target.checked)}
-                          className={GetCheckboxClass(darkMode)}
-                        />
-                        Feedback
-                      </label>
-                    </div>
-                  </div>
-                  <div
-                    className={`border rounded-2xl p-3 mb-4 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
-                  >
-                    <div
-                      className={`flex items-start gap-3 mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}
+              <p className="text-sm text-slate-600 mb-4">
+                Enter your best recall for each shot. Higher score means closer to the correct
+                values.
+              </p>
+              <div className="overflow-auto border rounded-2xl">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr
+                      className={
+                        darkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-50 text-slate-600'
+                      }
                     >
-                      <span
-                        className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}
-                      >
-                        Mode
-                      </span>
-                      <div className="flex gap-2 flex-wrap items-center">
-                        <Chip
-                          active={mode === 'manual'}
-                          onClick={() => setMode('manual')}
-                          darkMode={darkMode}
-                        >
-                          Manual
-                        </Chip>
-                        <div className="flex items-center gap-2">
-                          <Chip
-                            active={mode === 'random'}
-                            onClick={() => setMode('random')}
-                            darkMode={darkMode}
-                          >
-                            Random
-                          </Chip>
-                          {mode === 'random' && (
-                            <>
-                              <button
-                                onClick={() => {
-                                  setSelectedIdx(pickRandomIdx());
-                                  setSelectedSide(seededRandom() < 0.5 ? 'L' : 'R');
-                                }}
-                                className={`w-8 h-8 rounded-full border flex items-center justify-center text-lg ${darkMode ? 'border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300' : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-700'}`}
-                                title="Random new shot & flipper"
-                              >
-                                ↻
-                              </button>
-                              <label
-                                className={`flex items-center gap-2 text-xs ml-2 ${GetTextClass(darkMode, 'secondary')}`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={useSeededRandom}
-                                  onChange={(e) => setUseSeededRandom(e.target.checked)}
-                                  className={GetCheckboxClass(darkMode)}
-                                />
-                                Seeded
-                              </label>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`mb-3 pb-3 border-b-2 ${darkMode ? 'border-slate-700' : 'border-slate-200'}`}
-                    >
-                      <div className="flex items-start gap-3 mb-2">
-                        <span
-                          className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}
-                        >
-                          Shot
-                        </span>
-                        <div className="flex gap-2 flex-wrap">
-                          {rows.map((r, i) => (
-                            <Chip
-                              key={r.id}
-                              active={selectedIdx === i}
-                              onClick={() => (mode === 'manual' ? setSelectedIdx(i) : undefined)}
-                              disabled={mode === 'random'}
-                              darkMode={darkMode}
-                            >
-                              {r.type}
-                            </Chip>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`w-28 flex-shrink-0 text-sm font-medium mt-1 ${GetTextClass(darkMode, 'secondary')}`}
-                      >
-                        Flipper
-                      </span>
-                      <div className="flex gap-2">
-                        <Chip
-                          active={selectedSide === 'L'}
-                          onClick={() => (mode === 'manual' ? setSelectedSide('L') : undefined)}
-                          disabled={mode === 'random'}
-                          darkMode={darkMode}
-                        >
-                          Left
-                        </Chip>
-                        <Chip
-                          active={selectedSide === 'R'}
-                          onClick={() => (mode === 'manual' ? setSelectedSide('R') : undefined)}
-                          disabled={mode === 'random'}
-                          darkMode={darkMode}
-                        >
-                          Right
-                        </Chip>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: feedback and stats (toggleable) */}
-                {showFeedbackPanel ? (
-                  <div className="lg:col-span-1 flex flex-col">
-                    <h3
-                      className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}
-                    >
-                      Feedback
-                    </h3>
-                    <div
-                      className={`border rounded-2xl p-3 flex-1 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
-                    >
-                      <div className="text-sm">
-                        {/* eslint-disable-next-line sonarjs/cognitive-complexity */}
-                        {(() => {
-                          const a = attempts[0];
-                          const has = Boolean(a);
-                          return (
-                            <>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Last shot
-                                </div>
-                                <div
-                                  className="font-medium"
-                                  style={{
-                                    color: has
-                                      ? SEVERITY_COLORS[a.severity] ||
-                                        (darkMode ? '#cbd5e1' : '#334155')
-                                      : undefined,
-                                  }}
-                                >
-                                  {has ? rowDisplayWithSide(rows[a.idx], a.side) : '—'}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Result
-                                </div>
-                                <div className="font-medium capitalize">
-                                  {has ? (
-                                    <>
-                                      {a.label}{' '}
-                                      <span
-                                        className={darkMode ? 'text-slate-500' : 'text-slate-500'}
-                                      >
-                                        (
-                                      </span>
-                                      <span
-                                        style={{
-                                          color:
-                                            SEVERITY_COLORS[a.severity] ||
-                                            (darkMode ? '#cbd5e1' : '#334155'),
-                                        }}
-                                      >
-                                        {a.severity}
-                                      </span>{' '}
-                                      <span
-                                        className={darkMode ? 'text-slate-500' : 'text-slate-500'}
-                                      >
-                                        {a.delta > 0 ? '+' : ''}
-                                        {format2(Math.abs(a.delta))}%)
-                                      </span>
-                                    </>
-                                  ) : (
-                                    'N/A'
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Guess
-                                </div>
-                                <div>{has ? formatPct(a.input) : '—'}</div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Prev guess
-                                </div>
-                                <div>
-                                  {(() => {
-                                    if (!showMentalModel) {
-                                      return '—';
-                                    }
-                                    if (!has || a.prevInput === null) {
-                                      return '—';
-                                    }
-                                    return formatPct(a.prevInput);
-                                  })()}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Guess delta
-                                </div>
-                                <div>
-                                  {(() => {
-                                    if (!has) {
-                                      return 'N/A';
-                                    }
-                                    if (a.prevInput === null) {
-                                      return 'N/A';
-                                    }
-                                    const diff = Math.round((a.input ?? 0) - (a.prevInput ?? 0));
-                                    return `${diff > 0 ? '+' : ''}${format2(Math.abs(diff))}%`;
-                                  })()}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Adjustment needed
-                                </div>
-                                <div className="capitalize">
-                                  {(() => {
-                                    if (!has) {
-                                      return 'N/A';
-                                    }
-                                    if (!a.adjustRequired) {
-                                      return 'N/A';
-                                    }
-                                    if (a.requiredDir === -1) {
-                                      return 'Lower';
-                                    }
-                                    if (a.requiredDir === 1) {
-                                      return 'Higher';
-                                    }
-                                    return 'None';
-                                  })()}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Adjustment result
-                                </div>
-                                <div
-                                  className={(() => {
-                                    if (!has || !a.adjustRequired) {
-                                      return 'text-slate-400';
-                                    }
-                                    return a.adjustCorrect ? 'text-emerald-600' : 'text-red-600';
-                                  })()}
-                                >
-                                  {(() => {
-                                    if (!has) {
-                                      return 'N/A';
-                                    }
-                                    if (!a.adjustRequired) {
-                                      return 'N/A';
-                                    }
-                                    return a.adjustCorrect ? 'Correct' : 'Missed';
-                                  })()}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Starting
-                                </div>
-                                <div>
-                                  {(() => {
-                                    if (!showBaseValues) {
-                                      return '—';
-                                    }
-                                    if (!has) {
-                                      return '—';
-                                    }
-                                    return formatPct(
-                                      (a.side === 'L' ? baseL[a.idx] : baseR[a.idx]) ?? 0
-                                    );
-                                  })()}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mb-1">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Correct
-                                </div>
-                                <div>
-                                  {(() => {
-                                    if (!showTruth) {
-                                      return '—';
-                                    }
-                                    if (!has) {
-                                      return '—';
-                                    }
-                                    return formatPct(a.truth);
-                                  })()}
-                                </div>
-                              </div>
-                              <div className="flex justify-between mt-2 pt-2 border-t">
-                                <div
-                                  className={`text-sm font-medium ${GetTextClass(darkMode, 'secondary')}`}
-                                >
-                                  Points
-                                </div>
-                                <div className="text-right">
-                                  <div>{has ? `${a.points} pts` : '—'}</div>
-                                  {has && a.basePoints !== null ? (
-                                    <div className="text-[11px] text-slate-500">
-                                      Base {a.basePoints}
-                                      {a.adjustPenalty ? ` − Adj Penalty ${a.adjustPenalty}` : ''}
-                                    </div>
-                                  ) : (
-                                    <div className="text-[11px] text-slate-400">
-                                      Awaiting first attempt
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="mt-4 pt-4 border-t">
-                                <div
-                                  className={`text-sm font-medium mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}
-                                >
-                                  View Shot Values
-                                </div>
-                                <div className="flex flex-wrap gap-4 items-center mb-3">
-                                  <label
-                                    className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={showBaseValues}
-                                      onChange={(e) => setShowBaseValues(e.target.checked)}
-                                      className={GetCheckboxClass(darkMode)}
-                                    />
-                                    Starting
-                                  </label>
-                                  <label
-                                    className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={showMentalModel}
-                                      onChange={(e) => {
-                                        const v = e.target.checked;
-                                        setShowMentalModel(v);
-                                      }}
-                                      className={GetCheckboxClass(darkMode)}
-                                    />
-                                    Guess
-                                  </label>
-                                  <label
-                                    className={`flex items-center gap-2 text-[11px] ${GetTextClass(darkMode, 'secondary')}`}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={showTruth}
-                                      onChange={(e) => setShowTruth(e.target.checked)}
-                                      className={GetCheckboxClass(darkMode)}
-                                    />
-                                    Correct
-                                  </label>
-                                </div>
-                                {showMentalModel || showBaseValues || showTruth ? (
-                                  <div>
-                                    <div className="rounded-xl border overflow-hidden">
-                                      <table className="w-full text-[11px] md:text-xs">
-                                        <thead>
-                                          <tr
-                                            className={
-                                              darkMode
-                                                ? 'bg-slate-700 text-slate-300 font-semibold'
-                                                : 'bg-slate-100 text-slate-700 font-semibold'
-                                            }
-                                          >
-                                            <th className="p-1.5 text-left" rowSpan="2">
-                                              Shot
-                                            </th>
-                                            {(() => {
-                                              const leftCols = [
-                                                showMentalModel,
-                                                showBaseValues,
-                                                showTruth,
-                                              ].filter(Boolean).length;
-                                              const rightCols = leftCols; // same columns for right
-                                              return (
-                                                <>
-                                                  {leftCols > 0 && (
-                                                    <th
-                                                      className={`p-1.5 text-center ${darkMode ? 'border-r border-slate-600' : 'border-r border-slate-300'}`}
-                                                      colSpan={leftCols}
-                                                    >
-                                                      Left Flipper
-                                                    </th>
-                                                  )}
-                                                  {rightCols > 0 && (
-                                                    <th
-                                                      className="p-1.5 text-center"
-                                                      colSpan={rightCols}
-                                                    >
-                                                      Right Flipper
-                                                    </th>
-                                                  )}
-                                                </>
-                                              );
-                                            })()}
-                                          </tr>
-                                          <tr
-                                            className={
-                                              darkMode
-                                                ? 'bg-slate-700 text-slate-300'
-                                                : 'bg-slate-50 text-slate-600'
-                                            }
-                                          >
-                                            {showBaseValues ? (
-                                              <th className="p-1.5 text-right" title="Starting">
-                                                Str
-                                              </th>
-                                            ) : null}
-                                            {showMentalModel ? (
-                                              <th className="p-1.5 text-right" title="Guess">
-                                                Gss
-                                              </th>
-                                            ) : null}
-                                            {showTruth ? (
-                                              <th
-                                                className={`p-1.5 text-right ${darkMode ? 'border-r border-slate-600' : 'border-r border-slate-300'}`}
-                                                title="Correct"
-                                              >
-                                                Cor
-                                              </th>
-                                            ) : null}
-                                            {showBaseValues ? (
-                                              <th className="p-1.5 text-right" title="Starting">
-                                                Str
-                                              </th>
-                                            ) : null}
-                                            {showMentalModel ? (
-                                              <th className="p-1.5 text-right" title="Guess">
-                                                Gss
-                                              </th>
-                                            ) : null}
-                                            {showTruth ? (
-                                              <th className="p-1.5 text-right" title="Correct">
-                                                Cor
-                                              </th>
-                                            ) : null}
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {rows.map((r, i) => (
-                                            <tr key={r.id} className="border-t">
-                                              <td
-                                                className="p-1.5 whitespace-nowrap max-w-[120px] truncate"
-                                                title={r.type}
-                                              >
-                                                {r.type}
-                                              </td>
-                                              {showBaseValues ? (
-                                                <td
-                                                  className={`p-1.5 text-right ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}
-                                                >
-                                                  {formatPct(baseL[i] ?? 0)}
-                                                </td>
-                                              ) : null}
-                                              {showMentalModel ? (
-                                                <td className="p-1.5 text-right">
-                                                  {formatPct(mentalL[i] ?? 0)}
-                                                </td>
-                                              ) : null}
-                                              {showTruth ? (
-                                                <td
-                                                  className={`p-1.5 text-right ${darkMode ? 'text-slate-400 border-r border-slate-600' : 'text-slate-600 border-r border-slate-300'}`}
-                                                >
-                                                  {formatPct(hiddenL[i] ?? 0)}
-                                                </td>
-                                              ) : null}
-                                              {showBaseValues ? (
-                                                <td
-                                                  className={`p-1.5 text-right ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}
-                                                >
-                                                  {formatPct(baseR[i] ?? 0)}
-                                                </td>
-                                              ) : null}
-                                              {showMentalModel ? (
-                                                <td className="p-1.5 text-right">
-                                                  {formatPct(mentalR[i] ?? 0)}
-                                                </td>
-                                              ) : null}
-                                              {showTruth ? (
-                                                <td
-                                                  className={`p-1.5 text-right ${GetTextClass(darkMode, 'secondary')}`}
-                                                >
-                                                  {formatPct(hiddenR[i] ?? 0)}
-                                                </td>
-                                              ) : null}
-                                            </tr>
-                                          ))}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="mt-6">
-                {/* Practice playfield (read-only visual) */}
-                <div className="relative">
-                  {/* Fullscreen toggle button (enter) */}
-                  {!playfieldFullscreen && (
-                    <button
-                      type="button"
-                      onClick={() => setPlayfieldFullscreen(true)}
-                      title="Fullscreen"
-                      className={`absolute top-1 right-1 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-1 ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300'}`}
-                    >
-                      {/* Enter fullscreen icon */}
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3" />
-                        <path d="M16 3h3a2 2 0 0 1 2 2v3" />
-                        <path d="M21 16v3a2 2 0 0 1-2 2h-3" />
-                        <path d="M3 16v3a2 2 0 0 0 2 2h3" />
-                        <path d="M8 8H5V5" />
-                        <path d="M16 8h3V5" />
-                        <path d="M16 16h3v3" />
-                        <path d="M8 16H5v3" />
-                      </svg>
-                      Fullscreen
-                    </button>
-                  )}
-                  {/* Metric boxes positioned at bottom corners - responsive sizing */}
-                  <div className="absolute bottom-2 left-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:left-4">
-                    <div
-                      className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
-                    >
-                      <div
-                        className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
-                      >
-                        Last attempt
-                      </div>
-                      <div
-                        className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                      >
-                        {attempts[0] ? attempts[0].points : '—'}
-                      </div>
-                    </div>
-                    <div
-                      className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
-                    >
-                      <div
-                        className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
-                      >
-                        Attempts
-                      </div>
-                      <div
-                        className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                      >
-                        {attemptCount}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 z-30 flex gap-1 sm:gap-2 sm:bottom-4 sm:right-4">
-                    <div
-                      className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
-                    >
-                      <div
-                        className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
-                      >
-                        Total points
-                      </div>
-                      <div
-                        className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                      >
-                        {totalPoints}
-                      </div>
-                    </div>
-                    <div
-                      className={`backdrop-blur-sm border rounded-lg sm:rounded-xl p-1.5 sm:p-2 shadow-lg min-w-[60px] sm:min-w-[72px] flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
-                    >
-                      <div
-                        className={`text-[8px] sm:text-[9px] mb-0.5 leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
-                      >
-                        Avg abs error
-                      </div>
-                      <div
-                        className={`text-sm sm:text-base font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                      >
-                        {avgAbsErr.toFixed(1)}
-                      </div>
-                    </div>
-                  </div>
-                  <PracticePlayfield
-                    rows={rows}
-                    selectedIdx={selectedIdx}
-                    selectedSide={selectedSide}
-                    lastRecall={attempts[0] || null}
-                    darkMode={darkMode}
-                    awaitingNextShot={awaitingNextShot}
-                    onAdvanceToNextShot={advanceToNextShot}
-                  />
-                </div>
-                {/* Quick recall chips (values 05..95) with centered rectangular Not Possible below - responsive sizing */}
-                <div className="w-full overflow-x-auto">
-                  {(() => {
-                    const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
-                    const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                    // Responsive font size using clamp for smooth scaling
-                    return (
-                      <div className="select-none flex flex-col items-stretch min-w-[320px]">
-                        <div
-                          className="grid w-full gap-[2px]"
-                          style={{
-                            gridTemplateColumns: `repeat(${ordered.length}, minmax(0, 1fr))`,
-                          }}
-                        >
-                          {ordered.map((v) => (
-                            <button
-                              key={v}
-                              type="button"
-                              onClick={() => submitAttempt(v)}
-                              disabled={awaitingNextShot}
-                              className={`aspect-square rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center font-semibold text-[clamp(10px,2.2vw,24px)] ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
-                              aria-label={`Recall ${format2(v)}`}
-                            >
-                              <span className="relative" style={{ top: '-1px' }}>
-                                {format2(v)}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                        <div className="flex justify-center mt-1">
-                          <button
-                            type="button"
-                            onClick={() => submitAttempt(0)}
-                            disabled={awaitingNextShot}
-                            className={`px-2 py-0.5 rounded-xl border shadow active:scale-[0.95] transition-transform font-semibold text-[clamp(10px,2.2vw,24px)] ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
-                          >
-                            <span className="relative" style={{ top: '-1px' }}>
-                              Not Possible
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-                {showAttemptHistory ? (
-                  <>
-                    {/* Attempt history below playfield */}
-                    <h3
-                      className={`font-medium mb-2 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}
-                    >
-                      Attempt history
-                    </h3>
-                    <div className="overflow-auto border rounded-2xl">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr
-                            className={
-                              darkMode
-                                ? 'bg-slate-700 text-slate-300 font-semibold'
-                                : 'bg-slate-100 text-slate-700 font-semibold'
+                      <th className="p-2 text-left">Shot</th>
+                      <th className="p-2 text-right">Your L</th>
+                      <th className="p-2 text-right">Your R</th>
+                      <th className="p-2 text-right">Correct L / R</th>
+                      <th className="p-2 text-right">Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((r, i) => (
+                      <tr key={r.id} className="border-t">
+                        <td className="p-2">{r.type}</td>
+                        <td className="p-2 text-right">
+                          <NumberInput
+                            value={finalRecallL[i] ?? 0}
+                            onChange={(v) =>
+                              setFinalRecallL((arr) => {
+                                const next = [...arr];
+                                next[i] = validatePercent(v) ?? next[i] ?? 0;
+                                return next;
+                              })
                             }
-                          >
-                            <th className="p-2 text-left">Time</th>
-                            <th className="p-2 text-left">Shot</th>
-                            <th className="p-2 text-right">Recall</th>
-                            <th className="p-2 text-right">Truth</th>
-                            <th className="p-2 text-right">Prev</th>
-                            <th className="p-2 text-right">Delta</th>
-                            <th className="p-2 text-right">Adj?</th>
-                            <th className="p-2 text-right">Dir</th>
-                            <th className="p-2 text-right">AdjPen</th>
-                            <th className="p-2 text-right">Label</th>
-                            <th className="p-2 text-right">Points</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {attempts.map((a) => (
-                            <tr key={a.t} className="border-t">
-                              <td className="p-2">{new Date(a.t).toLocaleTimeString()}</td>
-                              <td className="p-2">{rowDisplayWithSide(rows[a.idx], a.side)}</td>
-                              <td className="p-2 text-right">{formatPct(a.input)}</td>
-                              <td className="p-2 text-right">{formatPct(a.truth)}</td>
-                              <td className="p-2 text-right">
-                                {a.prevInput === null ? '—' : formatPct(a.prevInput)}
-                              </td>
-                              <td className="p-2 text-right">
-                                {a.delta > 0 ? '+' : ''}
-                                {a.delta}
-                              </td>
-                              <td className="p-2 text-right">
-                                {(() => {
-                                  if (!a.adjustRequired) {
-                                    return '—';
-                                  }
-                                  return a.adjustCorrect ? '✔' : '✖';
-                                })()}
-                              </td>
-                              <td className="p-2 text-right">
-                                {(() => {
-                                  if (!a.adjustRequired) {
-                                    return '—';
-                                  }
-                                  if (a.requiredDir === -1) {
-                                    return '↓';
-                                  }
-                                  if (a.requiredDir === 1) {
-                                    return '↑';
-                                  }
-                                  return '';
-                                })()}
-                              </td>
-                              <td className="p-2 text-right">
-                                {a.adjustPenalty ? a.adjustPenalty : 0}
-                              </td>
-                              <td className="p-2 text-right capitalize">{a.label}</td>
-                              <td className="p-2 text-right">{a.points}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                ) : null}
+                            darkMode={darkMode}
+                          />
+                        </td>
+                        <td className="p-2 text-right">
+                          <NumberInput
+                            value={finalRecallR[i] ?? 0}
+                            onChange={(v) =>
+                              setFinalRecallR((arr) => {
+                                const next = [...arr];
+                                next[i] = validatePercent(v) ?? next[i] ?? 0;
+                                return next;
+                              })
+                            }
+                            darkMode={darkMode}
+                          />
+                        </td>
+                        <td className="p-2 text-right">
+                          {formatPct(hiddenL[i] ?? 0)} / {formatPct(hiddenR[i] ?? 0)}
+                        </td>
+                        <td className="p-2 text-right">
+                          {(
+                            Math.abs(clamp(finalRecallL[i] ?? 0) - (hiddenL[i] ?? 0)) +
+                            Math.abs(clamp(finalRecallR[i] ?? 0) - (hiddenR[i] ?? 0))
+                          ).toFixed(0)}{' '}
+                          pts
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                <div
+                  className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
+                >
+                  <div className={GetTextClass(darkMode, 'secondary')}>Final score</div>
+                  <div className="text-3xl font-semibold">{finalScore}</div>
+                </div>
+                <div
+                  className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
+                >
+                  <div className={GetTextClass(darkMode, 'secondary')}>Shots</div>
+                  <div className="text-3xl font-semibold">{rows.length}</div>
+                </div>
+                <div
+                  className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
+                >
+                  <div className={GetTextClass(darkMode, 'secondary')}>Total attempts</div>
+                  <div className="text-3xl font-semibold">{attemptCount}</div>
+                </div>
               </div>
             </Section>
-            {playfieldFullscreen
-              ? createPortal(
-                  <div
-                    className="fixed inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col overflow-hidden fullscreen-safe-area"
-                    style={{ scrollbarGutter: 'auto' }}
-                  >
-                    {(() => {
-                      // Scale based on both fullscreenScale (height-driven) and windowWidth
-                      const heightScale = fullscreenScale || 1;
-                      const widthScale = Math.min(1.5, windowWidth / 800);
-                      const s = Math.min(heightScale, widthScale);
-                      const fontSize = Math.round(11 * s); // base 11px scaled
-                      const padY = 0.9 * s; // base 0.9 (~py-1.5 ≈6px) adjust
-                      const padX = 1.2 * s; // base horizontal
-                      const gap = 6 * s; // base gap 6px
-                      const iconSize = Math.max(14, Math.round(14 * s));
-                      return (
-                        <div
-                          className="flex items-center justify-between px-4 py-2 text-slate-200"
-                          style={{ fontSize }}
-                        >
-                          <div
-                            className="font-medium"
-                            style={{ fontSize: Math.round(fontSize * 1.05) }}
-                          >
-                            Practice Playfield
-                          </div>
-                          <div className="flex items-center" style={{ gap }}>
-                            <button
-                              type="button"
-                              onClick={() => setPlayfieldFullscreen(false)}
-                              title="Exit fullscreen (Esc)"
-                              style={{
-                                padding: `${padY}px ${padX * 8}px`,
-                                fontSize: fontSize * 0.9,
-                                lineHeight: 1.1,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: `${Math.round(4 * s)}px`,
-                                borderWidth: 1,
-                              }}
-                              className="rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 border border-white/20 transition-colors"
-                            >
-                              {/* Standard fullscreen exit: arrows pointing inward */}
-                              <svg
-                                width={iconSize}
-                                height={iconSize}
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M9 3H5a2 2 0 0 0-2 2v4" />
-                                <path d="M15 3h4a2 2 0 0 1 2 2v4" />
-                                <path d="M9 21H5a2 2 0 0 1-2-2v-4" />
-                                <path d="M15 21h4a2 2 0 0 0 2-2v-4" />
-                                <path d="M10 14v4h4v-4" />
-                                <path d="M10 10V6h4v4" />
-                              </svg>
-                              <span>Exit</span>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                    {/* Main fullscreen content column. Use overflow-hidden to avoid phantom scrollbar when content fits. */}
-                    <div className="flex-1 flex flex-col items-stretch overflow-hidden">
-                      <div className="relative flex-1 flex flex-col min-h-0">
-                        {/* Metric boxes positioned at bottom corners - scaled */}
-                        {(() => {
-                          // Scale based on both fullscreenScale (height-driven) and windowWidth
-                          // Base reference: 800px width and scale of 1
-                          const heightScale = fullscreenScale || 1;
-                          const widthScale = Math.min(1.5, windowWidth / 800); // cap at 1.5 like height
-                          const s = Math.min(heightScale, widthScale); // use the smaller of the two
-                          const boxSize = Math.round(72 * s); // base 72px (w-18 h-18)
-                          const padding = Math.round(8 * s); // base p-2
-                          const margin = Math.round(16 * s); // base bottom-4/left-4/right-4
-                          const gap = Math.round(8 * s); // base gap-2
-                          const labelFont = Math.max(8, Math.round(9 * s)); // base text-[9px]
-                          const valueFont = Math.max(12, Math.round(16 * s)); // base text-base (16px)
-                          const borderRadius = Math.round(12 * s); // base rounded-xl
-
-                          return (
-                            <>
-                              <div
-                                className="absolute z-30 flex"
-                                style={{ bottom: margin, left: margin, gap }}
-                              >
-                                <div
-                                  className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
-                                  style={{ width: boxSize, height: boxSize, padding, borderRadius }}
-                                >
-                                  <div
-                                    className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
-                                    style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}
-                                  >
-                                    Last attempt
-                                  </div>
-                                  <div
-                                    className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                                    style={{ fontSize: valueFont }}
-                                  >
-                                    {attempts[0] ? attempts[0].points : '—'}
-                                  </div>
-                                </div>
-                                <div
-                                  className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
-                                  style={{ width: boxSize, height: boxSize, padding, borderRadius }}
-                                >
-                                  <div
-                                    className={GetTextClass(darkMode, 'secondary')}
-                                    style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}
-                                  >
-                                    Attempts
-                                  </div>
-                                  <div
-                                    className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                                    style={{ fontSize: valueFont }}
-                                  >
-                                    {attemptCount}
-                                  </div>
-                                </div>
-                              </div>
-                              <div
-                                className="absolute z-30 flex"
-                                style={{ bottom: margin, right: margin, gap }}
-                              >
-                                <div
-                                  className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
-                                  style={{ width: boxSize, height: boxSize, padding, borderRadius }}
-                                >
-                                  <div
-                                    className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
-                                    style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}
-                                  >
-                                    Total points
-                                  </div>
-                                  <div
-                                    className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                                    style={{ fontSize: valueFont }}
-                                  >
-                                    {totalPoints}
-                                  </div>
-                                </div>
-                                <div
-                                  className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
-                                  style={{ width: boxSize, height: boxSize, padding, borderRadius }}
-                                >
-                                  <div
-                                    className={`leading-tight text-center ${GetTextClass(darkMode, 'secondary')}`}
-                                    style={{ fontSize: labelFont, marginBottom: Math.round(2 * s) }}
-                                  >
-                                    Avg abs error
-                                  </div>
-                                  <div
-                                    className={`font-semibold ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}
-                                    style={{ fontSize: valueFont }}
-                                  >
-                                    {avgAbsErr.toFixed(1)}
-                                  </div>
-                                </div>
-                              </div>
-                            </>
-                          );
-                        })()}
-                        <PracticePlayfield
-                          fullscreen
-                          rows={rows}
-                          selectedIdx={selectedIdx}
-                          selectedSide={selectedSide}
-                          lastRecall={attempts[0] || null}
-                          onScale={(s) => setFullscreenScale(s)}
-                          darkMode={darkMode}
-                          awaitingNextShot={awaitingNextShot}
-                          onAdvanceToNextShot={advanceToNextShot}
-                        />
-                      </div>
-                      <div className="w-full px-4">
-                        {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
-                        {(() => {
-                          // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
-                          // Strategy:
-                          // 1. Measure available container width (window.innerWidth minus side padding ~32px).
-                          // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
-                          //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
-                          // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
-                          const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
-                          const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                          const totalChips = 19; // numeric chips only (NP below)
-                          // Use tracked windowWidth state for responsive sizing
-                          // Account for padding (px-4 = 32px) plus extra buffer for potential scrollbar space
-                          const horizontalPadding = 48; // 16 left + 16 right + 16 buffer for scrollbar reservation
-                          const avail = Math.max(300, windowWidth - horizontalPadding); // safeguard
-                          // Increase overall size (~25%) and tighten spacing.
-                          const maxDiameter = 112; // was 90
-                          const minDiameter = 26;
-                          const baseGap = 3 * fullscreenScale; // target very tight spacing (~2-3px final)
-                          // First pass assume gap = baseGap => candidate diameter
-                          let gap = baseGap;
-                          let d = (avail - (totalChips - 1) * gap) / totalChips;
-                          if (d > maxDiameter) {
-                            // Grow gap to consume extra space while keeping diameter at cap
-                            d = maxDiameter;
-                            gap = (avail - totalChips * d) / (totalChips - 1);
-                          }
-                          if (d < minDiameter) {
-                            // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
-                            gap = 4; // minimal aesthetic gap
-                            d = (avail - (totalChips - 1) * gap) / totalChips;
-                            if (d < 20) {
-                              d = 20;
-                            } // absolute floor
-                          }
-                          // Final safety clamp
-                          d = Math.max(20, Math.min(maxDiameter, d));
-                          // Recompute gap precisely to fill width (avoid leftover). Bound gap min/max after recompute.
-                          gap = (avail - totalChips * d) / (totalChips - 1);
-                          const minGap = 2,
-                            maxGap = 24; // allow tighter minimum
-                          if (gap < minGap) {
-                            // Reduce diameter slightly so gap hits minGap.
-                            const targetD = (avail - (totalChips - 1) * minGap) / totalChips;
-                            d = Math.max(20, Math.min(maxDiameter, targetD));
-                            gap = minGap;
-                          } else if (gap > maxGap) {
-                            // Increase diameter so gap hits maxGap.
-                            const targetD = (avail - (totalChips - 1) * maxGap) / totalChips;
-                            d = Math.max(20, Math.min(maxDiameter, targetD));
-                            gap = maxGap;
-                          }
-                          const diameter = Math.round(d);
-                          const chipFont = Math.round(diameter * 0.65); // enlarge ~25% more from 0.52
-                          // Container style: use exact width so chips line up flush without overflow/underflow.
-                          const containerStyle = { width: avail, margin: '0 auto' };
-                          return (
-                            <div className="w-full select-none" style={containerStyle}>
-                              <div className="flex items-center" style={{ gap: Math.round(gap) }}>
-                                {ordered.map((v) => (
-                                  <button
-                                    key={v}
-                                    type="button"
-                                    onClick={() => submitAttempt(v)}
-                                    disabled={awaitingNextShot}
-                                    className={`rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0 ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
-                                    style={{
-                                      width: diameter,
-                                      height: diameter,
-                                      fontSize: chipFont,
-                                      lineHeight: 1,
-                                      fontWeight: 600,
-                                    }}
-                                    aria-label={`Recall ${format2(v)}`}
-                                  >
-                                    <span className="relative" style={{ top: '-2px' }}>
-                                      {format2(v)}
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                              <div className="mt-[2px] flex justify-center">
-                                <button
-                                  type="button"
-                                  onClick={() => submitAttempt(0)}
-                                  disabled={awaitingNextShot}
-                                  className={`px-1 rounded-xl border shadow active:scale-[0.97] transition-transform text-sm font-medium ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
-                                  style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
-                                >
-                                  <span className="relative" style={{ top: '-1px' }}>
-                                    Not Possible
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>,
-                  document.body
-                )
-              : null}
-          </>
-        ) : null}
-
-        {/* Final recall */}
-        {initialized && finalPhase ? (
-          <Section
-            title="Recall Shots"
-            darkMode={darkMode}
-            right={
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isStandalone) {
-                      downloadStandalone();
-                    } else {
-                      _pushToast('Download only works in standalone mode');
-                    }
-                  }}
-                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'} ${isStandalone ? '' : 'opacity-60'}`}
-                  title={
-                    isStandalone
-                      ? 'Download this standalone HTML file'
-                      : 'Download (only works in standalone mode)'
-                  }
-                  aria-label="Download standalone"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <path d="M7 10l5 5 5-5" />
-                    <path d="M12 15V3" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDarkMode(!darkMode)}
-                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-yellow-400 hover:text-yellow-300' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
-                  title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                  aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                >
-                  {darkMode ? (
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                      <path
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                      />
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                    </svg>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowInfoModal(true)}
-                  className={`w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100' : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900'}`}
-                  title="Help & About"
-                  aria-label="Help & About"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                </button>
-                <button
-                  onClick={resetAll}
-                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
-                  title="Return to setup and reset session"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                  Setup
-                </button>
-                <button
-                  onClick={() => setFinalPhase(false)}
-                  className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
-                  title="Return to practice session"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                  Practice
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className={`${BTN_ICON} bg-blue-600 border-2 border-blue-400 font-semibold`}
-                  title="Currently on Recall page"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                    <line x1="4" y1="22" x2="4" y2="15" />
-                  </svg>
-                  Recall
-                </button>
-              </div>
-            }
-          >
-            <p className="text-sm text-slate-600 mb-4">
-              Enter your best recall for each shot. Higher score means closer to the correct values.
-            </p>
-            <div className="overflow-auto border rounded-2xl">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr
-                    className={
-                      darkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-50 text-slate-600'
-                    }
-                  >
-                    <th className="p-2 text-left">Shot</th>
-                    <th className="p-2 text-right">Your L</th>
-                    <th className="p-2 text-right">Your R</th>
-                    <th className="p-2 text-right">Correct L / R</th>
-                    <th className="p-2 text-right">Error</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r, i) => (
-                    <tr key={r.id} className="border-t">
-                      <td className="p-2">{r.type}</td>
-                      <td className="p-2 text-right">
-                        <NumberInput
-                          value={finalRecallL[i] ?? 0}
-                          onChange={(v) =>
-                            setFinalRecallL((arr) => {
-                              const next = [...arr];
-                              next[i] = validatePercent(v) ?? next[i] ?? 0;
-                              return next;
-                            })
-                          }
-                          darkMode={darkMode}
-                        />
-                      </td>
-                      <td className="p-2 text-right">
-                        <NumberInput
-                          value={finalRecallR[i] ?? 0}
-                          onChange={(v) =>
-                            setFinalRecallR((arr) => {
-                              const next = [...arr];
-                              next[i] = validatePercent(v) ?? next[i] ?? 0;
-                              return next;
-                            })
-                          }
-                          darkMode={darkMode}
-                        />
-                      </td>
-                      <td className="p-2 text-right">
-                        {formatPct(hiddenL[i] ?? 0)} / {formatPct(hiddenR[i] ?? 0)}
-                      </td>
-                      <td className="p-2 text-right">
-                        {(
-                          Math.abs(clamp(finalRecallL[i] ?? 0) - (hiddenL[i] ?? 0)) +
-                          Math.abs(clamp(finalRecallR[i] ?? 0) - (hiddenR[i] ?? 0))
-                        ).toFixed(0)}{' '}
-                        pts
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-              <div
-                className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
-              >
-                <div className={GetTextClass(darkMode, 'secondary')}>Final score</div>
-                <div className="text-3xl font-semibold">{finalScore}</div>
-              </div>
-              <div
-                className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
-              >
-                <div className={GetTextClass(darkMode, 'secondary')}>Shots</div>
-                <div className="text-3xl font-semibold">{rows.length}</div>
-              </div>
-              <div
-                className={`border rounded-2xl p-3 ${darkMode ? 'border-slate-700' : 'border-slate-300'}`}
-              >
-                <div className={GetTextClass(darkMode, 'secondary')}>Total attempts</div>
-                <div className="text-3xl font-semibold">{attemptCount}</div>
-              </div>
-            </div>
-          </Section>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      </main>
     </div>
   );
 };

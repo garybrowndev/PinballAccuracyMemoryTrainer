@@ -180,3 +180,5 @@ export function secureClear() {
 export function getWhitelistedKeys() {
   return ALLOWED_KEYS.filter((key) => localStorage.getItem(key) !== null);
 }
+
+export { ALLOWED_KEYS, sanitizeObject };

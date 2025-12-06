@@ -4,13 +4,22 @@ import { configureAxe, toHaveNoViolations } from 'jest-axe';
 // Extend Jest matchers with jest-axe
 expect.extend(toHaveNoViolations);
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
+// Mock localStorage with actual storage functionality
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+      store[key] = String(value);
+    },
+    removeItem: (key) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
 
 global.localStorage = localStorageMock;
 

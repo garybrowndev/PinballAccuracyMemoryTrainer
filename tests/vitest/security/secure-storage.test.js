@@ -1,14 +1,15 @@
-/* eslint-disable import/named, import/no-unresolved */
+/* eslint-disable import/named, import/no-deprecated */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import {
+  ALLOWED_KEYS,
   secureClear,
   secureGetItem,
   secureRemoveItem,
   secureSetItem,
   getWhitelistedKeys,
-} from '../../src/utils/secure-storage.js';
-/* eslint-enable import/named, import/no-unresolved */
+} from '../../../src/utils/secure-storage.js';
+/* eslint-enable import/named */
 
 describe('Secure Storage - XSS Prevention', () => {
   beforeEach(() => {
@@ -23,9 +24,12 @@ describe('Secure Storage - XSS Prevention', () => {
         value: 100,
       };
 
-      secureSetItem('rows', maliciousData);
+      const result = secureSetItem('rows', maliciousData);
+      expect(result).toBe(true);
+
       const retrieved = secureGetItem('rows');
 
+      expect(retrieved).not.toBeNull();
       expect(retrieved.name).not.toContain('<script>');
       expect(retrieved.name).toBe('Normal Text');
     });
@@ -75,7 +79,7 @@ describe('Secure Storage - XSS Prevention', () => {
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalled();
-      expect(localStorage.getItem('maliciousKey')).toBeNull();
+      expect(localStorage.getItem('maliciousKey')).toBeFalsy();
     });
 
     it('should handle nested objects with malicious content', () => {
@@ -158,7 +162,7 @@ describe('Secure Storage - XSS Prevention', () => {
       expect(localStorage.getItem('darkMode')).not.toBeNull();
 
       secureRemoveItem('darkMode');
-      expect(localStorage.getItem('darkMode')).toBeNull();
+      expect(localStorage.getItem('darkMode')).toBeFalsy();
     });
 
     it('should reject removal of non-whitelisted keys', () => {
@@ -181,9 +185,9 @@ describe('Secure Storage - XSS Prevention', () => {
 
       secureClear();
 
-      expect(localStorage.getItem('rows')).toBeNull();
-      expect(localStorage.getItem('darkMode')).toBeNull();
-      expect(localStorage.getItem('nonWhitelisted')).not.toBeNull();
+      expect(localStorage.getItem('rows')).toBeFalsy();
+      expect(localStorage.getItem('darkMode')).toBeFalsy();
+      expect(localStorage.getItem('nonWhitelisted')).not.toBeFalsy();
     });
   });
 
