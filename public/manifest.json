@@ -16,5 +16,55 @@
     }
   ],
   "categories": ["games", "education"],
-  "lang": "en"
+  "lang": "en",
+  "shortcuts": [
+    {
+      "name": "Start Practice",
+      "short_name": "Practice",
+      "description": "Begin a new practice session",
+      "url": "/?mode=practice",
+      "icons": [
+        {
+          "src": "/vite.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Start Recall",
+      "short_name": "Recall",
+      "description": "Begin a new recall test",
+      "url": "/?mode=recall",
+      "icons": [
+        {
+          "src": "/vite.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Browse Presets",
+      "short_name": "Presets",
+      "description": "View available pinball table presets",
+      "url": "/?view=presets",
+      "icons": [
+        {
+          "src": "/vite.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }
