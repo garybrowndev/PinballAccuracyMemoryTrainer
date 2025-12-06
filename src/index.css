@@ -3,10 +3,17 @@
 /* Ensure minimum body width to prevent content from being drawn off-screen */
 html {
   scrollbar-gutter: stable;
+  min-height: 100%;
 }
 
 body {
   min-width: 320px;
+  min-height: 100%;
+}
+
+/* Dark mode background for html and body to prevent white flash when page grows */
+html:has(.dark), html:has(.dark) body {
+  background-color: #020617; /* slate-950 - matches the to-slate-950 gradient end */
 }
 
 /* Safe area padding for devices with notches/rounded corners (iOS, modern Android) */
