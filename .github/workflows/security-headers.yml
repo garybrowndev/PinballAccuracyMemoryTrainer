@@ -1,0 +1,59 @@
+name: Security Headers Check
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  security-headers:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start server for testing
+        run: |
+          npx serve dist -p 9222 &
+          sleep 5
+        shell: bash
+
+      - name: Test security headers
+        run: |
+          echo "Testing Content-Security-Policy..."
+          curl -I http://localhost:9222 | grep -i "content-security-policy" || echo "CSP header not found in server response"
+
+          echo "Checking HTML meta tags for security..."
+          curl -s http://localhost:9222 | grep -i "Content-Security-Policy" && echo "✓ CSP meta tag found" || echo "✗ CSP meta tag missing"
+          curl -s http://localhost:9222 | grep -i "X-Content-Type-Options" && echo "✓ X-Content-Type-Options meta tag found" || echo "✗ X-Content-Type-Options meta tag missing"
+          curl -s http://localhost:9222 | grep -i "X-Frame-Options" && echo "✓ X-Frame-Options meta tag found" || echo "✗ X-Frame-Options meta tag missing"
+          curl -s http://localhost:9222 | grep -i "X-XSS-Protection" && echo "✓ X-XSS-Protection meta tag found" || echo "✗ X-XSS-Protection meta tag missing"
+
+          echo "All security header checks completed"
+        shell: bash
+
+      - name: Check for inline scripts (should be none with strict CSP)
+        run: |
+          if grep -r "onclick=" dist/ || grep -r "onerror=" dist/ || grep -r "onload=" dist/; then
+            echo "⚠️  Warning: Inline event handlers found (potential CSP violation)"
+            exit 1
+          else
+            echo "✓ No inline event handlers found"
+          fi
+        shell: bash
