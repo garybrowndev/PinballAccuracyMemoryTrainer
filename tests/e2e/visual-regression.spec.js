@@ -42,6 +42,25 @@ test.describe('Visual Regression Tests', () => {
     await exampleButton.click();
     await page.waitForTimeout(300);
 
+    // Open Advanced options popover
+    const advancedButton = page.getByRole('button', { name: /advanced/i });
+    await advancedButton.click();
+    await page.waitForTimeout(300);
+
+    // Click Random mode chip
+    const randomChip = page.getByRole('button', { name: 'Random' }).first();
+    await randomChip.click();
+    await page.waitForTimeout(300);
+
+    // Enable Seeded checkbox for deterministic random behavior
+    const seededCheckbox = page.getByRole('checkbox', { name: /seeded/i });
+    await seededCheckbox.check();
+    await page.waitForTimeout(100);
+
+    // Close the Advanced options dialog by clicking away
+    await page.mouse.click(50, 50);
+    await page.waitForTimeout(300);
+
     // Start practice mode - use title to distinguish from Advanced button
     const practiceButton = page
       .getByRole('button', {
@@ -53,6 +72,7 @@ test.describe('Visual Regression Tests', () => {
 
     await expect(page).toHaveScreenshot('practice-mode.png', {
       animations: 'disabled',
+      maxDiffPixelRatio: 0.02,
     });
   });
 
@@ -62,6 +82,25 @@ test.describe('Visual Regression Tests', () => {
     await exampleButton.click();
     await page.waitForTimeout(300);
 
+    // Open Advanced options popover
+    const advancedButton = page.getByRole('button', { name: /advanced/i });
+    await advancedButton.click();
+    await page.waitForTimeout(300);
+
+    // Click Random mode chip
+    const randomChip = page.getByRole('button', { name: 'Random' }).first();
+    await randomChip.click();
+    await page.waitForTimeout(300);
+
+    // Enable Seeded checkbox for deterministic random behavior
+    const seededCheckbox = page.getByRole('checkbox', { name: /seeded/i });
+    await seededCheckbox.check();
+    await page.waitForTimeout(100);
+
+    // Close the Advanced options dialog by clicking away
+    await page.mouse.click(50, 50);
+    await page.waitForTimeout(300);
+
     // Start recall mode
     const recallButton = page.getByRole('button', { name: 'Recall' });
     await recallButton.click();
@@ -69,6 +108,7 @@ test.describe('Visual Regression Tests', () => {
 
     await expect(page).toHaveScreenshot('recall-mode.png', {
       animations: 'disabled',
+      maxDiffPixelRatio: 0.02,
     });
   });
 

@@ -23,3 +23,5 @@ VSCode workspace settings: Share recommended extensions via .vscode/extensions.j
 Better error boundaries: Add React error boundaries for graceful failure
 Hot Module Replacement: Ensure HMR works optimally for the large app.jsx file
 Source maps: Verify production source maps for easier debugging
+
+Go through entire repo and all settings and look for things that are disabled and list them. For example, I know there are at least a few lint things that are disbale dand maybe some tests that are skipped. i want to go back and make all those work.
