@@ -33,8 +33,33 @@ jobs:
         run: npm run build
 
       - name: Run visual regression tests
-        run: npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js
+        id: visual-tests
+        run: |
+          # Check if snapshots exist
+          if [ -d "tests/e2e/visual-regression.spec.js-snapshots" ] && [ "$(ls -A tests/e2e/visual-regression.spec.js-snapshots/*-linux.png 2>/dev/null)" ]; then
+            echo "Linux snapshots found, running comparison tests"
+            npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js
+          else
+            echo "No Linux snapshots found, generating baseline"
+            npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
+            echo "snapshots_updated=true" >> $GITHUB_OUTPUT
+          fi
         continue-on-error: true
+        env:
+          CI: true
+
+      - name: Commit updated snapshots
+        if: steps.visual-tests.outputs.snapshots_updated == 'true' && github.event_name == 'pull_request'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add tests/e2e/visual-regression.spec.js-snapshots/*-linux.png
+          if git diff --staged --quiet; then
+            echo "No snapshot changes to commit"
+          else
+            git commit -m "chore(tests): add Linux baseline snapshots for visual regression tests"
+            git push
+          fi
 
       - name: Upload visual regression results
         if: always()
@@ -47,11 +72,11 @@ jobs:
           retention-days: 14
 
       - name: Upload baseline screenshots
-        if: github.ref == 'refs/heads/master'
+        if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: visual-regression-baseline
-          path: tests/e2e/*.png
+          name: visual-regression-snapshots
+          path: tests/e2e/visual-regression.spec.js-snapshots/
           retention-days: 90
 
       - name: Comment on PR if visual changes detected

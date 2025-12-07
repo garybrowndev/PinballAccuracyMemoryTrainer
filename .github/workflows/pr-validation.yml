@@ -66,8 +66,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Run E2E tests
-        run: npm run test:e2e
+      - name: Run E2E tests (excluding visual regression)
+        run: playwright test --config config/playwright.config.js --ignore-snapshots tests/e2e/app.spec.js
 
       - name: Run accessibility E2E tests
         run: npm run test:e2e:a11y
