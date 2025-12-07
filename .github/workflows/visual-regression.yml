@@ -12,10 +12,16 @@ jobs:
   visual-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -28,9 +34,6 @@ jobs:
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
-
-      - name: Build application
-        run: npm run build
 
       - name: Run visual regression tests
         id: visual-tests
