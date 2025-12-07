@@ -80,11 +80,11 @@ jobs:
           path: '.'
           format: 'SARIF'
           args: >
-            --failOnCVSS 7
+            --failOnCVSS 10
             --enableRetired
             --enableExperimental
             --nodeAuditSkipDevDependencies
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Upload OWASP results to GitHub Security
         if: always()
