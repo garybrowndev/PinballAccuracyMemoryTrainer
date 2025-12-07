@@ -17,6 +17,7 @@ This document explains where to get help with the project.
 If you've found a bug, please [open a bug report](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues/new?template=bug_report.yml).
 
 Before opening an issue:
+
 1. Check the [existing issues](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues) to see if it's already reported
 2. Include steps to reproduce the bug
 3. Include your browser and OS information
@@ -24,6 +25,7 @@ Before opening an issue:
 ### 💡 Have an Idea?
 
 Feature requests are welcome! Please [open a feature request](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues/new?template=feature_request.yml) and describe:
+
 - What problem you're trying to solve
 - Your proposed solution
 - Any alternatives you've considered
@@ -31,6 +33,7 @@ Feature requests are welcome! Please [open a feature request](https://github.com
 ### ❓ Questions
 
 For general questions about the project:
+
 - [Open a question](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues/new?template=question.yml) using the question template
 - Check existing [discussions and issues](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues?q=is%3Aissue) for similar questions
 

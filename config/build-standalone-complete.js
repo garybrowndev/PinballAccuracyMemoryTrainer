@@ -40,8 +40,8 @@ async function buildStandaloneWithAssets() {
   const assetsDir = path.join(distDir, 'assets');
   const files = fs.readdirSync(assetsDir);
 
-  const cssFile = files.find(f => f.endsWith('.css'));
-  const jsFile = files.find(f => f.endsWith('.js'));
+  const cssFile = files.find((f) => f.endsWith('.css'));
+  const jsFile = files.find((f) => f.endsWith('.js'));
 
   let css = '';
   let js = '';
@@ -65,7 +65,7 @@ async function buildStandaloneWithAssets() {
 
   // Embed all element images
   const elementsDir = path.join(rootDir, 'public', 'images', 'elements');
-  const imageFiles = fs.readdirSync(elementsDir).filter(f => f.endsWith('.webp'));
+  const imageFiles = fs.readdirSync(elementsDir).filter((f) => f.endsWith('.webp'));
   const imageMap = {};
 
   // eslint-disable-next-line no-console
@@ -79,7 +79,7 @@ async function buildStandaloneWithAssets() {
 
   // Embed all presets
   const presetsDir = path.join(rootDir, 'public', 'presets');
-  const presetFiles = fs.readdirSync(presetsDir).filter(f => f.endsWith('.json'));
+  const presetFiles = fs.readdirSync(presetsDir).filter((f) => f.endsWith('.json'));
   const presets = {};
   let presetIndex = [];
 
@@ -112,21 +112,12 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   // The code is minified, so we need to handle both minified and non-minified patterns
 
   // Replace IMAGE_BASE_URL assignments (both const and let, with various variable names)
-  js = js.replaceAll(
-    /([$A-Z_a-z][\w$]*)=["']\/images\/elements["']/g,
-    '$1=""',
-  );
+  js = js.replaceAll(/([$A-Z_a-z][\w$]*)=["']\/images\/elements["']/g, '$1=""');
 
   // Also try to match non-minified patterns for safety
-  js = js.replaceAll(
-    /const\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g,
-    'const IMAGE_BASE_URL = ""',
-  );
+  js = js.replaceAll(/const\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g, 'const IMAGE_BASE_URL = ""');
 
-  js = js.replaceAll(
-    /let\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g,
-    'let IMAGE_BASE_URL = ""',
-  );
+  js = js.replaceAll(/let\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g, 'let IMAGE_BASE_URL = ""');
 
   // Create standalone HTML
   const standaloneHtml = `<!DOCTYPE html>
@@ -165,7 +156,7 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 }
 
 // eslint-disable-next-line promise/prefer-await-to-callbacks
-buildStandaloneWithAssets().catch(error => {
+buildStandaloneWithAssets().catch((error) => {
   // eslint-disable-next-line no-console
   console.error('Build failed:', error);
   // eslint-disable-next-line no-undef

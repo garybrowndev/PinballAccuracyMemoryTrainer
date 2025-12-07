@@ -16,10 +16,13 @@ async function setupAppWithShots(user) {
   const exampleButton = screen.getByRole('button', { name: /load example shots/i });
   await user.click(exampleButton);
 
-  await waitFor(() => {
-    const table = screen.getByRole('table');
-    expect(table).toBeInTheDocument();
-  }, { timeout: 3000 });
+  await waitFor(
+    () => {
+      const table = screen.getByRole('table');
+      expect(table).toBeInTheDocument();
+    },
+    { timeout: 3000 }
+  );
 
   return user;
 }
@@ -29,8 +32,16 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
     localStorage.clear();
     vi.clearAllMocks();
     // Reset window dimensions
-    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1024 });
-    Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 768 });
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 1024,
+    });
+    Object.defineProperty(window, 'innerHeight', {
+      writable: true,
+      configurable: true,
+      value: 768,
+    });
   });
 
   afterEach(() => {
@@ -43,9 +54,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       await setupAppWithShots(user);
 
       // Navigate to practice to trigger format2 with various values
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
       if (practiceButton) {
         await user.click(practiceButton);
         await waitFor(() => {
@@ -108,13 +119,13 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
       // Find the shot type selector button in the table
       const shotTypeButtons = screen.queryAllByRole('button');
-      const typeSelector = shotTypeButtons.find(btn =>
-        btn.textContent?.includes('Type') || btn.getAttribute('data-shot-chip'),
+      const typeSelector = shotTypeButtons.find(
+        (btn) => btn.textContent?.includes('Type') || btn.getAttribute('data-shot-chip')
       );
 
       if (typeSelector) {
         await user.click(typeSelector);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Should show element selection dialog
         const rampButton = screen.queryByRole('button', { name: /ramp/i });
@@ -130,15 +141,14 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
       // Look for location selector buttons in the table
       const allButtons = screen.getAllByRole('button');
-      const locationButton = allButtons.find(btn =>
-        btn.textContent === 'Left' ||
-        btn.textContent === 'Right' ||
-        btn.textContent === 'Center',
+      const locationButton = allButtons.find(
+        (btn) =>
+          btn.textContent === 'Left' || btn.textContent === 'Right' || btn.textContent === 'Center'
       );
 
       if (locationButton) {
         await user.click(locationButton);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 15000);
   });
@@ -154,7 +164,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       if (sliders.length > 0) {
         // Simulate slider change
         fireEvent.change(sliders[0], { target: { value: '50' } });
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         fireEvent.mouseDown(sliders[0]);
         fireEvent.pointerDown(sliders[0]);
@@ -169,7 +179,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
       if (sliders.length > 1) {
         fireEvent.change(sliders[1], { target: { value: '30' } });
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 15000);
   });
@@ -184,7 +194,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
       if (removeButtons.length > 0) {
         await user.click(removeButtons[0]);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     }, 15000);
 
@@ -197,7 +207,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
       if (insertButtons.length > 0) {
         await user.click(insertButtons[0]);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     }, 15000);
 
@@ -267,7 +277,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
       if (deleteButtons.length > 0) {
         await user.click(deleteButtons[0]);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     }, 15000);
   });
@@ -278,9 +288,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       await setupAppWithShots(user);
 
       // Go to practice
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -295,7 +305,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
         // Click several recall buttons
         for (let i = 0; i < Math.min(5, recallButtons.length); i++) {
           await user.click(recallButtons[i]);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         // Click Not Possible button
@@ -310,9 +320,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -327,12 +337,12 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
         if (manualBtn) {
           await user.click(manualBtn);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         if (randomBtn) {
           await user.click(randomBtn);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
     }, 20000);
@@ -341,9 +351,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -365,9 +375,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -386,7 +396,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
           if (refreshBtn) {
             for (let i = 0; i < 10; i++) {
               await user.click(refreshBtn);
-              await new Promise(resolve => setTimeout(resolve, 50));
+              await new Promise((resolve) => setTimeout(resolve, 50));
             }
           }
         }
@@ -399,9 +409,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -415,13 +425,13 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
         for (const checkbox of checkboxes) {
           await user.click(checkbox);
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
         // Toggle them back
         for (const checkbox of checkboxes) {
           await user.click(checkbox);
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
       }
     }, 25000);
@@ -432,9 +442,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -447,7 +457,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
         const fullscreenBtn = screen.queryByRole('button', { name: /fullscreen/i });
         if (fullscreenBtn) {
           await user.click(fullscreenBtn);
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise((resolve) => setTimeout(resolve, 300));
 
           // Find and click exit button
           const exitBtn = screen.queryByRole('button', { name: /exit/i });
@@ -462,9 +472,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -476,11 +486,11 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
         const fullscreenBtn = screen.queryByRole('button', { name: /fullscreen/i });
         if (fullscreenBtn) {
           await user.click(fullscreenBtn);
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
 
           // Press Escape
           await user.keyboard('{Escape}');
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
       }
     }, 20000);
@@ -491,9 +501,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const recallButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Recall' && !btn.disabled,
-      );
+      const recallButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Recall' && !btn.disabled);
 
       if (recallButton) {
         await user.click(recallButton);
@@ -515,9 +525,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const recallButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Recall' && !btn.disabled,
-      );
+      const recallButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Recall' && !btn.disabled);
 
       if (recallButton) {
         await user.click(recallButton);
@@ -530,7 +540,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
         const submitBtn = screen.queryByRole('button', { name: /submit|check|finish/i });
         if (submitBtn) {
           await user.click(submitBtn);
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
       }
     }, 20000);
@@ -549,13 +559,13 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const addButton = screen.getByRole('button', { name: /add shot/i });
       await user.click(addButton);
 
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Look for preset dropdown
       const presetButton = screen.queryByRole('button', { name: /choose preset/i });
       if (presetButton) {
         await user.click(presetButton);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     }, 15000);
   });
@@ -569,7 +579,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const downloadBtn = screen.queryByRole('button', { name: /download/i });
       if (downloadBtn) {
         await user.click(downloadBtn);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 15000);
   });
@@ -580,13 +590,21 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       await setupAppWithShots(user);
 
       // Trigger resize events
-      Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 600 });
+      Object.defineProperty(window, 'innerWidth', {
+        writable: true,
+        configurable: true,
+        value: 600,
+      });
       fireEvent.resize(window);
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1200 });
+      Object.defineProperty(window, 'innerWidth', {
+        writable: true,
+        configurable: true,
+        value: 1200,
+      });
       fireEvent.resize(window);
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }, 15000);
   });
 
@@ -618,9 +636,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -641,12 +659,12 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
         if (leftBtn) {
           await user.click(leftBtn);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         if (rightBtn) {
           await user.click(rightBtn);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
     }, 20000);
@@ -657,9 +675,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -676,14 +694,13 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
 
         // Find shot chips (they contain shot names like "Left Orbit", "Center Ramp", etc.)
         const allButtons = screen.getAllByRole('button');
-        const shotChips = allButtons.filter(btn =>
-          btn.textContent?.includes('Orbit') ||
-          btn.textContent?.includes('Ramp'),
+        const shotChips = allButtons.filter(
+          (btn) => btn.textContent?.includes('Orbit') || btn.textContent?.includes('Ramp')
         );
 
         for (const chip of shotChips.slice(0, 3)) {
           await user.click(chip);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
     }, 25000);
@@ -701,7 +718,7 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       // Hover over headers
       for (const header of headers) {
         await user.hover(header);
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         await user.unhover(header);
       }
     }, 15000);
@@ -712,9 +729,9 @@ describe('App - Edge Cases and Comprehensive Coverage Tests', () => {
       const user = userEvent.setup();
       await setupAppWithShots(user);
 
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice' && !btn.disabled,
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
       if (practiceButton) {
         await user.click(practiceButton);
@@ -755,11 +772,11 @@ describe('App - Scroll and Popup Positioning', () => {
     const addButton = screen.getByRole('button', { name: /add shot/i });
     await user.click(addButton);
 
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Trigger scroll event
     fireEvent.scroll(window, { target: { scrollY: 100 } });
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }, 15000);
 
   it('should close popups on outside click', async () => {
@@ -773,11 +790,11 @@ describe('App - Scroll and Popup Positioning', () => {
     const addButton = screen.getByRole('button', { name: /add shot/i });
     await user.click(addButton);
 
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Click outside (on body)
     await user.click(document.body);
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }, 15000);
 });
 
@@ -791,9 +808,9 @@ describe('App - Animation and Ball Movement', () => {
     const user = userEvent.setup();
     await setupAppWithShots(user);
 
-    const practiceButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Practice' && !btn.disabled,
-    );
+    const practiceButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
     if (practiceButton) {
       await user.click(practiceButton);
@@ -808,7 +825,7 @@ describe('App - Animation and Ball Movement', () => {
       for (let i = 0; i < Math.min(3, recallButtons.length); i++) {
         await user.click(recallButtons[i]);
         // Wait for animation
-        await new Promise(resolve => setTimeout(resolve, 600));
+        await new Promise((resolve) => setTimeout(resolve, 600));
       }
     }
   }, 30000);
@@ -824,9 +841,9 @@ describe('App - PracticePlayfield Click Handling', () => {
     const user = userEvent.setup();
     await setupAppWithShots(user);
 
-    const practiceButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Practice' && !btn.disabled,
-    );
+    const practiceButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
     if (practiceButton) {
       await user.click(practiceButton);
@@ -839,7 +856,7 @@ describe('App - PracticePlayfield Click Handling', () => {
       const playfields = screen.queryAllByRole('region');
       for (const playfield of playfields) {
         await user.click(playfield);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
   }, 20000);

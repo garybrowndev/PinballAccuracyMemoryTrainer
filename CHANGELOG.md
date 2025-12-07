@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - **Mobile fullscreen support** - Browser Fullscreen API integration to hide URL bar and navigation when entering fullscreen practice mode
 - **PWA manifest** - Web app manifest enabling "Add to Home Screen" installation for true fullscreen experience without browser chrome
 - **Mobile meta tags** - Added `apple-mobile-web-app-capable`, `mobile-web-app-capable`, and theme color meta tags for improved mobile experience
@@ -20,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-> **Note:** This changelog tracks major features and changes going forward. 
+> **Note:** This changelog tracks major features and changes going forward.
 > For detailed release notes including all commits, see the [GitHub Releases](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/releases) page.
 
 [Unreleased]: https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/compare/master...HEAD

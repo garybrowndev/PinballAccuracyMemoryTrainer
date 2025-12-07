@@ -1,12 +1,25 @@
 import '@testing-library/jest-dom';
+import { configureAxe, toHaveNoViolations } from 'jest-axe';
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
+// Extend Jest matchers with jest-axe
+expect.extend(toHaveNoViolations);
+
+// Mock localStorage with actual storage functionality
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+      store[key] = String(value);
+    },
+    removeItem: (key) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
 
 global.localStorage = localStorageMock;
 
@@ -28,7 +41,7 @@ global.IntersectionObserver = class IntersectionObserver {
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -38,4 +51,19 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
+});
+
+// Configure axe for WCAG 2.1 AAA compliance
+export const axe = configureAxe({
+  rules: {
+    // Enable all WCAG 2.1 AAA rules
+    'color-contrast-enhanced': { enabled: true },
+    'link-in-text-block': { enabled: true },
+    'meta-refresh': { enabled: true },
+    'meta-viewport-large': { enabled: true },
+    'meta-viewport': { enabled: true },
+    'page-has-heading-one': { enabled: true },
+    region: { enabled: true },
+    'skip-link': { enabled: true },
+  },
 });

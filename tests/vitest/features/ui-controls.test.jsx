@@ -55,7 +55,7 @@ describe('App - Component Interactions', () => {
 
       // Close modal with the X close button (not the backdrop)
       const closeButtons = screen.getAllByRole('button', { name: /close/i });
-      const closeButton = closeButtons.find(btn => btn.getAttribute('aria-label') === 'Close');
+      const closeButton = closeButtons.find((btn) => btn.getAttribute('aria-label') === 'Close');
       await user.click(closeButton);
 
       // Modal should be gone

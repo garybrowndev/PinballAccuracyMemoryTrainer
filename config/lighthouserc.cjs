@@ -10,7 +10,7 @@ module.exports = {
       preset: 'lighthouse:recommended',
       assertions: {
         'categories:performance': ['warn', { minScore: 0.5 }],
-        'categories:accessibility': ['warn', { minScore: 0.85 }],
+        'categories:accessibility': ['error', { minScore: 0.95 }], // Strict for WCAG 2.1 AAA
         'categories:best-practices': ['warn', { minScore: 0.95 }],
         'categories:seo': ['warn', { minScore: 0.85 }],
       },

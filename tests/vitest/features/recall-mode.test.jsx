@@ -26,17 +26,18 @@ describe('App - Recall Mode Tests', () => {
     });
 
     // Navigate to Recall mode
-    const recallButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Recall',
-    );
+    const recallButton = screen.getAllByRole('button').find((btn) => btn.textContent === 'Recall');
 
     if (recallButton) {
       await user.click(recallButton);
 
       // Wait for recall mode to load
-      await waitFor(() => {
-        expect(screen.queryByText(/setup shots/i)).not.toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.queryByText(/setup shots/i)).not.toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     }
   }
 
@@ -65,7 +66,7 @@ describe('App - Recall Mode Tests', () => {
     await setupAndGoToRecall(user);
 
     const allButtons = screen.getAllByRole('button');
-    const setupButton = allButtons.find(btn => btn.textContent === 'Setup');
+    const setupButton = allButtons.find((btn) => btn.textContent === 'Setup');
 
     if (setupButton) {
       await user.click(setupButton);
@@ -120,24 +121,23 @@ describe('App - Recall Mode Tests', () => {
     });
 
     // Go to recall
-    const recallButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Recall',
-    );
+    const recallButton = screen.getAllByRole('button').find((btn) => btn.textContent === 'Recall');
 
     if (recallButton) {
       await user.click(recallButton);
 
-      await waitFor(() => {
-        expect(screen.queryByText(/setup shots/i)).not.toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.queryByText(/setup shots/i)).not.toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
       // In recall mode
       expect(screen.getByText(/enter your best recall/i)).toBeInTheDocument();
 
       // Go back to setup
-      const setupButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Setup',
-      );
+      const setupButton = screen.getAllByRole('button').find((btn) => btn.textContent === 'Setup');
 
       if (setupButton) {
         await user.click(setupButton);

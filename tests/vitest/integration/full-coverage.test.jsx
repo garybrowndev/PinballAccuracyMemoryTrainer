@@ -16,19 +16,22 @@ async function setupAppWithShots(user) {
   const exampleButton = screen.getByRole('button', { name: /load example shots/i });
   await user.click(exampleButton);
 
-  await waitFor(() => {
-    const table = screen.getByRole('table');
-    expect(table).toBeInTheDocument();
-  }, { timeout: 3000 });
+  await waitFor(
+    () => {
+      const table = screen.getByRole('table');
+      expect(table).toBeInTheDocument();
+    },
+    { timeout: 3000 }
+  );
 
   return user;
 }
 
 // Helper to navigate to practice mode
 async function goToPractice(user) {
-  const practiceButton = screen.getAllByRole('button').find(btn =>
-    btn.textContent === 'Practice' && !btn.disabled,
-  );
+  const practiceButton = screen
+    .getAllByRole('button')
+    .find((btn) => btn.textContent === 'Practice' && !btn.disabled);
 
   if (practiceButton) {
     await user.click(practiceButton);
@@ -80,9 +83,8 @@ describe('App - Complete Component Coverage', () => {
       const chips = screen.getAllByRole('button');
 
       // Click on several chips to test active states
-      const shotChips = chips.filter(btn =>
-        btn.textContent?.includes('Orbit') ||
-        btn.textContent?.includes('Ramp'),
+      const shotChips = chips.filter(
+        (btn) => btn.textContent?.includes('Orbit') || btn.textContent?.includes('Ramp')
       );
 
       for (const chip of shotChips) {
@@ -107,9 +109,9 @@ describe('App - Complete Component Coverage', () => {
       await setupAppWithShots(user);
 
       // Navigate to recall mode where number inputs are used
-      const recallButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Recall' && !btn.disabled,
-      );
+      const recallButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Recall' && !btn.disabled);
 
       if (recallButton) {
         await user.click(recallButton);
@@ -160,7 +162,7 @@ describe('App - Complete Component Coverage', () => {
       const advancedBtn = screen.queryByRole('button', { name: /advanced/i });
       if (advancedBtn) {
         await user.click(advancedBtn);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Click again to close
         await user.click(advancedBtn);
@@ -202,13 +204,13 @@ describe('App - Complete Component Coverage', () => {
 
       // Find thumbnail buttons
       const thumbnails = screen.queryAllByRole('button');
-      const thumbButtons = thumbnails.filter(btn =>
-        btn.querySelector('img') || btn.getAttribute('data-shot-chip-thumb'),
+      const thumbButtons = thumbnails.filter(
+        (btn) => btn.querySelector('img') || btn.getAttribute('data-shot-chip-thumb')
       );
 
       if (thumbButtons.length > 0) {
         await user.click(thumbButtons[0]);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }, 15000);
   });
@@ -238,13 +240,21 @@ describe('App - Complete Component Coverage', () => {
       const fullscreenBtn = screen.queryByRole('button', { name: /fullscreen/i });
       if (fullscreenBtn) {
         await user.click(fullscreenBtn);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Resize window to trigger scale changes
-        Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1600 });
-        Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 900 });
+        Object.defineProperty(window, 'innerWidth', {
+          writable: true,
+          configurable: true,
+          value: 1600,
+        });
+        Object.defineProperty(window, 'innerHeight', {
+          writable: true,
+          configurable: true,
+          value: 900,
+        });
         fireEvent.resize(window);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         // Exit fullscreen
         await user.keyboard('{Escape}');
@@ -290,11 +300,11 @@ describe('App - Isotonic and Constraint Functions', () => {
     if (sliders.length >= 2) {
       // Set first slider to high value
       fireEvent.change(sliders[0], { target: { value: '90' } });
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Set second slider to lower value
       fireEvent.change(sliders[1], { target: { value: '20' } });
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }, 20000);
 
@@ -322,7 +332,7 @@ describe('App - Isotonic and Constraint Functions', () => {
     if (notPossibleButtons.length >= 2) {
       // Toggle first one
       await user.click(notPossibleButtons[0]);
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Toggle it back
       await user.click(notPossibleButtons[0]);
@@ -348,7 +358,7 @@ describe('App - Drift and Randomization', () => {
     for (let i = 0; i < 10; i++) {
       if (recallButtons.length > 0) {
         await user.click(recallButtons[i % recallButtons.length]);
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise((resolve) => setTimeout(resolve, 150));
       }
     }
   }, 35000);
@@ -373,7 +383,7 @@ describe('App - Drift and Randomization', () => {
       if (refreshBtn) {
         for (let i = 0; i < 5; i++) {
           await user.click(refreshBtn);
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
       }
     }
@@ -399,13 +409,13 @@ describe('App - Toast Notifications', () => {
     await user.click(exampleButton);
 
     // Wait for toast
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Clear all - should show toast
     const clearButton = screen.getByRole('button', { name: /clear all shots/i });
     await user.click(clearButton);
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }, 15000);
 });
 
@@ -420,9 +430,9 @@ describe('App - Recall Mode Comprehensive', () => {
     await setupAppWithShots(user);
 
     // Go directly to recall mode
-    const recallButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Recall' && !btn.disabled,
-    );
+    const recallButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent === 'Recall' && !btn.disabled);
 
     if (recallButton) {
       await user.click(recallButton);
@@ -441,15 +451,16 @@ describe('App - Recall Mode Comprehensive', () => {
 
       // Find and click submit/finish button
       const submitButtons = screen.getAllByRole('button');
-      const finishBtn = submitButtons.find(btn =>
-        btn.textContent?.toLowerCase().includes('finish') ||
-        btn.textContent?.toLowerCase().includes('submit') ||
-        btn.textContent?.toLowerCase().includes('check'),
+      const finishBtn = submitButtons.find(
+        (btn) =>
+          btn.textContent?.toLowerCase().includes('finish') ||
+          btn.textContent?.toLowerCase().includes('submit') ||
+          btn.textContent?.toLowerCase().includes('check')
       );
 
       if (finishBtn) {
         await user.click(finishBtn);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
   }, 25000);
@@ -459,9 +470,9 @@ describe('App - Recall Mode Comprehensive', () => {
     await setupAppWithShots(user);
 
     // Go to recall
-    const recallButton = screen.getAllByRole('button').find(btn =>
-      btn.textContent === 'Recall' && !btn.disabled,
-    );
+    const recallButton = screen
+      .getAllByRole('button')
+      .find((btn) => btn.textContent === 'Recall' && !btn.disabled);
 
     if (recallButton) {
       await user.click(recallButton);
@@ -471,9 +482,7 @@ describe('App - Recall Mode Comprehensive', () => {
       });
 
       // Go back to setup
-      const setupBtn = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Setup',
-      );
+      const setupBtn = screen.getAllByRole('button').find((btn) => btn.textContent === 'Setup');
 
       if (setupBtn) {
         await user.click(setupBtn);
@@ -501,7 +510,7 @@ describe('App - View Shot Values Table', () => {
     const recallButtons = screen.queryAllByRole('button', { name: /recall \d+/i });
     if (recallButtons.length > 0) {
       await user.click(recallButtons[0]);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
     // Enable feedback panel
@@ -526,7 +535,7 @@ describe('App - View Shot Values Table', () => {
     }
 
     // Should now show the values table
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }, 25000);
 });
 
@@ -552,7 +561,7 @@ describe('App - Attempt History Table', () => {
     for (let i = 0; i < 3; i++) {
       if (recallButtons.length > 0) {
         await user.click(recallButtons[i % recallButtons.length]);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     }
 
@@ -604,11 +613,15 @@ describe('App - Element Type Selection Flow', () => {
     // Trigger window resize to exercise canvas measurements
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 600 });
     fireEvent.resize(window);
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1200 });
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 1200,
+    });
     fireEvent.resize(window);
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }, 15000);
 });
 

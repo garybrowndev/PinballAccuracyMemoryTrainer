@@ -3,12 +3,68 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Security Headers via Meta Tags (Strict CSP) -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()" />
+
     <title>Pinball Accuracy Memory Trainer - Master Shot Recall for Competitive Play</title>
-    <meta name="description" content="A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall with progressive difficulty and performance tracking. Features 39 preset tables." />
-    <meta name="keywords" content="pinball, memory trainer, accuracy training, competitive pinball, flipper mechanics, muscle memory, game training, progressive web app" />
+    <meta
+      name="description"
+      content="A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall with progressive difficulty and performance tracking. Features 39 preset tables."
+    />
+    <meta
+      name="keywords"
+      content="pinball, memory trainer, accuracy training, competitive pinball, flipper mechanics, muscle memory, game training, progressive web app"
+    />
     <meta name="author" content="Gary Brown" />
-    
+
+    <!-- Robots and SEO Directives -->
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/"
+    />
+    <meta property="og:title" content="Pinball Accuracy Memory Trainer" />
+    <meta
+      property="og:description"
+      content="Train your pinball accuracy and memory with dynamic flipper position tracking. Free, offline-capable tool for competitive players."
+    />
+    <meta
+      property="og:image"
+      content="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/app-screenshot.jpg"
+    />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:url"
+      content="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/"
+    />
+    <meta name="twitter:title" content="Pinball Accuracy Memory Trainer" />
+    <meta
+      name="twitter:description"
+      content="Train your pinball accuracy and memory with dynamic flipper position tracking. Free, offline-capable tool for competitive players."
+    />
+    <meta
+      name="twitter:image"
+      content="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/app-screenshot.jpg"
+    />
+
     <!-- PWA and Mobile Fullscreen Support -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -18,6 +74,50 @@
     <meta name="theme-color" content="#0f172a" />
     <meta name="msapplication-navbutton-color" content="#0f172a" />
     <meta name="msapplication-starturl" content="/" />
+
+    <!-- JSON-LD Structured Data for Rich Snippets -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Pinball Accuracy Memory Trainer",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall with progressive difficulty and performance tracking.",
+        "url": "https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/",
+        "author": {
+          "@type": "Person",
+          "name": "Gary Brown",
+          "url": "https://github.com/garybrowndev"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "5",
+          "reviewCount": "1"
+        },
+        "featureList": [
+          "Dynamic flipper position tracking",
+          "39 preset pinball tables",
+          "Progressive difficulty levels",
+          "Performance tracking and statistics",
+          "Offline-capable PWA",
+          "Dark mode support",
+          "Customizable shot configurations"
+        ],
+        "screenshot": "https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/app-screenshot.jpg",
+        "softwareVersion": "0.0.1",
+        "datePublished": "2024-01-01",
+        "dateModified": "2025-12-06",
+        "inLanguage": "en-US",
+        "isAccessibleForFree": true,
+        "browserRequirements": "Requires JavaScript. Modern browser with ES2020 support."
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

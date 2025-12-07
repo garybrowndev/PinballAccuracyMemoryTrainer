@@ -1,0 +1,164 @@
+name: Update CHANGELOG
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to add to CHANGELOG (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${{ github.event.release.tag_name }}"
+          fi
+          # Remove 'v' prefix if present
+          VERSION_NUM=${VERSION#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_num=$VERSION_NUM" >> $GITHUB_OUTPUT
+
+      - name: Get previous tag
+        id: previous
+        run: |
+          CURRENT_TAG="${{ steps.version.outputs.version }}"
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^ 2>/dev/null || echo "")
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog entry
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          VERSION_NUM="${{ steps.version.outputs.version_num }}"
+          PREVIOUS_TAG="${{ steps.previous.outputs.previous_tag }}"
+          CURRENT_DATE=$(date +%Y-%m-%d)
+
+          # Get commits since last tag
+          if [ -n "$PREVIOUS_TAG" ]; then
+            COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+          else
+            COMMITS=$(git log --pretty=format:"- %s" --no-merges)
+          fi
+
+          # Categorize commits
+          FEATURES=$(echo "$COMMITS" | grep "^- feat:" | sed 's/^- feat: /- /' || echo "")
+          FIXES=$(echo "$COMMITS" | grep "^- fix:" | sed 's/^- fix: /- /' || echo "")
+          DOCS=$(echo "$COMMITS" | grep "^- docs:" | sed 's/^- docs: /- /' || echo "")
+          REFACTOR=$(echo "$COMMITS" | grep "^- refactor:" | sed 's/^- refactor: /- /' || echo "")
+          CHORE=$(echo "$COMMITS" | grep "^- chore:" | sed 's/^- chore: /- /' || echo "")
+          PERF=$(echo "$COMMITS" | grep "^- perf:" | sed 's/^- perf: /- /' || echo "")
+          TEST=$(echo "$COMMITS" | grep "^- test:" | sed 's/^- test: /- /' || echo "")
+          BREAKING=$(echo "$COMMITS" | grep "BREAKING CHANGE" || echo "")
+
+          # Create changelog entry
+          cat > changelog-entry.md << EOF
+          ## [$VERSION_NUM] - $CURRENT_DATE
+
+          EOF
+
+          if [ -n "$BREAKING" ]; then
+            echo "### ⚠️ BREAKING CHANGES" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+            echo "$BREAKING" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+          fi
+
+          if [ -n "$FEATURES" ]; then
+            echo "### Added" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+            echo "$FEATURES" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+          fi
+
+          if [ -n "$FIXES" ]; then
+            echo "### Fixed" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+            echo "$FIXES" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+          fi
+
+          if [ -n "$PERF" ]; then
+            echo "### Performance" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+            echo "$PERF" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+          fi
+
+          if [ -n "$REFACTOR" ]; then
+            echo "### Changed" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+            echo "$REFACTOR" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+          fi
+
+          if [ -n "$DOCS" ]; then
+            echo "### Documentation" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+            echo "$DOCS" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+          fi
+
+          if [ -n "$TEST" ]; then
+            echo "### Tests" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+            echo "$TEST" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+          fi
+
+          if [ -n "$CHORE" ]; then
+            echo "### Maintenance" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+            echo "$CHORE" >> changelog-entry.md
+            echo "" >> changelog-entry.md
+          fi
+
+          cat changelog-entry.md
+
+      - name: Update CHANGELOG.md
+        run: |
+          # Check if CHANGELOG.md exists
+          if [ ! -f "CHANGELOG.md" ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "All notable changes to this project will be documented in this file." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)," >> CHANGELOG.md
+            echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+
+          # Insert new entry after the header
+          sed -i '/^# Changelog/r changelog-entry.md' CHANGELOG.md || \
+          (head -n 6 CHANGELOG.md > temp.md && cat changelog-entry.md >> temp.md && tail -n +7 CHANGELOG.md >> temp.md && mv temp.md CHANGELOG.md)
+
+      - name: Commit and push changes
+        run: |
+          git add CHANGELOG.md
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
+            git push
+          fi

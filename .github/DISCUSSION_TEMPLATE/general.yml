@@ -1,11 +1,11 @@
-title: ""
+title: ''
 labels: []
 body:
   - type: markdown
     attributes:
       value: |
         Welcome to the general discussion area! 🎰
-        
+
         Use this space for:
         - Pinball strategy discussions
         - Tournament preparation tips

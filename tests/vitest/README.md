@@ -27,7 +27,9 @@ tests/vitest/
 ## Test Categories
 
 ### Features (`features/`)
+
 Focused tests for individual features and components:
+
 - **practice-mode.test.jsx** (14 tests) - Practice mode UI, manual/random modes, statistics
 - **recall-mode.test.jsx** (6 tests) - Recall mode UI, navigation, metrics
 - **setup.test.jsx** (3 tests) - Setup page, clearing shots, state management
@@ -36,7 +38,9 @@ Focused tests for individual features and components:
 - **utils.test.jsx** (17 tests) - Utility functions (distance, coordinates, RNG)
 
 ### Integration (`integration/`)
+
 Comprehensive workflow tests covering multiple features:
+
 - **advanced-features.test.jsx** (18 tests) - Complex interactions, edge cases
 - **app-workflow.test.jsx** (11 tests) - End-to-end user workflows
 - **comprehensive-coverage.test.jsx** (31 tests) - Maximum coverage scenarios
@@ -47,7 +51,7 @@ Comprehensive workflow tests covering multiple features:
 
 ## Running Tests
 
-```bash
+````bash
 # Run all tests
 npm test
 
@@ -87,9 +91,10 @@ describe('Feature Name', () => {
     // assertions
   });
 });
-```
+````
 
 ### Integration Tests
+
 Place in `integration/` directory. Test multiple features working together.
 
 ## Test Utilities

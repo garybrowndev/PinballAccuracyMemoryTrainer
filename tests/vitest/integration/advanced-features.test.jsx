@@ -16,10 +16,13 @@ async function setupAppWithShots(user) {
   const exampleButton = screen.getByRole('button', { name: /load example shots/i });
   await user.click(exampleButton);
 
-  await waitFor(() => {
-    const table = screen.getByRole('table');
-    expect(table).toBeInTheDocument();
-  }, { timeout: 3000 });
+  await waitFor(
+    () => {
+      const table = screen.getByRole('table');
+      expect(table).toBeInTheDocument();
+    },
+    { timeout: 3000 }
+  );
 
   return user;
 }
@@ -53,16 +56,17 @@ describe('App - Advanced Feature Coverage Tests', () => {
 
       // Find the file/preset button (might be labeled differently)
       const buttons = screen.getAllByRole('button');
-      const fileButton = buttons.find(btn =>
-        btn.textContent.toLowerCase().includes('preset') ||
-        btn.textContent.toLowerCase().includes('file') ||
-        btn.getAttribute('aria-label')?.toLowerCase().includes('preset'),
+      const fileButton = buttons.find(
+        (btn) =>
+          btn.textContent.toLowerCase().includes('preset') ||
+          btn.textContent.toLowerCase().includes('file') ||
+          btn.getAttribute('aria-label')?.toLowerCase().includes('preset')
       );
 
       if (fileButton) {
         await user.click(fileButton);
         // Dialog or menu should appear
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     }, 15000);
   });
@@ -72,9 +76,9 @@ describe('App - Advanced Feature Coverage Tests', () => {
       const user = await setupAppWithShots(userEvent.setup());
 
       // Go to practice
-      const practiceButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent === 'Practice' && btn.title?.includes('Start'),
-      );
+      const practiceButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent === 'Practice' && btn.title?.includes('Start'));
 
       if (practiceButtons.length > 0) {
         await user.click(practiceButtons[0]);
@@ -84,20 +88,22 @@ describe('App - Advanced Feature Coverage Tests', () => {
         });
 
         // Look for fullscreen button
-        const fullscreenButton = screen.getAllByRole('button').find(btn =>
-          btn.getAttribute('aria-label')?.includes('ullscreen') ||
-          btn.title?.includes('ullscreen'),
-        );
+        const fullscreenButton = screen
+          .getAllByRole('button')
+          .find(
+            (btn) =>
+              btn.getAttribute('aria-label')?.includes('ullscreen') ||
+              btn.title?.includes('ullscreen')
+          );
 
         if (fullscreenButton) {
           await user.click(fullscreenButton);
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise((resolve) => setTimeout(resolve, 300));
 
           // Click again to exit
-          const exitFullscreenButton = screen.getAllByRole('button').find(btn =>
-            btn.textContent?.includes('Exit') ||
-            btn.title?.includes('Exit'),
-          );
+          const exitFullscreenButton = screen
+            .getAllByRole('button')
+            .find((btn) => btn.textContent?.includes('Exit') || btn.title?.includes('Exit'));
 
           if (exitFullscreenButton) {
             await user.click(exitFullscreenButton);
@@ -112,9 +118,9 @@ describe('App - Advanced Feature Coverage Tests', () => {
       const user = await setupAppWithShots(userEvent.setup());
 
       // Go directly to recall mode
-      const recallButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Recall' && !btn.disabled,
-      );
+      const recallButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Recall' && !btn.disabled);
 
       if (recallButton) {
         await user.click(recallButton);
@@ -133,14 +139,17 @@ describe('App - Advanced Feature Coverage Tests', () => {
           }
 
           // Submit guesses
-          const submitButton = screen.getAllByRole('button').find(btn =>
-            btn.textContent.toLowerCase().includes('submit') ||
-            btn.textContent.toLowerCase().includes('check'),
-          );
+          const submitButton = screen
+            .getAllByRole('button')
+            .find(
+              (btn) =>
+                btn.textContent.toLowerCase().includes('submit') ||
+                btn.textContent.toLowerCase().includes('check')
+            );
 
           if (submitButton) {
             await user.click(submitButton);
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }
 
@@ -153,9 +162,9 @@ describe('App - Advanced Feature Coverage Tests', () => {
     it('should toggle recall history visibility', async () => {
       const user = await setupAppWithShots(userEvent.setup());
 
-      const recallButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Recall' && !btn.disabled,
-      );
+      const recallButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Recall' && !btn.disabled);
 
       if (recallButton) {
         await user.click(recallButton);
@@ -168,7 +177,7 @@ describe('App - Advanced Feature Coverage Tests', () => {
         const checkboxes = screen.queryAllByRole('checkbox');
         for (const checkbox of checkboxes) {
           await user.click(checkbox);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
     }, 20000);
@@ -179,9 +188,9 @@ describe('App - Advanced Feature Coverage Tests', () => {
       const user = await setupAppWithShots(userEvent.setup());
 
       // Find and click practice button
-      const practiceButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent === 'Practice' && btn.title?.includes('Start'),
-      );
+      const practiceButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent === 'Practice' && btn.title?.includes('Start'));
 
       if (practiceButtons.length > 0) {
         await user.click(practiceButtons[0]);
@@ -197,7 +206,7 @@ describe('App - Advanced Feature Coverage Tests', () => {
 
         if (advancedButton) {
           await user.click(advancedButton);
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
 
           // Close dialog
           await user.click(advancedButton);
@@ -208,9 +217,9 @@ describe('App - Advanced Feature Coverage Tests', () => {
     it('should toggle all practice checkboxes comprehensively', async () => {
       const user = await setupAppWithShots(userEvent.setup());
 
-      const practiceButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent === 'Practice' && btn.title?.includes('Start'),
-      );
+      const practiceButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent === 'Practice' && btn.title?.includes('Start'));
 
       if (practiceButtons.length > 0) {
         await user.click(practiceButtons[0]);
@@ -226,13 +235,13 @@ describe('App - Advanced Feature Coverage Tests', () => {
           if (!checkbox.checked) {
             await user.click(checkbox);
           }
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
 
           // Toggle off
           if (checkbox.checked) {
             await user.click(checkbox);
           }
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
 
           // Toggle back on
           if (!checkbox.checked) {
@@ -253,12 +262,16 @@ describe('App - Advanced Feature Coverage Tests', () => {
       if (playfield) {
         // Click on playfield to potentially select shots
         await user.click(playfield);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Click again at different location
         const rect = playfield.getBoundingClientRect();
         await user.pointer([
-          { keys: '[MouseLeft>]', target: playfield, coords: { clientX: rect.left + 100, clientY: rect.top + 100 } },
+          {
+            keys: '[MouseLeft>]',
+            target: playfield,
+            coords: { clientX: rect.left + 100, clientY: rect.top + 100 },
+          },
           { keys: '[/MouseLeft]' },
         ]);
       }
@@ -299,11 +312,11 @@ describe('App - Advanced Feature Coverage Tests', () => {
       const elementTypes = ['Orbit', 'Ramp', 'Target', 'Lane', 'Spinner', 'Scoop', 'Kickout'];
 
       for (const type of elementTypes) {
-        const typeButton = buttons.find(btn => btn.textContent === type);
+        const typeButton = buttons.find((btn) => btn.textContent === type);
         if (typeButton) {
           // Click the type to select it
           await user.click(typeButton);
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
       }
     }, 15000);
@@ -318,17 +331,21 @@ describe('App - Advanced Feature Coverage Tests', () => {
 
         // Find flipper buttons (L/R/Both)
         const buttons = screen.getAllByRole('button');
-        const leftButton = buttons.find(btn => btn.textContent === 'L' || btn.textContent === 'Left');
-        const rightButton = buttons.find(btn => btn.textContent === 'R' || btn.textContent === 'Right');
+        const leftButton = buttons.find(
+          (btn) => btn.textContent === 'L' || btn.textContent === 'Left'
+        );
+        const rightButton = buttons.find(
+          (btn) => btn.textContent === 'R' || btn.textContent === 'Right'
+        );
 
         if (leftButton) {
           await user.click(leftButton);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         if (rightButton) {
           await user.click(rightButton);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         if (leftButton) {
@@ -351,12 +368,12 @@ describe('App - Advanced Feature Coverage Tests', () => {
       const infoButton = screen.getByRole('button', { name: /about/i });
       await user.click(infoButton);
 
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Press Escape
       await user.keyboard('{Escape}');
 
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }, 15000);
 
     it('should handle tab navigation through inputs', async () => {
@@ -383,13 +400,13 @@ describe('App - Advanced Feature Coverage Tests', () => {
       // Toggle dark mode 5 times to exercise theme functions extensively
       for (let i = 0; i < 5; i++) {
         await user.click(darkModeButton);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Go to practice mode and toggle there
-      const practiceButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent === 'Practice' && btn.title?.includes('Start'),
-      );
+      const practiceButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent === 'Practice' && btn.title?.includes('Start'));
 
       if (practiceButtons.length > 0) {
         await user.click(practiceButtons[0]);
@@ -412,9 +429,9 @@ describe('App - Advanced Feature Coverage Tests', () => {
     it('should generate many random shots to exercise RNG', async () => {
       const user = await setupAppWithShots(userEvent.setup());
 
-      const practiceButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent === 'Practice' && btn.title?.includes('Start'),
-      );
+      const practiceButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent === 'Practice' && btn.title?.includes('Start'));
 
       if (practiceButtons.length > 0) {
         await user.click(practiceButtons[0]);
@@ -424,19 +441,21 @@ describe('App - Advanced Feature Coverage Tests', () => {
         });
 
         // Switch to random mode
-        const randomButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Random');
+        const randomButton = screen
+          .getAllByRole('button')
+          .find((btn) => btn.textContent === 'Random');
         if (randomButton) {
           await user.click(randomButton);
 
           // Click random refresh button multiple times
-          const refreshButton = screen.getAllByRole('button').find(btn =>
-            btn.textContent === '↻' || btn.textContent.includes('Random'),
-          );
+          const refreshButton = screen
+            .getAllByRole('button')
+            .find((btn) => btn.textContent === '↻' || btn.textContent.includes('Random'));
 
           if (refreshButton) {
             for (let i = 0; i < 10; i++) {
               await user.click(refreshButton);
-              await new Promise(resolve => setTimeout(resolve, 50));
+              await new Promise((resolve) => setTimeout(resolve, 50));
             }
           }
         }
@@ -448,9 +467,9 @@ describe('App - Advanced Feature Coverage Tests', () => {
     it('should show and update statistics after practice attempts', async () => {
       const user = await setupAppWithShots(userEvent.setup());
 
-      const practiceButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent === 'Practice' && btn.title?.includes('Start'),
-      );
+      const practiceButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent === 'Practice' && btn.title?.includes('Start'));
 
       if (practiceButtons.length > 0) {
         await user.click(practiceButtons[0]);
@@ -463,7 +482,7 @@ describe('App - Advanced Feature Coverage Tests', () => {
         const recallButtons = screen.queryAllByRole('button', { name: /recall \d+/i });
         for (let i = 0; i < Math.min(5, recallButtons.length); i++) {
           await user.click(recallButtons[i]);
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
 
         // Stats should update - look for any text showing numbers
@@ -482,9 +501,9 @@ describe('App - Advanced Feature Coverage Tests', () => {
       });
 
       // Verify practice/recall buttons are disabled
-      const practiceButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent === 'Practice',
-      );
+      const practiceButton = screen
+        .getAllByRole('button')
+        .find((btn) => btn.textContent === 'Practice');
 
       expect(practiceButton).toBeDisabled();
     }, 15000);

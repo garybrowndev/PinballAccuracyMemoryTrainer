@@ -118,7 +118,10 @@ describe('Utility Functions', () => {
 
   describe('elementSlug function', () => {
     const elementSlug = (name) => {
-      return name.toLowerCase().replaceAll(/[^\da-z]+/g, '-').replaceAll(/^-+|-+$/g, '');
+      return name
+        .toLowerCase()
+        .replaceAll(/[^\da-z]+/g, '-')
+        .replaceAll(/^-+|-+$/g, '');
     };
 
     it('should convert name to slug', () => {
@@ -128,7 +131,7 @@ describe('Utility Functions', () => {
     });
 
     it('should handle special characters', () => {
-      expect(elementSlug('Captain\'s Chair')).toBe('captain-s-chair');
+      expect(elementSlug("Captain's Chair")).toBe('captain-s-chair');
       expect(elementSlug('Lock #1')).toBe('lock-1');
     });
 

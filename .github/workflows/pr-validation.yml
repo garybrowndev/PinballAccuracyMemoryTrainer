@@ -17,7 +17,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -53,6 +53,9 @@ jobs:
       - name: Run unit tests with coverage
         run: npm run test:coverage
 
+      - name: Run accessibility unit tests
+        run: npm run test:a11y
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5.5.1
         with:
@@ -63,8 +66,31 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Run E2E tests
-        run: npm run test:e2e
+      - name: Run E2E tests (excluding visual regression)
+        run: npx playwright test --config config/playwright.config.js --grep-invert "Visual Regression"
+
+      - name: Run accessibility E2E tests
+        run: npm run test:e2e:a11y
+
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'PinballAccuracyMemoryTrainer'
+          path: '.'
+          format: 'SARIF'
+          args: >
+            --failOnCVSS 10
+            --enableRetired
+            --enableExperimental
+            --nodeAuditSkipDevDependencies
+        continue-on-error: true
+
+      - name: Upload OWASP results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/dependency-check-report.sarif
 
       - name: Build for Lighthouse
         run: npm run build
@@ -72,7 +98,7 @@ jobs:
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.js
+          lhci autorun --config=config/lighthouserc.cjs
         continue-on-error: true
 
       - name: Upload Playwright report

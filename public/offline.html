@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline | Pinball Accuracy Memory Trainer</title>
+    <meta
+      name="description"
+      content="You're currently offline. The Pinball Accuracy Memory Trainer works offline after your first visit."
+    />
+    <meta name="robots" content="noindex, follow" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #e2e8f0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+      }
+      .emoji {
+        font-size: 80px;
+        margin-bottom: 20px;
+        animation: pulse 2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        color: #f8fafc;
+      }
+      .status {
+        font-size: 1rem;
+        color: #fbbf24;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+      p {
+        font-size: 1.1rem;
+        color: #94a3b8;
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+      .features {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 30px 0;
+        text-align: left;
+      }
+      .features h2 {
+        font-size: 1.2rem;
+        color: #f8fafc;
+        margin-bottom: 15px;
+      }
+      .features ul {
+        list-style: none;
+        padding: 0;
+      }
+      .features li {
+        padding: 8px 0;
+        color: #cbd5e1;
+        display: flex;
+        align-items: center;
+      }
+      .features li::before {
+        content: '✓';
+        color: #10b981;
+        font-weight: bold;
+        margin-right: 10px;
+        font-size: 1.2rem;
+      }
+      .button {
+        display: inline-block;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        padding: 14px 32px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+      .button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+      }
+      .connection-status {
+        margin-top: 30px;
+        padding: 15px;
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 8px;
+        color: #fbbf24;
+        font-size: 0.9rem;
+      }
+      .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(251, 191, 36, 0.3);
+        border-top-color: #fbbf24;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="emoji">📡</div>
+      <h1>You're Offline</h1>
+      <p class="status">No Internet Connection</p>
+      <p>
+        Don't worry! The Pinball Accuracy Memory Trainer is designed to work offline. Once you've
+        visited the app while online, all features are available without an internet connection.
+      </p>
+
+      <div class="features">
+        <h2>Available Offline:</h2>
+        <ul>
+          <li>Practice mode with all shots</li>
+          <li>Recall test mode</li>
+          <li>All 39 preset pinball tables</li>
+          <li>Custom shot configurations</li>
+          <li>Performance statistics</li>
+          <li>Dark mode support</li>
+        </ul>
+      </div>
+
+      <a href="/" class="button" id="retryBtn">Try Again</a>
+
+      <div class="connection-status" id="connectionStatus">
+        <span class="spinner"></span>
+        Waiting for connection...
+      </div>
+    </div>
+
+    <script>
+      // Check for online status
+      function updateConnectionStatus() {
+        const status = document.getElementById('connectionStatus');
+        const retryBtn = document.getElementById('retryBtn');
+
+        if (navigator.onLine) {
+          status.style.background = 'rgba(16, 185, 129, 0.1)';
+          status.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+          status.style.color = '#10b981';
+          status.innerHTML = '✓ Back online! Click "Try Again" to continue.';
+          retryBtn.style.animation = 'pulse 1s ease-in-out infinite';
+        } else {
+          status.style.background = 'rgba(251, 191, 36, 0.1)';
+          status.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+          status.style.color = '#fbbf24';
+          status.innerHTML = '<span class="spinner"></span>Waiting for connection...';
+        }
+      }
+
+      // Listen for online/offline events
+      window.addEventListener('online', updateConnectionStatus);
+      window.addEventListener('offline', updateConnectionStatus);
+
+      // Check immediately
+      updateConnectionStatus();
+
+      // Retry button with cache bust
+      document.getElementById('retryBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '/?retry=' + Date.now();
+      });
+    </script>
+  </body>
+</html>

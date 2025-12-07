@@ -1,6 +1,6 @@
 # Contributing to Pinball Accuracy Memory Trainer
 
-First off, thank you for considering contributing to Pinball Accuracy Memory Trainer! 🎯 
+First off, thank you for considering contributing to Pinball Accuracy Memory Trainer! 🎯
 
 We welcome contributions from everyone — whether it's fixing bugs, adding new pinball machine presets, improving documentation, or suggesting new features. Every contribution helps make this tool better for the pinball community.
 
@@ -31,12 +31,14 @@ This project and everyone participating in it is governed by our [Code of Conduc
 Getting started is super simple:
 
 1. **Fork & Clone** the repository
+
    ```bash
    git clone https://github.com/YOUR-USERNAME/PinballAccuracyMemoryTrainer.git
    cd PinballAccuracyMemoryTrainer
    ```
 
 2. **Open in VS Code**
+
    ```bash
    code .
    ```
@@ -59,6 +61,7 @@ npm run dev          # Start development server
 ### 🐛 Reporting Bugs
 
 Found a bug? Please [open an issue](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues/new?template=bug_report.yml) with:
+
 - A clear, descriptive title
 - Steps to reproduce the issue
 - Expected vs actual behavior
@@ -67,6 +70,7 @@ Found a bug? Please [open an issue](https://github.com/garybrowndev/PinballAccur
 ### 💡 Suggesting Features
 
 Have an idea? [Open a feature request](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/issues/new?template=feature_request.yml) and describe:
+
 - The problem you're trying to solve
 - Your proposed solution
 - Any alternatives you've considered
@@ -102,6 +106,7 @@ New to the project? Look for issues labeled [`good first issue`](https://github.
 ### Branch Naming
 
 Use descriptive branch names:
+
 - `feature/add-twilight-zone-preset`
 - `fix/score-calculation-bug`
 - `docs/update-readme`
@@ -117,6 +122,7 @@ npm run test:e2e     # Run E2E tests
 ```
 
 Or use VS Code tasks:
+
 - **Run Unit Tests** (Ctrl+Shift+B → select task)
 - **Run E2E Tests**
 - **Run All Tests**
@@ -124,6 +130,7 @@ Or use VS Code tasks:
 ### Code Coverage
 
 Check test coverage with:
+
 ```bash
 npm run test:coverage
 ```
@@ -149,6 +156,7 @@ test: add tests for score tracking
 ```
 
 Common prefixes:
+
 - `feat:` — New feature
 - `fix:` — Bug fix
 - `docs:` — Documentation only
@@ -183,6 +191,7 @@ Common prefixes:
 ### Recognition
 
 All contributors are valued! Contributors will be recognized in:
+
 - The project's contributor list
 - Release notes when applicable
 
