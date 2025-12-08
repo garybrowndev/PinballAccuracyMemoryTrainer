@@ -16,7 +16,6 @@ updates:
       prefix: 'chore(deps)'
     labels:
       - 'dependencies'
-      - 'npm'
     groups:
       # Group all production dependencies together
       production-dependencies:
@@ -56,4 +55,3 @@ updates:
       prefix: 'chore(ci)'
     labels:
       - 'dependencies'
-      - 'github-actions'
