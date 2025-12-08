@@ -58,7 +58,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
+    "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.15",
     "@vitest/ui": "^4.0.15",
     "axe-core": "^4.11.0",
@@ -78,11 +78,11 @@
     "globals": "^16.5.0",
     "husky": "^9.1.7",
     "jest-axe": "^10.0.0",
-    "jsdom": "^27.2.0",
+    "jsdom": "^27.3.0",
     "prettier": "^3.7.4",
     "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^4.1.13",
-    "vite": "^7.2.6",
+    "vite": "^7.2.7",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.15"
   }
