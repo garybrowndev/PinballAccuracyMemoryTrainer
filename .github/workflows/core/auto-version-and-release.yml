@@ -6,7 +6,46 @@ on:
       - master
 
 jobs:
+  check-browser-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for browser tests to complete
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const browsers = ['Browser Tests - Chromium', 'Browser Tests - Firefox', 'Browser Tests - WebKit'];
+            const ref = context.sha;
+
+            for (const browserWorkflow of browsers) {
+              console.log(`Checking ${browserWorkflow}...`);
+              
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: `testing/browser-${browserWorkflow.split(' - ')[1].toLowerCase()}.yml`,
+                head_sha: ref
+              });
+              
+              if (runs.data.workflow_runs.length === 0) {
+                throw new Error(`${browserWorkflow} has not started yet`);
+              }
+              
+              const latestRun = runs.data.workflow_runs[0];
+              if (latestRun.status !== 'completed') {
+                throw new Error(`${browserWorkflow} is still running`);
+              }
+              
+              if (latestRun.conclusion !== 'success') {
+                throw new Error(`${browserWorkflow} failed with conclusion: ${latestRun.conclusion}`);
+              }
+              
+              console.log(`✅ ${browserWorkflow} passed`);
+            }
+
+            console.log('✅ All browser tests passed');
+
   version-build-and-release:
+    needs: check-browser-tests
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -95,18 +134,6 @@ jobs:
           flags: unittests
           fail_ci_if_error: false
 
-      - name: Install Playwright browsers
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npx playwright install --with-deps
-
-      - name: Run E2E tests (excluding visual regression)
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npx playwright test --config config/playwright.config.js --grep-invert "Visual Regression"
-
-      - name: Run accessibility E2E tests
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm run test:e2e:a11y
-
       - name: Run OWASP Dependency Check
         if: steps.check_tag.outputs.exists == 'false'
         uses: dependency-check/Dependency-Check_Action@main
@@ -151,7 +178,6 @@ jobs:
         run: |
           npm install -g @lhci/cli@0.13.x
           lhci autorun --config=config/lighthouserc.cjs
-        continue-on-error: true
 
       - name: Upload Playwright report
         if: failure() && steps.check_tag.outputs.exists == 'false'
