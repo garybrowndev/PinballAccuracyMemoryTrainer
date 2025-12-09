@@ -208,10 +208,15 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     const playfield3 = page.locator('.relative.border.rounded-xl').first();
     await playfield3.waitFor({ state: 'visible', timeout: 10000 });
     await playfield3.click({ timeout: 10000, force: true });
-    await page.waitForTimeout(500);
+    // Give extra time for Firefox to process the click and update UI
+    await page.waitForTimeout(2000);
 
     // Test Case 4: Guess value 20
-    await page.getByRole('button', { name: 'Recall 20' }).click({ timeout: 15000 });
+    // Wait for the button to be in a stable state before clicking
+    const recall20Button = page.getByRole('button', { name: 'Recall 20' });
+    await recall20Button.waitFor({ state: 'visible', timeout: 10000 });
+    await recall20Button.waitFor({ state: 'attached', timeout: 10000 });
+    await recall20Button.click({ timeout: 15000 });
     await page.waitForTimeout(1000);
 
     // Verify that results are being tracked
