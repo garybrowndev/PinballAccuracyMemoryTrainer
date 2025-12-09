@@ -9,7 +9,7 @@
 ---
 
 <a href="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/">
-  <img src="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/app-screenshot.jpg" alt="Pinball Accuracy Memory Trainer Screenshot" width="700">
+  <img src="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/app-screenshot.webp" alt="Pinball Accuracy Memory Trainer Screenshot" width="700">
 </a>
 
 _👆 Click the screenshot to launch the app_
