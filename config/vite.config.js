@@ -81,6 +81,18 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate React and React-DOM into their own chunk
+          'react-vendor': ['react', 'react-dom'],
+          // Separate react/jsx-runtime to reduce duplication
+          'react-jsx-runtime': ['react/jsx-runtime'],
+        },
+      },
+    },
+    // Increase chunk size warning limit (our main bundle is large but intentional)
+    chunkSizeWarningLimit: 600,
   },
   server: {
     port: 5173,
