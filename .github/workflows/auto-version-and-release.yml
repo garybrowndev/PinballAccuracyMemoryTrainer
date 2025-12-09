@@ -150,6 +150,15 @@ jobs:
           publish_dir: ./gh-pages-deploy
           keep_files: true
 
+      - name: Get previous release tag
+        if: steps.check_tag.outputs.exists == 'false'
+        id: previous_release
+        run: |
+          # Get the most recent tag before the current one
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | head -n 1)
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+          echo "📋 Previous release tag: $PREVIOUS_TAG"
+
       - name: Create Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2.5.0
@@ -159,6 +168,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          make_latest: true
           files: |
             dist-standalone/pinball-trainer-standalone.html
           body: |

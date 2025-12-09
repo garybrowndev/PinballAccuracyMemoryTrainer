@@ -230,11 +230,59 @@ All values snap to 5% increments. Valid values are 0 (Not Possible) or 5, 10, 15
 - **Bounds**: Each shot can drift ±20% from its base value (4 steps max)
 - **Order preservation**: Drift maintains left-ascending/right-descending order constraints
 
+## Hosting & Compliance
+
+### GitHub Pages Hosting
+
+This application is hosted on **GitHub Pages** and is fully compliant with GitHub's Terms of Service and Acceptable Use Policies:
+
+- ✅ **100% client-side** - No backend servers, all processing happens in the browser
+- ✅ **Static site hosting** - Only HTML, CSS, and JavaScript files served
+- ✅ **Educational/training tool** - Free open-source project for the pinball community
+- ✅ **No commercial transactions** - No payments, e-commerce, or business operations
+- ✅ **Lightweight bandwidth** - Minimal resource usage well within GitHub's soft limits
+- ✅ **localStorage only** - All user data stored locally in browser (no external databases)
+
+### Progressive Web App (PWA) Features
+
+As a PWA, this application provides:
+
+- **Installable** - Add to home screen on mobile devices for app-like experience
+- **Offline-capable** - Works completely offline after first visit via Service Worker
+- **No app store required** - Direct access via web browser, no installation barriers
+- **Cross-platform** - Runs on any device with a modern browser (iOS, Android, Desktop)
+- **Automatic updates** - New versions deploy automatically when you refresh
+
+### Privacy & Data
+
+- **No tracking or analytics** - Your training data never leaves your device
+- **No accounts or sign-ins** - No user registration, authentication, or personal information collected
+- **Local-only storage** - All shot configurations and performance data stored in browser localStorage
+- **No cookies** - Application doesn't use cookies or external tracking scripts
+- **GitHub Pages only logs IP addresses** for security purposes (standard for all GitHub Pages sites)
+
+### Acceptable Use
+
+This tool is intended for:
+
+- ✅ Personal training and skill development
+- ✅ Educational purposes and pinball theory learning
+- ✅ Tournament preparation and competitive practice
+- ✅ Community sharing of shot configurations and presets
+
+This application does NOT:
+
+- ❌ Collect, store, or transmit personal information
+- ❌ Involve any commercial transactions or monetization
+- ❌ Use excessive bandwidth or place undue load on GitHub's infrastructure
+- ❌ Include spamming, malware, or malicious code
+- ❌ Violate any GitHub Terms of Service or Acceptable Use Policies
+
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 24+ and npm
 
 ### Installation
 
