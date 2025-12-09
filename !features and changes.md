@@ -25,3 +25,11 @@ Hot Module Replacement: Ensure HMR works optimally for the large app.jsx file
 Source maps: Verify production source maps for easier debugging
 
 Go through entire repo and all settings and look for things that are disabled and list them. For example, I know there are at least a few lint things that are disbale dand maybe some tests that are skipped. i want to go back and make all those work.
+
+Look for other random errors at the end of workflow jobs
+
+Name workflows better to make sense
+
+Lighthouse looks to be still errorcode 1
+
+Review lighthouse results, their seemed to be lots of errors

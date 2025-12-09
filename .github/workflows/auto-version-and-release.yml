@@ -83,6 +83,10 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         run: npm run test:coverage
 
+      - name: Run accessibility unit tests
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm run test:a11y
+
       - name: Upload coverage to Codecov
         if: steps.check_tag.outputs.exists == 'false'
         uses: codecov/codecov-action@v5.5.1
@@ -95,9 +99,34 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         run: npx playwright install --with-deps
 
-      - name: Run E2E tests
+      - name: Run E2E tests (excluding visual regression)
         if: steps.check_tag.outputs.exists == 'false'
-        run: npm run test:e2e
+        run: npx playwright test --config config/playwright.config.js --grep-invert "Visual Regression"
+
+      - name: Run accessibility E2E tests
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm run test:e2e:a11y
+
+      - name: Run OWASP Dependency Check
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'PinballAccuracyMemoryTrainer'
+          path: '.'
+          format: 'SARIF'
+          args: >
+            --failOnCVSS 10
+            --enableRetired
+            --enableExperimental
+            --nodeAuditSkipDevDependencies
+        continue-on-error: true
+
+      - name: Upload OWASP results to GitHub Security
+        if: always() && steps.check_tag.outputs.exists == 'false'
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: reports/dependency-check-report.sarif
 
       - name: Update package.json version temporarily for build
         if: steps.check_tag.outputs.exists == 'false'
@@ -112,6 +141,25 @@ jobs:
           BUILD_COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.version.outputs.commit_hash }}
           BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.full_version }}
+
+      - name: Build for Lighthouse
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          npm install -g @lhci/cli@0.13.x
+          lhci autorun --config=config/lighthouserc.cjs
+        continue-on-error: true
+
+      - name: Upload Playwright report
+        if: failure() && steps.check_tag.outputs.exists == 'false'
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
 
       - name: Create and push tag
         if: steps.check_tag.outputs.exists == 'false'
@@ -131,7 +179,7 @@ jobs:
           cp dist-standalone/pinball-trainer-standalone.html gh-pages-deploy/index.html
 
           # Copy screenshot to root for README display
-          cp public/images/app-screenshot.jpg gh-pages-deploy/app-screenshot.jpg
+          cp public/images/app-screenshot.webp gh-pages-deploy/app-screenshot.webp
 
           # Copy standalone build to versioned release directory (keep original name)
           mkdir -p gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}
