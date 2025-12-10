@@ -13,11 +13,19 @@ on:
     branches:
       - master
 
+# Prevent multiple concurrent releases - only one at a time per branch
+concurrency:
+  group: cd-release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   cd-release-check:
     name: 'CD: Release Check'
     runs-on: ubuntu-latest
     # Only proceed if the triggering workflow succeeded
+    # NOTE: This workflow runs 5 times per push to master (once per completing workflow).
+    # The concurrency group above ensures only one release runs at a time - others are queued.
+    # Each queued run will check if all 5 workflows succeeded before proceeding.
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
       all_success: ${{ steps.check.outputs.all_success }}
