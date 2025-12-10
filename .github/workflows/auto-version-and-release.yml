@@ -98,6 +98,7 @@ jobs:
     permissions:
       contents: write
       security-events: write
+      statuses: write
 
     steps:
       - name: Checkout code
@@ -148,7 +149,7 @@ jobs:
 
       - name: Security audit
         if: steps.check_tag.outputs.exists == 'false'
-        run: npm audit --audit-level=moderate
+        run: npm audit --audit-level=low
         continue-on-error: false
 
       - name: Generate security audit report
@@ -195,8 +196,17 @@ jobs:
             --failOnCVSS 10
             --enableRetired
             --enableExperimental
-            --nodeAuditSkipDevDependencies
+            --disableNodeAudit
         continue-on-error: true
+
+      - name: Sanitize SARIF file
+        if: always() && steps.check_tag.outputs.exists == 'false'
+        run: |
+          if [ -f reports/dependency-check-report.sarif ]; then
+            # Fix invalid URIs by removing query parameters
+            sed -i 's|file:///github/workspace/package-lock\.json?[^"]*|file:///github/workspace/package-lock.json|g' reports/dependency-check-report.sarif
+            echo "✅ SARIF file sanitized"
+          fi
 
       - name: Upload OWASP results to GitHub Security
         if: always() && steps.check_tag.outputs.exists == 'false'
@@ -224,9 +234,12 @@ jobs:
 
       - name: Run Lighthouse CI
         if: steps.check_tag.outputs.exists == 'false'
+        env:
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.cjs
+          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
 
       - name: Upload Playwright report
         if: failure() && steps.check_tag.outputs.exists == 'false'
@@ -235,6 +248,7 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Create and push tag
         if: steps.check_tag.outputs.exists == 'false'

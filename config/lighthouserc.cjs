@@ -1,4 +1,5 @@
 /* eslint-env node */
+/* global process */
 module.exports = {
   ci: {
     collect: {
@@ -33,6 +34,7 @@ module.exports = {
     },
     upload: {
       target: 'temporary-public-storage', // Free, 7-day retention
+      githubAppToken: process.env.LHCI_GITHUB_APP_TOKEN, // Optional: for status checks
     },
   },
 };
