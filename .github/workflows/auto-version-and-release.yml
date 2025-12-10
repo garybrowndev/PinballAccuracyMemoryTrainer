@@ -3,11 +3,11 @@ name: Auto Version and Release
 on:
   workflow_run:
     workflows:
-      - "Browser Tests - Chromium"
-      - "Browser Tests - Firefox"
-      - "Browser Tests - WebKit"
-      - "CodeQL Security Analysis"
-      - "Visual Regression Testing"
+      - 'Browser Tests - Chromium'
+      - 'Browser Tests - Firefox'
+      - 'Browser Tests - WebKit'
+      - 'CodeQL Security Analysis'
+      - 'Visual Regression Testing'
     types:
       - completed
     branches:
@@ -33,13 +33,13 @@ jobs:
               'CodeQL Security Analysis',
               'Visual Regression Testing'
             ];
-            
+
             const headSha = context.payload.workflow_run.head_sha;
             console.log(`Checking workflows for commit: ${headSha}`);
-            
+
             let allSuccess = true;
             const results = {};
-            
+
             for (const workflowName of requiredWorkflows) {
               console.log(`\n🔍 Checking: ${workflowName}`);
               
@@ -78,16 +78,16 @@ jobs:
               console.log(`✅ ${workflowName}: Success`);
               results[workflowName] = 'success';
             }
-            
+
             console.log('\n📊 Summary:');
             console.log(JSON.stringify(results, null, 2));
-            
+
             if (allSuccess) {
               console.log('\n✅ All required workflows succeeded! Proceeding with release.');
             } else {
               console.log('\n⏸️  Not all workflows completed successfully yet. Skipping release.');
             }
-            
+
             core.setOutput('all_success', allSuccess);
             return allSuccess;
 
