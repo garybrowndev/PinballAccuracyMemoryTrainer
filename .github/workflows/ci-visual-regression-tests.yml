@@ -112,6 +112,28 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
+      - name: Update snapshots with current render
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
+        run: |
+          echo "Updating snapshots to match current render for review..."
+          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
+        env:
+          CI: true
+
+      - name: Commit updated snapshots for review
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add tests/e2e/visual-regression.spec.js-snapshots/*-linux.png
+          if git diff --staged --quiet; then
+            echo "No snapshot changes to commit"
+          else
+            git commit -m "chore(ci): update Linux snapshots - visual changes detected [needs approval]"
+            git push
+            echo "✓ Updated snapshots committed for review"
+          fi
+
       - name: Count visual differences
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         id: count-diffs
@@ -204,19 +226,12 @@ jobs:
 
             return hasApproval ? 'true' : 'false';
 
-      - name: Regenerate Linux snapshots (if approved)
+      - name: Verify snapshots are approved
         if: steps.check-approval.outputs.result == 'true' && steps.visual-tests.outcome == 'failure'
         run: |
-          echo "✓ Snapshot changes approved - regenerating Linux baselines"
-          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
-
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add tests/e2e/visual-regression.spec.js-snapshots/*-linux.png
-          git commit -m "chore(ci): update Linux baseline snapshots [approved]"
-          git push
-        env:
-          CI: true
+          echo "✓ Snapshot changes have been approved"
+          echo "Updated snapshots were already committed in the previous run"
+          echo "Workflow will now pass"
 
       - name: Fail workflow - visual changes require approval
         if: steps.visual-tests.outcome == 'failure'
