@@ -156,24 +156,7 @@ Automatically generates release notes from commit history.
 - Contributors
 - Files changed
 
-#### 10. **Update CHANGELOG** (`.github/workflows/automation-update-changelog.yml`)
-
-Maintains CHANGELOG.md automatically.
-
-**Format:** [Keep a Changelog](https://keepachangelog.com/)
-
-**Sections:**
-
-- ⚠️ BREAKING CHANGES
-- Added (new features)
-- Fixed (bug fixes)
-- Performance
-- Changed (refactoring)
-- Documentation
-- Tests
-- Maintenance
-
-#### 11. **Release** (`.github/workflows/cd-release.yml`)
+#### 10. **Release** (`.github/workflows/cd-release.yml`)
 
 Automated versioning and deployment using Semantic Release.
 
@@ -386,4 +369,3 @@ perf: optimize bundle size
 - [Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci)
 - [OWASP Dependency Check](https://owasp.org/www-project-dependency-check/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
-- [Keep a Changelog](https://keepachangelog.com/)
