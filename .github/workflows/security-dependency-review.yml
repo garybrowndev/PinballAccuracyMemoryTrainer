@@ -1,4 +1,4 @@
-name: Dependency Review
+name: 'Security: Dependency Review'
 
 on:
   pull_request:
@@ -15,8 +15,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  dependency-review:
-    name: Review Dependencies
+  security-dependency-review:
+    name: 'Security: Dependency Review'
     runs-on: ubuntu-latest
 
     steps:

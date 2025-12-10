@@ -1,4 +1,4 @@
-name: Browser Tests - Chromium
+name: 'CI: WebKit Browser Tests'
 
 on:
   pull_request:
@@ -14,7 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  chromium-tests:
+  ci-webkit-browser-tests:
+    name: 'CI: WebKit Browser Tests'
     runs-on: ubuntu-latest
 
     steps:
@@ -30,20 +31,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install Playwright WebKit
+        run: npx playwright install --with-deps webkit
 
-      - name: Run E2E tests on Chromium
-        run: npx playwright test --project=chromium --config config/playwright.config.js --grep-invert "Visual Regression"
+      - name: Run E2E tests on WebKit (Safari)
+        run: npx playwright test --project=webkit --config config/playwright.config.js --grep-invert "Visual Regression"
 
-      - name: Run accessibility E2E tests on Chromium
-        run: npx playwright test --project=chromium --config config/playwright.config.js tests/e2e/accessibility.spec.js
+      - name: Run accessibility E2E tests on WebKit
+        run: npx playwright test --project=webkit --config config/playwright.config.js tests/e2e/accessibility.spec.js
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: playwright-results-chromium
+          name: playwright-results-webkit
           path: |
             playwright-report/
             test-results/

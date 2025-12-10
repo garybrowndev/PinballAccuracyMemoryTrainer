@@ -6,7 +6,7 @@ This document describes all automated workflows and CI/CD processes for the Pinb
 
 ### Code Quality & Testing
 
-#### 1. **PR Validation** (`.github/workflows/pr-validation.yml`)
+#### 1. **PR Validation** (`.github/workflows/ci-pr-validation.yml`)
 
 Runs on every pull request to ensure code quality and functionality.
 
@@ -45,7 +45,7 @@ Tests application across multiple browsers.
 - Uploads test results as artifacts
 - Reports failures per browser
 
-#### 3. **Visual Regression** (`.github/workflows/visual-regression.yml`)
+#### 3. **Visual Regression** (`.github/workflows/ci-visual-regression-tests.yml`)
 
 Detects unintended visual changes.
 
@@ -94,7 +94,7 @@ Validates security headers in production build.
 - X-XSS-Protection
 - No inline event handlers
 
-#### 6. **CodeQL Analysis** (`.github/workflows/codeql.yml`)
+#### 6. **CodeQL Analysis** (`.github/workflows/security-codeql-security-analysis.yml`)
 
 Static code analysis for security vulnerabilities.
 
@@ -156,7 +156,7 @@ Automatically generates release notes from commit history.
 - Contributors
 - Files changed
 
-#### 10. **Update CHANGELOG** (`.github/workflows/update-changelog.yml`)
+#### 10. **Update CHANGELOG** (`.github/workflows/automation-update-changelog.yml`)
 
 Maintains CHANGELOG.md automatically.
 
@@ -173,9 +173,9 @@ Maintains CHANGELOG.md automatically.
 - Tests
 - Maintenance
 
-#### 11. **Auto Version & Release** (`.github/workflows/auto-version-and-release.yml`)
+#### 11. **Release** (`.github/workflows/cd-release.yml`)
 
-Automated versioning using Semantic Release.
+Automated versioning and deployment using Semantic Release.
 
 **Version bumps:**
 
@@ -185,7 +185,7 @@ Automated versioning using Semantic Release.
 
 ### Deployment
 
-#### 12. **PR Preview Deployment** (`.github/workflows/pr-preview.yml`)
+#### 12. **PR Preview Deployment** (`.github/workflows/cd-deploy-pr-preview.yml`)
 
 Deploys preview builds for every PR.
 
@@ -207,7 +207,7 @@ Deploys preview builds for every PR.
 
 ### Maintenance
 
-#### 13. **Dependency Review** (`.github/workflows/dependency-review.yml`)
+#### 13. **Dependency Review** (`.github/workflows/security-dependency-review.yml`)
 
 Reviews dependency changes in PRs.
 
@@ -217,7 +217,7 @@ Reviews dependency changes in PRs.
 - Known vulnerabilities
 - Deprecated packages
 
-#### 14. **Stale Issues/PRs** (`.github/workflows/stale.yml`)
+#### 14. **Stale Issues/PRs** (`.github/workflows/automation-mark-stale-issues-and-prs.yml`)
 
 Manages stale issues and pull requests.
 

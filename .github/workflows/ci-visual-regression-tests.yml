@@ -1,4 +1,4 @@
-name: Visual Regression Testing
+name: 'CI: Visual Regression Tests'
 
 on:
   pull_request:
@@ -9,7 +9,8 @@ on:
       - master
 
 jobs:
-  visual-regression:
+  ci-visual-regression-tests:
+    name: 'CI: Visual Regression Tests'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

@@ -1,4 +1,4 @@
-name: PR Validation
+name: 'CI: PR Validation'
 
 on:
   pull_request:
@@ -15,7 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  ci-pr-validation:
+    name: 'CI: PR Validation'
     runs-on: ubuntu-latest
     permissions:
       contents: read
