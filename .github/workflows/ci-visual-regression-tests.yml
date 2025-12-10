@@ -99,6 +99,36 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
+      - name: Prepare thumbnail images for PR comment
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
+        id: prepare-thumbnails
+        run: |
+          mkdir -p /tmp/thumbnails
+
+          # Find first diff image and create resized thumbnails (160px width, maintain ratio)
+          DIFF_FILE=$(find test-results -name "*-diff.png" 2>/dev/null | head -1)
+
+          if [ -n "$DIFF_FILE" ]; then
+            DIR=$(dirname "$DIFF_FILE")
+            BASE=$(basename "$DIFF_FILE" -diff.png)
+            
+            EXPECTED="$DIR/${BASE}-expected.png"
+            ACTUAL="$DIR/${BASE}-actual.png"
+            
+            if [ -f "$EXPECTED" ] && [ -f "$ACTUAL" ]; then
+              convert "$EXPECTED" -resize 160x /tmp/thumbnails/expected.png
+              convert "$ACTUAL" -resize 160x /tmp/thumbnails/actual.png
+              convert "$DIFF_FILE" -resize 160x /tmp/thumbnails/diff.png
+              
+              echo "has_thumbnails=true" >> $GITHUB_OUTPUT
+              echo "base_name=$BASE" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+          # Count total diffs
+          DIFF_COUNT=$(find test-results -name "*-diff.png" 2>/dev/null | wc -l)
+          echo "diff_count=$DIFF_COUNT" >> $GITHUB_OUTPUT
+
       - name: Comment on PR with visual regression results
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v8
@@ -111,34 +141,19 @@ jobs:
             const runId = context.runId;
             const artifactsUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`;
 
-            // Try to find the first diff image for preview
+            // Check if thumbnails were generated
+            const hasThumbnails = '${{ steps.prepare-thumbnails.outputs.has_thumbnails }}' === 'true';
+            const baseName = '${{ steps.prepare-thumbnails.outputs.base_name }}';
+            const diffCount = parseInt('${{ steps.prepare-thumbnails.outputs.diff_count }}') || 0;
+
             let exampleDiff = '';
-            let diffCount = 0;
-            try {
-              const testResultsPath = 'test-results';
-              if (fs.existsSync(testResultsPath)) {
-                const findDiffs = (dir) => {
-                  const files = fs.readdirSync(dir, { withFileTypes: true });
-                  for (const file of files) {
-                    const fullPath = path.join(dir, file.name);
-                    if (file.isDirectory()) {
-                      findDiffs(fullPath);
-                    } else if (file.name.includes('-diff.png')) {
-                      diffCount++;
-                      if (!exampleDiff) {
-                        // Found first diff, get expected and actual too
-                        const baseName = file.name.replace('-diff.png', '');
-                        const dirPath = path.dirname(fullPath);
-                        const expectedPath = path.join(dirPath, `${baseName}-expected.png`);
-                        const actualPath = path.join(dirPath, `${baseName}-actual.png`);
-                        const diffPath = fullPath;
-                        
-                        if (fs.existsSync(expectedPath) && fs.existsSync(actualPath)) {
-                          const expectedB64 = fs.readFileSync(expectedPath).toString('base64');
-                          const actualB64 = fs.readFileSync(actualPath).toString('base64');
-                          const diffB64 = fs.readFileSync(diffPath).toString('base64');
-                          
-                          exampleDiff = `
+            if (hasThumbnails) {
+              try {
+                const expectedB64 = fs.readFileSync('/tmp/thumbnails/expected.png').toString('base64');
+                const actualB64 = fs.readFileSync('/tmp/thumbnails/actual.png').toString('base64');
+                const diffB64 = fs.readFileSync('/tmp/thumbnails/diff.png').toString('base64');
+                
+                exampleDiff = `
             ### Example Difference: \`${baseName}\`
 
             <details>
@@ -146,19 +161,13 @@ jobs:
 
             | Expected (Baseline) | Actual (Current) | Difference |
             |---------------------|------------------|------------|
-            | <img src="data:image/png;base64,${expectedB64}" width="300" alt="Expected"/> | <img src="data:image/png;base64,${actualB64}" width="300" alt="Actual"/> | <img src="data:image/png;base64,${diffB64}" width="300" alt="Diff"/> |
+            | <img src="data:image/png;base64,${expectedB64}" width="160" alt="Expected"/> | <img src="data:image/png;base64,${actualB64}" width="160" alt="Actual"/> | <img src="data:image/png;base64,${diffB64}" width="160" alt="Diff"/> |
 
             </details>
             `;
-                        }
-                      }
-                    }
-                  }
-                };
-                findDiffs(testResultsPath);
+              } catch (e) {
+                console.log('Error reading thumbnails:', e.message);
               }
-            } catch (e) {
-              console.log('Error reading test results:', e.message);
             }
 
             const diffInfo = diffCount > 0 ? `\n**Differences detected in ${diffCount} screenshot(s)**\n` : '';
