@@ -187,24 +187,24 @@ jobs:
               '',
               '### Review the changes:',
               '1. Click on each file link above to see the visual differences in the PR Files tab',
-              '2. If changes are intentional, **approve this review** to update the baselines',
-              '3. If changes are bugs, push fixes to update the CSS/layout',
+              '2. Updated snapshots have been committed to this PR for review',
+              '3. If changes are intentional, **approve this review** to accept the changes',
+              '4. If changes are bugs, push fixes to update the CSS/layout',
               '',
-              '### To approve and update Linux baselines:',
-              '**Approve this review**, then **re-run the failed workflow** to regenerate and commit the new baselines.',
+              '### To approve the changes:',
+              '**Approve this review** and the workflow will automatically pass on the next run.',
               '',
               '---',
               `*🤖 Visual regression test completed at ${new Date().toISOString()}*`
             ].join('\n');
 
-            // Create a comment review (cannot REQUEST_CHANGES with GITHUB_TOKEN)
-            // The workflow failure itself will block the PR
+            // Create a review requesting changes to block the PR
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
               body: body,
-              event: 'COMMENT'
+              event: 'REQUEST_CHANGES'
             });
 
       - name: Check for snapshot approval
