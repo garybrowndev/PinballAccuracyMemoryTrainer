@@ -1,5 +1,6 @@
 name: 'Automation: Update CHANGELOG'
 
+# Automatically generates changelog entries from commits when a release is published
 on:
   release:
     types: [published]
