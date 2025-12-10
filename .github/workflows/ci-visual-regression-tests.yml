@@ -175,13 +175,14 @@ jobs:
               `*🤖 Visual regression test completed at ${new Date().toISOString()}*`
             ].join('\n');
 
-            // Create a review with REQUEST_CHANGES to block the PR until approved
+            // Create a comment review (cannot REQUEST_CHANGES with GITHUB_TOKEN)
+            // The workflow failure itself will block the PR
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
               body: body,
-              event: 'REQUEST_CHANGES'
+              event: 'COMMENT'
             });
 
       - name: Check for snapshot approval
