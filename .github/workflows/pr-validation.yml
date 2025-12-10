@@ -8,6 +8,7 @@ on:
       - "Browser Tests - WebKit"
       - "CodeQL Security Analysis"
       - "Visual Regression Testing"
+      - "Dependency Review"
     types:
       - completed
 
@@ -36,7 +37,8 @@ jobs:
               'Browser Tests - Firefox',
               'Browser Tests - WebKit',
               'CodeQL Security Analysis',
-              'Visual Regression Testing'
+              'Visual Regression Testing',
+              'Dependency Review'
             ];
             
             const headSha = context.payload.workflow_run.head_sha;
@@ -113,7 +115,7 @@ jobs:
           # Get short commit hash (7 chars)
           SHORT_HASH=$(git rev-parse --short=7 HEAD)
           # Use PR number instead of run number for PR builds
-          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_NUMBER="${{ github.event.workflow_run.pull_requests[0].number }}"
           # Numeric version for npm (semver compliant): 0.0.PR-{pr_number}
           NUMERIC_VERSION="0.0.0-PR-${PR_NUMBER}"
           # Full version with commit hash for tag: 0.0.PR-{pr_number}.{hash}
@@ -227,6 +229,7 @@ jobs:
             const mainBundle = '${{ steps.analyze.outputs.main_bundle_kb }}';
             const cssBundle = '${{ steps.analyze.outputs.css_bundle_kb }}';
             const assetCount = '${{ steps.analyze.outputs.asset_count }}';
+            const prNumber = context.payload.workflow_run.pull_requests[0].number;
 
             const comment = `## 📦 Bundle Size Report
 
@@ -245,7 +248,7 @@ jobs:
             *Bundle analysis completed at ${new Date().toISOString()}*`;
 
             github.rest.issues.createComment({
-              issue_number: context.issue.number,
+              issue_number: prNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: comment
@@ -293,7 +296,7 @@ jobs:
           BUILD_COMMIT: ${{ steps.version.outputs.commit_hash }}
           BUILD_COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.version.outputs.commit_hash }}
           BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.workflow_run.pull_requests[0].number }}'
 
       - name: Prepare GitHub Pages deployment (dry-run)
         run: |
