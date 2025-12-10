@@ -173,9 +173,9 @@ Maintains CHANGELOG.md automatically.
 - Tests
 - Maintenance
 
-#### 11. **Auto Version & Release** (`.github/workflows/cd-release.yml`)
+#### 11. **Release** (`.github/workflows/cd-release.yml`)
 
-Automated versioning using Semantic Release.
+Automated versioning and deployment using Semantic Release.
 
 **Version bumps:**
 

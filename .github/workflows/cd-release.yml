@@ -1,4 +1,4 @@
-name: 'CD: Version Build and Release'
+name: 'CD: Release'
 
 on:
   workflow_run:
@@ -14,8 +14,8 @@ on:
       - master
 
 jobs:
-  cd-release-check-workflows:
-    name: 'CD: Check All Required Workflows'
+  cd-release-check:
+    name: 'CD: Release Check'
     runs-on: ubuntu-latest
     # Only proceed if the triggering workflow succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -92,10 +92,10 @@ jobs:
             core.setOutput('all_success', allSuccess);
             return allSuccess;
 
-  cd-release-build:
-    name: 'CD: Version Build and Release'
-    needs: cd-release-check-workflows
-    if: ${{ needs.cd-release-check-workflows.outputs.all_success == 'true' }}
+  cd-release-deploy:
+    name: 'CD: Release Deploy'
+    needs: cd-release-check
+    if: ${{ needs.cd-release-check.outputs.all_success == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
