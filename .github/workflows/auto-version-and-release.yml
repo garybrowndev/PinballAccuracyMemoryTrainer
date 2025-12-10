@@ -204,7 +204,8 @@ jobs:
         run: |
           if [ -f reports/dependency-check-report.sarif ]; then
             # Fix invalid URIs by removing query parameters
-            sed -i 's|file:///github/workspace/package-lock\.json?[^"]*|file:///github/workspace/package-lock.json|g' reports/dependency-check-report.sarif
+            sed 's|file:///github/workspace/package-lock\.json?[^"]*|file:///github/workspace/package-lock.json|g' reports/dependency-check-report.sarif > reports/dependency-check-report-sanitized.sarif
+            mv reports/dependency-check-report-sanitized.sarif reports/dependency-check-report.sarif
             echo "✅ SARIF file sanitized"
           fi
 
