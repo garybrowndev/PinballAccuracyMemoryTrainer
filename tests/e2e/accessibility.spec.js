@@ -17,8 +17,7 @@ test.describe('Accessibility Tests - WCAG 2.1 AAA', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  // TODO: Fix color contrast issues in practice mode (emerald-600 buttons need darker shade)
-  test.skip('should not have accessibility issues in practice mode', async ({ page }) => {
+  test('should not have accessibility issues in practice mode', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 

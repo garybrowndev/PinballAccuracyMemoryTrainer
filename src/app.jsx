@@ -53,7 +53,7 @@ const COLORS = {
 /* eslint-enable sonarjs/no-duplicate-string */
 
 // Button style constants
-const BTN_SUCCESS = 'bg-emerald-600 hover:bg-emerald-700';
+const BTN_SUCCESS = 'bg-emerald-800 hover:bg-emerald-900';
 const BTN_ICON = 'px-4 py-2 rounded-2xl text-white flex items-center gap-2';
 const BTN_BASE = 'px-4 py-2 rounded-2xl text-white';
 const DISABLED_CLASS = 'opacity-50 cursor-not-allowed';
@@ -80,7 +80,7 @@ const GetIconButtonClass = (darkMode) =>
 const GetSmallButtonClass = (darkMode) =>
   `text-[11px] px-2 py-0.5 rounded-md ${GetButtonClass(darkMode)} text-slate-200 border ${GetBorderClass(darkMode)}`;
 const GetCheckboxClass = (darkMode) =>
-  `w-4 h-4 rounded ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} checked:bg-blue-600 checked:border-blue-600 accent-blue-600 [color-scheme:dark]` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary} accent-blue-600`}`;
+  `w-4 h-4 rounded ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} checked:bg-blue-800 checked:border-blue-800 accent-blue-800 [color-scheme:dark]` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary} accent-blue-800`}`;
 const GetMetricBoxClass = (darkMode) =>
   darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300';
 
@@ -705,8 +705,8 @@ const Chip = ({
   const getChipClasses = () => {
     if (active) {
       return darkMode
-        ? 'bg-blue-600 text-white border-blue-600 font-semibold'
-        : 'bg-blue-600 text-white border-blue-600 shadow-sm font-semibold';
+        ? 'bg-blue-800 text-white border-blue-800 font-semibold'
+        : 'bg-blue-800 text-white border-blue-800 shadow-sm font-semibold';
     }
     return darkMode
       ? `${COLORS.dark.bg.tertiary} ${COLORS.dark.bg.hover} ${COLORS.dark.text.secondary} ${COLORS.dark.border.secondary} hover:border-slate-600`
@@ -4544,7 +4544,7 @@ const App = () => {
                     <button
                       type="button"
                       disabled
-                      className={`${BTN_ICON} ${darkMode ? 'bg-blue-600 border-2 border-blue-400' : 'bg-blue-600 border-2 border-blue-400'} font-semibold`}
+                      className={`${BTN_ICON} ${darkMode ? 'bg-blue-800 border-2 border-blue-600' : 'bg-blue-800 border-2 border-blue-600'} font-semibold`}
                       title="Currently on Setup page"
                     >
                       <svg
@@ -5985,7 +5985,7 @@ const App = () => {
                     <button
                       type="button"
                       disabled
-                      className={`${BTN_ICON} bg-blue-600 border-2 border-blue-400 font-semibold`}
+                      className={`${BTN_ICON} bg-blue-800 border-2 border-blue-600 font-semibold`}
                       title="Currently on Practice page"
                     >
                       <svg
@@ -7259,7 +7259,7 @@ const App = () => {
                   <button
                     type="button"
                     disabled
-                    className={`${BTN_ICON} bg-blue-600 border-2 border-blue-400 font-semibold`}
+                    className={`${BTN_ICON} bg-blue-800 border-2 border-blue-600 font-semibold`}
                     title="Currently on Recall page"
                   >
                     <svg
