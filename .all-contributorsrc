@@ -32,18 +32,14 @@
       "name": "dependabot[bot]",
       "avatar_url": "https://avatars.githubusercontent.com/in/29110",
       "profile": "https://github.com/apps/dependabot",
-      "contributions": [
-        "maintenance"
-      ]
+      "contributions": ["maintenance"]
     },
     {
       "login": "github-actions[bot]",
       "name": "github-actions[bot]",
       "avatar_url": "https://avatars.githubusercontent.com/in/15368",
       "profile": "https://github.com/apps/github-actions",
-      "contributions": [
-        "infra"
-      ]
+      "contributions": ["infra"]
     }
   ],
   "contributorsSortAlphabetically": false
