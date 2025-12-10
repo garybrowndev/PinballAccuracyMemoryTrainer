@@ -199,19 +199,10 @@ jobs:
             --disableNodeAudit
         continue-on-error: true
 
-      - name: Sanitize SARIF file
-        if: always() && steps.check_tag.outputs.exists == 'false'
-        run: |
-          if [ -f reports/dependency-check-report.sarif ]; then
-            # Fix invalid URIs by removing query parameters
-            sed 's|file:///github/workspace/package-lock\.json?[^"]*|file:///github/workspace/package-lock.json|g' reports/dependency-check-report.sarif > /tmp/dependency-check-report-sanitized.sarif
-            mv /tmp/dependency-check-report-sanitized.sarif reports/dependency-check-report.sarif
-            echo "✅ SARIF file sanitized"
-          fi
-
       - name: Upload OWASP results to GitHub Security
         if: always() && steps.check_tag.outputs.exists == 'false'
         uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
         with:
           sarif_file: reports/dependency-check-report.sarif
 

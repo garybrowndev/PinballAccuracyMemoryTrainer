@@ -248,7 +248,7 @@ describe('App - Maximum Coverage Tests', () => {
       const fullscreenBtn = screen.queryByRole('button', { name: /fullscreen/i });
       if (fullscreenBtn) {
         await user.click(fullscreenBtn);
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await waitFor(() => {}, { timeout: 300 });
 
         // Test recall chips at various values
         const recallButtons = screen.queryAllByRole('button', { name: /recall \d+/i });
@@ -256,7 +256,7 @@ describe('App - Maximum Coverage Tests', () => {
         // Click chips in sequence
         for (let i = 0; i < Math.min(19, recallButtons.length); i += 3) {
           await user.click(recallButtons[i]);
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          await waitFor(() => {}, { timeout: 50 });
         }
 
         // Click Not Possible button
@@ -265,7 +265,7 @@ describe('App - Maximum Coverage Tests', () => {
           .filter((btn) => btn.textContent === 'Not Possible');
         if (notPossibleBtns.length > 0) {
           await user.click(notPossibleBtns[0]);
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await waitFor(() => {}, { timeout: 100 });
         }
 
         // Test window resize in fullscreen
@@ -280,7 +280,7 @@ describe('App - Maximum Coverage Tests', () => {
           value: 1080,
         });
         fireEvent.resize(window);
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await waitFor(() => {}, { timeout: 100 });
 
         Object.defineProperty(window, 'innerWidth', {
           writable: true,
@@ -583,7 +583,7 @@ describe('App - Maximum Coverage Tests', () => {
       const advancedBtn = screen.queryByRole('button', { name: /advanced/i });
       if (advancedBtn) {
         await user.click(advancedBtn);
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await waitFor(() => {}, { timeout: 200 });
 
         // Set drift every to low number
         const spinbuttons = screen.getAllByRole('spinbutton');
@@ -600,7 +600,7 @@ describe('App - Maximum Coverage Tests', () => {
 
         // Close options
         await user.click(document.body);
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await waitFor(() => {}, { timeout: 100 });
       }
 
       // Go to practice and make enough attempts to trigger drift
@@ -611,7 +611,7 @@ describe('App - Maximum Coverage Tests', () => {
       for (let i = 0; i < 10; i++) {
         if (recallButtons[i % recallButtons.length]) {
           await user.click(recallButtons[i % recallButtons.length]);
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await waitFor(() => {}, { timeout: 100 });
         }
       }
     }, 35000);
@@ -1016,17 +1016,17 @@ describe('App - Maximum Coverage Tests', () => {
       });
 
       // Should show "Loaded example shots" toast
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await waitFor(() => {}, { timeout: 100 });
 
       // Clear shots to trigger another toast
       const clearBtn = screen.queryByRole('button', { name: /clear all/i });
       if (clearBtn) {
         await user.click(clearBtn);
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await waitFor(() => {}, { timeout: 100 });
       }
 
       // Wait for toasts to auto-dismiss
-      await new Promise((resolve) => setTimeout(resolve, 4000));
+      await waitFor(() => {}, { timeout: 4000 });
     }, 20000);
   });
 

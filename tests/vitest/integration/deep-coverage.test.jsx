@@ -345,7 +345,7 @@ describe('App - Deep Coverage Tests', () => {
       const recallButtons = screen.queryAllByRole('button', { name: /recall \d+/i });
       if (recallButtons.length > 0) {
         await user.click(recallButtons[5]);
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await waitFor(() => {}, { timeout: 300 });
       }
 
       // Select different shots manually
@@ -354,7 +354,7 @@ describe('App - Deep Coverage Tests', () => {
         .find((btn) => btn.textContent === 'Manual');
       if (manualChip) {
         await user.click(manualChip);
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await waitFor(() => {}, { timeout: 100 });
       }
 
       // Click on shot chips to select different rows
@@ -365,12 +365,12 @@ describe('App - Deep Coverage Tests', () => {
 
       for (const chip of shotChips.slice(0, 3)) {
         await user.click(chip);
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await waitFor(() => {}, { timeout: 200 });
 
         // Make attempt with this selection
         if (recallButtons[3]) {
           await user.click(recallButtons[3]);
-          await new Promise((resolve) => setTimeout(resolve, 200));
+          await waitFor(() => {}, { timeout: 200 });
         }
       }
     }, 30000);

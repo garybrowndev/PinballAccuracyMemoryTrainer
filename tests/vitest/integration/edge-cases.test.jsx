@@ -772,11 +772,11 @@ describe('App - Scroll and Popup Positioning', () => {
     const addButton = screen.getByRole('button', { name: /add shot/i });
     await user.click(addButton);
 
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await waitFor(() => {}, { timeout: 200 });
 
     // Trigger scroll event
     fireEvent.scroll(window, { target: { scrollY: 100 } });
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await waitFor(() => {}, { timeout: 100 });
   }, 15000);
 
   it('should close popups on outside click', async () => {

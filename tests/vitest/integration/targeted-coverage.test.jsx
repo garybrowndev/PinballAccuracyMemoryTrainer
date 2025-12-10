@@ -354,13 +354,13 @@ describe('App - Targeted Line Coverage', () => {
         // Click flipper selection
         if (flipperButtons[round % 2]) {
           await user.click(flipperButtons[round % 2]);
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await waitFor(() => {}, { timeout: 100 });
         }
 
         // Make attempt
         if (recallButtons[round * 3]) {
           await user.click(recallButtons[round * 3]);
-          await new Promise((resolve) => setTimeout(resolve, 300));
+          await waitFor(() => {}, { timeout: 300 });
         }
       }
     }, 30000);
@@ -455,7 +455,7 @@ describe('App - Targeted Line Coverage', () => {
       for (let i = 0; i < 20; i++) {
         if (recallButtons[i % recallButtons.length]) {
           await user.click(recallButtons[i % recallButtons.length]);
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          await waitFor(() => {}, { timeout: 100 });
         }
       }
     }, 40000);
