@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - master
+  pull_request_review:
+    types: [submitted]
   push:
     branches:
       - master
@@ -79,6 +81,17 @@ jobs:
             echo "✓ Linux baseline snapshots committed"
           fi
 
+      - name: Fail workflow - new baselines require review
+        if: steps.generate-snapshots.outputs.snapshots_generated == 'true' && github.event_name == 'pull_request'
+        run: |
+          echo "⚠️ New Linux baseline snapshots were generated and committed"
+          echo ""
+          echo "These snapshots have been added to the PR and require manual review."
+          echo "Please review the committed snapshot files to ensure they are correct."
+          echo ""
+          echo "The workflow fails to ensure these baselines are not automatically merged."
+          exit 1
+
       - name: Upload visual regression results
         if: always()
         uses: actions/upload-artifact@v5
@@ -107,42 +120,68 @@ jobs:
           echo "diff_count=$DIFF_COUNT" >> $GITHUB_OUTPUT
           echo "Found $DIFF_COUNT visual differences"
 
-      - name: Comment on PR with visual regression results
+      - name: Request review for visual regression changes
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
-            const runId = context.runId;
-            const artifactsUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`;
-            const diffCount = parseInt('${{ steps.count-diffs.outputs.diff_count }}') || 0;
+            const fs = require('fs');
+            const path = require('path');
+            const { execSync } = require('child_process');
 
-            const diffInfo = diffCount > 0 ? `\n**Differences detected in ${diffCount} screenshot(s)**\n` : '';
+            // Find all diff files and extract snapshot names
+            const diffFiles = execSync('find test-results -name "*-diff.png" 2>/dev/null || true', { encoding: 'utf-8' })
+              .trim()
+              .split('\n')
+              .filter(f => f);
 
-            const comment = `## 📸 Visual Regression Changes Detected
+            // Extract the snapshot filenames that changed
+            const changedSnapshots = [];
+            for (const diffFile of diffFiles) {
+              const baseName = path.basename(diffFile, '-diff.png');
+              // The snapshot files follow pattern: test-name-browser-linux.png
+              const snapshotName = `${baseName}-linux.png`;
+              changedSnapshots.push(snapshotName);
+            }
 
-            Visual differences were found between the Linux baseline and current render.${diffInfo}
+            // Build file links for the PR files tab
+            const snapshotPath = 'tests/e2e/visual-regression.spec.js-snapshots';
+            const fileLinks = changedSnapshots.map(name => {
+              const fullPath = `${snapshotPath}/${name}`;
+              // GitHub PR file link format uses the file path hash
+              return `- [\`${name}\`](https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files#diff-${Buffer.from(fullPath).toString('hex')})`;
+            }).join('\n');
 
-            ### 📦 Download Artifacts:
-            - 🔗 [**View all artifacts**](${artifactsUrl}) - Download \`visual-regression-results\` for full HTML report with all diffs
-            - 📸 Baseline snapshots available in \`visual-regression-snapshots\` artifact
+            const diffCount = changedSnapshots.length;
 
-            ### Review Process:
-            1. **Click the artifacts link above** and download \`visual-regression-results\`
-            2. **Open the HTML report** inside to see all side-by-side comparisons
-            3. **If changes are intentional**: Comment \`/approve-snapshots\` on this PR
-            4. **If changes are bugs**: Fix the CSS/layout issues and push new commits
+            const body = [
+              '## 📸 Visual Regression Changes Detected',
+              '',
+              'Visual differences were found between the Linux baseline and current render.',
+              '',
+              `**${diffCount} screenshot(s) have changed:**`,
+              '',
+              fileLinks,
+              '',
+              '### Review the changes:',
+              '1. Click on each file link above to see the visual differences in the PR Files tab',
+              '2. If changes are intentional, **approve this review** to update the baselines',
+              '3. If changes are bugs, push fixes to update the CSS/layout',
+              '',
+              '### To approve and update Linux baselines:',
+              '**Approve this review**, then **re-run the failed workflow** to regenerate and commit the new baselines.',
+              '',
+              '---',
+              `*🤖 Visual regression test completed at ${new Date().toISOString()}*`
+            ].join('\n');
 
-            ### To approve and update Linux baselines:
-            Comment \`/approve-snapshots\` on this PR, then **re-run the failed workflow** to regenerate and commit the new baselines.
-
-            ---
-            *🤖 Linux visual regression test completed at ${new Date().toISOString()}*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            // Create a review with REQUEST_CHANGES to block the PR until approved
+            await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: comment
+              pull_number: context.issue.number,
+              body: body,
+              event: 'REQUEST_CHANGES'
             });
 
       - name: Check for snapshot approval
@@ -152,17 +191,17 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const comments = await github.rest.issues.listComments({
-              issue_number: context.issue.number,
+            // Check if there's an approving review
+            const reviews = await github.rest.pulls.listReviews({
               owner: context.repo.owner,
               repo: context.repo.repo,
+              pull_number: context.issue.number,
             });
 
-            const approvalComment = comments.data.find(comment => 
-              comment.body.includes('/approve-snapshots')
-            );
+            // Look for APPROVED reviews
+            const hasApproval = reviews.data.some(review => review.state === 'APPROVED');
 
-            return approvalComment ? 'true' : 'false';
+            return hasApproval ? 'true' : 'false';
 
       - name: Regenerate Linux snapshots (if approved)
         if: steps.check-approval.outputs.result == 'true' && steps.visual-tests.outcome == 'failure'
@@ -188,10 +227,10 @@ jobs:
             echo "❌ Visual regression tests failed"
             echo ""
             echo "Visual differences detected. To proceed, you must:"
-            echo "1. Review the artifacts above (visual-regression-results)"
-            echo "2. If changes are intentional, comment '/approve-snapshots' on this PR"
-            echo "3. Re-run this workflow after approval to update the baselines"
+            echo "1. Review the visual changes in the PR Files tab"
+            echo "2. If changes are intentional, approve the PR review"
+            echo "3. The workflow will automatically re-run and update the baselines"
             echo ""
-            echo "The workflow will fail until you approve the changes."
+            echo "The workflow will fail until the review is approved."
             exit 1
           fi
