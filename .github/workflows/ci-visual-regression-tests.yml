@@ -36,24 +36,37 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
-      - name: Run visual regression tests
+      - name: Check if Linux snapshots exist
+        id: check-snapshots
+        run: |
+          if ls tests/e2e/visual-regression.spec.js-snapshots/*-linux.png 1> /dev/null 2>&1; then
+            echo "has_snapshots=true" >> $GITHUB_OUTPUT
+            echo "✓ Linux snapshots found"
+          else
+            echo "has_snapshots=false" >> $GITHUB_OUTPUT
+            echo "✗ No Linux snapshots found - will generate baseline"
+          fi
+
+      - name: Run visual regression tests (comparison mode)
+        if: steps.check-snapshots.outputs.has_snapshots == 'true'
         id: visual-tests
         run: |
-          # Check if snapshots exist
-          if [ -d "tests/e2e/visual-regression.spec.js-snapshots" ] && [ "$(ls -A tests/e2e/visual-regression.spec.js-snapshots/*-linux.png 2>/dev/null)" ]; then
-            echo "Linux snapshots found, running comparison tests"
-            npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js
-          else
-            echo "No Linux snapshots found, generating baseline"
-            npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
-            echo "snapshots_updated=true" >> $GITHUB_OUTPUT
-          fi
+          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js
         continue-on-error: true
         env:
           CI: true
 
-      - name: Commit updated snapshots
-        if: steps.visual-tests.outputs.snapshots_updated == 'true' && github.event_name == 'pull_request'
+      - name: Generate Linux baseline snapshots
+        if: steps.check-snapshots.outputs.has_snapshots == 'false'
+        id: generate-snapshots
+        run: |
+          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
+          echo "snapshots_generated=true" >> $GITHUB_OUTPUT
+        env:
+          CI: true
+
+      - name: Commit Linux baseline snapshots
+        if: steps.generate-snapshots.outputs.snapshots_generated == 'true' && github.event_name == 'pull_request'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -61,8 +74,9 @@ jobs:
           if git diff --staged --quiet; then
             echo "No snapshot changes to commit"
           else
-            git commit -m "chore(tests): add Linux baseline snapshots for visual regression tests"
+            git commit -m "chore(ci): add Linux baseline snapshots for visual regression tests"
             git push
+            echo "✓ Linux baseline snapshots committed"
           fi
 
       - name: Upload visual regression results
@@ -85,22 +99,42 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
-      - name: Comment on PR if visual changes detected
-        if: failure() && github.event_name == 'pull_request'
+      - name: Comment on PR with visual regression results
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
-            const comment = `## 📸 Visual Regression Test Failed
+            const fs = require('fs');
 
-            Visual changes were detected in this PR. Please review the screenshots in the artifacts.
+            // Try to find the test results to get pixel diff info
+            let diffInfo = '';
+            try {
+              const testResults = fs.readdirSync('test-results', { recursive: true });
+              const diffFiles = testResults.filter(f => f.includes('-diff.png'));
+              if (diffFiles.length > 0) {
+                diffInfo = `\n**Differences detected in ${diffFiles.length} screenshot(s)**\n`;
+              }
+            } catch (e) {
+              // Ignore if we can't read test results
+            }
 
-            **What to do:**
-            1. Download the \`visual-regression-results\` artifact
-            2. Review the visual differences
-            3. If changes are intentional, update the baseline screenshots
-            4. If changes are unintentional, fix the CSS/layout issues
+            const comment = `## 📸 Visual Regression Changes Detected
 
-            *Visual regression test completed at ${new Date().toISOString()}*`;
+            Visual differences were found between the Linux baseline and current render.${diffInfo}
+
+            ### Review Process:
+            1. **Download artifacts** below to review the differences
+               - \`visual-regression-results\` - Contains diff images and HTML report
+               - \`visual-regression-snapshots\` - Current baseline snapshots
+            2. **Review the changes**: Open the HTML report to see side-by-side comparisons
+            3. **If changes are intentional**: Approve them by commenting \`/approve-snapshots\` on this PR
+            4. **If changes are bugs**: Fix the CSS/layout issues and push new commits
+
+            ### To approve and update Linux baselines:
+            Comment \`/approve-snapshots\` on this PR and the CI will regenerate the Linux baselines on the next run.
+
+            ---
+            *🤖 Linux visual regression test completed at ${new Date().toISOString()}*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -108,3 +142,43 @@ jobs:
               repo: context.repo.repo,
               body: comment
             });
+
+      - name: Check for snapshot approval
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
+        id: check-approval
+        uses: actions/github-script@v8
+        with:
+          result-encoding: string
+          script: |
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const approvalComment = comments.data.find(comment => 
+              comment.body.includes('/approve-snapshots')
+            );
+
+            return approvalComment ? 'true' : 'false';
+
+      - name: Regenerate Linux snapshots (if approved)
+        if: steps.check-approval.outputs.result == 'true' && steps.visual-tests.outcome == 'failure'
+        run: |
+          echo "✓ Snapshot changes approved - regenerating Linux baselines"
+          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
+
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add tests/e2e/visual-regression.spec.js-snapshots/*-linux.png
+          git commit -m "chore(ci): update Linux baseline snapshots [approved]"
+          git push
+        env:
+          CI: true
+
+      - name: Fail workflow if visual changes not approved
+        if: steps.visual-tests.outcome == 'failure' && steps.check-approval.outputs.result != 'true'
+        run: |
+          echo "❌ Visual regression tests failed and changes have not been approved"
+          echo "Review the artifacts and comment '/approve-snapshots' to approve changes"
+          exit 1
