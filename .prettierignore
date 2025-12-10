@@ -29,6 +29,3 @@ Thumbs.db
 # Generated files
 *.min.js
 *.min.css
-
-# Config that should maintain specific formatting
-.all-contributorsrc

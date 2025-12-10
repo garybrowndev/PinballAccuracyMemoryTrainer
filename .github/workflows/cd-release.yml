@@ -121,19 +121,30 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Calculate version from run number and commit hash
+      - name: Calculate version from commit count and timestamp
         id: version
         run: |
-          # Get short commit hash (7 chars)
+          # Get commit count on master branch
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+
+          # Get timestamp (YYYYMMDD.HHMM format)
+          TIMESTAMP=$(date -u +"%Y%m%d.%H%M")
+
+          # Get short commit hash (7 chars) for reference
           SHORT_HASH=$(git rev-parse --short=7 HEAD)
-          # Numeric version for npm (semver compliant): 0.0.{run_number}
-          NUMERIC_VERSION="0.0.${{ github.run_number }}"
-          # Full version with commit hash for tag: 0.0.{run_number}.{hash}
-          FULL_VERSION="0.0.${{ github.run_number }}.${SHORT_HASH}"
+
+          # Major.Minor.CommitCount.YYYYMMDD.HHMM
+          FULL_VERSION="0.0.${COMMIT_COUNT}.${TIMESTAMP}"
+
+          # Numeric version for npm (semver compliant): 0.0.{commit_count}
+          NUMERIC_VERSION="0.0.${COMMIT_COUNT}"
+
           echo "numeric_version=$NUMERIC_VERSION" >> $GITHUB_OUTPUT
           echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
           echo "commit_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
-          echo "📦 Calculated version: $FULL_VERSION (npm: $NUMERIC_VERSION)"
+          echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "📦 Calculated version: $FULL_VERSION (npm: $NUMERIC_VERSION, commit: $SHORT_HASH)"
 
       - name: Check if tag already exists
         id: check_tag
