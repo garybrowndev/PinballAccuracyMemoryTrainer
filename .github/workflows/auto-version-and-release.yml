@@ -1,70 +1,99 @@
 name: Auto Version and Release
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - "Browser Tests - Chromium"
+      - "Browser Tests - Firefox"
+      - "Browser Tests - WebKit"
+      - "CodeQL Security Analysis"
+      - "Visual Regression Testing"
+    types:
+      - completed
     branches:
       - master
 
 jobs:
-  check-browser-tests:
+  check-all-workflows:
     runs-on: ubuntu-latest
+    # Only proceed if the triggering workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      all_success: ${{ steps.check.outputs.all_success }}
     steps:
-      - name: Wait for browser tests to complete
+      - name: Check all required workflows succeeded
+        id: check
         uses: actions/github-script@v8
         with:
           script: |
-            const browsers = ['Browser Tests - Chromium', 'Browser Tests - Firefox', 'Browser Tests - WebKit'];
-            const ref = context.sha;
-            const maxWaitMinutes = 10;
-            const pollIntervalSeconds = 30;
-            const maxAttempts = (maxWaitMinutes * 60) / pollIntervalSeconds;
-
-            for (const browserWorkflow of browsers) {
-              console.log(`\n🔍 Checking ${browserWorkflow}...`);
-              let attempt = 0;
-              let completed = false;
-
-              while (attempt < maxAttempts && !completed) {
-                const runs = await github.rest.actions.listWorkflowRunsForRepo({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  workflow_id: `browser-${browserWorkflow.split(' - ')[1].toLowerCase()}.yml`,
-                  head_sha: ref
-                });
-
-                if (runs.data.workflow_runs.length === 0) {
-                  console.log(`⏳ ${browserWorkflow} has not started yet (attempt ${attempt + 1}/${maxAttempts})`);
-                  await new Promise(resolve => setTimeout(resolve, pollIntervalSeconds * 1000));
-                  attempt++;
-                  continue;
-                }
-
-                const latestRun = runs.data.workflow_runs[0];
-                
-                if (latestRun.status !== 'completed') {
-                  console.log(`⏳ ${browserWorkflow} is ${latestRun.status} (attempt ${attempt + 1}/${maxAttempts})`);
-                  await new Promise(resolve => setTimeout(resolve, pollIntervalSeconds * 1000));
-                  attempt++;
-                  continue;
-                }
-
-                if (latestRun.conclusion !== 'success') {
-                  throw new Error(`❌ ${browserWorkflow} failed with conclusion: ${latestRun.conclusion}`);
-                }
-
-                console.log(`✅ ${browserWorkflow} passed`);
-                completed = true;
+            const requiredWorkflows = [
+              'Browser Tests - Chromium',
+              'Browser Tests - Firefox',
+              'Browser Tests - WebKit',
+              'CodeQL Security Analysis',
+              'Visual Regression Testing'
+            ];
+            
+            const headSha = context.payload.workflow_run.head_sha;
+            console.log(`Checking workflows for commit: ${headSha}`);
+            
+            let allSuccess = true;
+            const results = {};
+            
+            for (const workflowName of requiredWorkflows) {
+              console.log(`\n🔍 Checking: ${workflowName}`);
+              
+              // Get all workflow runs for this commit
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head_sha: headSha,
+                per_page: 100
+              });
+              
+              // Find the workflow run for this specific workflow
+              const workflowRun = runs.data.workflow_runs.find(run => run.name === workflowName);
+              
+              if (!workflowRun) {
+                console.log(`❌ ${workflowName}: Not found or not started`);
+                allSuccess = false;
+                results[workflowName] = 'not_found';
+                continue;
               }
-
-              if (!completed) {
-                throw new Error(`⏰ ${browserWorkflow} did not complete within ${maxWaitMinutes} minutes`);
+              
+              if (workflowRun.status !== 'completed') {
+                console.log(`⏳ ${workflowName}: Still running (${workflowRun.status})`);
+                allSuccess = false;
+                results[workflowName] = workflowRun.status;
+                continue;
               }
+              
+              if (workflowRun.conclusion !== 'success') {
+                console.log(`❌ ${workflowName}: Failed with conclusion: ${workflowRun.conclusion}`);
+                allSuccess = false;
+                results[workflowName] = workflowRun.conclusion;
+                continue;
+              }
+              
+              console.log(`✅ ${workflowName}: Success`);
+              results[workflowName] = 'success';
             }
-
-            console.log('\n✅ All browser tests passed');
+            
+            console.log('\n📊 Summary:');
+            console.log(JSON.stringify(results, null, 2));
+            
+            if (allSuccess) {
+              console.log('\n✅ All required workflows succeeded! Proceeding with release.');
+            } else {
+              console.log('\n⏸️  Not all workflows completed successfully yet. Skipping release.');
+            }
+            
+            core.setOutput('all_success', allSuccess);
+            return allSuccess;
 
   version-build-and-release:
-    needs: check-browser-tests
+    needs: check-all-workflows
+    if: ${{ needs.check-all-workflows.outputs.all_success == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

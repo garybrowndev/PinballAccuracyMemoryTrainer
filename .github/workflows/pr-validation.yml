@@ -1,60 +1,104 @@
 name: PR Validation
 
 on:
-  pull_request:
-    branches:
-      - master
+  workflow_run:
+    workflows:
+      - "Browser Tests - Chromium"
+      - "Browser Tests - Firefox"
+      - "Browser Tests - WebKit"
+      - "CodeQL Security Analysis"
+      - "Visual Regression Testing"
     types:
-      - opened
-      - synchronize
-      - reopened
+      - completed
 
 # Cancel in-progress runs for the same PR
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.pull_requests[0].number || github.event.workflow_run.head_branch }}
   cancel-in-progress: true
 
 jobs:
-  check-browser-tests:
+  check-all-workflows:
     runs-on: ubuntu-latest
+    # Only run for pull requests and if the triggering workflow succeeded
+    if: |
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    outputs:
+      all_success: ${{ steps.check.outputs.all_success }}
     steps:
-      - name: Wait for browser tests to complete
+      - name: Check all required workflows succeeded
+        id: check
         uses: actions/github-script@v8
         with:
           script: |
-            const browsers = ['Browser Tests - Chromium', 'Browser Tests - Firefox', 'Browser Tests - WebKit'];
-            const ref = context.payload.pull_request.head.sha;
-
-            for (const browserWorkflow of browsers) {
-              console.log(`Checking ${browserWorkflow}...`);
+            const requiredWorkflows = [
+              'Browser Tests - Chromium',
+              'Browser Tests - Firefox',
+              'Browser Tests - WebKit',
+              'CodeQL Security Analysis',
+              'Visual Regression Testing'
+            ];
+            
+            const headSha = context.payload.workflow_run.head_sha;
+            console.log(`Checking workflows for commit: ${headSha}`);
+            
+            let allSuccess = true;
+            const results = {};
+            
+            for (const workflowName of requiredWorkflows) {
+              console.log(`\n🔍 Checking: ${workflowName}`);
               
+              // Get all workflow runs for this commit
               const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                workflow_id: `testing/browser-${browserWorkflow.split(' - ')[1].toLowerCase()}.yml`,
-                head_sha: ref
+                head_sha: headSha,
+                per_page: 100
               });
               
-              if (runs.data.workflow_runs.length === 0) {
-                throw new Error(`${browserWorkflow} has not started yet`);
+              // Find the workflow run for this specific workflow
+              const workflowRun = runs.data.workflow_runs.find(run => run.name === workflowName);
+              
+              if (!workflowRun) {
+                console.log(`❌ ${workflowName}: Not found or not started`);
+                allSuccess = false;
+                results[workflowName] = 'not_found';
+                continue;
               }
               
-              const latestRun = runs.data.workflow_runs[0];
-              if (latestRun.status !== 'completed') {
-                throw new Error(`${browserWorkflow} is still running`);
+              if (workflowRun.status !== 'completed') {
+                console.log(`⏳ ${workflowName}: Still running (${workflowRun.status})`);
+                allSuccess = false;
+                results[workflowName] = workflowRun.status;
+                continue;
               }
               
-              if (latestRun.conclusion !== 'success') {
-                throw new Error(`${browserWorkflow} failed with conclusion: ${latestRun.conclusion}`);
+              if (workflowRun.conclusion !== 'success') {
+                console.log(`❌ ${workflowName}: Failed with conclusion: ${workflowRun.conclusion}`);
+                allSuccess = false;
+                results[workflowName] = workflowRun.conclusion;
+                continue;
               }
               
-              console.log(`✅ ${browserWorkflow} passed`);
+              console.log(`✅ ${workflowName}: Success`);
+              results[workflowName] = 'success';
             }
-
-            console.log('✅ All browser tests passed');
+            
+            console.log('\n📊 Summary:');
+            console.log(JSON.stringify(results, null, 2));
+            
+            if (allSuccess) {
+              console.log('\n✅ All required workflows succeeded!');
+            } else {
+              console.log('\n⏸️  Not all workflows completed successfully yet.');
+            }
+            
+            core.setOutput('all_success', allSuccess);
+            return allSuccess;
 
   validate:
-    needs: check-browser-tests
+    needs: check-all-workflows
+    if: ${{ needs.check-all-workflows.outputs.all_success == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
