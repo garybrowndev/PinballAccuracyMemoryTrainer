@@ -99,111 +99,28 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
-      - name: Install sharp for image resizing
+      - name: Count visual differences
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
-        run: npm install sharp
-
-      - name: Prepare thumbnail images for PR comment
-        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
-        id: prepare-thumbnails
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const sharp = require('sharp');
-
-            // Find first diff image
-            const { execSync } = require('child_process');
-            const diffFiles = execSync('find test-results -name "*-diff.png" 2>/dev/null || true', { encoding: 'utf-8' })
-              .trim()
-              .split('\n')
-              .filter(f => f);
-
-            let diffCount = diffFiles.length;
-            let hasThumbnails = false;
-            let baseName = '';
-
-            if (diffFiles.length > 0) {
-              const diffFile = diffFiles[0];
-              const dir = path.dirname(diffFile);
-              baseName = path.basename(diffFile, '-diff.png');
-              
-              const expectedPath = path.join(dir, `${baseName}-expected.png`);
-              const actualPath = path.join(dir, `${baseName}-actual.png`);
-
-              if (fs.existsSync(expectedPath) && fs.existsSync(actualPath)) {
-                // Create thumbnails directory
-                const thumbDir = '/tmp/thumbnails';
-                if (!fs.existsSync(thumbDir)) {
-                  fs.mkdirSync(thumbDir, { recursive: true });
-                }
-
-                // Resize images to 160px width using sharp
-                await sharp(expectedPath)
-                  .resize(160, null, { withoutEnlargement: true })
-                  .toFile(path.join(thumbDir, 'expected.png'));
-                
-                await sharp(actualPath)
-                  .resize(160, null, { withoutEnlargement: true })
-                  .toFile(path.join(thumbDir, 'actual.png'));
-                
-                await sharp(diffFile)
-                  .resize(160, null, { withoutEnlargement: true })
-                  .toFile(path.join(thumbDir, 'diff.png'));
-
-                hasThumbnails = true;
-                console.log(`Created thumbnails for: ${baseName}`);
-              }
-            }
-
-            core.setOutput('has_thumbnails', hasThumbnails ? 'true' : 'false');
-            core.setOutput('base_name', baseName);
-            core.setOutput('diff_count', diffCount.toString());
+        id: count-diffs
+        run: |
+          DIFF_COUNT=$(find test-results -name "*-diff.png" 2>/dev/null | wc -l)
+          echo "diff_count=$DIFF_COUNT" >> $GITHUB_OUTPUT
+          echo "Found $DIFF_COUNT visual differences"
 
       - name: Comment on PR with visual regression results
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
-            const fs = require('fs');
-
-            // Build artifact URLs
             const runId = context.runId;
             const artifactsUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`;
+            const diffCount = parseInt('${{ steps.count-diffs.outputs.diff_count }}') || 0;
 
-            const hasThumbnails = '${{ steps.prepare-thumbnails.outputs.has_thumbnails }}' === 'true';
-            const baseName = '${{ steps.prepare-thumbnails.outputs.base_name }}';
-            const diffCount = parseInt('${{ steps.prepare-thumbnails.outputs.diff_count }}') || 0;
+            const diffInfo = diffCount > 0 ? `\n**Differences detected in ${diffCount} screenshot(s)**\n` : '';
 
-            let exampleDiff = '';
-            if (hasThumbnails) {
-              try {
-                const expectedB64 = fs.readFileSync('/tmp/thumbnails/expected.png').toString('base64');
-                const actualB64 = fs.readFileSync('/tmp/thumbnails/actual.png').toString('base64');
-                const diffB64 = fs.readFileSync('/tmp/thumbnails/diff.png').toString('base64');
-                
-                exampleDiff = `
-            ### Example Difference: \`${baseName}\`
-
-            <details>
-            <summary>Click to view comparison images</summary>
-
-            | Expected (Baseline) | Actual (Current) | Difference |
-            |---------------------|------------------|------------|
-            | <img src="data:image/png;base64,${expectedB64}" width="160" alt="Expected"/> | <img src="data:image/png;base64,${actualB64}" width="160" alt="Actual"/> | <img src="data:image/png;base64,${diffB64}" width="160" alt="Diff"/> |
-
-            </details>
-            `;
-              } catch (e) {
-                console.log('Error reading thumbnails:', e.message);
-              }
-            }
-
-            const diffInfo = diffCount > 0 ? `\n**Differences detected in ${diffCount} screenshot(s)**\n` : '';            const comment = `## 📸 Visual Regression Changes Detected
+            const comment = `## 📸 Visual Regression Changes Detected
 
             Visual differences were found between the Linux baseline and current render.${diffInfo}
-            ${exampleDiff}
 
             ### 📦 Download Artifacts:
             - 🔗 [**View all artifacts**](${artifactsUrl}) - Download \`visual-regression-results\` for full HTML report with all diffs
