@@ -15,34 +15,53 @@ jobs:
           script: |
             const browsers = ['Browser Tests - Chromium', 'Browser Tests - Firefox', 'Browser Tests - WebKit'];
             const ref = context.sha;
+            const maxWaitMinutes = 10;
+            const pollIntervalSeconds = 30;
+            const maxAttempts = (maxWaitMinutes * 60) / pollIntervalSeconds;
 
             for (const browserWorkflow of browsers) {
-              console.log(`Checking ${browserWorkflow}...`);
-              
-              const runs = await github.rest.actions.listWorkflowRunsForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflow_id: `browser-${browserWorkflow.split(' - ')[1].toLowerCase()}.yml`,
-                head_sha: ref
-              });
-              
-              if (runs.data.workflow_runs.length === 0) {
-                throw new Error(`${browserWorkflow} has not started yet`);
+              console.log(`\n🔍 Checking ${browserWorkflow}...`);
+              let attempt = 0;
+              let completed = false;
+
+              while (attempt < maxAttempts && !completed) {
+                const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id: `browser-${browserWorkflow.split(' - ')[1].toLowerCase()}.yml`,
+                  head_sha: ref
+                });
+
+                if (runs.data.workflow_runs.length === 0) {
+                  console.log(`⏳ ${browserWorkflow} has not started yet (attempt ${attempt + 1}/${maxAttempts})`);
+                  await new Promise(resolve => setTimeout(resolve, pollIntervalSeconds * 1000));
+                  attempt++;
+                  continue;
+                }
+
+                const latestRun = runs.data.workflow_runs[0];
+                
+                if (latestRun.status !== 'completed') {
+                  console.log(`⏳ ${browserWorkflow} is ${latestRun.status} (attempt ${attempt + 1}/${maxAttempts})`);
+                  await new Promise(resolve => setTimeout(resolve, pollIntervalSeconds * 1000));
+                  attempt++;
+                  continue;
+                }
+
+                if (latestRun.conclusion !== 'success') {
+                  throw new Error(`❌ ${browserWorkflow} failed with conclusion: ${latestRun.conclusion}`);
+                }
+
+                console.log(`✅ ${browserWorkflow} passed`);
+                completed = true;
               }
-              
-              const latestRun = runs.data.workflow_runs[0];
-              if (latestRun.status !== 'completed') {
-                throw new Error(`${browserWorkflow} is still running`);
+
+              if (!completed) {
+                throw new Error(`⏰ ${browserWorkflow} did not complete within ${maxWaitMinutes} minutes`);
               }
-              
-              if (latestRun.conclusion !== 'success') {
-                throw new Error(`${browserWorkflow} failed with conclusion: ${latestRun.conclusion}`);
-              }
-              
-              console.log(`✅ ${browserWorkflow} passed`);
             }
 
-            console.log('✅ All browser tests passed');
+            console.log('\n✅ All browser tests passed');
 
   version-build-and-release:
     needs: check-browser-tests
