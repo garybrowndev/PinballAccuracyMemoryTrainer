@@ -42,7 +42,7 @@ jobs:
 
             for (const workflowName of requiredWorkflows) {
               console.log(`\n🔍 Checking: ${workflowName}`);
-              
+
               // Get all workflow runs for this commit
               const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner: context.repo.owner,
@@ -50,31 +50,31 @@ jobs:
                 head_sha: headSha,
                 per_page: 100
               });
-              
+
               // Find the workflow run for this specific workflow
               const workflowRun = runs.data.workflow_runs.find(run => run.name === workflowName);
-              
+
               if (!workflowRun) {
                 console.log(`❌ ${workflowName}: Not found or not started`);
                 allSuccess = false;
                 results[workflowName] = 'not_found';
                 continue;
               }
-              
+
               if (workflowRun.status !== 'completed') {
                 console.log(`⏳ ${workflowName}: Still running (${workflowRun.status})`);
                 allSuccess = false;
                 results[workflowName] = workflowRun.status;
                 continue;
               }
-              
+
               if (workflowRun.conclusion !== 'success') {
                 console.log(`❌ ${workflowName}: Failed with conclusion: ${workflowRun.conclusion}`);
                 allSuccess = false;
                 results[workflowName] = workflowRun.conclusion;
                 continue;
               }
-              
+
               console.log(`✅ ${workflowName}: Success`);
               results[workflowName] = 'success';
             }
