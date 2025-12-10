@@ -105,33 +105,81 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            const path = require('path');
 
-            // Try to find the test results to get pixel diff info
-            let diffInfo = '';
+            // Build artifact URLs
+            const runId = context.runId;
+            const artifactsUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`;
+
+            // Try to find the first diff image for preview
+            let exampleDiff = '';
+            let diffCount = 0;
             try {
-              const testResults = fs.readdirSync('test-results', { recursive: true });
-              const diffFiles = testResults.filter(f => f.includes('-diff.png'));
-              if (diffFiles.length > 0) {
-                diffInfo = `\n**Differences detected in ${diffFiles.length} screenshot(s)**\n`;
+              const testResultsPath = 'test-results';
+              if (fs.existsSync(testResultsPath)) {
+                const findDiffs = (dir) => {
+                  const files = fs.readdirSync(dir, { withFileTypes: true });
+                  for (const file of files) {
+                    const fullPath = path.join(dir, file.name);
+                    if (file.isDirectory()) {
+                      findDiffs(fullPath);
+                    } else if (file.name.includes('-diff.png')) {
+                      diffCount++;
+                      if (!exampleDiff) {
+                        // Found first diff, get expected and actual too
+                        const baseName = file.name.replace('-diff.png', '');
+                        const dirPath = path.dirname(fullPath);
+                        const expectedPath = path.join(dirPath, `${baseName}-expected.png`);
+                        const actualPath = path.join(dirPath, `${baseName}-actual.png`);
+                        const diffPath = fullPath;
+                        
+                        if (fs.existsSync(expectedPath) && fs.existsSync(actualPath)) {
+                          const expectedB64 = fs.readFileSync(expectedPath).toString('base64');
+                          const actualB64 = fs.readFileSync(actualPath).toString('base64');
+                          const diffB64 = fs.readFileSync(diffPath).toString('base64');
+                          
+                          exampleDiff = `
+            ### Example Difference: \`${baseName}\`
+
+            <details>
+            <summary>Click to view comparison images</summary>
+
+            | Expected (Baseline) | Actual (Current) | Difference |
+            |---------------------|------------------|------------|
+            | <img src="data:image/png;base64,${expectedB64}" width="300" alt="Expected"/> | <img src="data:image/png;base64,${actualB64}" width="300" alt="Actual"/> | <img src="data:image/png;base64,${diffB64}" width="300" alt="Diff"/> |
+
+            </details>
+            `;
+                        }
+                      }
+                    }
+                  }
+                };
+                findDiffs(testResultsPath);
               }
             } catch (e) {
-              // Ignore if we can't read test results
+              console.log('Error reading test results:', e.message);
             }
+
+            const diffInfo = diffCount > 0 ? `\n**Differences detected in ${diffCount} screenshot(s)**\n` : '';
 
             const comment = `## 📸 Visual Regression Changes Detected
 
             Visual differences were found between the Linux baseline and current render.${diffInfo}
+            ${exampleDiff}
+
+            ### 📦 Download Artifacts:
+            - 🔗 [**View all artifacts**](${artifactsUrl}) - Download \`visual-regression-results\` for full HTML report with all diffs
+            - 📸 Baseline snapshots available in \`visual-regression-snapshots\` artifact
 
             ### Review Process:
-            1. **Download artifacts** below to review the differences
-               - \`visual-regression-results\` - Contains diff images and HTML report
-               - \`visual-regression-snapshots\` - Current baseline snapshots
-            2. **Review the changes**: Open the HTML report to see side-by-side comparisons
-            3. **If changes are intentional**: Approve them by commenting \`/approve-snapshots\` on this PR
+            1. **Click the artifacts link above** and download \`visual-regression-results\`
+            2. **Open the HTML report** inside to see all side-by-side comparisons
+            3. **If changes are intentional**: Comment \`/approve-snapshots\` on this PR
             4. **If changes are bugs**: Fix the CSS/layout issues and push new commits
 
             ### To approve and update Linux baselines:
-            Comment \`/approve-snapshots\` on this PR and the CI will regenerate the Linux baselines on the next run.
+            Comment \`/approve-snapshots\` on this PR, then **re-run the failed workflow** to regenerate and commit the new baselines.
 
             ---
             *🤖 Linux visual regression test completed at ${new Date().toISOString()}*`;
@@ -176,9 +224,20 @@ jobs:
         env:
           CI: true
 
-      - name: Fail workflow if visual changes not approved
-        if: steps.visual-tests.outcome == 'failure' && steps.check-approval.outputs.result != 'true'
+      - name: Fail workflow - visual changes require approval
+        if: steps.visual-tests.outcome == 'failure'
         run: |
-          echo "❌ Visual regression tests failed and changes have not been approved"
-          echo "Review the artifacts and comment '/approve-snapshots' to approve changes"
-          exit 1
+          if [ "${{ steps.check-approval.outputs.result }}" == "true" ]; then
+            echo "✓ Snapshot changes were approved and updated"
+            exit 0
+          else
+            echo "❌ Visual regression tests failed"
+            echo ""
+            echo "Visual differences detected. To proceed, you must:"
+            echo "1. Review the artifacts above (visual-regression-results)"
+            echo "2. If changes are intentional, comment '/approve-snapshots' on this PR"
+            echo "3. Re-run this workflow after approval to update the baselines"
+            echo ""
+            echo "The workflow will fail until you approve the changes."
+            exit 1
+          fi
