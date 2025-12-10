@@ -1,27 +1,8 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in the following locations:
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+- **[GitHub Releases](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/releases)** - Detailed release notes for each version
+- **[Commit History](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/commits/master)** - Complete commit log with all changes
 
-## [Unreleased]
-
-### Added
-
-- **Mobile fullscreen support** - Browser Fullscreen API integration to hide URL bar and navigation when entering fullscreen practice mode
-- **PWA manifest** - Web app manifest enabling "Add to Home Screen" installation for true fullscreen experience without browser chrome
-- **Mobile meta tags** - Added `apple-mobile-web-app-capable`, `mobile-web-app-capable`, and theme color meta tags for improved mobile experience
-- **Safe area support** - CSS safe-area-inset padding for devices with notches and rounded corners (iPhone X+, modern Android)
-- Initial GitHub community files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, SUPPORT.md)
-- Dependabot configuration for automated npm and GitHub Actions updates
-- PR validation workflow with lint, unit tests, and E2E tests
-- Pull request template
-- CODEOWNERS file
-
----
-
-> **Note:** This changelog tracks major features and changes going forward.
-> For detailed release notes including all commits, see the [GitHub Releases](https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/releases) page.
-
-[Unreleased]: https://github.com/garybrowndev/PinballAccuracyMemoryTrainer/compare/master...HEAD
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and uses [Conventional Commits](https://conventionalcommits.org) for commit messages.
