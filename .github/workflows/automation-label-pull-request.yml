@@ -1,7 +1,7 @@
 # Auto-label PRs based on files changed
 # https://github.com/actions/labeler
 
-name: PR Labeler
+name: 'Automation: Label Pull Request'
 
 on:
   pull_request:
@@ -15,7 +15,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  labeler:
+  automation-label-pull-request:
+    name: 'Automation: Label Pull Request'
     runs-on: ubuntu-latest
     steps:
       - name: Apply labels based on changed files

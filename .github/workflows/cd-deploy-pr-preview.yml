@@ -1,4 +1,4 @@
-name: PR Preview Deployment
+name: 'CD: Deploy PR Preview'
 
 on:
   pull_request:
@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-preview:
+  cd-deploy-pr-preview:
+    name: 'CD: Deploy PR Preview'
     runs-on: ubuntu-latest
     permissions:
       contents: read

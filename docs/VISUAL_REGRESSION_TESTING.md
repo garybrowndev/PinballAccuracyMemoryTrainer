@@ -36,8 +36,8 @@ npm run test:e2e:visual:update
 
 The visual regression tests run automatically:
 
-1. **PR Validation** (`pr-validation.yml`): Excludes visual regression tests to avoid platform mismatches
-2. **Visual Regression Workflow** (`visual-regression.yml`): Runs dedicated visual regression tests
+1. **PR Validation** (`ci-pr-validation.yml`): Excludes visual regression tests to avoid platform mismatches
+2. **Visual Regression Workflow** (`ci-visual-regression-tests.yml`): Runs dedicated visual regression tests
 
 ## Generating Linux Baselines Locally
 
@@ -55,7 +55,7 @@ docker run --rm --network host -v ${PWD}:/work -w /work mcr.microsoft.com/playwr
 
 ### Option 2: Let CI Generate Baselines
 
-The `visual-regression.yml` workflow automatically:
+The `ci-visual-regression-tests.yml` workflow automatically:
 
 1. Checks if Linux snapshots exist
 2. If not, generates them with `--update-snapshots`

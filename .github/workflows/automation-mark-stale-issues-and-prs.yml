@@ -1,7 +1,7 @@
 # Mark and close stale issues and PRs
 # https://github.com/actions/stale
 
-name: Stale Issues and PRs
+name: 'Automation: Mark Stale Issues and PRs'
 
 on:
   schedule:
@@ -14,7 +14,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  stale:
+  automation-mark-stale-issues-and-prs:
+    name: 'Automation: Mark Stale Issues and PRs'
     runs-on: ubuntu-latest
     steps:
       - name: Mark and close stale issues and PRs

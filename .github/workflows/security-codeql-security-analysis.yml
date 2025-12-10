@@ -1,4 +1,4 @@
-name: CodeQL Security Analysis
+name: 'Security: CodeQL Security Analysis'
 
 on:
   push:
@@ -17,8 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  analyze:
-    name: Analyze JavaScript
+  security-codeql-security-analysis:
+    name: 'Security: CodeQL Security Analysis'
     runs-on: ubuntu-latest
 
     permissions:

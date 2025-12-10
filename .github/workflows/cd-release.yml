@@ -1,20 +1,21 @@
-name: Auto Version and Release
+name: 'CD: Version Build and Release'
 
 on:
   workflow_run:
     workflows:
-      - 'Browser Tests - Chromium'
-      - 'Browser Tests - Firefox'
-      - 'Browser Tests - WebKit'
-      - 'CodeQL Security Analysis'
-      - 'Visual Regression Testing'
+      - 'CI: Chromium Browser Tests'
+      - 'CI: Firefox Browser Tests'
+      - 'CI: WebKit Browser Tests'
+      - 'Security: CodeQL Security Analysis'
+      - 'CI: Visual Regression Tests'
     types:
       - completed
     branches:
       - master
 
 jobs:
-  check-all-workflows:
+  cd-release-check-workflows:
+    name: 'CD: Check All Required Workflows'
     runs-on: ubuntu-latest
     # Only proceed if the triggering workflow succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -27,11 +28,11 @@ jobs:
         with:
           script: |
             const requiredWorkflows = [
-              'Browser Tests - Chromium',
-              'Browser Tests - Firefox',
-              'Browser Tests - WebKit',
-              'CodeQL Security Analysis',
-              'Visual Regression Testing'
+              'CI: Chromium Browser Tests',
+              'CI: Firefox Browser Tests',
+              'CI: WebKit Browser Tests',
+              'Security: CodeQL Security Analysis',
+              'CI: Visual Regression Tests'
             ];
 
             const headSha = context.payload.workflow_run.head_sha;
@@ -91,9 +92,10 @@ jobs:
             core.setOutput('all_success', allSuccess);
             return allSuccess;
 
-  version-build-and-release:
-    needs: check-all-workflows
-    if: ${{ needs.check-all-workflows.outputs.all_success == 'true' }}
+  cd-release-build:
+    name: 'CD: Version Build and Release'
+    needs: cd-release-check-workflows
+    if: ${{ needs.cd-release-check-workflows.outputs.all_success == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
