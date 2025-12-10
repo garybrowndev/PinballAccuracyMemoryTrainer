@@ -22,7 +22,7 @@ jobs:
               const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                workflow_id: `testing/browser-${browserWorkflow.split(' - ')[1].toLowerCase()}.yml`,
+                workflow_id: `browser-${browserWorkflow.split(' - ')[1].toLowerCase()}.yml`,
                 head_sha: ref
               });
               
