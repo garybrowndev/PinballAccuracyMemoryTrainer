@@ -73,6 +73,7 @@ jobs:
             test-results/
             playwright-report/
           retention-days: 14
+          if-no-files-found: ignore
 
       - name: Upload baseline screenshots
         if: always()
@@ -81,6 +82,7 @@ jobs:
           name: visual-regression-snapshots
           path: tests/e2e/visual-regression.spec.js-snapshots/
           retention-days: 90
+          if-no-files-found: ignore
 
       - name: Comment on PR if visual changes detected
         if: failure() && github.event_name == 'pull_request'

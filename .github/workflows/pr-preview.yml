@@ -89,7 +89,7 @@ jobs:
               issue_number: context.issue.number,
             });
 
-            const existingComment = comments.find(c => 
+            const existingComment = comments.find(c =>
               c.user.type === 'Bot' && c.body.includes('Preview Deployment')
             );
 

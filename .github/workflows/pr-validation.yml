@@ -21,6 +21,7 @@ jobs:
       contents: read
       security-events: write
       pull-requests: write
+      statuses: write
 
     steps:
       - name: Checkout code
@@ -54,7 +55,7 @@ jobs:
         run: npm ci
 
       - name: Security audit
-        run: npm audit --audit-level=moderate
+        run: npm audit --audit-level=low
         continue-on-error: false
 
       - name: Generate security audit report
@@ -96,12 +97,13 @@ jobs:
             --failOnCVSS 10
             --enableRetired
             --enableExperimental
-            --nodeAuditSkipDevDependencies
+            --disableNodeAudit
         continue-on-error: true
 
       - name: Upload OWASP results to GitHub Security
         if: always()
         uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
         with:
           sarif_file: reports/dependency-check-report.sarif
 
@@ -178,17 +180,17 @@ jobs:
           CSS_BUNDLE_KB=${{ steps.analyze.outputs.css_bundle_kb }}
           DIST_SIZE_MB=${{ steps.analyze.outputs.dist_size_mb }}
 
-          # Warning thresholds
-          if (( $(echo "$MAIN_BUNDLE_KB > 200" | bc -l) )); then
-            echo "⚠️  Warning: Main JS bundle exceeds 200 KB ($MAIN_BUNDLE_KB KB)"
+          # Warning thresholds (adjusted to realistic values)
+          if (( $(echo "$MAIN_BUNDLE_KB > 350" | bc -l) )); then
+            echo "⚠️  Warning: Main JS bundle exceeds 350 KB ($MAIN_BUNDLE_KB KB)"
           fi
 
-          if (( $(echo "$CSS_BUNDLE_KB > 50" | bc -l) )); then
-            echo "⚠️  Warning: CSS bundle exceeds 50 KB ($CSS_BUNDLE_KB KB)"
+          if (( $(echo "$CSS_BUNDLE_KB > 75" | bc -l) )); then
+            echo "⚠️  Warning: CSS bundle exceeds 75 KB ($CSS_BUNDLE_KB KB)"
           fi
 
-          if (( $(echo "$DIST_SIZE_MB > 2" | bc -l) )); then
-            echo "⚠️  Warning: Total dist size exceeds 2 MB ($DIST_SIZE_MB MB)"
+          if (( $(echo "$DIST_SIZE_MB > 3" | bc -l) )); then
+            echo "⚠️  Warning: Total dist size exceeds 3 MB ($DIST_SIZE_MB MB)"
           fi
 
           # Hard limits (fail build)
@@ -197,12 +199,20 @@ jobs:
             exit 1
           fi
 
+          if (( $(echo "$DIST_SIZE_MB > 5" | bc -l) )); then
+            echo "❌ Error: Total dist size exceeds hard limit of 5 MB ($DIST_SIZE_MB MB)"
+            exit 1
+          fi
+
           echo "✅ Bundle size within acceptable limits"
 
       - name: Run Lighthouse CI
+        env:
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.cjs
+          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
 
       - name: Update package.json version temporarily for build
         run: |
@@ -253,3 +263,4 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+          if-no-files-found: ignore

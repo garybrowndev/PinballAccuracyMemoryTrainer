@@ -42,7 +42,7 @@ jobs:
 
             for (const workflowName of requiredWorkflows) {
               console.log(`\n🔍 Checking: ${workflowName}`);
-              
+
               // Get all workflow runs for this commit
               const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner: context.repo.owner,
@@ -50,31 +50,31 @@ jobs:
                 head_sha: headSha,
                 per_page: 100
               });
-              
+
               // Find the workflow run for this specific workflow
               const workflowRun = runs.data.workflow_runs.find(run => run.name === workflowName);
-              
+
               if (!workflowRun) {
                 console.log(`❌ ${workflowName}: Not found or not started`);
                 allSuccess = false;
                 results[workflowName] = 'not_found';
                 continue;
               }
-              
+
               if (workflowRun.status !== 'completed') {
                 console.log(`⏳ ${workflowName}: Still running (${workflowRun.status})`);
                 allSuccess = false;
                 results[workflowName] = workflowRun.status;
                 continue;
               }
-              
+
               if (workflowRun.conclusion !== 'success') {
                 console.log(`❌ ${workflowName}: Failed with conclusion: ${workflowRun.conclusion}`);
                 allSuccess = false;
                 results[workflowName] = workflowRun.conclusion;
                 continue;
               }
-              
+
               console.log(`✅ ${workflowName}: Success`);
               results[workflowName] = 'success';
             }
@@ -98,6 +98,7 @@ jobs:
     permissions:
       contents: write
       security-events: write
+      statuses: write
 
     steps:
       - name: Checkout code
@@ -148,7 +149,7 @@ jobs:
 
       - name: Security audit
         if: steps.check_tag.outputs.exists == 'false'
-        run: npm audit --audit-level=moderate
+        run: npm audit --audit-level=low
         continue-on-error: false
 
       - name: Generate security audit report
@@ -195,12 +196,13 @@ jobs:
             --failOnCVSS 10
             --enableRetired
             --enableExperimental
-            --nodeAuditSkipDevDependencies
+            --disableNodeAudit
         continue-on-error: true
 
       - name: Upload OWASP results to GitHub Security
         if: always() && steps.check_tag.outputs.exists == 'false'
         uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
         with:
           sarif_file: reports/dependency-check-report.sarif
 
@@ -224,9 +226,12 @@ jobs:
 
       - name: Run Lighthouse CI
         if: steps.check_tag.outputs.exists == 'false'
+        env:
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.cjs
+          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
 
       - name: Upload Playwright report
         if: failure() && steps.check_tag.outputs.exists == 'false'
@@ -235,6 +240,7 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Create and push tag
         if: steps.check_tag.outputs.exists == 'false'

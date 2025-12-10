@@ -6,8 +6,6 @@
 
 **⚡ Instant access — No signup, no download, no install. Just click and play!**
 
-**🧪 Testing PR workflow validation**
-
 ---
 
 <a href="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/">

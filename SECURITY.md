@@ -76,7 +76,7 @@ Run security tests locally:
 ```bash
 npm run lint                 # Code quality and security lint rules
 npm run test:run            # Unit tests including security tests
-npm audit                   # Check for vulnerable dependencies
+npm audit --audit-level=low # Check for vulnerable dependencies (strictest level)
 ```
 
 ## Contact
