@@ -1,4 +1,4 @@
-# Visual Regression Review
+# Visual regression changes approved
 
 This file tracks visual regression test changes that require review.
 
