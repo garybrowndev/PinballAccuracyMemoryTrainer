@@ -111,25 +111,6 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
-      - name: Count visual differences and extract file names
-        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
-        id: count-diffs
-        run: |
-          # Find all actual diff files (the -diff.png files show the differences)
-          # Playwright creates 3 files per failure: -actual.png, -expected.png, -diff.png
-          # We only want to count the unique snapshots, not all generated files
-          find test-results -name "*-diff.png" 2>/dev/null | while read diffFile; do
-            # Extract just the base name to get the snapshot name
-            basename "$diffFile" | sed 's/-diff\.png$//'
-          done | sort -u > /tmp/diff-files.txt || true
-
-          DIFF_COUNT=$(cat /tmp/diff-files.txt | wc -l)
-          echo "diff_count=$DIFF_COUNT" >> $GITHUB_OUTPUT
-          echo "Found $DIFF_COUNT unique snapshots with visual differences"
-
-          # Show the list for debugging
-          cat /tmp/diff-files.txt
-
       - name: Update snapshots with current render
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         run: |
@@ -147,6 +128,8 @@ jobs:
           if git diff --staged --quiet; then
             echo "No snapshot changes to commit"
           else
+            # Save list of changed files before committing
+            git diff --staged --name-only | grep "\.png$" | xargs -n1 basename > /tmp/changed-snapshots.txt
             git commit -m "chore(ci): update Linux snapshots - visual changes detected [needs approval]"
             git push
             echo "✓ Updated snapshots committed for review"
@@ -160,13 +143,9 @@ jobs:
             const fs = require('fs');
             const path = require('path');
 
-            // Read the unique snapshot base names we saved earlier
-            const diffFilesContent = fs.readFileSync('/tmp/diff-files.txt', 'utf-8');
-            const baseNames = diffFilesContent.trim().split('\n').filter(f => f);
-
-            // The base names already have the pattern: test-name-browser-linux
-            // Just add .png extension to get the snapshot filename
-            const changedSnapshots = baseNames.map(baseName => `${baseName}.png`);
+            // Read the list of actually changed snapshot files from git
+            const changedSnapshotsContent = fs.readFileSync('/tmp/changed-snapshots.txt', 'utf-8');
+            const changedSnapshots = changedSnapshotsContent.trim().split('\n').filter(f => f);
 
             // Build file links for the PR files tab
             // GitHub uses SHA-256 hashes of the file path for file anchors
