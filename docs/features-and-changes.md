@@ -35,3 +35,11 @@ Lighthouse looks to be still errorcode 1
 Review lighthouse results, their seemed to be lots of errors
 
 Add new part of release workflow that actually tests the basic loading of the site form git-pages deploy. i've had the app pass everything and just fail for ome other reason
+
+See if I can get more "prettier" style stuff going, see if we are skipping anything
+
+Ensure that the depdency check and code coverage are running correctly and prevent PR from being merged
+
+Fix the lighthouse issues being pushed to the magic google place
+
+Fix issue with the website working at all
