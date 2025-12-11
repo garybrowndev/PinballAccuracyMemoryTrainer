@@ -121,18 +121,23 @@ jobs:
 
       - name: Commit updated snapshots for review
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
+        id: commit-snapshots
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add tests/e2e/visual-regression.spec.js-snapshots/*-linux.png
           if git diff --staged --quiet; then
             echo "No snapshot changes to commit"
+            echo "new_commit_sha=" >> $GITHUB_OUTPUT
           else
             # Save list of changed files before committing
             git diff --staged --name-only | grep "\.png$" | xargs -n1 basename > /tmp/changed-snapshots.txt
             git commit -m "chore(ci): update Linux snapshots - visual changes detected [needs approval]"
             git push
-            echo "✓ Updated snapshots committed for review"
+            # Capture the new commit SHA for review comments
+            NEW_SHA=$(git rev-parse HEAD)
+            echo "new_commit_sha=$NEW_SHA" >> $GITHUB_OUTPUT
+            echo "✓ Updated snapshots committed for review (commit: $NEW_SHA)"
           fi
 
       - name: Request changes for visual regression review
@@ -184,34 +189,43 @@ jobs:
 
             console.log(`Created REQUEST_CHANGES review: ${review.data.html_url}`);
 
-            // Add a review comment for each changed snapshot file
-            // This creates conversations that must be resolved
-            for (const fileName of changedSnapshots) {
-              const fullPath = `${snapshotPath}/${fileName}`;
-              const hash = crypto.createHash('sha256').update(fullPath).digest('hex');
-              const fileUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files#diff-${hash}`;
-              
-              const commentBody = `📸 **Visual changes detected in [\`${fileName}\`](${fileUrl})**\n\nPlease review this snapshot and click "Resolve conversation" if the changes are intentional.`;
-              
-              try {
-                // Add review comment on the file (line 1 of the file)
-                await github.rest.pulls.createReviewComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: context.issue.number,
-                  body: commentBody,
-                  commit_id: context.sha,
-                  path: fullPath,
-                  line: 1,
-                  side: 'RIGHT'
-                });
-                console.log(`Added review comment for ${fileName}`);
-              } catch (error) {
-                console.log(`Could not add comment for ${fileName}: ${error.message}`);
-              }
-            }
+            // Get the commit SHA where snapshots were just committed
+            const newCommitSha = '${{ steps.commit-snapshots.outputs.new_commit_sha }}';
 
-            console.log(`Review complete. ${diffCount} conversations created.`);
+            if (!newCommitSha) {
+              console.log('No new commit SHA available, skipping file comments');
+            } else {
+              console.log(`Using commit SHA for review comments: ${newCommitSha}`);
+              
+              // Add a review comment for each changed snapshot file
+              // This creates conversations that must be resolved
+              for (const fileName of changedSnapshots) {
+                const fullPath = `${snapshotPath}/${fileName}`;
+                const hash = crypto.createHash('sha256').update(fullPath).digest('hex');
+                const fileUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files#diff-${hash}`;
+                
+                const commentBody = `📸 **Visual changes detected in [\`${fileName}\`](${fileUrl})**\n\nPlease review this snapshot and click "Resolve conversation" if the changes are intentional.`;
+                
+                try {
+                  // Add review comment on the file using the NEW commit SHA
+                  await github.rest.pulls.createReviewComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: context.issue.number,
+                    body: commentBody,
+                    commit_id: newCommitSha,
+                    path: fullPath,
+                    line: 1,
+                    side: 'RIGHT'
+                  });
+                  console.log(`Added review comment for ${fileName}`);
+                } catch (error) {
+                  console.log(`Could not add comment for ${fileName}: ${error.message}`);
+                }
+              }
+              
+              console.log(`Review complete. ${diffCount} file-specific conversations created.`);
+            }
 
       - name: Fail workflow - visual changes require review
         if: steps.visual-tests.outcome == 'failure'
