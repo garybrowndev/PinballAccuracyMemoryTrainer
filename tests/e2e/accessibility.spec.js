@@ -38,10 +38,17 @@ test.describe('Accessibility Tests - WCAG 2.1 AAA', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Test tab navigation
+    // Test tab navigation - may need multiple tabs to reach first interactive element
     await page.keyboard.press('Tab');
-    const firstFocusedElement = await page.evaluate(() => document.activeElement?.tagName);
-    expect(['BUTTON', 'A', 'INPUT', 'SELECT']).toContain(firstFocusedElement);
+    let focusedElement = await page.evaluate(() => document.activeElement?.tagName);
+
+    // In some browsers (like WebKit), first tab may focus BODY, so tab again
+    if (focusedElement === 'BODY') {
+      await page.keyboard.press('Tab');
+      focusedElement = await page.evaluate(() => document.activeElement?.tagName);
+    }
+
+    expect(['BUTTON', 'A', 'INPUT', 'SELECT']).toContain(focusedElement);
 
     // Verify focus is visible
     const hasFocusStyles = await page.evaluate(() => {

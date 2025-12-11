@@ -2,6 +2,7 @@ name: 'CI: Visual Regression Tests'
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
     branches:
       - master
   push:
@@ -36,24 +37,37 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
-      - name: Run visual regression tests
+      - name: Check if Linux snapshots exist
+        id: check-snapshots
+        run: |
+          if ls tests/e2e/visual-regression.spec.js-snapshots/*-linux.png 1> /dev/null 2>&1; then
+            echo "has_snapshots=true" >> $GITHUB_OUTPUT
+            echo "✓ Linux snapshots found"
+          else
+            echo "has_snapshots=false" >> $GITHUB_OUTPUT
+            echo "✗ No Linux snapshots found - will generate baseline"
+          fi
+
+      - name: Run visual regression tests (comparison mode)
+        if: steps.check-snapshots.outputs.has_snapshots == 'true'
         id: visual-tests
         run: |
-          # Check if snapshots exist
-          if [ -d "tests/e2e/visual-regression.spec.js-snapshots" ] && [ "$(ls -A tests/e2e/visual-regression.spec.js-snapshots/*-linux.png 2>/dev/null)" ]; then
-            echo "Linux snapshots found, running comparison tests"
-            npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js
-          else
-            echo "No Linux snapshots found, generating baseline"
-            npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
-            echo "snapshots_updated=true" >> $GITHUB_OUTPUT
-          fi
+          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js
         continue-on-error: true
         env:
           CI: true
 
-      - name: Commit updated snapshots
-        if: steps.visual-tests.outputs.snapshots_updated == 'true' && github.event_name == 'pull_request'
+      - name: Generate Linux baseline snapshots
+        if: steps.check-snapshots.outputs.has_snapshots == 'false'
+        id: generate-snapshots
+        run: |
+          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
+          echo "snapshots_generated=true" >> $GITHUB_OUTPUT
+        env:
+          CI: true
+
+      - name: Commit Linux baseline snapshots
+        if: steps.generate-snapshots.outputs.snapshots_generated == 'true' && github.event_name == 'pull_request'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -61,9 +75,21 @@ jobs:
           if git diff --staged --quiet; then
             echo "No snapshot changes to commit"
           else
-            git commit -m "chore(tests): add Linux baseline snapshots for visual regression tests"
+            git commit -m "chore(ci): add Linux baseline snapshots for visual regression tests"
             git push
+            echo "✓ Linux baseline snapshots committed"
           fi
+
+      - name: Fail workflow - new baselines require review
+        if: steps.generate-snapshots.outputs.snapshots_generated == 'true' && github.event_name == 'pull_request'
+        run: |
+          echo "⚠️ New Linux baseline snapshots were generated and committed"
+          echo ""
+          echo "These snapshots have been added to the PR and require manual review."
+          echo "Please review the committed snapshot files to ensure they are correct."
+          echo ""
+          echo "The workflow fails to ensure these baselines are not automatically merged."
+          exit 1
 
       - name: Upload visual regression results
         if: always()
@@ -85,26 +111,172 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
-      - name: Comment on PR if visual changes detected
-        if: failure() && github.event_name == 'pull_request'
+      - name: Update snapshots with current render
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
+        run: |
+          echo "Updating snapshots to match current render for review..."
+          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --update-snapshots
+        env:
+          CI: true
+
+      - name: Commit updated snapshots and review file
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
+        id: commit-snapshots
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add tests/e2e/visual-regression.spec.js-snapshots/*-linux.png
+          if git diff --staged --quiet; then
+            echo "No snapshot changes to commit"
+            echo "new_commit_sha=" >> $GITHUB_OUTPUT
+          else
+            # Save list of changed files before committing
+            git diff --staged --name-only | grep "\.png$" | xargs -n1 basename > /tmp/changed-snapshots.txt
+            
+            # Update review file with new timestamp and file list
+            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
+            REVIEW_FILE="tests/e2e/visual-regression.spec.js-snapshots/VISUAL_REGRESSION_REVIEW.md"
+            
+            echo "# Visual Regression Review" > "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "This file tracks visual regression test changes that require review." >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "**Last Updated:** $TIMESTAMP" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "## Purpose" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "This file enables the \"Resolve conversation\" workflow for visual regression approvals:" >> "$REVIEW_FILE"
+            echo "1. When visual changes are detected, CI updates this file with a new timestamp" >> "$REVIEW_FILE"
+            echo "2. A review comment is added to this file with the list of changed snapshots" >> "$REVIEW_FILE"
+            echo "3. Review the changes and click \"Resolve conversation\" to approve" >> "$REVIEW_FILE"
+            echo "4. Once resolved, the PR can be merged" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "## Current Status" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "Visual changes detected in the following snapshots:" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            
+            # Add each changed file
+            while IFS= read -r file; do
+              echo "- \`$file\`" >> "$REVIEW_FILE"
+            done < /tmp/changed-snapshots.txt
+            
+            # Format the file with prettier to pass pre-commit hooks
+            npx prettier --write "$REVIEW_FILE"
+            
+            git add "$REVIEW_FILE"
+            git commit -m "chore(ci): update Linux snapshots - visual changes detected [needs approval]"
+            git push
+            
+            # Capture the new commit SHA for review comments
+            NEW_SHA=$(git rev-parse HEAD)
+            echo "new_commit_sha=$NEW_SHA" >> $GITHUB_OUTPUT
+            echo "✓ Updated snapshots and review file committed (commit: $NEW_SHA)"
+          fi
+
+      - name: Request changes for visual regression review
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
-            const comment = `## 📸 Visual Regression Test Failed
+            const fs = require('fs');
+            const path = require('path');
 
-            Visual changes were detected in this PR. Please review the screenshots in the artifacts.
+            // Read the list of actually changed snapshot files from git
+            const changedSnapshotsContent = fs.readFileSync('/tmp/changed-snapshots.txt', 'utf-8');
+            const changedSnapshots = changedSnapshotsContent.trim().split('\n').filter(f => f);
 
-            **What to do:**
-            1. Download the \`visual-regression-results\` artifact
-            2. Review the visual differences
-            3. If changes are intentional, update the baseline screenshots
-            4. If changes are unintentional, fix the CSS/layout issues
+            const crypto = require('crypto');
+            const snapshotPath = 'tests/e2e/visual-regression.spec.js-snapshots';
+            const diffCount = changedSnapshots.length;
+            const filesTabUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files`;
 
-            *Visual regression test completed at ${new Date().toISOString()}*`;
+            // Build file links with SHA-256 hashes
+            const fileLinks = changedSnapshots.map(name => {
+              const fullPath = `${snapshotPath}/${name}`;
+              const hash = crypto.createHash('sha256').update(fullPath).digest('hex');
+              const fileUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files#diff-${hash}`;
+              return `- [\`${name}\`](${fileUrl})`;
+            }).join('\n');
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+            // Get the commit SHA where snapshots were just committed
+            const newCommitSha = '${{ steps.commit-snapshots.outputs.new_commit_sha }}';
+
+            if (!newCommitSha) {
+              console.log('No new commit SHA available, skipping review comment');
+            } else {
+              console.log(`Using commit SHA for review comment: ${newCommitSha}`);
+              
+              // Add a review comment on the dummy review file
+              const reviewFilePath = `${snapshotPath}/VISUAL_REGRESSION_REVIEW.md`;
+              
+              const commentBody = [
+                '## 📸 Visual Regression Changes Detected',
+                '',
+                `**${diffCount} snapshots have changed and require your review.**`,
+                '',
+                '### Changed Files:',
+                '',
+                fileLinks,
+                '',
+                '### ✅ How to approve (2 clicks):',
+                '',
+                `1. **[Review all changed snapshots →](${filesTabUrl})**`,
+                '2. **Click "Resolve conversation"** on this comment',
+                '3. **Click "Commit suggestion"** below to re-run CI ⬇️',
+                '',
+                '```suggestion',
+                '# Visual regression changes approved',
+                '```',
+                '',
+                '### What happens:',
+                '',
+                '- Resolving conversation unblocks PR (via ruleset)',
+                '- Committing suggestion triggers CI to verify all checks pass',
+                '- The `VISUAL_REGRESSION_REVIEW.md` file stays in the repo',
+                '',
+                '### If changes are bugs:',
+                '',
+                '- Push fixes to update CSS/layout',
+                '- Workflow will auto-update snapshots on next run',
+                '',
+                '---',
+                '',
+                `*🤖 Snapshots updated at ${new Date().toISOString()}*`
+              ].join('\n');
+              
+              try {
+                // Add review comment on the dummy text file
+                await github.rest.pulls.createReviewComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.issue.number,
+                  body: commentBody,
+                  commit_id: newCommitSha,
+                  path: reviewFilePath,
+                  line: 1,
+                  side: 'RIGHT'
+                });
+                console.log(`✓ Created review comment on ${reviewFilePath}`);
+                console.log(`✓ Review complete. "Resolve conversation" button is now available.`);
+              } catch (error) {
+                console.log(`✗ Could not add review comment: ${error.message}`);
+              }
+            }
+
+      - name: Fail workflow - visual changes require review
+        if: steps.visual-tests.outcome == 'failure'
+        run: |
+          echo "❌ Visual regression tests detected changes"
+          echo ""
+          echo "Updated snapshots have been committed to this PR."
+          echo "A review comment has been posted with file links."
+          echo ""
+          echo "To proceed:"
+          echo "1. Review the changed snapshots in the PR Files tab"
+          echo "2. Click 'Resolve conversation' on the review comment"
+          echo "3. Once resolved, the PR will be unblocked for merging (via ruleset)"
+          echo ""
+          echo "Note: Only conversation resolution is required - no review approval needed."
+          echo "The VISUAL_REGRESSION_REVIEW.md file is kept in the repo and updated each run."
+          exit 1
