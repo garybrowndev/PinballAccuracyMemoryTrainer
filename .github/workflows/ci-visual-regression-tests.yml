@@ -161,6 +161,9 @@ jobs:
               echo "- \`$file\`" >> "$REVIEW_FILE"
             done < /tmp/changed-snapshots.txt
             
+            # Format the file with prettier to pass pre-commit hooks
+            npx prettier --write "$REVIEW_FILE"
+            
             git add "$REVIEW_FILE"
             git commit -m "chore(ci): update Linux snapshots - visual changes detected [needs approval]"
             git push
