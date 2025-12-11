@@ -318,12 +318,10 @@ jobs:
 
           echo "✅ Site returned HTTP 200"
 
-          # Check for common 404 patterns in the HTML
-          if grep -q "404" /tmp/gh-pages.html || grep -q "Not Found" /tmp/gh-pages.html; then
-            echo "❌ ERROR: Page content suggests 404 error"
-            cat /tmp/gh-pages.html
-            exit 1
-          fi
+          # Check for actual 404 error page (in title or heading, not in JavaScript code)
+          if grep -E "<title>[^<]*404[^<]*</title>" /tmp/gh-pages.html > /dev/null || grep -E "<h[1-6][^>]*>[^<]*404.*Not Found[^<]*</h[1-6]>" /tmp/gh-pages.html > /dev/null; then
+            echo "❌ ERROR: Page appears to be a 404 error page"
+            head -n 50 /tmp/gh-pages.html
 
           # Check for external script references that might 404
           EXTERNAL_SCRIPTS=$(grep -o 'src="[^"]*\.js"' /tmp/gh-pages.html || true)

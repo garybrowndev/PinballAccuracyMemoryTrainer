@@ -79,10 +79,10 @@ jobs:
 
           echo "✅ Site returned HTTP 200"
 
-          # Check for common 404 patterns in the HTML
-          if grep -q "404" /tmp/surge-deploy.html || grep -q "Not Found" /tmp/surge-deploy.html; then
-            echo "❌ ERROR: Page content suggests 404 error"
-            cat /tmp/surge-deploy.html
+          # Check for actual 404 error page (in title or heading, not in JavaScript code)
+          if grep -E "<title>[^<]*404[^<]*</title>" /tmp/surge-deploy.html > /dev/null || grep -E "<h[1-6][^>]*>[^<]*404.*Not Found[^<]*</h[1-6]>" /tmp/surge-deploy.html > /dev/null; then
+            echo "❌ ERROR: Page appears to be a 404 error page"
+            head -n 50 /tmp/surge-deploy.html
             exit 1
           fi
 
