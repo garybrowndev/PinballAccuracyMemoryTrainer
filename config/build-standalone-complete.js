@@ -20,16 +20,41 @@ async function buildStandaloneWithAssets() {
     fs.rmSync(distDir, { recursive: true, force: true });
   }
 
-  // Use execSync to run the build command normally (this ensures Tailwind processes correctly)
+  // Create a temporary vite config that disables code splitting for standalone builds
+  const viteConfigPath = path.join(rootDir, 'config', 'vite.config.js');
+  const viteConfig = fs.readFileSync(viteConfigPath, 'utf8');
+  const tempViteConfigPath = path.join(rootDir, 'config', 'vite.config.standalone.js');
+
+  // Modify the config to disable code splitting
+  const modifiedConfig = viteConfig.replace(
+    /manualChunks:\s*{[^}]*}/s,
+    '// Code splitting disabled for standalone build'
+  );
+
+  fs.writeFileSync(tempViteConfigPath, modifiedConfig, 'utf8');
+
+  // Use execSync to run vite directly with the modified config
   try {
-    execSync('npm run build', { stdio: 'inherit', cwd: rootDir });
+    execSync('npx vite build --config config/vite.config.standalone.js', {
+      stdio: 'inherit',
+      cwd: rootDir,
+    });
     // eslint-disable-next-line no-console
     console.log('Build completed!\n');
   } catch {
     // eslint-disable-next-line no-console
     console.error('Build failed.');
+    // Clean up temp config
+    if (fs.existsSync(tempViteConfigPath)) {
+      fs.unlinkSync(tempViteConfigPath);
+    }
     // eslint-disable-next-line no-undef
     process.exit(1);
+  } finally {
+    // Clean up temp config
+    if (fs.existsSync(tempViteConfigPath)) {
+      fs.unlinkSync(tempViteConfigPath);
+    }
   }
 
   // Read built files from the standard dist directory
@@ -40,20 +65,22 @@ async function buildStandaloneWithAssets() {
   const assetsDir = path.join(distDir, 'assets');
   const files = fs.readdirSync(assetsDir);
 
-  const cssFile = files.find((f) => f.endsWith('.css'));
-  const jsFile = files.find((f) => f.endsWith('.js'));
+  const cssFiles = files.filter((f) => f.endsWith('.css'));
+  const jsFiles = files.filter((f) => f.endsWith('.js'));
 
   let css = '';
   let js = '';
 
-  if (cssFile) {
+  // Combine all CSS files
+  for (const cssFile of cssFiles) {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    css = fs.readFileSync(path.join(assetsDir, cssFile), 'utf8');
+    css += fs.readFileSync(path.join(assetsDir, cssFile), 'utf8');
   }
 
-  if (jsFile) {
+  // Combine all JS files (in case code splitting still occurs)
+  for (const jsFile of jsFiles) {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    js = fs.readFileSync(path.join(assetsDir, jsFile), 'utf8');
+    js += `${fs.readFileSync(path.join(assetsDir, jsFile), 'utf8')}\n`;
   }
 
   // Function to convert image to base64

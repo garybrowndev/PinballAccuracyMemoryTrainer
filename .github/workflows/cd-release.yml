@@ -13,9 +13,9 @@ on:
     branches:
       - master
 
-# Prevent multiple concurrent releases - only one at a time per branch
+# Prevent multiple concurrent releases - only one at a time per commit
 concurrency:
-  group: cd-release-${{ github.ref }}
+  group: cd-release-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: false
 
 jobs:
