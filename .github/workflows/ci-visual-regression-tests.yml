@@ -111,6 +111,19 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
+      - name: Count visual differences and extract file names
+        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
+        id: count-diffs
+        run: |
+          # Find all diff files and save to a file for later use
+          find test-results -name "*-diff.png" 2>/dev/null > /tmp/diff-files.txt || true
+          DIFF_COUNT=$(cat /tmp/diff-files.txt | wc -l)
+          echo "diff_count=$DIFF_COUNT" >> $GITHUB_OUTPUT
+          echo "Found $DIFF_COUNT visual differences"
+
+          # Also save the list for the review comment
+          cat /tmp/diff-files.txt
+
       - name: Update snapshots with current render
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         run: |
@@ -133,14 +146,6 @@ jobs:
             echo "✓ Updated snapshots committed for review"
           fi
 
-      - name: Count visual differences
-        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
-        id: count-diffs
-        run: |
-          DIFF_COUNT=$(find test-results -name "*-diff.png" 2>/dev/null | wc -l)
-          echo "diff_count=$DIFF_COUNT" >> $GITHUB_OUTPUT
-          echo "Found $DIFF_COUNT visual differences"
-
       - name: Request review for visual regression changes
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v8
@@ -148,13 +153,10 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const { execSync } = require('child_process');
 
-            // Find all diff files and extract snapshot names
-            const diffFiles = execSync('find test-results -name "*-diff.png" 2>/dev/null || true', { encoding: 'utf-8' })
-              .trim()
-              .split('\n')
-              .filter(f => f);
+            // Read the diff files list we saved earlier (before updating snapshots)
+            const diffFilesContent = fs.readFileSync('/tmp/diff-files.txt', 'utf-8');
+            const diffFiles = diffFilesContent.trim().split('\n').filter(f => f);
 
             // Extract the snapshot filenames that changed
             const changedSnapshots = [];
