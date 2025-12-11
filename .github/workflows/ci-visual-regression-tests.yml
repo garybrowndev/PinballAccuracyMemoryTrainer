@@ -135,7 +135,7 @@ jobs:
             echo "✓ Updated snapshots committed for review"
           fi
 
-      - name: Request review for visual regression changes
+      - name: Request changes for visual regression review
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
@@ -147,93 +147,85 @@ jobs:
             const changedSnapshotsContent = fs.readFileSync('/tmp/changed-snapshots.txt', 'utf-8');
             const changedSnapshots = changedSnapshotsContent.trim().split('\n').filter(f => f);
 
-            // Build file links for the PR files tab
-            // GitHub uses SHA-256 hashes of the file path for file anchors
             const crypto = require('crypto');
             const snapshotPath = 'tests/e2e/visual-regression.spec.js-snapshots';
-
-            const fileLinks = changedSnapshots.map(name => {
-              const fullPath = `${snapshotPath}/${name}`;
-              // Compute SHA-256 hash of the file path
-              const hash = crypto.createHash('sha256').update(fullPath).digest('hex');
-              const fileUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files#diff-${hash}`;
-              return `- [\`${name}\`](${fileUrl})`;
-            }).join('\n');
-
             const diffCount = changedSnapshots.length;
-
             const filesTabUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files`;
 
-            const body = [
+            // Build main review body
+            const reviewBody = [
               '## 📸 Visual Regression Changes Detected',
               '',
-              'Visual differences were found between the Linux baseline and current render.',
+              `**${diffCount} screenshot(s) have changed and require review.**`,
               '',
-              `**${diffCount} screenshot(s) have changed:**`,
+              '### How to review and approve:',
               '',
-              fileLinks,
+              `1. **[Click here to view all changed snapshots →](${filesTabUrl})**`,
+              '2. Review each changed file to ensure the visual changes are intentional',
+              '3. **Click "Resolve conversation" on each file below** to approve the changes',
+              '4. Once all conversations are resolved, the PR can be merged',
               '',
-              '### Review the changes:',
-              `1. [View all changed snapshots in the Files tab →](${filesTabUrl})`,
-              '2. Updated snapshots have been committed to this PR for review',
-              '3. If changes are intentional, add the label **`visual-snapshots-approved`** to this PR',
-              '4. If changes are bugs, push fixes to update the CSS/layout',
-              '',
-              '### To approve the changes:',
-              'Add the label **`visual-snapshots-approved`** to this PR and the workflow will automatically re-run and pass.',
+              '### If changes are not intentional:',
+              '- Push fixes to update the CSS/layout',
+              '- The workflow will automatically update snapshots on the next run',
               '',
               '---',
-              `*🤖 Visual regression test completed at ${new Date().toISOString()}*`
+              `*🤖 Updated snapshots have been committed. Review completed at ${new Date().toISOString()}*`
             ].join('\n');
 
-            // Create a comment review (informational)
-            await github.rest.pulls.createReview({
+            // Create the main review with REQUEST_CHANGES
+            const review = await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
-              body: body,
-              event: 'COMMENT'
+              body: reviewBody,
+              event: 'REQUEST_CHANGES'
             });
 
-      - name: Check for snapshot approval
-        if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
-        id: check-approval
-        uses: actions/github-script@v8
-        with:
-          result-encoding: string
-          script: |
-            // Check if the PR has the approval label
-            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
+            console.log(`Created REQUEST_CHANGES review: ${review.data.html_url}`);
 
-            const hasApprovalLabel = labels.some(label => label.name === 'visual-snapshots-approved');
+            // Add a review comment for each changed snapshot file
+            // This creates conversations that must be resolved
+            for (const fileName of changedSnapshots) {
+              const fullPath = `${snapshotPath}/${fileName}`;
+              const hash = crypto.createHash('sha256').update(fullPath).digest('hex');
+              const fileUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files#diff-${hash}`;
+              
+              const commentBody = `📸 **Visual changes detected in [\`${fileName}\`](${fileUrl})**\n\nPlease review this snapshot and click "Resolve conversation" if the changes are intentional.`;
+              
+              try {
+                // Add review comment on the file (line 1 of the file)
+                await github.rest.pulls.createReviewComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.issue.number,
+                  body: commentBody,
+                  commit_id: context.sha,
+                  path: fullPath,
+                  line: 1,
+                  side: 'RIGHT'
+                });
+                console.log(`Added review comment for ${fileName}`);
+              } catch (error) {
+                console.log(`Could not add comment for ${fileName}: ${error.message}`);
+              }
+            }
 
-            return hasApprovalLabel ? 'true' : 'false';
+            console.log(`Review complete. ${diffCount} conversations created.`);
 
-      - name: Verify snapshots are approved
-        if: steps.check-approval.outputs.result == 'true' && steps.visual-tests.outcome == 'failure'
-        run: |
-          echo "✓ Snapshot changes have been approved"
-          echo "Updated snapshots were already committed in the previous run"
-          echo "Workflow will now pass"
-
-      - name: Fail workflow - visual changes require approval
+      - name: Fail workflow - visual changes require review
         if: steps.visual-tests.outcome == 'failure'
         run: |
-          if [ "${{ steps.check-approval.outputs.result }}" == "true" ]; then
-            echo "✓ Snapshot changes were approved and updated"
-            exit 0
-          else
-            echo "❌ Visual regression tests failed"
-            echo ""
-            echo "Visual differences detected. To proceed, you must:"
-            echo "1. Review the visual changes in the PR Files tab"
-            echo "2. If changes are intentional, add the label 'visual-snapshots-approved' to this PR"
-            echo "3. The workflow will automatically re-run and pass"
-            echo ""
-            echo "The workflow will fail until the label is added."
-            exit 1
-          fi
+          echo "❌ Visual regression tests detected changes"
+          echo ""
+          echo "Updated snapshots have been committed to this PR."
+          echo "A review requesting changes has been posted."
+          echo ""
+          echo "To proceed:"
+          echo "1. Review the changed snapshots in the PR Files tab"
+          echo "2. Resolve each conversation if changes are intentional"
+          echo "3. Once all conversations are resolved, re-run this workflow"
+          echo ""
+          echo "Note: Enable 'Require conversation resolution before merging' in branch"
+          echo "protection settings to automatically block merging until review is complete."
+          exit 1
