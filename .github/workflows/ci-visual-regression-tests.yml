@@ -133,41 +133,33 @@ jobs:
             # Save list of changed files before committing
             git diff --staged --name-only | grep "\.png$" | xargs -n1 basename > /tmp/changed-snapshots.txt
             
-            # Create dummy review file with timestamp and file list
+            # Update review file with new timestamp and file list
             TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
             REVIEW_FILE="tests/e2e/visual-regression.spec.js-snapshots/VISUAL_REGRESSION_REVIEW.md"
             
-            echo "# Visual Regression Review Required" > "$REVIEW_FILE"
+            echo "# Visual Regression Review" > "$REVIEW_FILE"
             echo "" >> "$REVIEW_FILE"
-            echo "**Generated:** $TIMESTAMP" >> "$REVIEW_FILE"
+            echo "This file tracks visual regression test changes that require review." >> "$REVIEW_FILE"
             echo "" >> "$REVIEW_FILE"
-            echo "## Changed Snapshots" >> "$REVIEW_FILE"
+            echo "**Last Updated:** $TIMESTAMP" >> "$REVIEW_FILE"
             echo "" >> "$REVIEW_FILE"
-            echo "The following Linux snapshots have been updated and require review:" >> "$REVIEW_FILE"
+            echo "## Purpose" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "This file enables the \"Resolve conversation\" workflow for visual regression approvals:" >> "$REVIEW_FILE"
+            echo "1. When visual changes are detected, CI updates this file with a new timestamp" >> "$REVIEW_FILE"
+            echo "2. A review comment is added to this file with the list of changed snapshots" >> "$REVIEW_FILE"
+            echo "3. Review the changes and click \"Resolve conversation\" to approve" >> "$REVIEW_FILE"
+            echo "4. Once resolved, the PR can be merged" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "## Current Status" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "Visual changes detected in the following snapshots:" >> "$REVIEW_FILE"
             echo "" >> "$REVIEW_FILE"
             
-            # Add each changed file (links will be added by the workflow)
+            # Add each changed file
             while IFS= read -r file; do
               echo "- \`$file\`" >> "$REVIEW_FILE"
             done < /tmp/changed-snapshots.txt
-            
-            echo "" >> "$REVIEW_FILE"
-            echo "## Instructions" >> "$REVIEW_FILE"
-            echo "" >> "$REVIEW_FILE"
-            echo "1. Review the changed snapshots in the Files tab" >> "$REVIEW_FILE"
-            echo "2. If changes are intentional, click **\"Resolve conversation\"** on the review comment below" >> "$REVIEW_FILE"
-            echo "3. Once resolved, delete this file and push:" >> "$REVIEW_FILE"
-            echo "   \`\`\`bash" >> "$REVIEW_FILE"
-            echo "   git rm tests/e2e/visual-regression.spec.js-snapshots/VISUAL_REGRESSION_REVIEW.md" >> "$REVIEW_FILE"
-            echo "   git commit -m \"chore: approve visual regression changes\"" >> "$REVIEW_FILE"
-            echo "   git push" >> "$REVIEW_FILE"
-            echo "   \`\`\`" >> "$REVIEW_FILE"
-            echo "4. All CI checks will re-run automatically" >> "$REVIEW_FILE"
-            echo "" >> "$REVIEW_FILE"
-            echo "## Note" >> "$REVIEW_FILE"
-            echo "" >> "$REVIEW_FILE"
-            echo "This file exists solely to enable the \"Resolve conversation\" workflow." >> "$REVIEW_FILE"
-            echo "Once resolved and deleted, the PR can be merged." >> "$REVIEW_FILE"
             
             git add "$REVIEW_FILE"
             git commit -m "chore(ci): update Linux snapshots - visual changes detected [needs approval]"
@@ -204,42 +196,6 @@ jobs:
               return `- [\`${name}\`](${fileUrl})`;
             }).join('\n');
 
-            // Build main review body with file links
-            const reviewBody = [
-              '## 📸 Visual Regression Changes Detected',
-              '',
-              `**${diffCount} screenshot(s) have changed and require review.**`,
-              '',
-              '### Changed Files:',
-              '',
-              fileLinks,
-              '',
-              '### How to review and approve:',
-              '',
-              `1. **[Click here to view all changed snapshots →](${filesTabUrl})**`,
-              '2. Review each changed file to ensure the visual changes are intentional',
-              '3. **Click "Resolve conversation"** on the review comment in the review file',
-              '4. Once resolved, delete the review file and push as instructed',
-              '',
-              '### If changes are not intentional:',
-              '- Push fixes to update the CSS/layout',
-              '- The workflow will automatically update snapshots on the next run',
-              '',
-              '---',
-              `*🤖 Updated snapshots have been committed. Review completed at ${new Date().toISOString()}*`
-            ].join('\n');
-
-            // Create the main review with REQUEST_CHANGES
-            const review = await github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              body: reviewBody,
-              event: 'REQUEST_CHANGES'
-            });
-
-            console.log(`Created REQUEST_CHANGES review: ${review.data.html_url}`);
-
             // Get the commit SHA where snapshots were just committed
             const newCommitSha = '${{ steps.commit-snapshots.outputs.new_commit_sha }}';
 
@@ -252,29 +208,34 @@ jobs:
               const reviewFilePath = `${snapshotPath}/VISUAL_REGRESSION_REVIEW.md`;
               
               const commentBody = [
-                '## 📸 Visual Regression Review',
+                '## 📸 Visual Regression Changes Detected',
                 '',
-                `**${diffCount} snapshots require your review.**`,
+                `**${diffCount} snapshots have changed and require your review.**`,
                 '',
                 '### Changed Files:',
                 '',
                 fileLinks,
                 '',
-                '### To approve these changes:',
+                '### How to approve:',
                 '',
-                '1. Review all snapshot changes in the Files tab above',
-                '2. If changes are intentional, click **"Resolve conversation"** on this comment',
-                '3. Delete this review file:',
-                '   ```bash',
-                '   git rm tests/e2e/visual-regression.spec.js-snapshots/VISUAL_REGRESSION_REVIEW.md',
-                '   git commit -m "chore: approve visual regression changes"',
-                '   git push',
-                '   ```',
-                '4. All CI checks will re-run and pass automatically',
+                `1. **[Review all changed snapshots →](${filesTabUrl})**`,
+                '2. Verify the visual changes are intentional',
+                '3. **Click "Resolve conversation"** on this comment',
+                '',
+                '### What happens next:',
+                '',
+                '- Once this conversation is resolved, the PR will be unblocked for merging',
+                '- Your ruleset requires conversation resolution (not review approval)',
+                '- The `VISUAL_REGRESSION_REVIEW.md` file stays in the repo and updates each run',
+                '',
+                '### If changes are bugs:',
+                '',
+                '- Push fixes to update CSS/layout',
+                '- Workflow will auto-update snapshots on next run',
                 '',
                 '---',
                 '',
-                '*Once you resolve this conversation and delete the file, the PR will be unblocked for merging.*'
+                `*🤖 Snapshots updated at ${new Date().toISOString()}*`
               ].join('\n');
               
               try {
@@ -302,13 +263,13 @@ jobs:
           echo "❌ Visual regression tests detected changes"
           echo ""
           echo "Updated snapshots have been committed to this PR."
-          echo "A review requesting changes has been posted."
+          echo "A review comment has been posted with file links."
           echo ""
           echo "To proceed:"
           echo "1. Review the changed snapshots in the PR Files tab"
-          echo "2. Resolve each conversation if changes are intentional"
-          echo "3. Once all conversations are resolved, re-run this workflow"
+          echo "2. Click 'Resolve conversation' on the review comment"
+          echo "3. Once resolved, the PR will be unblocked for merging (via ruleset)"
           echo ""
-          echo "Note: Enable 'Require conversation resolution before merging' in branch"
-          echo "protection settings to automatically block merging until review is complete."
+          echo "Note: Only conversation resolution is required - no review approval needed."
+          echo "The VISUAL_REGRESSION_REVIEW.md file is kept in the repo and updated each run."
           exit 1
