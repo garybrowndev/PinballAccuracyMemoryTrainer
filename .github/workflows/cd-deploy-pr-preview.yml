@@ -32,8 +32,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
-        run: npm run build
+      - name: Build standalone HTML
+        run: npm run build:standalone
+
+      - name: Prepare deployment directory
+        run: |
+          # Create deployment directory and copy standalone build as index.html
+          mkdir -p deploy
+          cp dist-standalone/pinball-trainer-standalone.html deploy/index.html
 
       - name: Deploy to Surge.sh (Preview)
         id: deploy
@@ -46,10 +52,69 @@ jobs:
           PREVIEW_URL="pinball-trainer-pr-${PR_NUMBER}.surge.sh"
 
           # Deploy to surge
-          surge ./dist $PREVIEW_URL --token ${{ secrets.SURGE_TOKEN }}
+          surge ./deploy $PREVIEW_URL --token ${{ secrets.SURGE_TOKEN }}
 
           echo "preview_url=https://$PREVIEW_URL" >> $GITHUB_OUTPUT
         continue-on-error: true
+
+      - name: Wait for Surge deployment to propagate
+        if: steps.deploy.outcome == 'success'
+        run: |
+          echo "⏳ Waiting 60 seconds for Surge deployment to propagate..."
+          sleep 60
+
+      - name: Validate Surge deployment
+        if: steps.deploy.outcome == 'success'
+        run: |
+          SITE_URL="${{ steps.deploy.outputs.preview_url }}"
+          echo "🔍 Validating deployment at $SITE_URL"
+
+          # Fetch the page
+          HTTP_CODE=$(curl -s -o /tmp/surge-deploy.html -w "%{http_code}" "$SITE_URL")
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ ERROR: Site returned HTTP $HTTP_CODE instead of 200"
+            exit 1
+          fi
+
+          echo "✅ Site returned HTTP 200"
+
+          # Check for common 404 patterns in the HTML
+          if grep -q "404" /tmp/surge-deploy.html || grep -q "Not Found" /tmp/surge-deploy.html; then
+            echo "❌ ERROR: Page content suggests 404 error"
+            cat /tmp/surge-deploy.html
+            exit 1
+          fi
+
+          # Check for external script references that might 404
+          EXTERNAL_SCRIPTS=$(grep -o 'src="[^"]*\.js"' /tmp/surge-deploy.html || true)
+          if [ ! -z "$EXTERNAL_SCRIPTS" ]; then
+            echo "⚠️  WARNING: Found external script references in standalone HTML:"
+            echo "$EXTERNAL_SCRIPTS"
+            echo "❌ ERROR: Standalone build should not have external script references"
+            exit 1
+          fi
+
+          # Check for external CSS references
+          EXTERNAL_CSS=$(grep -o 'href="[^"]*\.css"' /tmp/surge-deploy.html || true)
+          if [ ! -z "$EXTERNAL_CSS" ]; then
+            echo "⚠️  WARNING: Found external CSS references in standalone HTML:"
+            echo "$EXTERNAL_CSS"
+            echo "❌ ERROR: Standalone build should not have external CSS references"
+            exit 1
+          fi
+
+          # Check that there's actually some content
+          FILE_SIZE=$(wc -c < /tmp/surge-deploy.html)
+          if [ "$FILE_SIZE" -lt 100000 ]; then
+            echo "❌ ERROR: Page size is suspiciously small ($FILE_SIZE bytes)"
+            echo "Expected at least 100KB for standalone HTML with embedded assets"
+            exit 1
+          fi
+
+          echo "✅ Page size: $FILE_SIZE bytes"
+          echo "✅ No external script/CSS references found"
+          echo "✅ Surge deployment validated successfully!"
 
       - name: Comment preview URL on PR
         if: steps.deploy.outcome == 'success'
@@ -65,9 +130,9 @@ jobs:
             🔗 **Preview URL:** ${previewUrl}
 
             ### What's included:
-            - ✅ Full application build
-            - ✅ Service worker enabled
-            - ✅ PWA features active
+            - ✅ Standalone HTML build (same as production)
+            - ✅ All assets embedded inline
+            - ✅ Fully offline-capable
             - ✅ Production optimizations
 
             ### Testing checklist:

@@ -241,11 +241,7 @@ jobs:
           BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.full_version }}
 
-      - name: Build for Lighthouse
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm run build
-
-      - name: Run Lighthouse CI
+      - name: Run Lighthouse CI on standalone build
         if: steps.check_tag.outputs.exists == 'false'
         env:
           LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -299,6 +295,65 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh-pages-deploy
           keep_files: true
+
+      - name: Wait for GitHub Pages deployment to propagate
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          echo "⏳ Waiting 60 seconds for GitHub Pages to update..."
+          sleep 60
+
+      - name: Validate GitHub Pages deployment
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          SITE_URL="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/"
+          echo "🔍 Validating deployment at $SITE_URL"
+
+          # Fetch the page
+          HTTP_CODE=$(curl -s -o /tmp/gh-pages.html -w "%{http_code}" "$SITE_URL")
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ ERROR: Site returned HTTP $HTTP_CODE instead of 200"
+            exit 1
+          fi
+
+          echo "✅ Site returned HTTP 200"
+
+          # Check for common 404 patterns in the HTML
+          if grep -q "404" /tmp/gh-pages.html || grep -q "Not Found" /tmp/gh-pages.html; then
+            echo "❌ ERROR: Page content suggests 404 error"
+            cat /tmp/gh-pages.html
+            exit 1
+          fi
+
+          # Check for external script references that might 404
+          EXTERNAL_SCRIPTS=$(grep -o 'src="[^"]*\.js"' /tmp/gh-pages.html || true)
+          if [ ! -z "$EXTERNAL_SCRIPTS" ]; then
+            echo "⚠️  WARNING: Found external script references in standalone HTML:"
+            echo "$EXTERNAL_SCRIPTS"
+            echo "❌ ERROR: Standalone build should not have external script references"
+            exit 1
+          fi
+
+          # Check for external CSS references
+          EXTERNAL_CSS=$(grep -o 'href="[^"]*\.css"' /tmp/gh-pages.html || true)
+          if [ ! -z "$EXTERNAL_CSS" ]; then
+            echo "⚠️  WARNING: Found external CSS references in standalone HTML:"
+            echo "$EXTERNAL_CSS"
+            echo "❌ ERROR: Standalone build should not have external CSS references"
+            exit 1
+          fi
+
+          # Check that there's actually some content
+          FILE_SIZE=$(wc -c < /tmp/gh-pages.html)
+          if [ "$FILE_SIZE" -lt 100000 ]; then
+            echo "❌ ERROR: Page size is suspiciously small ($FILE_SIZE bytes)"
+            echo "Expected at least 100KB for standalone HTML with embedded assets"
+            exit 1
+          fi
+
+          echo "✅ Page size: $FILE_SIZE bytes"
+          echo "✅ No external script/CSS references found"
+          echo "✅ GitHub Pages deployment validated successfully!"
 
       - name: Get previous release tag
         if: steps.check_tag.outputs.exists == 'false'

@@ -207,14 +207,6 @@ jobs:
 
           echo "✅ Bundle size within acceptable limits"
 
-      - name: Run Lighthouse CI
-        env:
-          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
-
       - name: Update package.json version temporarily for build
         run: |
           npm version ${{ steps.version.outputs.numeric_version }} --no-git-tag-version --allow-same-version
@@ -226,6 +218,14 @@ jobs:
           BUILD_COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.version.outputs.commit_hash }}
           BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+
+      - name: Run Lighthouse CI on standalone build
+        env:
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm install -g @lhci/cli@0.13.x
+          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
 
       - name: Prepare GitHub Pages deployment (dry-run)
         run: |
