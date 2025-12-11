@@ -2,10 +2,9 @@ name: 'CI: Visual Regression Tests'
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
     branches:
       - master
-  pull_request_review:
-    types: [submitted]
   push:
     branches:
       - master
@@ -188,23 +187,23 @@ jobs:
               '### Review the changes:',
               '1. Click on each file link above to see the visual differences in the PR Files tab',
               '2. Updated snapshots have been committed to this PR for review',
-              '3. If changes are intentional, **approve this review** to accept the changes',
+              '3. If changes are intentional, add the label **`visual-snapshots-approved`** to this PR',
               '4. If changes are bugs, push fixes to update the CSS/layout',
               '',
               '### To approve the changes:',
-              '**Approve this review** and the workflow will automatically pass on the next run.',
+              'Add the label **`visual-snapshots-approved`** to this PR and the workflow will automatically re-run and pass.',
               '',
               '---',
               `*🤖 Visual regression test completed at ${new Date().toISOString()}*`
             ].join('\n');
 
-            // Create a review requesting changes to block the PR
+            // Create a comment review (informational)
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
               body: body,
-              event: 'REQUEST_CHANGES'
+              event: 'COMMENT'
             });
 
       - name: Check for snapshot approval
@@ -214,17 +213,16 @@ jobs:
         with:
           result-encoding: string
           script: |
-            // Check if there's an approving review
-            const reviews = await github.rest.pulls.listReviews({
+            // Check if the PR has the approval label
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.issue.number,
+              issue_number: context.issue.number,
             });
 
-            // Look for APPROVED reviews
-            const hasApproval = reviews.data.some(review => review.state === 'APPROVED');
+            const hasApprovalLabel = labels.some(label => label.name === 'visual-snapshots-approved');
 
-            return hasApproval ? 'true' : 'false';
+            return hasApprovalLabel ? 'true' : 'false';
 
       - name: Verify snapshots are approved
         if: steps.check-approval.outputs.result == 'true' && steps.visual-tests.outcome == 'failure'
@@ -244,9 +242,9 @@ jobs:
             echo ""
             echo "Visual differences detected. To proceed, you must:"
             echo "1. Review the visual changes in the PR Files tab"
-            echo "2. If changes are intentional, approve the PR review"
-            echo "3. The workflow will automatically re-run and update the baselines"
+            echo "2. If changes are intentional, add the label 'visual-snapshots-approved' to this PR"
+            echo "3. The workflow will automatically re-run and pass"
             echo ""
-            echo "The workflow will fail until the review is approved."
+            echo "The workflow will fail until the label is added."
             exit 1
           fi
