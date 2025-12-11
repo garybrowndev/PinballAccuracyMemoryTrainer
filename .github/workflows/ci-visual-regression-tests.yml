@@ -119,7 +119,7 @@ jobs:
         env:
           CI: true
 
-      - name: Commit updated snapshots for review
+      - name: Commit updated snapshots and review file
         if: steps.visual-tests.outcome == 'failure' && github.event_name == 'pull_request'
         id: commit-snapshots
         run: |
@@ -132,12 +132,51 @@ jobs:
           else
             # Save list of changed files before committing
             git diff --staged --name-only | grep "\.png$" | xargs -n1 basename > /tmp/changed-snapshots.txt
+            
+            # Create dummy review file with timestamp and file list
+            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
+            REVIEW_FILE="tests/e2e/visual-regression.spec.js-snapshots/VISUAL_REGRESSION_REVIEW.md"
+            
+            echo "# Visual Regression Review Required" > "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "**Generated:** $TIMESTAMP" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "## Changed Snapshots" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "The following Linux snapshots have been updated and require review:" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            
+            # Add each changed file (links will be added by the workflow)
+            while IFS= read -r file; do
+              echo "- \`$file\`" >> "$REVIEW_FILE"
+            done < /tmp/changed-snapshots.txt
+            
+            echo "" >> "$REVIEW_FILE"
+            echo "## Instructions" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "1. Review the changed snapshots in the Files tab" >> "$REVIEW_FILE"
+            echo "2. If changes are intentional, click **\"Resolve conversation\"** on the review comment below" >> "$REVIEW_FILE"
+            echo "3. Once resolved, delete this file and push:" >> "$REVIEW_FILE"
+            echo "   \`\`\`bash" >> "$REVIEW_FILE"
+            echo "   git rm tests/e2e/visual-regression.spec.js-snapshots/VISUAL_REGRESSION_REVIEW.md" >> "$REVIEW_FILE"
+            echo "   git commit -m \"chore: approve visual regression changes\"" >> "$REVIEW_FILE"
+            echo "   git push" >> "$REVIEW_FILE"
+            echo "   \`\`\`" >> "$REVIEW_FILE"
+            echo "4. All CI checks will re-run automatically" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "## Note" >> "$REVIEW_FILE"
+            echo "" >> "$REVIEW_FILE"
+            echo "This file exists solely to enable the \"Resolve conversation\" workflow." >> "$REVIEW_FILE"
+            echo "Once resolved and deleted, the PR can be merged." >> "$REVIEW_FILE"
+            
+            git add "$REVIEW_FILE"
             git commit -m "chore(ci): update Linux snapshots - visual changes detected [needs approval]"
             git push
+            
             # Capture the new commit SHA for review comments
             NEW_SHA=$(git rev-parse HEAD)
             echo "new_commit_sha=$NEW_SHA" >> $GITHUB_OUTPUT
-            echo "✓ Updated snapshots committed for review (commit: $NEW_SHA)"
+            echo "✓ Updated snapshots and review file committed (commit: $NEW_SHA)"
           fi
 
       - name: Request changes for visual regression review
@@ -157,18 +196,30 @@ jobs:
             const diffCount = changedSnapshots.length;
             const filesTabUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files`;
 
-            // Build main review body
+            // Build file links with SHA-256 hashes
+            const fileLinks = changedSnapshots.map(name => {
+              const fullPath = `${snapshotPath}/${name}`;
+              const hash = crypto.createHash('sha256').update(fullPath).digest('hex');
+              const fileUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files#diff-${hash}`;
+              return `- [\`${name}\`](${fileUrl})`;
+            }).join('\n');
+
+            // Build main review body with file links
             const reviewBody = [
               '## 📸 Visual Regression Changes Detected',
               '',
               `**${diffCount} screenshot(s) have changed and require review.**`,
               '',
+              '### Changed Files:',
+              '',
+              fileLinks,
+              '',
               '### How to review and approve:',
               '',
               `1. **[Click here to view all changed snapshots →](${filesTabUrl})**`,
               '2. Review each changed file to ensure the visual changes are intentional',
-              '3. **Click "Resolve conversation" on each file below** to approve the changes',
-              '4. Once all conversations are resolved, the PR can be merged',
+              '3. **Click "Resolve conversation"** on the review comment in the review file',
+              '4. Once resolved, delete the review file and push as instructed',
               '',
               '### If changes are not intentional:',
               '- Push fixes to update the CSS/layout',
@@ -193,38 +244,56 @@ jobs:
             const newCommitSha = '${{ steps.commit-snapshots.outputs.new_commit_sha }}';
 
             if (!newCommitSha) {
-              console.log('No new commit SHA available, skipping file comments');
+              console.log('No new commit SHA available, skipping review comment');
             } else {
-              console.log(`Using commit SHA for review comments: ${newCommitSha}`);
+              console.log(`Using commit SHA for review comment: ${newCommitSha}`);
               
-              // Add a review comment for each changed snapshot file
-              // This creates conversations that must be resolved
-              for (const fileName of changedSnapshots) {
-                const fullPath = `${snapshotPath}/${fileName}`;
-                const hash = crypto.createHash('sha256').update(fullPath).digest('hex');
-                const fileUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}/files#diff-${hash}`;
-                
-                const commentBody = `📸 **Visual changes detected in [\`${fileName}\`](${fileUrl})**\n\nPlease review this snapshot and click "Resolve conversation" if the changes are intentional.`;
-                
-                try {
-                  // Add review comment on the file using the NEW commit SHA
-                  await github.rest.pulls.createReviewComment({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: context.issue.number,
-                    body: commentBody,
-                    commit_id: newCommitSha,
-                    path: fullPath,
-                    line: 1,
-                    side: 'RIGHT'
-                  });
-                  console.log(`Added review comment for ${fileName}`);
-                } catch (error) {
-                  console.log(`Could not add comment for ${fileName}: ${error.message}`);
-                }
+              // Add a review comment on the dummy review file
+              const reviewFilePath = `${snapshotPath}/VISUAL_REGRESSION_REVIEW.md`;
+              
+              const commentBody = [
+                '## 📸 Visual Regression Review',
+                '',
+                `**${diffCount} snapshots require your review.**`,
+                '',
+                '### Changed Files:',
+                '',
+                fileLinks,
+                '',
+                '### To approve these changes:',
+                '',
+                '1. Review all snapshot changes in the Files tab above',
+                '2. If changes are intentional, click **"Resolve conversation"** on this comment',
+                '3. Delete this review file:',
+                '   ```bash',
+                '   git rm tests/e2e/visual-regression.spec.js-snapshots/VISUAL_REGRESSION_REVIEW.md',
+                '   git commit -m "chore: approve visual regression changes"',
+                '   git push',
+                '   ```',
+                '4. All CI checks will re-run and pass automatically',
+                '',
+                '---',
+                '',
+                '*Once you resolve this conversation and delete the file, the PR will be unblocked for merging.*'
+              ].join('\n');
+              
+              try {
+                // Add review comment on the dummy text file
+                await github.rest.pulls.createReviewComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.issue.number,
+                  body: commentBody,
+                  commit_id: newCommitSha,
+                  path: reviewFilePath,
+                  line: 1,
+                  side: 'RIGHT'
+                });
+                console.log(`✓ Created review comment on ${reviewFilePath}`);
+                console.log(`✓ Review complete. "Resolve conversation" button is now available.`);
+              } catch (error) {
+                console.log(`✗ Could not add review comment: ${error.message}`);
               }
-              
-              console.log(`Review complete. ${diffCount} file-specific conversations created.`);
             }
 
       - name: Fail workflow - visual changes require review
