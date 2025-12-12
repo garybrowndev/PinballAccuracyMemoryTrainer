@@ -1,109 +1,18 @@
 name: 'CD: Release'
 
 on:
-  workflow_run:
-    workflows:
-      - 'CI: Chromium Browser Tests'
-      - 'CI: Firefox Browser Tests'
-      - 'CI: WebKit Browser Tests'
-      - 'Security: CodeQL Security Analysis'
-      - 'CI: Visual Regression Tests'
-    types:
-      - completed
+  push:
     branches:
       - master
 
-# Prevent multiple concurrent releases - only one at a time per commit
+# Prevent multiple concurrent releases - only one at a time
 concurrency:
-  group: cd-release-${{ github.event.workflow_run.head_sha }}
+  group: cd-release-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
-  cd-release-check:
-    name: 'CD: Release Check'
-    runs-on: ubuntu-latest
-    # Only proceed if the triggering workflow succeeded
-    # NOTE: This workflow runs 5 times per push to master (once per completing workflow).
-    # The concurrency group above ensures only one release runs at a time - others are queued.
-    # Each queued run will check if all 5 workflows succeeded before proceeding.
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    outputs:
-      all_success: ${{ steps.check.outputs.all_success }}
-    steps:
-      - name: Check all required workflows succeeded
-        id: check
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const requiredWorkflows = [
-              'CI: Chromium Browser Tests',
-              'CI: Firefox Browser Tests',
-              'CI: WebKit Browser Tests',
-              'Security: CodeQL Security Analysis',
-              'CI: Visual Regression Tests'
-            ];
-
-            const headSha = context.payload.workflow_run.head_sha;
-            console.log(`Checking workflows for commit: ${headSha}`);
-
-            let allSuccess = true;
-            const results = {};
-
-            for (const workflowName of requiredWorkflows) {
-              console.log(`\n🔍 Checking: ${workflowName}`);
-
-              // Get all workflow runs for this commit
-              const runs = await github.rest.actions.listWorkflowRunsForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                head_sha: headSha,
-                per_page: 100
-              });
-
-              // Find the workflow run for this specific workflow
-              const workflowRun = runs.data.workflow_runs.find(run => run.name === workflowName);
-
-              if (!workflowRun) {
-                console.log(`❌ ${workflowName}: Not found or not started`);
-                allSuccess = false;
-                results[workflowName] = 'not_found';
-                continue;
-              }
-
-              if (workflowRun.status !== 'completed') {
-                console.log(`⏳ ${workflowName}: Still running (${workflowRun.status})`);
-                allSuccess = false;
-                results[workflowName] = workflowRun.status;
-                continue;
-              }
-
-              if (workflowRun.conclusion !== 'success') {
-                console.log(`❌ ${workflowName}: Failed with conclusion: ${workflowRun.conclusion}`);
-                allSuccess = false;
-                results[workflowName] = workflowRun.conclusion;
-                continue;
-              }
-
-              console.log(`✅ ${workflowName}: Success`);
-              results[workflowName] = 'success';
-            }
-
-            console.log('\n📊 Summary:');
-            console.log(JSON.stringify(results, null, 2));
-
-            if (allSuccess) {
-              console.log('\n✅ All required workflows succeeded! Proceeding with release.');
-            } else {
-              console.log('\n⏸️  Not all workflows completed successfully yet. Skipping release.');
-            }
-
-            core.setOutput('all_success', allSuccess);
-            return allSuccess;
-
-  cd-release-deploy:
-    name: 'CD: Release Deploy'
-    needs: cd-release-check
-    if: ${{ needs.cd-release-check.outputs.all_success == 'true' }}
+  cd-release-build:
+    name: 'CD: Build and Test'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -289,6 +198,78 @@ jobs:
           echo "📦 Versioned release:"
           ls -la gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
 
+      - name: Wait for all other workflows to complete
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const headSha = context.sha;
+            const currentWorkflow = 'CD: Release';
+            console.log(`Waiting for all workflows on commit ${headSha} to complete...`);
+
+            const maxAttempts = 60; // 30 minutes max (60 attempts * 30 seconds)
+            let attempt = 0;
+
+            while (attempt < maxAttempts) {
+              attempt++;
+              console.log(`\n🔄 Attempt ${attempt}/${maxAttempts}`);
+              
+              // Get all workflow runs for this commit
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head_sha: headSha,
+                per_page: 100
+              });
+              
+              // Filter out this workflow and check others
+              const otherWorkflows = runs.data.workflow_runs.filter(run => 
+                run.name !== currentWorkflow && run.event === 'push'
+              );
+              
+              console.log(`Found ${otherWorkflows.length} other workflows`);
+              
+              let allComplete = true;
+              let allSuccess = true;
+              const results = {};
+              
+              for (const run of otherWorkflows) {
+                const status = run.status === 'completed' ? run.conclusion : run.status;
+                results[run.name] = status;
+                
+                if (run.status !== 'completed') {
+                  allComplete = false;
+                  console.log(`⏳ ${run.name}: ${run.status}`);
+                } else if (run.conclusion !== 'success') {
+                  allSuccess = false;
+                  console.log(`❌ ${run.name}: ${run.conclusion}`);
+                } else {
+                  console.log(`✅ ${run.name}: success`);
+                }
+              }
+              
+              if (allComplete) {
+                console.log('\n📊 All workflows completed!');
+                console.log(JSON.stringify(results, null, 2));
+                
+                if (!allSuccess) {
+                  throw new Error('One or more workflows failed. Aborting deployment.');
+                }
+                
+                console.log('\n✅ All workflows succeeded! Proceeding with deployment.');
+                break;
+              }
+              
+              if (attempt < maxAttempts) {
+                console.log(`\n⏰ Waiting 30 seconds before checking again...`);
+                await new Promise(resolve => setTimeout(resolve, 30000));
+              }
+            }
+
+            if (attempt >= maxAttempts) {
+              throw new Error('Timeout waiting for workflows to complete after 30 minutes');
+            }
+
       - name: Deploy to GitHub Pages
         if: steps.check_tag.outputs.exists == 'false'
         uses: peaceiris/actions-gh-pages@v4
@@ -323,6 +304,8 @@ jobs:
           if grep -E "<title>[^<]*404[^<]*</title>" /tmp/gh-pages.html > /dev/null || grep -E "<h[1-6][^>]*>[^<]*404.*Not Found[^<]*</h[1-6]>" /tmp/gh-pages.html > /dev/null; then
             echo "❌ ERROR: Page appears to be a 404 error page"
             head -n 50 /tmp/gh-pages.html
+            exit 1
+          fi
 
           # Check for external script references that might 404
           EXTERNAL_SCRIPTS=$(grep -o 'src="[^"]*\.js"' /tmp/gh-pages.html || true)
