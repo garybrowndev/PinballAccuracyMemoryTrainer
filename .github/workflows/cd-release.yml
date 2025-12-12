@@ -151,6 +151,72 @@ jobs:
           BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.full_version }}
 
+      - name: Analyze bundle size
+        if: steps.check_tag.outputs.exists == 'false'
+        id: analyze
+        run: |
+          # Get dist folder size
+          DIST_SIZE=$(du -sb dist | cut -f1)
+          DIST_SIZE_MB=$(echo "scale=2; $DIST_SIZE / 1024 / 1024" | bc)
+
+          # Get main bundle size
+          MAIN_BUNDLE=$(find dist/assets -name "index-*.js" -type f -exec du -b {} \; | sort -n | tail -1 | cut -f1)
+          MAIN_BUNDLE_KB=$(echo "scale=2; $MAIN_BUNDLE / 1024" | bc)
+
+          # Get CSS bundle size
+          CSS_BUNDLE=$(find dist/assets -name "index-*.css" -type f -exec du -b {} \; | sort -n | tail -1 | cut -f1)
+          CSS_BUNDLE_KB=$(echo "scale=2; $CSS_BUNDLE / 1024" | bc)
+
+          echo "dist_size_mb=$DIST_SIZE_MB" >> $GITHUB_OUTPUT
+          echo "main_bundle_kb=$MAIN_BUNDLE_KB" >> $GITHUB_OUTPUT
+          echo "css_bundle_kb=$CSS_BUNDLE_KB" >> $GITHUB_OUTPUT
+
+          # Count files
+          ASSET_COUNT=$(find dist/assets -type f | wc -l)
+          echo "asset_count=$ASSET_COUNT" >> $GITHUB_OUTPUT
+
+          echo "### Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total dist size | ${DIST_SIZE_MB} MB |" >> $GITHUB_STEP_SUMMARY
+          echo "| Main JS bundle | ${MAIN_BUNDLE_KB} KB |" >> $GITHUB_STEP_SUMMARY
+          echo "| Main CSS bundle | ${CSS_BUNDLE_KB} KB |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total assets | ${ASSET_COUNT} files |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check bundle size limits
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          MAIN_BUNDLE_KB=${{ steps.analyze.outputs.main_bundle_kb }}
+          CSS_BUNDLE_KB=${{ steps.analyze.outputs.css_bundle_kb }}
+          DIST_SIZE_MB=${{ steps.analyze.outputs.dist_size_mb }}
+
+          # Warning thresholds (adjusted to realistic values)
+          if (( $(echo "$MAIN_BUNDLE_KB > 350" | bc -l) )); then
+            echo "⚠️  Warning: Main JS bundle exceeds 350 KB ($MAIN_BUNDLE_KB KB)"
+          fi
+
+          if (( $(echo "$CSS_BUNDLE_KB > 75" | bc -l) )); then
+            echo "⚠️  Warning: CSS bundle exceeds 75 KB ($CSS_BUNDLE_KB KB)"
+          fi
+
+          if (( $(echo "$DIST_SIZE_MB > 3" | bc -l) )); then
+            echo "⚠️  Warning: Total dist size exceeds 3 MB ($DIST_SIZE_MB MB)"
+          fi
+
+          # Hard limits (fail build)
+          if (( $(echo "$MAIN_BUNDLE_KB > 500" | bc -l) )); then
+            echo "❌ Error: Main JS bundle exceeds hard limit of 500 KB ($MAIN_BUNDLE_KB KB)"
+            exit 1
+          fi
+
+          if (( $(echo "$DIST_SIZE_MB > 5" | bc -l) )); then
+            echo "❌ Error: Total dist size exceeds hard limit of 5 MB ($DIST_SIZE_MB MB)"
+            exit 1
+          fi
+
+          echo "✅ Bundle size within acceptable limits"
+
       - name: Run Lighthouse CI on standalone build
         if: steps.check_tag.outputs.exists == 'false'
         env:
