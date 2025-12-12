@@ -107,8 +107,9 @@ jobs:
         continue-on-error: true
         with:
           sarif_file: reports/dependency-check-report.sarif
+          category: dependency-check
 
-      - name: Build for Lighthouse
+      - name: Build dist for bundle size analysis
         run: npm run build
 
       - name: Analyze bundle size
@@ -143,7 +144,7 @@ jobs:
           echo "| Main CSS bundle | ${CSS_BUNDLE_KB} KB |" >> $GITHUB_STEP_SUMMARY
           echo "| Total assets | ${ASSET_COUNT} files |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Comment bundle size on PR
+      - name: Post bundle size report to PR
         uses: actions/github-script@v8
         with:
           script: |
@@ -207,15 +208,7 @@ jobs:
 
           echo "✅ Bundle size within acceptable limits"
 
-      - name: Run Lighthouse CI
-        env:
-          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
-
-      - name: Update package.json version temporarily for build
+      - name: Update package.json version for build
         run: |
           npm version ${{ steps.version.outputs.numeric_version }} --no-git-tag-version --allow-same-version
 
@@ -227,9 +220,17 @@ jobs:
           BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
 
-      - name: Prepare GitHub Pages deployment (dry-run)
+      - name: Run Lighthouse CI on standalone build
+        env:
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Create a temporary directory for GitHub Pages (dry-run)
+          npm install -g @lhci/cli@0.13.x
+          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
+
+      - name: Prepare GitHub Pages deployment preview
+        run: |
+          # Create a temporary directory for GitHub Pages preview
           mkdir -p gh-pages-deploy
 
           # Copy standalone build to root (latest version) and rename to index.html
@@ -242,13 +243,13 @@ jobs:
           mkdir -p gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}
           cp -r dist-standalone/* gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
 
-          echo "📦 Prepared deployment structure (dry-run):"
+          echo "📦 Prepared deployment structure (preview):"
           ls -la gh-pages-deploy/
           echo "📦 Versioned release:"
           ls -la gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
           echo "✅ Deployment preparation validated successfully"
 
-      - name: Upload deployment artifacts for inspection
+      - name: Upload deployment preview artifacts
         uses: actions/upload-artifact@v5
         with:
           name: pr-deployment-preview
