@@ -73,3 +73,58 @@ jobs:
         run: |
           npm install -g @lhci/cli@0.13.x
           lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 30
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          python3 -c '
+          import json
+          import os
+          import glob
+
+          print("## Lighthouse CI Results")
+          print("| Category | Score |")
+          print("| --- | --- |")
+
+          files = glob.glob(".lighthouseci/lhr-*.json")
+          if not files:
+              print("\nNo Lighthouse reports found.")
+          else:
+              scores = {"performance": 0, "accessibility": 0, "best-practices": 0, "seo": 0}
+              count = 0
+              
+              for f in files:
+                  try:
+                      with open(f, "r") as json_file:
+                          data = json.load(json_file)
+                          categories = data.get("categories", {})
+                          for key in scores.keys():
+                              if key in categories:
+                                  scores[key] += categories[key].get("score", 0)
+                          count += 1
+                  except Exception as e:
+                      pass
+              
+              if count > 0:
+                  for key, total in scores.items():
+                      avg_score = (total / count) * 100
+                      emoji = "🔴"
+                      if avg_score >= 90:
+                          emoji = "🟢"
+                      elif avg_score >= 50:
+                          emoji = "🟠"
+                      
+                      print(f"| {key.replace("-", " ").title()} | {emoji} {avg_score:.0f} |")
+              else:
+                  print("\nNo valid data found in reports.")
+
+          print("\nSee artifacts for full reports.")
+          ' >> $GITHUB_STEP_SUMMARY

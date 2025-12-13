@@ -178,3 +178,11 @@ jobs:
           else
             echo "| Total dist size | ${DIST_SIZE_MB} MB | 3 MB | 5 MB | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Upload dist artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-bundle
+          path: dist/
+          retention-days: 30

@@ -61,7 +61,37 @@ jobs:
       - name: Upload OWASP results to GitHub Security
         if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
-        continue-on-error: true
         with:
           sarif_file: reports/dependency-check-report.sarif
           category: dependency-check
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          python3 -c '
+          import json
+          import os
+
+          print("## 🛡️ OWASP Dependency Check Results")
+
+          report_path = "reports/dependency-check-report.sarif"
+          if os.path.exists(report_path):
+              try:
+                  with open(report_path, "r", encoding="utf-8") as f:
+                      data = json.load(f)
+                      runs = data.get("runs", [])
+                      total_vulns = 0
+                      for run in runs:
+                          results = run.get("results", [])
+                          total_vulns += len(results)
+                      
+                      if total_vulns == 0:
+                          print("\n✅ No vulnerabilities found.")
+                      else:
+                          print(f"\n⚠️ Found {total_vulns} vulnerabilities.")
+                          print("\nCheck the [Security tab](../../security/code-scanning) for details.")
+              except Exception as e:
+                  print(f"Error parsing report: {e}")
+          else:
+              print("Report file not found.")
+          ' >> $GITHUB_STEP_SUMMARY

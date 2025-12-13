@@ -308,3 +308,20 @@ jobs:
             5. Start training!
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## 🚀 Release Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          VERSION="${{ steps.version.outputs.full_version }}"
+          TAG_EXISTS="${{ steps.check_tag.outputs.exists }}"
+
+          if [ "$TAG_EXISTS" == "true" ]; then
+            echo "ℹ️ **Release Skipped**: Tag v$VERSION already exists." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Release Created**: v$VERSION" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 [Open App](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)" >> $GITHUB_STEP_SUMMARY
+          fi

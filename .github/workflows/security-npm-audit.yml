@@ -41,17 +41,50 @@ jobs:
         run: npm ci
 
       - name: Security audit
-        run: npm audit --audit-level=info
-        continue-on-error: false
-
-      - name: Generate security audit report
-        if: failure()
-        run: npm audit --json > audit-report.json
+        id: audit
+        run: npm audit --audit-level=info --json > audit-report.json
+        continue-on-error: true
 
       - name: Upload security audit report
-        if: failure()
-        uses: actions/upload-artifact@v5
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: security-audit-report
           path: audit-report.json
           retention-days: 7
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          python3 -c '
+          import json
+          import os
+
+          print("## 🛡️ npm Audit Results")
+
+          if os.path.exists("audit-report.json"):
+              try:
+                  with open("audit-report.json", "r") as f:
+                      data = json.load(f)
+                      metadata = data.get("metadata", {})
+                      vulnerabilities = metadata.get("vulnerabilities", {})
+                      total = sum(vulnerabilities.values())
+                      
+                      if total == 0:
+                          print("\n✅ No vulnerabilities found.")
+                      else:
+                          print(f"\n⚠️ Found {total} vulnerabilities.")
+                          print("| Severity | Count |")
+                          print("| --- | --- |")
+                          for severity, count in vulnerabilities.items():
+                              if count > 0:
+                                  print(f"| {severity.title()} | {count} |")
+              except Exception as e:
+                  print(f"Error parsing report: {e}")
+          else:
+              print("Report file not found.")
+          ' >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for failure
+        if: steps.audit.outcome == 'failure'
+        run: exit 1

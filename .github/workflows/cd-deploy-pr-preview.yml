@@ -55,7 +55,6 @@ jobs:
           surge ./deploy $PREVIEW_URL --token ${{ secrets.SURGE_TOKEN }}
 
           echo "preview_url=https://$PREVIEW_URL" >> $GITHUB_OUTPUT
-        continue-on-error: true
 
       - name: Wait for Surge deployment to propagate
         if: steps.deploy.outcome == 'success'
@@ -197,3 +196,19 @@ jobs:
               repo: context.repo.repo,
               body: comment
             });
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## 🚀 Deployment Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          DEPLOY_STATUS="${{ steps.deploy.outcome }}"
+          PREVIEW_URL="${{ steps.deploy.outputs.preview_url }}"
+
+          if [ "$DEPLOY_STATUS" == "success" ]; then
+            echo "✅ **Deployed Successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 [Open Preview]($PREVIEW_URL)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Deployment Failed**" >> $GITHUB_STEP_SUMMARY
+          fi

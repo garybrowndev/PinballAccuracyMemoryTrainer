@@ -38,7 +38,45 @@ jobs:
         run: npm ci
 
       - name: Run unit tests with coverage
-        run: npm run test:coverage
+        run: npm run test:coverage -- --reporter=default --reporter=json-summary --outputFile.json-summary=coverage/coverage-summary.json
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          python3 -c '
+          import json
+          import os
+
+          def parse_coverage(file_path):
+              if not os.path.exists(file_path):
+                  return "| ⚠️ Coverage Summary Not Found | - | - | - | - |"
+              
+              try:
+                  with open(file_path, "r") as f:
+                      data = json.load(f)
+                  
+                  total = data.get("total", {})
+                  lines = total.get("lines", {})
+                  statements = total.get("statements", {})
+                  functions = total.get("functions", {})
+                  branches = total.get("branches", {})
+                  
+                  return f"| Total | {lines.get(\"pct\", 0)}% | {statements.get(\"pct\", 0)}% | {functions.get(\"pct\", 0)}% | {branches.get(\"pct\", 0)}% |"
+              except Exception as e:
+                  return "| ⚠️ Error parsing | - | - | - | - |"
+
+          print("## 📊 Code Coverage Results")
+          print("| Category | Lines | Statements | Functions | Branches |")
+          print("|----------|-------|------------|-----------|----------|")
+          print(parse_coverage("coverage/coverage-summary.json"))
+          ' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5.5.1
