@@ -41,3 +41,35 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: '/language:javascript-typescript'
+          output: codeql-results
+
+      - name: Generate CodeQL Summary
+        if: success() || failure()
+        run: |
+          echo "## CodeQL Security Analysis Results" >> $GITHUB_STEP_SUMMARY
+
+          # Find the SARIF file
+          SARIF_FILE=$(find codeql-results -name "*.sarif" | head -n 1)
+
+          if [ -f "$SARIF_FILE" ]; then
+            # Get total count
+            COUNT=$(jq '.runs[].results | length' "$SARIF_FILE")
+            echo "### Total Alerts: $COUNT" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$COUNT" -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| Rule | Message | Location |" >> $GITHUB_STEP_SUMMARY
+              echo "| --- | --- | --- |" >> $GITHUB_STEP_SUMMARY
+              
+              # Generate table rows
+              jq -r '.runs[].results[] | "| \(.ruleId) | \(.message.text) | \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine) |"' "$SARIF_FILE" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No security alerts found." >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Also print to console for logs
+            echo "Detailed Findings:"
+            jq -r '.runs[].results[] | "Rule: \(.ruleId)\nMessage: \(.message.text)\nLocation: \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine)\n-------------------"' "$SARIF_FILE"
+          else
+            echo "❌ SARIF file not found." >> $GITHUB_STEP_SUMMARY
+          fi
