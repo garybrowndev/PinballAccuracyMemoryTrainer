@@ -77,23 +77,6 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         run: npm ci
 
-      - name: Security audit
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm audit --audit-level=info
-        continue-on-error: false
-
-      - name: Generate security audit report
-        if: failure() && steps.check_tag.outputs.exists == 'false'
-        run: npm audit --json > audit-report.json
-
-      - name: Upload security audit report
-        if: failure() && steps.check_tag.outputs.exists == 'false'
-        uses: actions/upload-artifact@v5
-        with:
-          name: security-audit-report
-          path: audit-report.json
-          retention-days: 7
-
       - name: Run linter
         if: steps.check_tag.outputs.exists == 'false'
         run: npm run lint

@@ -1,0 +1,57 @@
+name: 'Security: npm Audit'
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - master
+  schedule:
+    # Run daily at 1:00 AM UTC
+    - cron: '0 1 * * *'
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-npm-audit:
+    name: 'Security: npm Audit'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit
+        run: npm audit --audit-level=info
+        continue-on-error: false
+
+      - name: Generate security audit report
+        if: failure()
+        run: npm audit --json > audit-report.json
+
+      - name: Upload security audit report
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: security-audit-report
+          path: audit-report.json
+          retention-days: 7
