@@ -613,6 +613,4 @@ Built for the pinball community to help players improve their shot accuracy reca
 
 This project is free and open source - contributions, forks, and adaptations are welcome!
 
-<!-- Dummy comment for testing PR workflow -->
-
 ---
