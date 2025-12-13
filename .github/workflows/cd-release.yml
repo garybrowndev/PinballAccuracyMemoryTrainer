@@ -79,7 +79,7 @@ jobs:
 
       - name: Security audit
         if: steps.check_tag.outputs.exists == 'false'
-        run: npm audit --audit-level=low
+        run: npm audit --audit-level=info
         continue-on-error: false
 
       - name: Generate security audit report
@@ -123,18 +123,29 @@ jobs:
           path: '.'
           format: 'SARIF'
           args: >
-            --failOnCVSS 10
+            --failOnCVSS 5
             --enableRetired
             --enableExperimental
             --disableNodeAudit
-        continue-on-error: true
+
+      - name: Check if SARIF report was generated
+        if: always() && steps.check_tag.outputs.exists == 'false'
+        run: |
+          if [ -f "reports/PinballAccuracyMemoryTrainer-report.sarif" ]; then
+            echo "✅ SARIF report found"
+            ls -lh reports/PinballAccuracyMemoryTrainer-report.sarif
+          else
+            echo "⚠️ SARIF report not found at expected location"
+            echo "Contents of reports directory:"
+            ls -la reports/ || echo "reports directory does not exist"
+          fi
 
       - name: Upload OWASP results to GitHub Security
-        if: always() && steps.check_tag.outputs.exists == 'false'
+        if: always() && steps.check_tag.outputs.exists == 'false' && hashFiles('reports/PinballAccuracyMemoryTrainer-report.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         continue-on-error: true
         with:
-          sarif_file: reports/dependency-check-report.sarif
+          sarif_file: reports/PinballAccuracyMemoryTrainer-report.sarif
           category: dependency-check
 
       - name: Update package.json version for build
