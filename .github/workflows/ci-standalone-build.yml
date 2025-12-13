@@ -1,4 +1,4 @@
-name: 'CI: PR Validation'
+name: 'CI: Standalone Build'
 
 on:
   pull_request:
@@ -15,20 +15,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci-pr-validation:
-    name: 'CI: PR Validation'
+  ci-standalone-build:
+    name: 'CI: Standalone Build'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
-      pull-requests: write
-      statuses: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Calculate version (dry-run for PR)
         id: version
@@ -55,20 +50,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linter
-        run: npm run lint
+      - name: Update package.json version for build
+        run: |
+          npm version ${{ steps.version.outputs.numeric_version }} --no-git-tag-version --allow-same-version
 
-      - name: Run unit tests with coverage
-        run: npm run test:coverage
+      - name: Build standalone HTML
+        run: npm run build:standalone
+        env:
+          BUILD_COMMIT: ${{ steps.version.outputs.commit_hash }}
+          BUILD_COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.version.outputs.commit_hash }}
+          BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
 
-      - name: Run accessibility unit tests
-        run: npm run test:a11y
-
-      - name: Upload Playwright report
-        if: failure()
+      - name: Upload standalone build artifact
         uses: actions/upload-artifact@v5
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: standalone-build
+          path: dist-standalone/
           retention-days: 7
-          if-no-files-found: ignore
