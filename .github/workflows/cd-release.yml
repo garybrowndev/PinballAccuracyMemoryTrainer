@@ -81,6 +81,10 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         run: npm run lint
 
+      - name: Check code formatting
+        if: steps.check_tag.outputs.exists == 'false'
+        run: npm run format:check
+
       - name: Run unit tests with coverage
         if: steps.check_tag.outputs.exists == 'false'
         run: npm run test:coverage
