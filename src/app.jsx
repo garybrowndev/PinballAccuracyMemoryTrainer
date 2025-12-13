@@ -765,7 +765,7 @@ const PlayfieldEditor = ({
     }
 
     let rafId = null;
-    const ro = new ResizeObserver((entries) => {
+    const handleResize = (entries) => {
       // Cancel any pending update
       if (rafId) {
         cancelAnimationFrame(rafId);
@@ -781,7 +781,9 @@ const PlayfieldEditor = ({
         }
         rafId = null;
       });
-    });
+    };
+
+    const ro = new ResizeObserver(handleResize);
 
     ro.observe(el);
     return () => {
@@ -2094,7 +2096,7 @@ const PracticePlayfield = ({
       setCanvasHeight(first.height);
     }
 
-    const ro = new ResizeObserver((entries) => {
+    const handleResize = (entries) => {
       // ResizeObserver callback - triggered on size changes
       for (const entry of entries) {
         const cr = entry.contentRect;
@@ -2105,7 +2107,9 @@ const PracticePlayfield = ({
           setCanvasHeight(cr.height);
         }
       }
-    });
+    };
+
+    const ro = new ResizeObserver(handleResize);
     ro.observe(el);
     return () => {
       ro.disconnect();

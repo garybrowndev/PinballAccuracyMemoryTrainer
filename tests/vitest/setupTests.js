@@ -25,6 +25,9 @@ global.localStorage = localStorageMock;
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
+  constructor(callback) {
+    this.callback = callback;
+  }
   observe() {}
   unobserve() {}
   disconnect() {}
@@ -32,7 +35,10 @@ global.ResizeObserver = class ResizeObserver {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
+  constructor(callback, options) {
+    this.callback = callback;
+    this.options = options;
+  }
   observe() {}
   unobserve() {}
   disconnect() {}
