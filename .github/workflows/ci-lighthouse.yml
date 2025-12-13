@@ -1,0 +1,72 @@
+name: 'CI: Lighthouse Performance Audit'
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci-lighthouse:
+    name: 'CI: Lighthouse Performance Audit'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Calculate version (dry-run for PR)
+        id: version
+        run: |
+          # Get short commit hash (7 chars)
+          SHORT_HASH=$(git rev-parse --short=7 HEAD)
+          # Use PR number instead of run number for PR builds
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          # Numeric version for npm (semver compliant): 0.0.PR-{pr_number}
+          NUMERIC_VERSION="0.0.0-PR-${PR_NUMBER}"
+          # Full version with commit hash for tag: 0.0.PR-{pr_number}.{hash}
+          FULL_VERSION="0.0.PR-${PR_NUMBER}.${SHORT_HASH}"
+          echo "numeric_version=$NUMERIC_VERSION" >> $GITHUB_OUTPUT
+          echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
+          echo "commit_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
+          echo "📦 Calculated PR version: $FULL_VERSION (npm: $NUMERIC_VERSION)"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update package.json version for build
+        run: |
+          npm version ${{ steps.version.outputs.numeric_version }} --no-git-tag-version --allow-same-version
+
+      - name: Build standalone HTML
+        run: npm run build:standalone
+        env:
+          BUILD_COMMIT: ${{ steps.version.outputs.commit_hash }}
+          BUILD_COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.version.outputs.commit_hash }}
+          BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+
+      - name: Run Lighthouse CI on standalone build
+        env:
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm install -g @lhci/cli@0.13.x
+          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"

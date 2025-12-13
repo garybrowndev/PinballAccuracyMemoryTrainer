@@ -1,0 +1,67 @@
+name: 'Security: OWASP Dependency Check'
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - master
+  schedule:
+    # Run weekly on Sundays at 3:00 AM UTC
+    - cron: '0 3 * * 0'
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-owasp-dependency-check:
+    name: 'Security: OWASP Dependency Check'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'PinballAccuracyMemoryTrainer'
+          path: '.'
+          format: 'SARIF'
+          args: >
+            --failOnCVSS 0
+            --enableRetired
+            --enableExperimental
+            --disableNodeAudit
+            --suppression config/dependency-check-suppression.xml
+
+      - name: Check if SARIF report was generated
+        if: always()
+        run: |
+          if [ -f "reports/dependency-check-report.sarif" ]; then
+            echo "✅ SARIF report found"
+            ls -lh reports/dependency-check-report.sarif
+          else
+            echo "⚠️ SARIF report not found at expected location"
+            echo "Contents of reports directory:"
+            ls -la reports/ || echo "reports directory does not exist"
+          fi
+
+      - name: Upload OWASP results to GitHub Security
+        if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
+        with:
+          sarif_file: reports/dependency-check-report.sarif
+          category: dependency-check

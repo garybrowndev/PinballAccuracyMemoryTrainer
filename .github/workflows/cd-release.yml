@@ -66,187 +66,6 @@ jobs:
             echo "✅ Tag v${{ steps.version.outputs.full_version }} does not exist - proceeding with release"
           fi
 
-      - name: Setup Node.js
-        if: steps.check_tag.outputs.exists == 'false'
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Install dependencies
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm ci
-
-      - name: Security audit
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm audit --audit-level=info
-        continue-on-error: false
-
-      - name: Generate security audit report
-        if: failure() && steps.check_tag.outputs.exists == 'false'
-        run: npm audit --json > audit-report.json
-
-      - name: Upload security audit report
-        if: failure() && steps.check_tag.outputs.exists == 'false'
-        uses: actions/upload-artifact@v5
-        with:
-          name: security-audit-report
-          path: audit-report.json
-          retention-days: 7
-
-      - name: Run linter
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm run lint
-
-      - name: Run unit tests with coverage
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm run test:coverage
-
-      - name: Run accessibility unit tests
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm run test:a11y
-
-      - name: Upload coverage to Codecov
-        if: steps.check_tag.outputs.exists == 'false'
-        uses: codecov/codecov-action@v5.5.1
-        with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          fail_ci_if_error: false
-
-      - name: Run OWASP Dependency Check
-        if: steps.check_tag.outputs.exists == 'false'
-        uses: dependency-check/Dependency-Check_Action@main
-        id: depcheck
-        with:
-          project: 'PinballAccuracyMemoryTrainer'
-          path: '.'
-          format: 'SARIF'
-          args: >
-            --failOnCVSS 5
-            --enableRetired
-            --enableExperimental
-            --disableNodeAudit
-            --suppression config/dependency-check-suppression.xml
-
-      - name: Check if SARIF report was generated
-        if: always() && steps.check_tag.outputs.exists == 'false'
-        run: |
-          if [ -f "reports/dependency-check-report.sarif" ]; then
-            echo "✅ SARIF report found"
-            ls -lh reports/dependency-check-report.sarif
-          else
-            echo "⚠️ SARIF report not found at expected location"
-            echo "Contents of reports directory:"
-            ls -la reports/ || echo "reports directory does not exist"
-          fi
-
-      - name: Upload OWASP results to GitHub Security
-        if: always() && steps.check_tag.outputs.exists == 'false' && hashFiles('reports/dependency-check-report.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v4
-        continue-on-error: true
-        with:
-          sarif_file: reports/dependency-check-report.sarif
-          category: dependency-check
-
-      - name: Update package.json version for build
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          npm version ${{ steps.version.outputs.numeric_version }} --no-git-tag-version --allow-same-version
-
-      - name: Build standalone HTML
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm run build:standalone
-        env:
-          BUILD_COMMIT: ${{ steps.version.outputs.commit_hash }}
-          BUILD_COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.version.outputs.commit_hash }}
-          BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.full_version }}
-
-      - name: Analyze bundle size
-        if: steps.check_tag.outputs.exists == 'false'
-        id: analyze
-        run: |
-          # Get dist folder size
-          DIST_SIZE=$(du -sb dist | cut -f1)
-          DIST_SIZE_MB=$(echo "scale=2; $DIST_SIZE / 1024 / 1024" | bc)
-
-          # Get main bundle size
-          MAIN_BUNDLE=$(find dist/assets -name "index-*.js" -type f -exec du -b {} \; | sort -n | tail -1 | cut -f1)
-          MAIN_BUNDLE_KB=$(echo "scale=2; $MAIN_BUNDLE / 1024" | bc)
-
-          # Get CSS bundle size
-          CSS_BUNDLE=$(find dist/assets -name "index-*.css" -type f -exec du -b {} \; | sort -n | tail -1 | cut -f1)
-          CSS_BUNDLE_KB=$(echo "scale=2; $CSS_BUNDLE / 1024" | bc)
-
-          echo "dist_size_mb=$DIST_SIZE_MB" >> $GITHUB_OUTPUT
-          echo "main_bundle_kb=$MAIN_BUNDLE_KB" >> $GITHUB_OUTPUT
-          echo "css_bundle_kb=$CSS_BUNDLE_KB" >> $GITHUB_OUTPUT
-
-          # Count files
-          ASSET_COUNT=$(find dist/assets -type f | wc -l)
-          echo "asset_count=$ASSET_COUNT" >> $GITHUB_OUTPUT
-
-          echo "### Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Size |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Total dist size | ${DIST_SIZE_MB} MB |" >> $GITHUB_STEP_SUMMARY
-          echo "| Main JS bundle | ${MAIN_BUNDLE_KB} KB |" >> $GITHUB_STEP_SUMMARY
-          echo "| Main CSS bundle | ${CSS_BUNDLE_KB} KB |" >> $GITHUB_STEP_SUMMARY
-          echo "| Total assets | ${ASSET_COUNT} files |" >> $GITHUB_STEP_SUMMARY
-
-      - name: Check bundle size limits
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          MAIN_BUNDLE_KB=${{ steps.analyze.outputs.main_bundle_kb }}
-          CSS_BUNDLE_KB=${{ steps.analyze.outputs.css_bundle_kb }}
-          DIST_SIZE_MB=${{ steps.analyze.outputs.dist_size_mb }}
-
-          # Warning thresholds (adjusted to realistic values)
-          if (( $(echo "$MAIN_BUNDLE_KB > 350" | bc -l) )); then
-            echo "⚠️  Warning: Main JS bundle exceeds 350 KB ($MAIN_BUNDLE_KB KB)"
-          fi
-
-          if (( $(echo "$CSS_BUNDLE_KB > 75" | bc -l) )); then
-            echo "⚠️  Warning: CSS bundle exceeds 75 KB ($CSS_BUNDLE_KB KB)"
-          fi
-
-          if (( $(echo "$DIST_SIZE_MB > 3" | bc -l) )); then
-            echo "⚠️  Warning: Total dist size exceeds 3 MB ($DIST_SIZE_MB MB)"
-          fi
-
-          # Hard limits (fail build)
-          if (( $(echo "$MAIN_BUNDLE_KB > 500" | bc -l) )); then
-            echo "❌ Error: Main JS bundle exceeds hard limit of 500 KB ($MAIN_BUNDLE_KB KB)"
-            exit 1
-          fi
-
-          if (( $(echo "$DIST_SIZE_MB > 5" | bc -l) )); then
-            echo "❌ Error: Total dist size exceeds hard limit of 5 MB ($DIST_SIZE_MB MB)"
-            exit 1
-          fi
-
-          echo "✅ Bundle size within acceptable limits"
-
-      - name: Run Lighthouse CI on standalone build
-        if: steps.check_tag.outputs.exists == 'false'
-        env:
-          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
-
-      - name: Upload Playwright report
-        if: failure() && steps.check_tag.outputs.exists == 'false'
-        uses: actions/upload-artifact@v5
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-          if-no-files-found: ignore
-
       - name: Create and push tag
         if: steps.check_tag.outputs.exists == 'false'
         run: |
@@ -254,27 +73,6 @@ jobs:
           git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           git push origin "v$NEW_VERSION"
           echo "🏷️  Created and pushed tag v$NEW_VERSION"
-
-      - name: Prepare GitHub Pages deployment
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          # Create a temporary directory for GitHub Pages
-          mkdir -p gh-pages-deploy
-
-          # Copy standalone build to root (latest version) and rename to index.html
-          cp dist-standalone/pinball-trainer-standalone.html gh-pages-deploy/index.html
-
-          # Copy screenshot to root for README display
-          cp public/images/app-screenshot.webp gh-pages-deploy/app-screenshot.webp
-
-          # Copy standalone build to versioned release directory (keep original name)
-          mkdir -p gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}
-          cp -r dist-standalone/* gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
-
-          echo "📦 Prepared deployment structure:"
-          ls -la gh-pages-deploy/
-          echo "📦 Versioned release:"
-          ls -la gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
 
       - name: Wait for all other workflows to complete
         if: steps.check_tag.outputs.exists == 'false'
@@ -347,6 +145,20 @@ jobs:
             if (attempt >= maxAttempts) {
               throw new Error('Timeout waiting for workflows to complete after 30 minutes');
             }
+
+      - name: Download standalone build artifact
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/download-artifact@v5
+        with:
+          name: standalone-build
+          path: dist-standalone/
+
+      - name: Download deployment preview artifact
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: actions/download-artifact@v5
+        with:
+          name: deployment-preview
+          path: gh-pages-deploy/
 
       - name: Deploy to GitHub Pages
         if: steps.check_tag.outputs.exists == 'false'
