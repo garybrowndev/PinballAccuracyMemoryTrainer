@@ -35,10 +35,49 @@ jobs:
         run: npx playwright install --with-deps firefox
 
       - name: Run E2E tests on Firefox
-        run: npx playwright test --project=firefox --config config/playwright.config.js --grep-invert "Visual Regression"
+        run: npx playwright test --project=firefox --config config/playwright.config.js --grep-invert "Visual Regression" --reporter=list,json,html
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results-firefox.json
 
       - name: Run accessibility E2E tests on Firefox
-        run: npx playwright test --project=firefox --config config/playwright.config.js tests/e2e/accessibility.spec.js
+        run: npx playwright test --project=firefox --config config/playwright.config.js tests/e2e/accessibility.spec.js --reporter=list,json,html
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results-a11y.json
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          python3 -c '
+          import json
+          import os
+
+          def parse_json_report(file_path, title):
+              if not os.path.exists(file_path):
+                  return f"| {title} | ⚠️ Not Found | - | - | - | - |"
+              
+              try:
+                  with open(file_path, "r") as f:
+                      data = json.load(f)
+                  
+                  stats = data.get("stats", {})
+                  total = stats.get("expected", 0) + stats.get("unexpected", 0) + stats.get("flaky", 0) + stats.get("skipped", 0)
+                  passed = stats.get("expected", 0)
+                  failed = stats.get("unexpected", 0)
+                  flaky = stats.get("flaky", 0)
+                  skipped = stats.get("skipped", 0)
+                  duration = round(stats.get("duration", 0) / 1000, 2)
+                  
+                  status = "✅ PASS" if failed == 0 else "❌ FAIL"
+                  return f"| {title} | {status} | {total} | {passed} | {failed} | {duration}s |"
+              except Exception as e:
+                  return f"| {title} | ⚠️ Error parsing | - | - | - | - |"
+
+          print("## 🦊 Firefox Browser Test Results")
+          print("| Suite | Status | Total | Passed | Failed | Time |")
+          print("|-------|--------|-------|--------|--------|------|")
+          print(parse_json_report("results-firefox.json", "E2E Tests"))
+          print(parse_json_report("results-a11y.json", "Accessibility Tests"))
+          ' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload test results
         if: always()

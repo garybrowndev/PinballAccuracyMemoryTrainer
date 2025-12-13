@@ -44,9 +44,38 @@ jobs:
           output: codeql-results
 
       - name: Generate CodeQL Summary
-        if: success() || failure()
+        if: always()
         run: |
-          echo "## CodeQL Security Analysis Results" >> $GITHUB_STEP_SUMMARY
+          python3 -c '
+          import json
+          import os
+          import glob
+
+          print("## 🛡️ CodeQL Security Analysis Results")
+
+          files = glob.glob("codeql-results/**/*.sarif", recursive=True)
+
+          if not files:
+              print("No SARIF files found.")
+          else:
+              total_alerts = 0
+              
+              for f in files:
+                  try:
+                      with open(f, "r", encoding="utf-8") as json_file:
+                          data = json.load(json_file)
+                          runs = data.get("runs", [])
+                          for run in runs:
+                              results = run.get("results", [])
+                              total_alerts += len(results)
+                  except Exception as e:
+                      pass
+              
+              if total_alerts == 0:
+                  print("\n✅ No security alerts found.")
+              else:
+                  print(f"\n⚠️ Found {total_alerts} alerts. Check the [Security tab](../../security/code-scanning) for details.")
+          ' >> $GITHUB_STEP_SUMMARY
 
           # Find the SARIF file
           SARIF_FILE=$(find codeql-results -name "*.sarif" | head -n 1)

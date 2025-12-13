@@ -32,10 +32,14 @@ jobs:
         run: npm ci
 
       - name: Run linter
+        id: lint
         run: npm run lint
+        continue-on-error: true
 
       - name: Check code formatting
+        id: format
         run: npm run format:check
+        continue-on-error: true
 
       - name: Generate job summary
         if: always()
@@ -44,5 +48,22 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ESLint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Prettier | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+
+          LINT_STATUS="${{ steps.lint.outcome }}"
+          FORMAT_STATUS="${{ steps.format.outcome }}"
+
+          if [ "$LINT_STATUS" == "success" ]; then
+            echo "| ESLint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ESLint | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$FORMAT_STATUS" == "success" ]; then
+            echo "| Prettier | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Prettier | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$LINT_STATUS" != "success" ] || [ "$FORMAT_STATUS" != "success" ]; then
+            exit 1
+          fi
