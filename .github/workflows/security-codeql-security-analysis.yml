@@ -34,8 +34,8 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-          # Use extended security queries for more comprehensive analysis
-          queries: security-extended
+          # Use security-and-quality queries for maximum comprehensive analysis
+          queries: security-and-quality
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4

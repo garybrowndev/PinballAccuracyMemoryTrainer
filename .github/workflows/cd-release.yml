@@ -123,7 +123,7 @@ jobs:
           path: '.'
           format: 'SARIF'
           args: >
-            --failOnCVSS 5
+            --failOnCVSS 0
             --enableRetired
             --enableExperimental
             --disableNodeAudit
