@@ -69,7 +69,7 @@ export default defineConfig({
     }),
   ],
   define: {
-    __APP_VERSION__: JSON.stringify(packageJson.version),
+    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || packageJson.version),
 
     __BUILD_COMMIT__: JSON.stringify(process.env.BUILD_COMMIT || 'dev'),
 

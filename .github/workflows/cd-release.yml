@@ -161,6 +161,7 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         run: npm run build:standalone
         env:
+          APP_VERSION: ${{ steps.version.outputs.full_version }}
           BUILD_COMMIT: ${{ steps.version.outputs.commit_hash }}
           BUILD_COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.version.outputs.commit_hash }}
           BUILD_WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
