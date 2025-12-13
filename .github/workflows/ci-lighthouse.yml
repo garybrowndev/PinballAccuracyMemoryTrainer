@@ -8,6 +8,9 @@ on:
       - opened
       - synchronize
       - reopened
+  push:
+    branches:
+      - master
 
 # Cancel in-progress runs for the same PR
 concurrency:

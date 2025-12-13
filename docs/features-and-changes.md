@@ -42,4 +42,8 @@ Ensure that the depdency check and code coverage are running correctly and preve
 
 Fix the lighthouse issues being pushed to the magic google place
 
+Look back at all workflows and ensure the right artifcats and summary at bottom under the job are there if applicable and make sense
+
+Also check if a comment on a pr is necessary
+
 Fix issue with the website working at all

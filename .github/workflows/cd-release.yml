@@ -153,12 +153,26 @@ jobs:
           name: standalone-build
           path: dist-standalone/
 
-      - name: Download deployment preview artifact
+      - name: Prepare GitHub Pages deployment structure
         if: steps.check_tag.outputs.exists == 'false'
-        uses: actions/download-artifact@v5
-        with:
-          name: deployment-preview
-          path: gh-pages-deploy/
+        run: |
+          # Create a temporary directory for GitHub Pages
+          mkdir -p gh-pages-deploy
+
+          # Copy standalone build to root (latest version) and rename to index.html
+          cp dist-standalone/pinball-trainer-standalone.html gh-pages-deploy/index.html
+
+          # Copy screenshot to root for README display
+          cp public/images/app-screenshot.webp gh-pages-deploy/app-screenshot.webp
+
+          # Copy standalone build to versioned release directory (keep original name)
+          mkdir -p gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}
+          cp -r dist-standalone/* gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
+
+          echo "📦 Prepared deployment structure:"
+          ls -la gh-pages-deploy/
+          echo "📦 Versioned release:"
+          ls -la gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
 
       - name: Deploy to GitHub Pages
         if: steps.check_tag.outputs.exists == 'false'
