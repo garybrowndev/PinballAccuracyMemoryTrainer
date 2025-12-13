@@ -66,30 +66,6 @@ jobs:
             echo "✅ Tag v${{ steps.version.outputs.full_version }} does not exist - proceeding with release"
           fi
 
-      - name: Setup Node.js
-        if: steps.check_tag.outputs.exists == 'false'
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Install dependencies
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm ci
-
-      - name: Run linter
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm run lint
-
-      - name: Check code formatting
-        if: steps.check_tag.outputs.exists == 'false'
-        run: npm run format:check
-
-      - name: Update package.json version for build
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          npm version ${{ steps.version.outputs.numeric_version }} --no-git-tag-version --allow-same-version
-
       - name: Create and push tag
         if: steps.check_tag.outputs.exists == 'false'
         run: |
