@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes><![CDATA[
+        CVE-2023-29827 is disputed by the ejs vendor as "out of scope".
+        The vulnerability requires passing untrusted input to ejs.render(),
+        which is not done in our build process. This is a transitive dependency
+        from vite-plugin-pwa -> workbox-build used only at build time for
+        service worker generation. No user data is processed through ejs templates.
+        
+        Dependency chain: vite-plugin-pwa@1.2.0 -> workbox-build@7.4.0 -> 
+        @surma/rollup-plugin-off-main-thread@2.2.3 -> ejs@3.1.10
+        
+        Risk Assessment: Build-time only, no runtime exposure, controlled input.
+        Reference: https://github.com/mde/ejs/blob/main/SECURITY.md#out-of-scope-vulnerabilities
+        Issue: https://github.com/mde/ejs/issues/720
+        ]]></notes>
+        <packageUrl regex="true">^pkg:npm/ejs@.*$</packageUrl>
+        <cve>CVE-2023-29827</cve>
+    </suppress>
+</suppressions>
