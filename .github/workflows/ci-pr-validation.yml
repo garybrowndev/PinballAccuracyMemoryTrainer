@@ -119,7 +119,7 @@ jobs:
         continue-on-error: true
         with:
           sarif_file: reports/dependency-check-report.sarif
-          category: dependency-check
+          category: dependency-check-pr
 
       - name: Build dist for bundle size analysis
         run: npm run build
