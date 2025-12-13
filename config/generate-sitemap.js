@@ -15,9 +15,7 @@ const __dirname = path.dirname(__filename);
 const BASE_URL = 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer';
 const PRIORITY_HIGH = '1.0';
 const PRIORITY_MEDIUM = '0.8';
-const PRIORITY_LOW = '0.6';
 const CHANGE_FREQ_DAILY = 'daily';
-const CHANGE_FREQ_WEEKLY = 'weekly';
 const CHANGE_FREQ_MONTHLY = 'monthly';
 
 /**

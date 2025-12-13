@@ -16,5 +16,9 @@ playwright-report/
 coverage/
 *.lcov
 
+# CodeQL
+codeql-db/
+*.sarif
+
 # Editor directories and files
 .vscode/*

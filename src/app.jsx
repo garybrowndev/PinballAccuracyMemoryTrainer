@@ -55,7 +55,6 @@ const COLORS = {
 // Button style constants
 const BTN_SUCCESS = 'bg-emerald-800 hover:bg-emerald-900';
 const BTN_ICON = 'px-4 py-2 rounded-2xl text-white flex items-center gap-2';
-const BTN_BASE = 'px-4 py-2 rounded-2xl text-white';
 const DISABLED_CLASS = 'opacity-50 cursor-not-allowed';
 /* eslint-disable sonarjs/no-duplicate-string */
 const ICON_BTN_DARK = 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100';
@@ -71,18 +70,11 @@ const GetBgClass = (darkMode, variant = 'primary') =>
   darkMode ? COLORS.dark.bg[variant] : COLORS.light.bg[variant];
 const GetBorderClass = (darkMode) =>
   darkMode ? COLORS.dark.border.primary : COLORS.light.border.primary;
-const GetButtonClass = (darkMode) => (darkMode ? COLORS.dark.bg.button : COLORS.light.bg.button);
-const GetHoverClass = (darkMode) => (darkMode ? COLORS.dark.bg.hover : COLORS.light.bg.hover);
-const GetHoverAltClass = (darkMode) =>
-  darkMode ? COLORS.dark.bg.hoverAlt : COLORS.light.bg.hoverAlt;
-const GetIconButtonClass = (darkMode) =>
-  `w-8 h-8 rounded-full border shadow hover:shadow-md transition-all flex items-center justify-center ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} ${COLORS.dark.text.tertiary} hover:text-slate-100` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary} text-slate-600 hover:text-slate-900`}`;
-const GetSmallButtonClass = (darkMode) =>
-  `text-[11px] px-2 py-0.5 rounded-md ${GetButtonClass(darkMode)} text-slate-200 border ${GetBorderClass(darkMode)}`;
 const GetCheckboxClass = (darkMode) =>
   `w-4 h-4 rounded ${darkMode ? `${COLORS.dark.bg.primary} ${COLORS.dark.border.primary} checked:bg-blue-800 checked:border-blue-800 accent-blue-800 [color-scheme:dark]` : `${COLORS.light.bg.primary} ${COLORS.light.border.primary} accent-blue-800`}`;
 const GetMetricBoxClass = (darkMode) =>
   darkMode ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-slate-300';
+const GetHoverClass = (darkMode) => (darkMode ? COLORS.dark.bg.hover : COLORS.light.bg.hover);
 
 // ---------- helpers ----------
 const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
@@ -404,7 +396,6 @@ function buildType(base, location) {
   }
   return `${location} ${base}`;
 }
-const FLIPPERS = ['L', 'R']; // left/right flippers
 
 // Current row schema only
 // Create a new shot row; if caller doesn't supply x/y we auto-distribute them to avoid overlap.
@@ -2104,6 +2095,7 @@ const PracticePlayfield = ({
     }
 
     const ro = new ResizeObserver((entries) => {
+      // ResizeObserver callback - triggered on size changes
       for (const entry of entries) {
         const cr = entry.contentRect;
         if (cr.width > 0) {
@@ -2316,19 +2308,6 @@ const PracticePlayfield = ({
               const BOX_HALF = 15 * scale; // approximate half-height scaled
               const _bx = activeGuideRow.x * w;
               const _by = activeGuideRow.y * h + BOX_HALF; // bottom center of shot box
-              // Coordinate anchors (note mapping: 0=base,100=tip in editor, but we now need both extremes).
-              const L_TIP = { x: 415, y: 920 },
-                L_BASE = { x: 285, y: 785 };
-              const R_TIP = { x: 585, y: 920 },
-                R_BASE = { x: 715, y: 785 };
-              const Lp = (p) => ({
-                x: ((L_BASE.x + (L_TIP.x - L_BASE.x) * (p / 100)) / 1000) * w,
-                y: ((L_BASE.y + (L_TIP.y - L_BASE.y) * (p / 100)) / 1000) * h,
-              });
-              const Rp = (p) => ({
-                x: ((R_BASE.x + (R_TIP.x - R_BASE.x) * (p / 100)) / 1000) * w,
-                y: ((R_BASE.y + (R_TIP.y - R_BASE.y) * (p / 100)) / 1000) * h,
-              });
               // Guide color: neutral slate during aiming/animation, changes to severity color when result is shown
               const defaultGuideColor = '#94a3b8'; // slate-400 - neutral gray for aiming state
               const stroke =
@@ -5548,7 +5527,6 @@ const App = () => {
                                       }
                                       // Clamp when list becomes empty
                                       if (next.length === 0) {
-                                        newIdx = -1;
                                         setSelectedBlockId(null);
                                         setSelectedIdx(-1);
                                         return next;
@@ -7055,7 +7033,6 @@ const App = () => {
                             if (d > maxDiameter) {
                               // Grow gap to consume extra space while keeping diameter at cap
                               d = maxDiameter;
-                              gap = (avail - totalChips * d) / (totalChips - 1);
                             }
                             if (d < minDiameter) {
                               // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
