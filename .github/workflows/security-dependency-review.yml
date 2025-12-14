@@ -30,7 +30,7 @@ jobs:
           # Fail on low and above severity vulnerabilities
           fail-on-severity: low
           # Comment on PR with vulnerability summary
-          comment-summary-in-pr: always
+          comment-summary-in-pr: never
           # Deny specific licenses (optional - uncomment if needed)
           # deny-licenses: GPL-3.0, AGPL-3.0
 
@@ -55,6 +55,33 @@ jobs:
         with:
           name: dependency-review-report
           path: dependency-review-report.json
+
+      - name: Update PR Comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.js');
+
+            let body = 'Dependency review failed or did not run correctly.';
+            try {
+              if (fs.existsSync('dependency-review-report.json')) {
+                const report = JSON.parse(fs.readFileSync('dependency-review-report.json', 'utf8'));
+                const vulnerable = report.vulnerable_changes ? report.vulnerable_changes.length : 0;
+                const denied = report.denied_changes ? report.denied_changes.length : 0;
+                
+                if (vulnerable === 0 && denied === 0) {
+                  body = '✅ No vulnerabilities or denied packages found.';
+                } else {
+                  body = `❌ **Vulnerabilities Found**: ${vulnerable}\n❌ **Denied Packages**: ${denied}\n\nPlease check the [Dependency Review Report artifact] for details.`;
+                }
+              }
+            } catch (e) {
+              console.error(e);
+            }
+
+            await updateComment({ github, context, header: 'Dependency Review', body });
 
       - name: Generate job summary
         if: always()
