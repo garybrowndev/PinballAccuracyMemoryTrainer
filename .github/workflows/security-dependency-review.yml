@@ -81,7 +81,13 @@ jobs:
               console.error(e);
             }
 
-            await updateComment({ github, context, header: 'Dependency Review', body });
+            await updateComment({
+              github,
+              context,
+              header: 'Dependency Review',
+              body,
+              workflowYaml: 'security-dependency-review.yml'
+            });
 
       - name: Generate job summary
         if: always()

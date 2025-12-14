@@ -99,7 +99,13 @@ jobs:
 
             *Bundle analysis completed at ${new Date().toISOString()}*`;
 
-            await updateComment({ github, context, header: 'Bundle Size Report', body: comment });
+            await updateComment({
+              github,
+              context,
+              header: 'Bundle Size Report',
+              body: comment,
+              workflowYaml: 'ci-bundle-analysis.yml'
+            });
 
       - name: Check bundle size limits
         run: |

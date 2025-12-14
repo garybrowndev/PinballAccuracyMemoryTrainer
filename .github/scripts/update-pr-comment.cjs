@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable security/detect-non-literal-regexp */
-module.exports = async ({ github, context, header, body }) => {
+module.exports = async ({ github, context, header, body, workflowYaml }) => {
   const sha = context.payload.pull_request ? context.payload.pull_request.head.sha : context.sha;
   const shortSha = sha.slice(0, 7);
   const marker = `<!-- report-for-commit-${sha} -->`;
@@ -21,7 +21,15 @@ module.exports = async ({ github, context, header, body }) => {
 
   const existingComment = comments.data.find((c) => c.body.includes(marker));
 
-  const newSection = `## ${header}\n\n${body}`;
+  // Construct header with links
+  let headerContent = header;
+  if (workflowYaml) {
+    const fileUrl = `https://github.com/${owner}/${repo}/blob/${sha}/.github/workflows/${workflowYaml}`;
+    headerContent += ` ([${workflowYaml}](${fileUrl}))`;
+  }
+
+  const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+  const newSection = `## ${headerContent}\n\n${body}\n\n[View Workflow Run](${runUrl})`;
 
   if (existingComment) {
     let content = existingComment.body;
