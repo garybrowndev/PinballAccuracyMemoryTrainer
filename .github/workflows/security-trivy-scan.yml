@@ -1,0 +1,90 @@
+name: 'Security: Trivy Scan'
+
+on:
+  push:
+    branches: ['master']
+  pull_request:
+    branches: ['master']
+  schedule:
+    - cron: '30 7 * * 1'
+
+permissions: read-all
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trivy-scan:
+    name: Trivy Vulnerability & Secret Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@22438a435773de8c97dc0958cc0b823c45b064ac # master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          # Scans for vulnerabilities (vuln) and secrets (secret) and config (config)
+          scanners: 'vuln,secret,config'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@1b168cd39490f61582a9beae412bb7057a6b2c4e # v4
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Upload Trivy artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
+          retention-days: 5
+
+      - name: Generate Trivy Summary
+        if: always()
+        run: |
+          # Create a simple summary from the SARIF file if possible, or just a static message
+          # Since parsing SARIF in bash is complex, we'll point to the Security tab
+          echo "## 🛡️ Trivy Security Scan Results" > trivy_summary.md
+          echo "" >> trivy_summary.md
+          echo "Trivy scan completed. Results have been uploaded to the GitHub Security tab." >> trivy_summary.md
+          echo "" >> trivy_summary.md
+          echo "### Scanned Categories" >> trivy_summary.md
+          echo "- ✅ Vulnerabilities (CRITICAL, HIGH)" >> trivy_summary.md
+          echo "- ✅ Secrets / Credentials" >> trivy_summary.md
+          echo "- ✅ Infrastructure Configuration" >> trivy_summary.md
+
+          cat trivy_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+
+            let body = 'Trivy scan completed. Check the Security tab for details.';
+            if (fs.existsSync('trivy_summary.md')) {
+              body = fs.readFileSync('trivy_summary.md', 'utf8');
+              // Remove the header
+              body = body.replace(/^## .*?\n/, '');
+            }
+
+            await updateComment({
+              github,
+              context,
+              header: 'Trivy Security Scan',
+              body,
+              workflowYaml: 'security-trivy-scan.yml'
+            });
