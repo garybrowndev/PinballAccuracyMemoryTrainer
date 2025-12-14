@@ -1,4 +1,3 @@
-/* eslint-env node */
 /* eslint-disable no-console */
 /* eslint-disable security/detect-non-literal-regexp */
 module.exports = async ({ github, context, header, body }) => {
@@ -30,7 +29,7 @@ module.exports = async ({ github, context, header, body }) => {
     // Regex to find existing section for this header
     // We assume sections start with "## Header" and end with "## " or end of string
     // We escape the header for regex safety just in case
-    const escapedHeader = header.replace(/[$()*+.?[\\\]^{|}]/g, '\\$&');
+    const escapedHeader = header.replaceAll(/[$()*+.?[\\\]^{|}]/g, '\\$&');
     const sectionRegex = new RegExp(`## ${escapedHeader}[\\s\\S]*?(?=(## |$))`, 'g');
 
     if (content.match(sectionRegex)) {

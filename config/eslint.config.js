@@ -30,22 +30,12 @@ const config = [
       'dev-dist',
     ],
   },
-  // CommonJS config files (lighthouserc.cjs)
-  {
-    files: ['**/lighthouserc.cjs'],
-    languageOptions: {
-      globals: {
-        module: 'readonly',
-        require: 'readonly',
-      },
-    },
-  },
   js.configs.recommended,
   reactHooks.configs.flat['recommended-latest'],
   reactRefresh.configs.vite,
   jsxA11y.flatConfigs.recommended,
   {
-    files: ['**/*.{js,jsx}'],
+    files: ['**/*.{js,jsx,cjs}'],
     plugins: {
       react,
       import: importPlugin,
@@ -396,6 +386,21 @@ const config = [
     rules: {
       'import/no-unresolved': 'off', // Allow unresolved imports in config files
       'no-undef': 'off', // Allow undefined variables in config files
+    },
+  },
+  // CommonJS files configuration
+  {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        module: 'readonly',
+        require: 'readonly',
+        process: 'readonly',
+        console: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+      },
     },
   },
   prettierConfig,
