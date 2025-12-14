@@ -89,7 +89,31 @@ jobs:
           print("| Suite | Status | Total | Passed | Failed | Time |")
           print("|-------|--------|-------|--------|--------|------|")
           print(parse_json_report("results-visual.json", "Visual Comparison"))
-          ' >> $GITHUB_STEP_SUMMARY
+          ' > visual_regression_summary.md
+          cat visual_regression_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && steps.check-snapshots.outputs.has_snapshots == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+
+            let body = 'Visual Regression Tests failed or did not run correctly.';
+            if (fs.existsSync('visual_regression_summary.md')) {
+              body = fs.readFileSync('visual_regression_summary.md', 'utf8');
+              // Remove the header from the body since updateComment adds it
+              body = body.replace(/^## .*?\n/, '');
+            }
+
+            await updateComment({
+              github,
+              context,
+              header: 'Visual Regression Results',
+              body,
+              workflowYaml: 'ci-visual-regression-tests.yml'
+            });
 
       - name: Generate Linux baseline snapshots
         if: steps.check-snapshots.outputs.has_snapshots == 'false'
@@ -133,7 +157,6 @@ jobs:
           path: |
             test-results/
             playwright-report/
-          retention-days: 14
           if-no-files-found: ignore
 
       - name: Upload baseline screenshots
@@ -142,7 +165,6 @@ jobs:
         with:
           name: visual-regression-snapshots
           path: tests/e2e/visual-regression.spec.js-snapshots/
-          retention-days: 90
           if-no-files-found: ignore
 
       - name: Update snapshots with current render

@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Mark and close stale issues and PRs
+        id: stale
         uses: actions/stale@v10.1.1
         with:
           # Issue settings
@@ -49,3 +50,30 @@ jobs:
 
           # Operations per run (to avoid rate limiting)
           operations-per-run: 30
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## 🏚️ Stale Issues and PRs Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Outputs are JSON arrays of objects (issues/PRs)
+          STALE_ITEMS='${{ steps.stale.outputs.stale-issues-prs }}'
+          CLOSED_ITEMS='${{ steps.stale.outputs.closed-issues-prs }}'
+
+          # Check if empty or empty array
+          if [ "$STALE_ITEMS" == "[]" ] && [ "$CLOSED_ITEMS" == "[]" ]; then
+            echo "✅ No issues or PRs were marked as stale or closed." >> $GITHUB_STEP_SUMMARY
+          else
+            if [ "$STALE_ITEMS" != "[]" ]; then
+              echo "### 🏷️ Marked as Stale" >> $GITHUB_STEP_SUMMARY
+              echo "$STALE_ITEMS" | jq -r '.[] | "- [" + .title + "](" + .html_url + ")"' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            if [ "$CLOSED_ITEMS" != "[]" ]; then
+              echo "### 🔒 Closed" >> $GITHUB_STEP_SUMMARY
+              echo "$CLOSED_ITEMS" | jq -r '.[] | "- [" + .title + "](" + .html_url + ")"' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi

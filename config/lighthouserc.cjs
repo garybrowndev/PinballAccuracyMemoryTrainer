@@ -1,5 +1,3 @@
-/* eslint-env node */
-/* global process */
 module.exports = {
   ci: {
     collect: {
