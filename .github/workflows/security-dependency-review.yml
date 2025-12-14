@@ -62,7 +62,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const updateComment = require('./.github/scripts/update-pr-comment.js');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
 
             let body = 'Dependency review failed or did not run correctly.';
             try {

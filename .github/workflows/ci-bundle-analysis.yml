@@ -78,7 +78,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const updateComment = require('./.github/scripts/update-pr-comment.js');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
             const distSize = '${{ steps.analyze.outputs.dist_size_mb }}';
             const mainBundle = '${{ steps.analyze.outputs.main_bundle_kb }}';
             const cssBundle = '${{ steps.analyze.outputs.css_bundle_kb }}';
