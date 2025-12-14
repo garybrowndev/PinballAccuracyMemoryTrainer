@@ -17,6 +17,9 @@ jobs:
   ci-code-quality:
     name: 'CI: Code Quality'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -80,7 +83,7 @@ jobs:
             echo "| Files  | ${{ steps.stats.outputs.files }} |"
             echo "| Lines  | ${{ steps.stats.outputs.lines }} |"
           } > code_quality_summary.md
-          
+
           cat code_quality_summary.md >> $GITHUB_STEP_SUMMARY
 
           if [ "$LINT_STATUS" != "success" ] || [ "$FORMAT_STATUS" != "success" ]; then
@@ -95,14 +98,14 @@ jobs:
           script: |
             const fs = require('fs');
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
-            
+
             let body = 'Code Quality check failed or did not run correctly.';
             if (fs.existsSync('code_quality_summary.md')) {
               body = fs.readFileSync('code_quality_summary.md', 'utf8');
               // Remove the header from the body since updateComment adds it
               body = body.replace(/^## .*?\n/, '');
             }
-            
+
             await updateComment({
               github,
               context,

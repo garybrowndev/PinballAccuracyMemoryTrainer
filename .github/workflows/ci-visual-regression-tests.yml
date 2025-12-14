@@ -99,14 +99,14 @@ jobs:
           script: |
             const fs = require('fs');
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
-            
+
             let body = 'Visual Regression Tests failed or did not run correctly.';
             if (fs.existsSync('visual_regression_summary.md')) {
               body = fs.readFileSync('visual_regression_summary.md', 'utf8');
               // Remove the header from the body since updateComment adds it
               body = body.replace(/^## .*?\n/, '');
             }
-            
+
             await updateComment({
               github,
               context,

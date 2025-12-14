@@ -25,6 +25,7 @@ jobs:
       security-events: write
       contents: read
       actions: read
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -124,14 +125,14 @@ jobs:
           script: |
             const fs = require('fs');
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
-            
+
             let body = 'CodeQL Analysis failed or did not run correctly.';
             if (fs.existsSync('codeql_summary.md')) {
               body = fs.readFileSync('codeql_summary.md', 'utf8');
               // Remove the header from the body since updateComment adds it
               body = body.replace(/^## .*?\n/, '');
             }
-            
+
             await updateComment({
               github,
               context,

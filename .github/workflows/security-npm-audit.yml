@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -92,14 +93,14 @@ jobs:
           script: |
             const fs = require('fs');
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
-            
+
             let body = 'npm Audit failed or did not run correctly.';
             if (fs.existsSync('npm_audit_summary.md')) {
               body = fs.readFileSync('npm_audit_summary.md', 'utf8');
               // Remove the header from the body since updateComment adds it
               body = body.replace(/^## .*?\n/, '');
             }
-            
+
             await updateComment({
               github,
               context,

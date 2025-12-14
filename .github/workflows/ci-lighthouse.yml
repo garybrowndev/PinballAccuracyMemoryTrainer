@@ -24,6 +24,7 @@ jobs:
     permissions:
       contents: read
       statuses: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -136,14 +137,14 @@ jobs:
           script: |
             const fs = require('fs');
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
-            
+
             let body = 'Lighthouse CI failed or did not run correctly.';
             if (fs.existsSync('lighthouse_summary.md')) {
               body = fs.readFileSync('lighthouse_summary.md', 'utf8');
               // Remove the header from the body since updateComment adds it
               body = body.replace(/^## .*?\n/, '');
             }
-            
+
             await updateComment({
               github,
               context,

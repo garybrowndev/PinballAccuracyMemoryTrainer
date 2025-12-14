@@ -27,6 +27,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -145,14 +146,14 @@ jobs:
           script: |
             const fs = require('fs');
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
-            
+
             let body = 'OWASP Dependency Check failed or did not run correctly.';
             if (fs.existsSync('owasp_summary.md')) {
               body = fs.readFileSync('owasp_summary.md', 'utf8');
               // Remove the header from the body since updateComment adds it
               body = body.replace(/^## .*?\n/, '');
             }
-            
+
             await updateComment({
               github,
               context,

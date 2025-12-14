@@ -17,6 +17,9 @@ jobs:
   ci-webkit-browser-tests:
     name: 'CI: WebKit Browser Tests'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -87,14 +90,14 @@ jobs:
           script: |
             const fs = require('fs');
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
-            
+
             let body = 'WebKit Browser Tests failed or did not run correctly.';
             if (fs.existsSync('webkit_summary.md')) {
               body = fs.readFileSync('webkit_summary.md', 'utf8');
               // Remove the header from the body since updateComment adds it
               body = body.replace(/^## .*?\n/, '');
             }
-            
+
             await updateComment({
               github,
               context,
