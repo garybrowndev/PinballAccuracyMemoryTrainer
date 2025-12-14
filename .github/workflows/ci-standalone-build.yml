@@ -94,4 +94,28 @@ jobs:
                   print("No HTML files found in dist-standalone.")
           else:
               print("Build directory not found.")
-          ' >> $GITHUB_STEP_SUMMARY
+          ' > standalone_build_summary.md
+          cat standalone_build_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            
+            let body = 'Standalone Build failed or did not run correctly.';
+            if (fs.existsSync('standalone_build_summary.md')) {
+              body = fs.readFileSync('standalone_build_summary.md', 'utf8');
+              // Remove the header from the body since updateComment adds it
+              body = body.replace(/^## .*?\n/, '');
+            }
+            
+            await updateComment({
+              github,
+              context,
+              header: 'Standalone Build Results',
+              body,
+              workflowYaml: 'ci-standalone-build.yml'
+            });

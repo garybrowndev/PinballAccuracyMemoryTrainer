@@ -82,7 +82,31 @@ jobs:
                   print(f"Error parsing report: {e}")
           else:
               print("Report file not found.")
-          ' >> $GITHUB_STEP_SUMMARY
+          ' > npm_audit_summary.md
+          cat npm_audit_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            
+            let body = 'npm Audit failed or did not run correctly.';
+            if (fs.existsSync('npm_audit_summary.md')) {
+              body = fs.readFileSync('npm_audit_summary.md', 'utf8');
+              // Remove the header from the body since updateComment adds it
+              body = body.replace(/^## .*?\n/, '');
+            }
+            
+            await updateComment({
+              github,
+              context,
+              header: 'npm Audit Results',
+              body,
+              workflowYaml: 'security-npm-audit.yml'
+            });
 
       - name: Check for failure
         if: steps.audit.outcome == 'failure'

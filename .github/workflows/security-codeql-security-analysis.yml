@@ -114,7 +114,31 @@ jobs:
                   print("\n✅ No security alerts found.")
           EOF
 
-          python3 codeql_summary.py >> $GITHUB_STEP_SUMMARY
+          python3 codeql_summary.py > codeql_summary.md
+          cat codeql_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            
+            let body = 'CodeQL Analysis failed or did not run correctly.';
+            if (fs.existsSync('codeql_summary.md')) {
+              body = fs.readFileSync('codeql_summary.md', 'utf8');
+              // Remove the header from the body since updateComment adds it
+              body = body.replace(/^## .*?\n/, '');
+            }
+            
+            await updateComment({
+              github,
+              context,
+              header: 'CodeQL Security Analysis',
+              body,
+              workflowYaml: 'security-codeql-security-analysis.yml'
+            });
 
       - name: Upload CodeQL results artifact
         if: always()

@@ -77,7 +77,31 @@ jobs:
           print("|-------|--------|-------|--------|--------|------|")
           print(parse_json_report("results-firefox.json", "E2E Tests"))
           print(parse_json_report("results-a11y.json", "Accessibility Tests"))
-          ' >> $GITHUB_STEP_SUMMARY
+          ' > firefox_summary.md
+          cat firefox_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            
+            let body = 'Firefox Browser Tests failed or did not run correctly.';
+            if (fs.existsSync('firefox_summary.md')) {
+              body = fs.readFileSync('firefox_summary.md', 'utf8');
+              // Remove the header from the body since updateComment adds it
+              body = body.replace(/^## .*?\n/, '');
+            }
+            
+            await updateComment({
+              github,
+              context,
+              header: 'Firefox Browser Test Results',
+              body,
+              workflowYaml: 'ci-firefox-browser-tests.yml'
+            });
 
       - name: Upload test results
         if: always()

@@ -19,6 +19,9 @@ jobs:
     name: 'Automation: Label Pull Request'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
       - name: Apply labels based on changed files
         uses: actions/labeler@v6.0.1
         with:
@@ -30,6 +33,7 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
             const { owner, repo } = context.repo;
             const prNumber = context.issue.number;
 
@@ -46,16 +50,29 @@ jobs:
               let summary = `## 🏷️ Pull Request Labeler\n\n`;
               summary += `**PR:** [${pr.title} (#${prNumber})](${prUrl})\n\n`;
               
+              let body = `**PR:** [${pr.title} (#${prNumber})](${prUrl})\n\n`;
+
               if (labels.length > 0) {
                 summary += `### Current Labels\n`;
+                body += `### Current Labels\n`;
                 labels.forEach(label => {
                   summary += `- \`${label}\`\n`;
+                  body += `- \`${label}\`\n`;
                 });
               } else {
                 summary += `No labels applied.\n`;
+                body += `No labels applied.\n`;
               }
               
               core.summary.addRaw(summary).write();
+
+              await updateComment({
+                github,
+                context,
+                header: 'Pull Request Labeler',
+                body,
+                workflowYaml: 'automation-label-pull-request.yml'
+              });
             } catch (error) {
               core.setFailed(`Failed to get PR details: ${error.message}`);
             }

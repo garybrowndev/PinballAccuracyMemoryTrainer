@@ -71,7 +71,31 @@ jobs:
           print(parse_coverage("coverage/coverage-summary.json"))
           EOF
 
-          python3 coverage_summary.py >> $GITHUB_STEP_SUMMARY
+          python3 coverage_summary.py > coverage_summary.md
+          cat coverage_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            
+            let body = 'Coverage reporting failed or did not run correctly.';
+            if (fs.existsSync('coverage_summary.md')) {
+              body = fs.readFileSync('coverage_summary.md', 'utf8');
+              // Remove the header from the body since updateComment adds it
+              body = body.replace(/^## .*?\n/, '');
+            }
+            
+            await updateComment({
+              github,
+              context,
+              header: 'Code Coverage Results',
+              body,
+              workflowYaml: 'ci-coverage-reporting.yml'
+            });
 
       - name: Upload coverage report artifact
         if: always()

@@ -120,11 +120,10 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
             const previewUrl = '${{ steps.deploy.outputs.preview_url }}';
 
-            const comment = `## 🚀 Preview Deployment
-
-            Your preview deployment is ready!
+            const comment = `Your preview deployment is ready!
 
             🔗 **Preview URL:** ${previewUrl}
 
@@ -147,54 +146,33 @@ jobs:
             ---
             *Deployed at ${new Date().toISOString()}*`;
 
-            // Find existing preview comment
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
+            await updateComment({
+              github,
+              context,
+              header: 'Preview Deployment',
+              body: comment,
+              workflowYaml: 'cd-deploy-pr-preview.yml'
             });
-
-            const existingComment = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('Preview Deployment')
-            );
-
-            if (existingComment) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existingComment.id,
-                body: comment
-              });
-            } else {
-              // Create new comment
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-            }
 
       - name: Comment if deployment failed
         if: steps.deploy.outcome == 'failure'
         uses: actions/github-script@v8
         with:
           script: |
-            const comment = `## ⚠️ Preview Deployment Failed
-
-            The preview deployment could not be completed. This might be due to:
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            const comment = `The preview deployment could not be completed. This might be due to:
             - Missing SURGE_TOKEN secret
             - Build errors
             - Network issues
 
             Please check the workflow logs for details.`;
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
+            await updateComment({
+              github,
+              context,
+              header: 'Preview Deployment (Failed)',
+              body: comment,
+              workflowYaml: 'cd-deploy-pr-preview.yml'
             });
 
       - name: Generate job summary

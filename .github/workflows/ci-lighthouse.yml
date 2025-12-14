@@ -126,4 +126,28 @@ jobs:
                   print("\nNo valid data found in reports.")
 
           print("\nSee artifacts for full reports.")
-          ' >> $GITHUB_STEP_SUMMARY
+          ' > lighthouse_summary.md
+          cat lighthouse_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            
+            let body = 'Lighthouse CI failed or did not run correctly.';
+            if (fs.existsSync('lighthouse_summary.md')) {
+              body = fs.readFileSync('lighthouse_summary.md', 'utf8');
+              // Remove the header from the body since updateComment adds it
+              body = body.replace(/^## .*?\n/, '');
+            }
+            
+            await updateComment({
+              github,
+              context,
+              header: 'Lighthouse CI Results',
+              body,
+              workflowYaml: 'ci-lighthouse.yml'
+            });
