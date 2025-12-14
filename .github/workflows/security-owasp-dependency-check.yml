@@ -65,6 +65,13 @@ jobs:
           sarif_file: reports/dependency-check-report.sarif
           category: dependency-check
 
+      - name: Upload OWASP report artifact
+        if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: reports/dependency-check-report.sarif
+
       - name: Generate job summary
         if: always()
         run: |

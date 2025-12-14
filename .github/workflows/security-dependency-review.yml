@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Dependency Review
+        id: review
         uses: actions/dependency-review-action@v4.8.2
         with:
           # Fail on low and above severity vulnerabilities
@@ -32,3 +33,16 @@ jobs:
           comment-summary-in-pr: always
           # Deny specific licenses (optional - uncomment if needed)
           # deny-licenses: GPL-3.0, AGPL-3.0
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## 🛡️ Dependency Review Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.review.outcome }}" == "success" ]; then
+            echo "✅ No new vulnerabilities found (or they are below the severity threshold)." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Vulnerabilities detected or check failed." >> $GITHUB_STEP_SUMMARY
+            echo "Please check the PR comments for details." >> $GITHUB_STEP_SUMMARY
+          fi

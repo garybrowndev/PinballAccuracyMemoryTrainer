@@ -133,7 +133,6 @@ jobs:
           path: |
             test-results/
             playwright-report/
-          retention-days: 14
           if-no-files-found: ignore
 
       - name: Upload baseline screenshots
@@ -142,7 +141,6 @@ jobs:
         with:
           name: visual-regression-snapshots
           path: tests/e2e/visual-regression.spec.js-snapshots/
-          retention-days: 90
           if-no-files-found: ignore
 
       - name: Update snapshots with current render

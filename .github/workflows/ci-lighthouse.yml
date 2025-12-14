@@ -80,7 +80,6 @@ jobs:
         with:
           name: lighthouse-reports
           path: lighthouse-results/
-          retention-days: 30
 
       - name: Generate job summary
         if: always()

@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   cd-release-build:
-    name: 'CD: Build and Test'
+    name: 'CD: Build and Deploy Release'
     runs-on: ubuntu-latest
     permissions:
       contents: write

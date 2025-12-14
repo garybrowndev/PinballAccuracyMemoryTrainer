@@ -51,7 +51,6 @@ jobs:
         with:
           name: security-audit-report
           path: audit-report.json
-          retention-days: 7
 
       - name: Generate job summary
         if: always()

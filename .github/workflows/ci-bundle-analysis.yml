@@ -185,4 +185,3 @@ jobs:
         with:
           name: dist-bundle
           path: dist/
-          retention-days: 30

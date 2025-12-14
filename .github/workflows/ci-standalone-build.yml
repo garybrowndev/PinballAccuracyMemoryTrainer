@@ -70,7 +70,6 @@ jobs:
         with:
           name: standalone-build
           path: dist-standalone/
-          retention-days: 7
 
       - name: Generate job summary
         if: always()
