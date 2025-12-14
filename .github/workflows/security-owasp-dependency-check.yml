@@ -61,7 +61,71 @@ jobs:
       - name: Upload OWASP results to GitHub Security
         if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
-        continue-on-error: true
         with:
           sarif_file: reports/dependency-check-report.sarif
           category: dependency-check
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          cat <<EOF > owasp_summary.py
+          import json
+          import os
+
+          print("## 🛡️ OWASP Dependency Check Results")
+
+          report_path = "reports/dependency-check-report.sarif"
+          if os.path.exists(report_path):
+              try:
+                  with open(report_path, "r", encoding="utf-8") as f:
+                      data = json.load(f)
+                      runs = data.get("runs", [])
+                      total_vulns = 0
+                      by_severity = {"error": 0, "warning": 0, "note": 0, "other": 0}
+                      all_results = []
+
+                      for run in runs:
+                          results = run.get("results", [])
+                          total_vulns += len(results)
+                          for res in results:
+                              level = res.get("level", "warning")
+                              if level not in by_severity:
+                                  by_severity["other"] += 1
+                              else:
+                                  by_severity[level] += 1
+                              
+                              rule_id = res.get("ruleId", "N/A")
+                              msg = res.get("message", {}).get("text", "N/A")
+                              if len(msg) > 100:
+                                  msg = msg[:97] + "..."
+                              
+                              all_results.append(f"| {rule_id} | {msg} |")
+                      
+                      print(f"\n**Total Vulnerabilities:** {total_vulns}")
+                      
+                      print("\n### Severity Breakdown")
+                      print("| Severity | Count |")
+                      print("| --- | --- |")
+                      print(f"| 🔴 High/Critical | {by_severity['error']} |")
+                      print(f"| ⚠️ Medium | {by_severity['warning']} |")
+                      print(f"| ℹ️ Low | {by_severity['note']} |")
+
+                      if total_vulns > 0:
+                          print("\n### Detailed Findings")
+                          print("| Rule | Message |")
+                          print("| --- | --- |")
+                          for row in all_results[:20]:
+                              print(row)
+                          if len(all_results) > 20:
+                              print(f"| ... | ... ({len(all_results) - 20} more) |")
+                          
+                          print("\nCheck the [Security tab](../../security/code-scanning) for full details.")
+                      else:
+                          print("\n✅ No vulnerabilities found.")
+              except Exception as e:
+                  print(f"Error parsing report: {e}")
+          else:
+              print("Report file not found.")
+          EOF
+
+          python3 owasp_summary.py >> $GITHUB_STEP_SUMMARY

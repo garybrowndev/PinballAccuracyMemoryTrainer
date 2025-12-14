@@ -66,8 +66,33 @@ jobs:
           RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
 
       - name: Upload standalone build artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: standalone-build
           path: dist-standalone/
           retention-days: 7
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          python3 -c '
+          import os
+
+          print("## 📦 Standalone Build Results")
+
+          dist_dir = "dist-standalone"
+          if os.path.exists(dist_dir):
+              files = [f for f in os.listdir(dist_dir) if f.endswith(".html")]
+              if files:
+                  print("| File | Size |")
+                  print("| --- | --- |")
+                  for f in files:
+                      path = os.path.join(dist_dir, f)
+                      size_bytes = os.path.getsize(path)
+                      size_mb = size_bytes / (1024 * 1024)
+                      print(f"| {f} | {size_mb:.2f} MB |")
+              else:
+                  print("No HTML files found in dist-standalone.")
+          else:
+              print("Build directory not found.")
+          ' >> $GITHUB_STEP_SUMMARY

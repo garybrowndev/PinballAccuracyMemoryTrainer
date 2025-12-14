@@ -52,10 +52,44 @@ jobs:
         if: steps.check-snapshots.outputs.has_snapshots == 'true'
         id: visual-tests
         run: |
-          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js
-        continue-on-error: true
+          npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --reporter=list,json,html
         env:
           CI: true
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results-visual.json
+
+      - name: Generate job summary (Comparison)
+        if: always() && steps.check-snapshots.outputs.has_snapshots == 'true'
+        run: |
+          python3 -c '
+          import json
+          import os
+
+          def parse_json_report(file_path, title):
+              if not os.path.exists(file_path):
+                  return f"| {title} | ⚠️ Not Found | - | - | - | - |"
+              
+              try:
+                  with open(file_path, "r") as f:
+                      data = json.load(f)
+                  
+                  stats = data.get("stats", {})
+                  total = stats.get("expected", 0) + stats.get("unexpected", 0) + stats.get("flaky", 0) + stats.get("skipped", 0)
+                  passed = stats.get("expected", 0)
+                  failed = stats.get("unexpected", 0)
+                  flaky = stats.get("flaky", 0)
+                  skipped = stats.get("skipped", 0)
+                  duration = round(stats.get("duration", 0) / 1000, 2)
+                  
+                  status = "✅ PASS" if failed == 0 else "❌ FAIL"
+                  return f"| {title} | {status} | {total} | {passed} | {failed} | {duration}s |"
+              except Exception as e:
+                  return f"| {title} | ⚠️ Error parsing | - | - | - | - |"
+
+          print("## 📸 Visual Regression Results")
+          print("| Suite | Status | Total | Passed | Failed | Time |")
+          print("|-------|--------|-------|--------|--------|------|")
+          print(parse_json_report("results-visual.json", "Visual Comparison"))
+          ' >> $GITHUB_STEP_SUMMARY
 
       - name: Generate Linux baseline snapshots
         if: steps.check-snapshots.outputs.has_snapshots == 'false'

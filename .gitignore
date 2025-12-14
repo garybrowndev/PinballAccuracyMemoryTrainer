@@ -11,6 +11,8 @@ dist/stats.html
 
 # Test results and reports
 test-results/
+test-results.json
+results-*.json
 playwright-report/
 .playwright/
 coverage/

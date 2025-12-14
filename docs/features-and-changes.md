@@ -42,7 +42,7 @@ Ensure that the depdency check and code coverage are running correctly and preve
 
 Fix the lighthouse issues being pushed to the magic google place
 
-Look back at all workflows and ensure the right artifcats and summary at bottom under the job are there if applicable and make sense
+Look back at all workflows and ensure the right artifcats and summary at bottom under the job are there if applicable and make sense. Also add stats that make sense for that flow, like with lighthouse CI it should show some of the performance numbers and for the codeql analysis, stuff like how many cve were checked again. doesn't have to be lots of logic or complicated stuff, just summary, stats, important findings, and recording of pass/fail and a little context
 
 Also check if a comment on a pr is necessary
 

@@ -8,6 +8,12 @@
     "node": ">=24.0.0",
     "npm": ">=10.0.0"
   },
+  "overrides": {
+    "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.4.15",
+    "workbox-build": {
+      "source-map": "0.7.4"
+    }
+  },
   "browserslist": [
     ">0.2%",
     "not dead",

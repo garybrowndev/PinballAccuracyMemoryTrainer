@@ -32,10 +32,22 @@ jobs:
         run: npm ci
 
       - name: Run linter
+        id: lint
         run: npm run lint
+        continue-on-error: true
 
       - name: Check code formatting
+        id: format
         run: npm run format:check
+        continue-on-error: true
+
+      - name: Calculate Code Stats
+        id: stats
+        run: |
+          FILES=$(find src tests config -type f \( -name "*.js" -o -name "*.jsx" \) | wc -l)
+          LINES=$(find src tests config -type f \( -name "*.js" -o -name "*.jsx" \) -exec cat {} + | wc -l)
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          echo "lines=$LINES" >> $GITHUB_OUTPUT
 
       - name: Generate job summary
         if: always()
@@ -44,5 +56,29 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ESLint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Prettier | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+
+          LINT_STATUS="${{ steps.lint.outcome }}"
+          FORMAT_STATUS="${{ steps.format.outcome }}"
+
+          if [ "$LINT_STATUS" == "success" ]; then
+            echo "| ESLint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ESLint | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "$FORMAT_STATUS" == "success" ]; then
+            echo "| Prettier | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Prettier | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Code Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Files  | ${{ steps.stats.outputs.files }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lines  | ${{ steps.stats.outputs.lines }} |" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$LINT_STATUS" != "success" ] || [ "$FORMAT_STATUS" != "success" ]; then
+            exit 1
+          fi

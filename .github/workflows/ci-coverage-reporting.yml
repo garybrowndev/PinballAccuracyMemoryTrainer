@@ -40,6 +40,46 @@ jobs:
       - name: Run unit tests with coverage
         run: npm run test:coverage
 
+      - name: Generate job summary
+        if: always()
+        run: |
+          cat <<'EOF' > coverage_summary.py
+          import json
+          import os
+
+          def parse_coverage(file_path):
+              if not os.path.exists(file_path):
+                  return "| ⚠️ Coverage Summary Not Found | - | - | - | - |"
+              
+              try:
+                  with open(file_path, "r") as f:
+                      data = json.load(f)
+                  
+                  total = data.get("total", {})
+                  lines = total.get("lines", {})
+                  statements = total.get("statements", {})
+                  functions = total.get("functions", {})
+                  branches = total.get("branches", {})
+                  
+                  return f"| Total | {lines.get('pct', 0)}% | {statements.get('pct', 0)}% | {functions.get('pct', 0)}% | {branches.get('pct', 0)}% |"
+              except Exception as e:
+                  return f"| ⚠️ Error parsing: {e} | - | - | - | - |"
+
+          print("## 📊 Code Coverage Results")
+          print("| Category | Lines | Statements | Functions | Branches |")
+          print("|----------|-------|------------|-----------|----------|")
+          print(parse_coverage("coverage/coverage-summary.json"))
+          EOF
+
+          python3 coverage_summary.py >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5.5.1
         with:
