@@ -46,7 +46,7 @@ jobs:
       - name: Generate CodeQL Summary
         if: always()
         run: |
-          python3 -c '
+          cat <<EOF > codeql_summary.py
           import json
           import os
           import glob
@@ -59,7 +59,9 @@ jobs:
               print("No SARIF files found.")
           else:
               total_alerts = 0
-              
+              by_severity = {"error": 0, "warning": 0, "note": 0, "other": 0}
+              all_results = []
+
               for f in files:
                   try:
                       with open(f, "r", encoding="utf-8") as json_file:
@@ -68,37 +70,48 @@ jobs:
                           for run in runs:
                               results = run.get("results", [])
                               total_alerts += len(results)
+                              for res in results:
+                                  level = res.get("level", "warning")
+                                  if level not in by_severity:
+                                      by_severity["other"] += 1
+                                  else:
+                                      by_severity[level] += 1
+                                  
+                                  rule_id = res.get("ruleId", "N/A")
+                                  msg = res.get("message", {}).get("text", "N/A")
+                                  locs = res.get("locations", [])
+                                  if locs:
+                                      ploc = locs[0].get("physicalLocation", {})
+                                      uri = ploc.get("artifactLocation", {}).get("uri", "unknown")
+                                      line = ploc.get("region", {}).get("startLine", 0)
+                                      location = f"{uri}:{line}"
+                                  else:
+                                      location = "N/A"
+                                  
+                                  all_results.append(f"| {rule_id} | {msg} | {location} |")
+
                   except Exception as e:
-                      pass
+                      print(f"Error parsing {f}: {e}")
+
+              print(f"\n**Total Alerts:** {total_alerts}")
               
-              if total_alerts == 0:
-                  print("\n✅ No security alerts found.")
+              print("\n### Severity Breakdown")
+              print("| Severity | Count |")
+              print("| --- | --- |")
+              print(f"| 🔴 Error | {by_severity['error']} |")
+              print(f"| ⚠️ Warning | {by_severity['warning']} |")
+              print(f"| ℹ️ Note | {by_severity['note']} |")
+
+              if total_alerts > 0:
+                  print("\n### Detailed Findings")
+                  print("| Rule | Message | Location |")
+                  print("| --- | --- | --- |")
+                  for row in all_results[:20]:
+                      print(row)
+                  if len(all_results) > 20:
+                      print(f"| ... | ... ({len(all_results) - 20} more) | ... |")
               else:
-                  print(f"\n⚠️ Found {total_alerts} alerts. Check the [Security tab](../../security/code-scanning) for details.")
-          ' >> $GITHUB_STEP_SUMMARY
+                  print("\n✅ No security alerts found.")
+          EOF
 
-          # Find the SARIF file
-          SARIF_FILE=$(find codeql-results -name "*.sarif" | head -n 1)
-
-          if [ -f "$SARIF_FILE" ]; then
-            # Get total count
-            COUNT=$(jq '.runs[].results | length' "$SARIF_FILE")
-            echo "### Total Alerts: $COUNT" >> $GITHUB_STEP_SUMMARY
-            
-            if [ "$COUNT" -gt 0 ]; then
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "| Rule | Message | Location |" >> $GITHUB_STEP_SUMMARY
-              echo "| --- | --- | --- |" >> $GITHUB_STEP_SUMMARY
-              
-              # Generate table rows
-              jq -r '.runs[].results[] | "| \(.ruleId) | \(.message.text) | \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine) |"' "$SARIF_FILE" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "✅ No security alerts found." >> $GITHUB_STEP_SUMMARY
-            fi
-            
-            # Also print to console for logs
-            echo "Detailed Findings:"
-            jq -r '.runs[].results[] | "Rule: \(.ruleId)\nMessage: \(.message.text)\nLocation: \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine)\n-------------------"' "$SARIF_FILE"
-          else
-            echo "❌ SARIF file not found." >> $GITHUB_STEP_SUMMARY
-          fi
+          python3 codeql_summary.py >> $GITHUB_STEP_SUMMARY

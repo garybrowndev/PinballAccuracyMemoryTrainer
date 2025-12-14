@@ -38,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Run unit tests with coverage
-        run: npm run test:coverage -- --reporter=default --reporter=json-summary --outputFile.json-summary=coverage/coverage-summary.json
+        run: npm run test:coverage -- --coverage.reporter=text --coverage.reporter=json-summary --coverage.reporter=lcov
 
       - name: Generate job summary
         if: always()

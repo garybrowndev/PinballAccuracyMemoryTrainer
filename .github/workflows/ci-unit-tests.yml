@@ -75,7 +75,13 @@ jobs:
                       time = root.attrib.get("time", "0")
                   
                   status = "✅ PASS" if int(failures) == 0 and int(errors) == 0 else "❌ FAIL"
-                  return f"| {title} | {status} | {tests} | {failures} | {errors} | {time}s |"
+                  try:
+                      time_val = float(time)
+                      time_str = f"{int(round(time_val))}s"
+                  except:
+                      time_str = f"{time}s"
+                  
+                  return f"| {title} | {status} | {tests} | {failures} | {errors} | {time_str} |"
               except Exception as e:
                   return f"| {title} | ⚠️ Error parsing | - | - | - | - |"
 

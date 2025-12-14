@@ -72,14 +72,14 @@ jobs:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install -g @lhci/cli@0.13.x
-          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
+          lhci autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI" --collect.outputDir=./lighthouse-results
 
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
-          path: .lighthouseci/
+          path: lighthouse-results/
           retention-days: 30
 
       - name: Generate job summary
@@ -94,7 +94,7 @@ jobs:
           print("| Category | Score |")
           print("| --- | --- |")
 
-          files = glob.glob(".lighthouseci/lhr-*.json")
+          files = glob.glob("lighthouse-results/lhr-*.json")
           if not files:
               print("\nNo Lighthouse reports found.")
           else:

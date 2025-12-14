@@ -37,12 +37,12 @@ jobs:
       - name: Run E2E tests on Firefox
         run: npx playwright test --project=firefox --config config/playwright.config.js --grep-invert "Visual Regression" --reporter=list,json,html
         env:
-          PLAYWRIGHT_JSON_OUTPUT_NAME: results-firefox.json
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results-firefox.json
 
       - name: Run accessibility E2E tests on Firefox
         run: npx playwright test --project=firefox --config config/playwright.config.js tests/e2e/accessibility.spec.js --reporter=list,json,html
         env:
-          PLAYWRIGHT_JSON_OUTPUT_NAME: results-a11y.json
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results-a11y.json
 
       - name: Generate job summary
         if: always()

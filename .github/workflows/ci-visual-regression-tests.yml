@@ -55,7 +55,7 @@ jobs:
           npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --reporter=list,json,html
         env:
           CI: true
-          PLAYWRIGHT_JSON_OUTPUT_NAME: results-visual.json
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results-visual.json
 
       - name: Generate job summary (Comparison)
         if: always() && steps.check-snapshots.outputs.has_snapshots == 'true'

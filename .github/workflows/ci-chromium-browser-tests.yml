@@ -37,12 +37,12 @@ jobs:
       - name: Run E2E tests on Chromium
         run: npx playwright test --project=chromium --config config/playwright.config.js --grep-invert "Visual Regression" --reporter=list,json,html
         env:
-          PLAYWRIGHT_JSON_OUTPUT_NAME: results-chromium.json
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results-chromium.json
 
       - name: Run accessibility E2E tests on Chromium
         run: npx playwright test --project=chromium --config config/playwright.config.js tests/e2e/accessibility.spec.js --reporter=list,json,html
         env:
-          PLAYWRIGHT_JSON_OUTPUT_NAME: results-a11y.json
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results-a11y.json
 
       - name: Generate job summary
         if: always()
