@@ -47,15 +47,13 @@ jobs:
       - name: Deploy to Surge.sh (Preview)
         id: deploy
         run: |
-          # Install surge if not present
-          npm install -g surge
-
           # Generate unique preview URL
           PR_NUMBER="${{ github.event.pull_request.number }}"
           PREVIEW_URL="pinball-trainer-pr-${PR_NUMBER}.surge.sh"
 
           # Deploy to surge
-          surge ./deploy $PREVIEW_URL --token ${{ secrets.SURGE_TOKEN }}
+          # Deploy using npx
+          npx surge ./deploy $PREVIEW_URL --token ${{ secrets.SURGE_TOKEN }}
 
           echo "preview_url=https://$PREVIEW_URL" >> $GITHUB_OUTPUT
 
