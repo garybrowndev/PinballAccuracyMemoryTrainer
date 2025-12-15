@@ -22,8 +22,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  analysis:
-    name: Scorecard analysis
+  security-ossf-scorecard:
+    name: 'Security: OSSF Scorecard Analysis'
     runs-on: ubuntu-latest
     permissions:
       # Needed to upload the results to code-scanning dashboard.
@@ -76,18 +76,27 @@ jobs:
 
       - name: Generate job summary
         if: always()
-        run: |
-          echo "## 🛡️ OSSF Scorecard Results" > scorecard_summary.md
-          echo "" >> scorecard_summary.md
-          echo "Scorecard analysis completed. Results have been uploaded to the GitHub Security tab." >> scorecard_summary.md
-          echo "" >> scorecard_summary.md
-          echo "### Checks Performed" >> scorecard_summary.md
-          echo "- ✅ Branch Protection" >> scorecard_summary.md
-          echo "- ✅ Code Review" >> scorecard_summary.md
-          echo "- ✅ Maintained" >> scorecard_summary.md
-          echo "- ✅ Pinned Dependencies" >> scorecard_summary.md
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = `## 🛡️ OSSF Scorecard Results
 
-          cat scorecard_summary.md >> $GITHUB_STEP_SUMMARY
+            Scorecard analysis completed. Results have been uploaded to the GitHub Security tab.
+
+            ### Checks Performed
+            - ✅ Branch Protection
+            - ✅ Code Review
+            - ✅ Maintained
+            - ✅ Pinned Dependencies
+            `;
+
+            try {
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+              fs.writeFileSync('scorecard_summary.md', summary);
+            } catch (error) {
+              console.error('Error writing summary:', error);
+            }
 
       - name: Update PR Comment
         if: always() && github.event_name == 'pull_request'
