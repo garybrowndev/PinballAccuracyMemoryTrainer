@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 # Prevent multiple concurrent releases - only one at a time
 concurrency:
   group: cd-release-${{ github.sha }}

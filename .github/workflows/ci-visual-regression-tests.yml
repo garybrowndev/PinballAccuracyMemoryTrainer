@@ -9,6 +9,9 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 jobs:
   ci-visual-regression-tests:
     name: 'CI: Visual Regression Tests'
