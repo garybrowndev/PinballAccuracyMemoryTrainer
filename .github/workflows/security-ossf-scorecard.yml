@@ -76,27 +76,16 @@ jobs:
 
       - name: Generate job summary
         if: always()
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
-        with:
-          script: |
-            const fs = require('fs');
-            const summary = `## 🛡️ OSSF Scorecard Results
-
-            Scorecard analysis completed. Results have been uploaded to the GitHub Security tab.
-
-            ### Checks Performed
-            - ✅ Branch Protection
-            - ✅ Code Review
-            - ✅ Maintained
-            - ✅ Pinned Dependencies
-            `;
-
-            try {
-              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
-              fs.writeFileSync('scorecard_summary.md', summary);
-            } catch (error) {
-              console.error('Error writing summary:', error);
-            }
+        run: |
+          echo "## 🛡️ OSSF Scorecard Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Scorecard analysis completed. Results have been uploaded to the GitHub Security tab." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Checks Performed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Branch Protection" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Code Review" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Maintained" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Pinned Dependencies" >> $GITHUB_STEP_SUMMARY
 
       - name: Update PR Comment
         if: always() && github.event_name == 'pull_request'
