@@ -31,10 +31,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Run OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@main
+        uses: dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c # main
         id: depcheck
         with:
           project: 'PinballAccuracyMemoryTrainer'
@@ -61,14 +61,14 @@ jobs:
 
       - name: Upload OWASP results to GitHub Security
         if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@1b168cd39490f61582a9beae412bb7057a6b2c4e # v4.31.8
         with:
           sarif_file: reports/dependency-check-report.sarif
           category: dependency-check
 
       - name: Upload OWASP report artifact
         if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: dependency-check-report
           path: reports/dependency-check-report.sarif
@@ -141,7 +141,7 @@ jobs:
 
       - name: Update PR Comment
         if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const fs = require('fs');

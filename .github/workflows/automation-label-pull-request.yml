@@ -20,17 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Apply labels based on changed files
-        uses: actions/labeler@v6.0.1
+        uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b # v6.0.1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           sync-labels: false # Only add labels, don't remove existing ones
 
       - name: Generate job summary
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
