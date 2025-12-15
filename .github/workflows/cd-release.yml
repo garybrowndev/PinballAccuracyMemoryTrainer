@@ -116,10 +116,11 @@ jobs:
                 if (run.status !== 'completed') {
                   allComplete = false;
                   console.log(`⏳ ${run.name}: ${run.status}`);
-                } else if (run.conclusion !== 'success') {
-                  allSuccess = false;
-                  console.log(`❌ ${run.name}: ${run.conclusion}`);
                 } else {
+                  // Fail fast if any workflow failed or was skipped
+                  if (run.conclusion !== 'success') {
+                    throw new Error(`Workflow ${run.name} failed with conclusion: ${run.conclusion}. Aborting deployment.`);
+                  }
                   console.log(`✅ ${run.name}: success`);
                 }
               }

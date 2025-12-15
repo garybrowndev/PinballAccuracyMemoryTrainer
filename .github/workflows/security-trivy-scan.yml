@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  trivy-scan:
-    name: Trivy Vulnerability & Secret Scan
+  security-trivy-scan:
+    name: 'Security: Trivy Vulnerability & Secret Scan'
     runs-on: ubuntu-latest
     permissions:
       contents: read
