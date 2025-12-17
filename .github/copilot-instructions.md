@@ -192,7 +192,64 @@ When requesting code changes:
 - If altering ordering/drift, restate invariant: left ascending / right descending with 5% steps.
 - Ask for minimal diff & avoid formatting unrelated lines.
 
-## 18. Anti‑Patterns to Avoid
+## 18. Learning from Mistakes: Persistent Error Log
+
+**Purpose**: Maintain institutional knowledge across chat sessions to prevent repeated mistakes.
+
+### The Problem
+
+AI assistants often make the same mistakes across different chat sessions (or even within the same session), especially trivial errors like:
+
+- Script syntax errors
+- Missing dependencies
+- Incorrect file paths
+- Wrong parameter types
+- Forgetting project-specific conventions
+
+### The Solution
+
+Maintain a persistent lessons-learned file at `.github/copilot-lessons-learned.md` that documents common mistakes and their solutions.
+
+### When to Update the Lessons File
+
+Update `.github/copilot-lessons-learned.md` whenever:
+
+1. You encounter an error that was caused by your own mistake (not user error or external issues)
+2. The mistake is something that could be prevented with better instructions
+3. The error took more than one attempt to fix (iterative debugging)
+4. You realize the mistake was trivial or could have been caught earlier
+5. The mistake relates to project-specific conventions or patterns
+
+### How to Update
+
+1. **Before starting any significant work**: Read `.github/copilot-lessons-learned.md` to review previous mistakes
+2. **When you make a mistake**: Append a new entry with:
+   - Date
+   - Brief description of the mistake
+   - What you should have done instead
+   - How to prevent it in the future
+3. **Keep entries concise**: 2-4 lines per mistake
+4. **Group related mistakes**: Use categories like "Build Scripts", "Testing", "File Paths", etc.
+
+### Example Entry Format
+
+```markdown
+### [Category] - [Brief Title]
+
+**Date**: YYYY-MM-DD
+**Mistake**: [What went wrong]
+**Correct Approach**: [What should have been done]
+**Prevention**: [How to avoid this in future]
+```
+
+### Integration with Workflow
+
+- The lessons file is automatically loaded as context for AI assistants via this instruction file
+- Review it at the start of each session, especially for complex tasks
+- Treat it as living documentation that evolves with the project
+- If a lesson becomes obsolete (due to architecture changes), mark it as [DEPRECATED]
+
+## 19. Anti‑Patterns to Avoid
 
 - Introducing floating-point percent states (keep multiples of 5 enforced early).
 - Duplicating localStorage keys or writing directly without the `useLocalStorage` hook pattern.
@@ -200,7 +257,7 @@ When requesting code changes:
 - Adding third-party state libraries for ephemeral UI toggles.
 - Blocking main thread with large loops without measuring (row counts are small by design).
 
-## 19. Glossary
+## 20. Glossary
 
 - Shot Row: A single shot configuration entry (with flipper percentages).
 - Hidden Truth: Randomized, drift-constrained true percentages user is recalling.
