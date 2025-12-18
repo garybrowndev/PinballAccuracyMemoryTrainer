@@ -18,6 +18,10 @@ We welcome contributions from everyone — whether it's fixing bugs, adding new 
 
 This project and everyone participating in it is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
+## Security & Best Practices
+
+This project follows the [OpenSSF Best Practices](https://www.bestpractices.dev/projects/10230) for secure open source development. All contributors are expected to follow secure coding practices and report security vulnerabilities responsibly. See [SECURITY.md](../SECURITY.md) for details.
+
 ## Getting Started
 
 ### Prerequisites
