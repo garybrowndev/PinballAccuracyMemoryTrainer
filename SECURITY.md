@@ -42,6 +42,19 @@ This project implements:
 - ✅ **CodeQL Analysis** - Static code analysis for security issues
 - ✅ **WCAG 2.1 AAA Accessibility** - Inclusive and secure user experience
 
+## OpenSSF Best Practices
+
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10230/badge)](https://www.bestpractices.dev/projects/10230)
+
+This project follows the [OpenSSF Best Practices](https://www.bestpractices.dev/) guidelines for secure open source software development. We are committed to:
+
+- **Security Best Practices**: Following industry standards for secure development
+- **Vulnerability Reporting**: Clear process for reporting and addressing security issues
+- **Continuous Improvement**: Regular security audits and updates
+- **Transparency**: Open security policies and documented practices
+
+For more information about our security practices, see our [OpenSSF Best Practices page](https://www.bestpractices.dev/projects/10230).
+
 ## localStorage Security
 
 All localStorage operations use sanitized wrappers that:
