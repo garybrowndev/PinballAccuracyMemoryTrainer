@@ -20,7 +20,7 @@ _👆 Click the screenshot to launch the app_
 
 |                                                              |                                                      |
 | :----------------------------------------------------------: | :--------------------------------------------------: |
-|              🎰 **38+ Classic & Modern Tables**              |      🧠 **Memory Training with Dynamic Drift**       |
+|                  🎰 **38+ Classic Tables**                   |      🧠 **Memory Training with Dynamic Drift**       |
 | Addams Family, Medieval Madness, Attack from Mars, and more! | Values shift as you practice — no rote memorization! |
 |            📊 **Real-Time Performance Tracking**             |              🌐 **Works 100% Offline**               |
 |    Instant feedback on accuracy with color-coded results     |       All data stored locally in your browser        |
