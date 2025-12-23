@@ -57,3 +57,20 @@ This file documents mistakes made by AI assistants during development to prevent
 ---
 
 _Add new entries below as they occur. Keep this file as a living document._
+
+---
+
+## GitHub Code Scanning
+
+### "Configuration Not Found" Stale Category Fix
+
+**Date**: 2025-12-23
+**Mistake**: Assumed the "1 configuration not found" neutral check on PRs was benign or unfixable
+**Correct Approach**: This occurs when a SARIF upload category exists on the base branch (e.g., `supply-chain/branch-protection`) but is not generated for PR branches. The fix is to DELETE all analyses with that stale category using the GitHub API:
+
+```bash
+gh api repos/{owner}/{repo}/code-scanning/analyses/{id}?confirm_delete=true --method DELETE
+```
+
+Each delete returns `next_analysis_url` - continue deleting until you get `null`, fully purging the stale category.
+**Prevention**: When seeing "configuration not found" warnings, compare categories between `refs/heads/master` and `refs/pull/{n}/merge` analyses to identify the mismatch, then delete the stale category from the base branch.

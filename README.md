@@ -20,7 +20,7 @@ _👆 Click the screenshot to launch the app_
 
 |                                                              |                                                      |
 | :----------------------------------------------------------: | :--------------------------------------------------: |
-|              🎰 **38+ Classic & Modern Tables**              |      🧠 **Memory Training with Dynamic Drift**       |
+|                  🎰 **38+ Classic Tables**                   |      🧠 **Memory Training with Dynamic Drift**       |
 | Addams Family, Medieval Madness, Attack from Mars, and more! | Values shift as you practice — no rote memorization! |
 |            📊 **Real-Time Performance Tracking**             |              🌐 **Works 100% Offline**               |
 |    Instant feedback on accuracy with color-coded results     |       All data stored locally in your browser        |
@@ -166,7 +166,7 @@ The trainer helps pinball players develop muscle memory for shot accuracy by:
 ### Shot Configuration
 
 - **Visual playfield editor** - Arrange shots spatially on an arc-based layout with visual flipper representations
-- **38 pinball preset tables** - Pre-configured shot layouts from classic and modern pinball machines (Addams Family, Medieval Madness, Attack from Mars, etc.)
+- **39 pinball preset tables** - Pre-configured shot layouts from classic pinball machines (Addams Family, Medieval Madness, Attack from Mars, etc.)
 - **Custom shot creation** - Setup shots using 20 base elements (Ramp, Orbit, Drops, Spinner, etc.) combined with 8 location modifiers (Left, Right, Center, Side, Top, Upper, Bottom, Lower)
 - **Image-based tiles** - Optional visual shot element thumbnails with 80×80px tiles (extensible with WebP images in `/public/images/elements/`)
 - **Export/import** - Save your custom shot configurations as JSON files
