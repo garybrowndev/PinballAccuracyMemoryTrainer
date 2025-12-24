@@ -10,6 +10,8 @@
  * Usage: node inject-branch-protection.js <sarif-file-path>
  */
 
+/* eslint-disable no-console, security/detect-non-literal-fs-filename */
+
 const fs = require('fs');
 const path = require('path');
 
