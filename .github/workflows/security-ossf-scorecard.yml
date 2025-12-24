@@ -58,7 +58,10 @@ jobs:
           # For private repositories:
           #   - `publish_results` will always be set to `false`, regardless
           #     of the value entered here.
-          publish_results: true
+          # NOTE: Publishing disabled because it requires jobs with ONLY `uses:` steps
+          # (no `run:` steps allowed). We need `run:` steps for summaries and PR comments.
+          # See: https://github.com/ossf/scorecard-action#workflow-restrictions
+          publish_results: false
 
       # Note: Branch-Protection check will not run on PRs without admin PAT token.
       # This is expected behavior - the check requires additional permissions beyond
