@@ -90,13 +90,44 @@ jobs:
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
+          # Extract both viewer URL (with comparison) and direct storage URL
+          VIEWER_URL=$(echo "$UPLOAD_OUTPUT" | grep -oE 'https://googlechrome\.github\.io/lighthouse-ci/viewer/\?[^[:space:]]+' | head -n 1)
+
+          # Extract the direct storage URL (current report) from either:
+          # 1. compareReport parameter in viewer URL (when comparison exists)
+          # 2. baseReport parameter in viewer URL (when only one report)
+          # 3. Direct storage URL in output (fallback)
+          if [ -n "$VIEWER_URL" ]; then
+            DIRECT_URL=$(echo "$VIEWER_URL" | grep -oE 'compareReport=https[^&]+' | sed 's/compareReport=//' | sed 's/%3A/:/g' | sed 's/%2F/\//g')
+            if [ -z "$DIRECT_URL" ]; then
+              DIRECT_URL=$(echo "$VIEWER_URL" | grep -oE 'baseReport=https[^&]+' | sed 's/baseReport=//' | sed 's/%3A/:/g' | sed 's/%2F/\//g')
+            fi
+          else
+            DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oE 'https://storage\.googleapis\.com/[^[:space:]]+\.html' | head -n 1)
+          fi
+
+          # Output both URLs
+          echo "report_url=$VIEWER_URL" >> $GITHUB_OUTPUT
+          echo "direct_report_url=$DIRECT_URL" >> $GITHUB_OUTPUT
+
+          if [ -n "$VIEWER_URL" ]; then
+            echo "📊 Lighthouse Comparison View: $VIEWER_URL"
+          fi
+          if [ -n "$DIRECT_URL" ]; then
+            echo "📄 Direct Report: $DIRECT_URL"
+          fi
+          if [ -z "$VIEWER_URL" ] && [ -z "$DIRECT_URL" ]; then
+            echo "⚠️  No report URLs found in upload output"
+          fi
+
           # Restore the directory for artifact upload
           rm -rf .lighthouseci
           mv .lighthouseci-backup .lighthouseci
       - name: Generate job summary
         if: always()
         env:
-          REPORT_URL: ${{ steps.lighthouse.outputs.report_url }}
+          VIEWER_URL: ${{ steps.lighthouse.outputs.report_url }}
+          DIRECT_URL: ${{ steps.lighthouse.outputs.direct_report_url }}
         run: |
           python3 -c '
           import json
@@ -105,10 +136,18 @@ jobs:
 
           print("## Lighthouse CI Results")
 
-          # Add report URL if available
-          report_url = os.environ.get("REPORT_URL", "")
-          if report_url:
-              print(f"\n📊 **[View Full Report]({report_url})**\n")
+          # Add report URLs if available
+          viewer_url = os.environ.get("VIEWER_URL", "")
+          direct_url = os.environ.get("DIRECT_URL", "")
+
+          if direct_url:
+              print(f"\n📄 **[View Report]({direct_url})**")
+
+          if viewer_url and viewer_url != direct_url:
+              print(f"📊 **[View Comparison]({viewer_url})**")
+
+          if direct_url or viewer_url:
+              print("")  # Add spacing
 
           print("| Category | Score |")
           print("| --- | --- |")
