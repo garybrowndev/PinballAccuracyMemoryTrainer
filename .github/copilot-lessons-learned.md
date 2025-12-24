@@ -69,3 +69,38 @@ _Add new entries below as they occur. Keep this file as a living document._
 **Rejected Fix**: Only uploading SARIF on PRs hides security status of the Master branch.
 **Correct Fix**: Explicitly exclude the `Branch-Protection` check using the `checks_to_run` list in the workflow. This ensures the set of checks (and thus categories) is identical on both Master and PRs, without needing an Admin PAT.
 **Prevention**: When configuring Scorecard without an Admin PAT, explicitly disable `Branch-Protection` to avoid category mismatches.
+
+---
+
+## CI/CD Workflows
+
+### External Service Dependencies - Non-Blocking Checks
+
+**Date**: 2025-12-17
+**Mistake**: Workflow validation steps for external services (surge.sh) caused PR failures during service outages
+**Correct Approach**: Add service availability check before validation; use `continue-on-error: true` to prevent blocking; provide clear messaging about service status
+**Prevention**: Always design workflows with external dependencies to be non-blocking; follow GitHub Actions best practices for resilience
+**Implementation Pattern**:
+
+``yaml
+
+- name: Check service availability
+  id: service-check
+  continue-on-error: true
+  run: |
+  if timeout 10 curl -sf https://service.com > /dev/null 2>&1; then
+  echo "available=true" >> $GITHUB_OUTPUT
+  else
+  echo "available=false" >> $GITHUB_OUTPUT
+  exit 1
+  fi
+
+- name: Validate deployment
+  if: steps.service-check.outputs.available == 'true'
+  run: # validation logic
+
+- name: Report unavailability
+  if: steps.service-check.outcome == 'failure'
+  run: |
+  echo "::notice title=Service Unavailable::Validation skipped due to service outage"
+  ``
