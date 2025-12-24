@@ -146,11 +146,20 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 
   js = js.replaceAll(/let\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g, 'let IMAGE_BASE_URL = ""');
 
+  // Remove sourceMappingURL comments to prevent 404 errors for missing .map files
+  js = js.replaceAll(/\/\/# sourceMappingURL=.*/g, '');
+
+  // Read and embed the favicon
+  const faviconPath = path.join(rootDir, 'public', 'vite.svg');
+  const faviconContent = fs.readFileSync(faviconPath, 'utf8');
+  const faviconDataUri = `data:image/svg+xml,${encodeURIComponent(faviconContent)}`;
+
   // Create standalone HTML
   const standaloneHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="${faviconDataUri}">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   
   <!-- SEO Meta Tags -->
