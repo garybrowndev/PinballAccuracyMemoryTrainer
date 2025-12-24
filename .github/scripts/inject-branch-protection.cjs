@@ -45,6 +45,15 @@ const SYNTHETIC_RESULT = {
   message: {
     text: 'Branch-Protection check skipped on non-default branch (synthetic result for SARIF consistency)',
   },
+  locations: [
+    {
+      physicalLocation: {
+        artifactLocation: {
+          uri: '.github/workflows/security-ossf-scorecard.yml',
+        },
+      },
+    },
+  ],
 };
 
 function injectBranchProtection(sarifPath) {
