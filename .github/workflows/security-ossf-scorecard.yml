@@ -70,6 +70,9 @@ jobs:
           retention-days: 5
 
       - name: 'Upload to code-scanning'
+        # Only upload SARIF on pull_request events to avoid category mismatch
+        # between master and PR branches (Branch-Protection check doesn't run on PRs without admin token)
+        if: github.event_name == 'pull_request'
         uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4
         with:
           sarif_file: results.sarif

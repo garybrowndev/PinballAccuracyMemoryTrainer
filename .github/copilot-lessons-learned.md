@@ -62,15 +62,11 @@ _Add new entries below as they occur. Keep this file as a living document._
 
 ## GitHub Code Scanning
 
-### "Configuration Not Found" Stale Category Fix
+### "Configuration Not Found" - Root Cause and Permanent Fix
 
 **Date**: 2025-12-23
-**Mistake**: Assumed the "1 configuration not found" neutral check on PRs was benign or unfixable
-**Correct Approach**: This occurs when a SARIF upload category exists on the base branch (e.g., `supply-chain/branch-protection`) but is not generated for PR branches. The fix is to DELETE all analyses with that stale category using the GitHub API:
-
-```bash
-gh api repos/{owner}/{repo}/code-scanning/analyses/{id}?confirm_delete=true --method DELETE
-```
-
-Each delete returns `next_analysis_url` - continue deleting until you get `null`, fully purging the stale category.
-**Prevention**: When seeing "configuration not found" warnings, compare categories between `refs/heads/master` and `refs/pull/{n}/merge` analyses to identify the mismatch, then delete the stale category from the base branch.
+**Root Cause**: The Branch-Protection check in OSSF Scorecard requires admin PAT token to run fully. Without the token (commented out in workflow), Scorecard still generates a `supply-chain/branch-protection` category when running on master, but does NOT generate it on PR branches. This causes GitHub Code Scanning to show "1 configuration not found" error on PRs because the baseline (master) has a category that the PR doesn't have.
+**Temporary Fix (NOT RECOMMENDED)**: Deleting stale analyses via `gh api repos/{owner}/{repo}/code-scanning/analyses/{id}?confirm_delete=true --method DELETE` fixes the error temporarily, but the category is regenerated next time Scorecard runs on master.
+**Permanent Fix**: Modify `.github/workflows/security-ossf-scorecard.yml` to only upload SARIF results on `pull_request` events, not on `push` to master. Add `if: github.event_name == 'pull_request'` to the 'Upload to code-scanning' step. This ensures master and PR branches have matching categories.
+**Alternative Fix**: Enable `repo_token` with admin PAT so Branch-Protection runs on both master and PRs (requires creating SCORECARD_TOKEN secret), or migrate from Branch Protection to Repository Rules (accessible with default GITHUB_TOKEN).
+**Prevention**: When configuring Scorecard workflow, ensure SARIF uploads only happen for events where the checks generate consistent categories. If a check requires admin access and you can't provide it, exclude that check or only upload on PRs.
