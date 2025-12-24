@@ -76,7 +76,7 @@ jobs:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Use npx with pinned version (avoids global install for security)
-          npx @lhci/cli@0.14.0 autorun --config=config/lighthouserc.cjs --upload.github-status-context="Lighthouse CI"
+          npx @lhci/cli@0.14.0 autorun --config=config/lighthouserc.cjs
 
       - name: Upload Lighthouse reports
         if: always()
