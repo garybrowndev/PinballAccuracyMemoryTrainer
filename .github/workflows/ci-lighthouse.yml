@@ -79,26 +79,20 @@ jobs:
           # Use separate commands instead of autorun to preserve .lighthouseci/ for artifacts
           # Collect performance data
           npx @lhci/cli@0.14.0 collect --config=config/lighthouserc.cjs
-          
+
           # Run assertions
           npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
+
+          # Copy .lighthouseci/ before upload (upload command deletes files after uploading to GCS)
+          cp -r .lighthouseci .lighthouseci-backup
           
           # Upload and capture the report URL
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
           
-          # Extract report URL and save to output
-          REPORT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^ ]+' | head -1)
-          echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
-          echo "📊 Report uploaded to: $REPORT_URL"
-
-      - name: Upload Lighthouse reports
-        if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        with:
-          name: lighthouse-reports
-          path: .lighthouseci/
-
+          # Restore the directory for artifact upload
+          rm -rf .lighthouseci
+          mv .lighthouseci-backup .lighthouseci
       - name: Generate job summary
         if: always()
         env:
@@ -110,12 +104,12 @@ jobs:
           import glob
 
           print("## Lighthouse CI Results")
-          
+
           # Add report URL if available
           report_url = os.environ.get("REPORT_URL", "")
           if report_url:
               print(f"\n📊 **[View Full Report]({report_url})**\n")
-          
+
           print("| Category | Score |")
           print("| --- | --- |")
 
