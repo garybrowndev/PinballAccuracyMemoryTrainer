@@ -99,7 +99,7 @@ function injectBranchProtection(sarifPath) {
   run.results = results;
 
   // Write modified SARIF back to file
-  const outputPath = sarifPath + '.tmp';
+  const outputPath = `${sarifPath}.tmp`;
   console.log(`Writing modified SARIF to: ${outputPath}`);
   fs.writeFileSync(outputPath, JSON.stringify(sarif, null, 2), 'utf8');
   console.log('✓ Successfully injected Branch-Protection result');

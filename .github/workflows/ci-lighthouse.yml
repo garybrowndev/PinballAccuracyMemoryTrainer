@@ -85,11 +85,11 @@ jobs:
 
           # Copy .lighthouseci/ before upload (upload command deletes files after uploading to GCS)
           cp -r .lighthouseci .lighthouseci-backup
-          
+
           # Upload and capture the report URL
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
-          
+
           # Restore the directory for artifact upload
           rm -rf .lighthouseci
           mv .lighthouseci-backup .lighthouseci
