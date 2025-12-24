@@ -189,6 +189,13 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   const outputPath = path.join(outputDir, 'pinball-trainer-standalone.html');
   fs.writeFileSync(outputPath, standaloneHtml, 'utf8');
 
+  // Create serve.json config to disable cleanUrls (prevents 600ms redirect penalty)
+  const serveConfig = {
+    cleanUrls: false,
+  };
+  const serveConfigPath = path.join(outputDir, 'serve.json');
+  fs.writeFileSync(serveConfigPath, JSON.stringify(serveConfig, null, 2), 'utf8');
+
   // Note: We're using the regular dist build, so no temp directory to clean up
 
   const stats = fs.statSync(outputPath);
