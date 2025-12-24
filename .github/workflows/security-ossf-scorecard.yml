@@ -67,7 +67,9 @@ jobs:
       # and avoid "configuration not found" errors in GitHub Code Scanning.
       - name: 'Inject Branch-Protection for PR consistency'
         if: github.event_name == 'pull_request'
-        run: node .github/scripts/inject-branch-protection.cjs results.sarif
+        run: |
+          chmod +w results.sarif
+          node .github/scripts/inject-branch-protection.cjs results.sarif
 
       - name: 'Upload artifact'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4
