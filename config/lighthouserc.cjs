@@ -2,9 +2,8 @@ module.exports = {
   ci: {
     collect: {
       // Serve the standalone build directory (contains single HTML file)
-      startServerCommand:
-        'mkdir -p lighthouse-test && cp dist-standalone/pinball-trainer-standalone.html lighthouse-test/index.html && npx serve lighthouse-test -p 9222',
-      url: ['http://localhost:9222'],
+      staticDistDir: './lighthouse-test',
+      url: ['http://localhost:9222/index.html'],
       numberOfRuns: 3, // Run 3 times and average for consistency
       settings: {
         // Add a longer timeout for server startup

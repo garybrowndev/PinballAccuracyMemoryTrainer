@@ -65,15 +65,18 @@ _Add new entries below as they occur. Keep this file as a living document._
 ### "Configuration Not Found" - Root Cause and Permanent Fix
 
 **Date**: 2025-12-23 (Updated: 2025-12-24)
-**Root Cause**: The Branch-Protection check in OSSF Scorecard requires admin PAT token to run fully. Without the token, Scorecard generates a `supply-chain/branch-protection` category on master but not on PRs. This mismatch causes "1 configuration not found" error on PRs.
+**Root Cause**: The Branch-Protection check in OSSF Scorecard **only runs when triggered by `branch_protection_rule` or `schedule` events**, which only fire on the default branch (master). PRs use the `pull_request` event trigger, which causes Scorecard to skip the Branch-Protection check entirely, regardless of token permissions. This creates a SARIF category mismatch: master has `supply-chain/branch-protection` category, PRs don't.
 **Rejected Fix**: Only uploading SARIF on PRs hides security status of the Master branch.
 **Initial (Incorrect) Fix**: Tried using `checks_to_run` parameter to exclude Branch-Protection check, but this parameter **does not exist** in scorecard-action v2.4.3.
-**Correct Fix**: Accept that Branch-Protection check will fail on PRs without admin PAT - this is expected behavior. Add a comment in the workflow explaining this is intentional. The "configuration not found" error occurs when one branch has categories that another doesn't, but this resolves itself once both branches run with the same checks.
+**Second (Incorrect) Fix**: Tried adding `|| github.token` fallback, but the issue isn't token availability - SCORECARD_TOKEN is accessible on PRs. The issue is the event trigger.
+**Correct Fix**: Skip SARIF upload on PRs by adding `if: github.event_name != 'pull_request'` to both the upload-artifact and upload-sarif steps. This prevents category mismatches while maintaining security scanning on master. PR security is still validated by other security workflows (CodeQL, OWASP, Trivy).
 **Prevention**:
 
 - Verify action inputs against official documentation before using them
-- Scorecard-action only supports: `results_file`, `results_format`, `repo_token`, `publish_results`, `file_mode`
-- Cannot exclude individual checks via action parameters - only via token permissions
+- Understand GitHub event triggers and their impact on check execution
+- Test workflows on both master and PR branches to ensure consistent SARIF categories
+- Don't assume secrets are inaccessible on PRs - they are available for same-repo PRs
+- Scorecard's Branch-Protection check is event-dependent, not just token-dependent
 
 ---
 
