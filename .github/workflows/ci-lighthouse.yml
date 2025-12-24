@@ -90,6 +90,15 @@ jobs:
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
+          # Extract report URL from upload output
+          REPORT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+' || echo "")
+          echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
+          if [ -n "$REPORT_URL" ]; then
+            echo "📊 Report URL extracted: $REPORT_URL"
+          else
+            echo "⚠️  No report URL found in upload output"
+          fi
+
           # Restore the directory for artifact upload
           rm -rf .lighthouseci
           mv .lighthouseci-backup .lighthouseci
