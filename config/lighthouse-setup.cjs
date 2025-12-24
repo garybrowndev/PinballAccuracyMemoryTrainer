@@ -14,9 +14,11 @@ const targetFile = path.join(testDir, 'index.html');
 // Create directory if it doesn't exist
 if (!fs.existsSync(testDir)) {
   fs.mkdirSync(testDir, { recursive: true });
+  // eslint-disable-next-line no-console
   console.log('✓ Created lighthouse-test directory');
 }
 
 // Copy file
 fs.copyFileSync(sourceFile, targetFile);
+// eslint-disable-next-line no-console
 console.log('✓ Copied standalone HTML to lighthouse-test/index.html');
