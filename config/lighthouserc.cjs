@@ -35,8 +35,9 @@ module.exports = {
     },
     upload: {
       target: 'temporary-public-storage', // Free, 7-day retention
-      githubAppToken: process.env.LHCI_GITHUB_APP_TOKEN,
-      githubStatusContextSuffix: 'CI', // Creates "Lighthouse CI" status check
+      // GitHub status check configuration
+      githubToken: process.env.LHCI_GITHUB_APP_TOKEN,
+      githubStatusContextSuffix: '/CI',
     },
   },
 };

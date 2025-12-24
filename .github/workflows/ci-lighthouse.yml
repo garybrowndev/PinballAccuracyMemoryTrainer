@@ -71,12 +71,26 @@ jobs:
           RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
 
       - name: Run Lighthouse CI on standalone build
+        id: lighthouse
         env:
           LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Use npx with pinned version (avoids global install for security)
-          npx @lhci/cli@0.14.0 autorun --config=config/lighthouserc.cjs
+          # Use separate commands instead of autorun to preserve .lighthouseci/ for artifacts
+          # Collect performance data
+          npx @lhci/cli@0.14.0 collect --config=config/lighthouserc.cjs
+          
+          # Run assertions
+          npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
+          
+          # Upload and capture the report URL
+          UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
+          echo "$UPLOAD_OUTPUT"
+          
+          # Extract report URL and save to output
+          REPORT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^ ]+' | head -1)
+          echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
+          echo "📊 Report uploaded to: $REPORT_URL"
 
       - name: Upload Lighthouse reports
         if: always()
@@ -87,6 +101,8 @@ jobs:
 
       - name: Generate job summary
         if: always()
+        env:
+          REPORT_URL: ${{ steps.lighthouse.outputs.report_url }}
         run: |
           python3 -c '
           import json
@@ -94,6 +110,12 @@ jobs:
           import glob
 
           print("## Lighthouse CI Results")
+          
+          # Add report URL if available
+          report_url = os.environ.get("REPORT_URL", "")
+          if report_url:
+              print(f"\n📊 **[View Full Report]({report_url})**\n")
+          
           print("| Category | Score |")
           print("| --- | --- |")
 
