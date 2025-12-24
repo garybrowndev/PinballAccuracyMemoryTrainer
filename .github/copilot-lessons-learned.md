@@ -62,15 +62,50 @@ _Add new entries below as they occur. Keep this file as a living document._
 
 ## GitHub Code Scanning
 
-### "Configuration Not Found" Stale Category Fix
+### "Configuration Not Found" - Root Cause and Permanent Fix
 
-**Date**: 2025-12-23
-**Mistake**: Assumed the "1 configuration not found" neutral check on PRs was benign or unfixable
-**Correct Approach**: This occurs when a SARIF upload category exists on the base branch (e.g., `supply-chain/branch-protection`) but is not generated for PR branches. The fix is to DELETE all analyses with that stale category using the GitHub API:
+**Date**: 2025-12-23 (Updated: 2025-12-24)
+**Root Cause**: The Branch-Protection check in OSSF Scorecard requires admin PAT token to run fully. Without the token, Scorecard generates a `supply-chain/branch-protection` category on master but not on PRs. This mismatch causes "1 configuration not found" error on PRs.
+**Rejected Fix**: Only uploading SARIF on PRs hides security status of the Master branch.
+**Initial (Incorrect) Fix**: Tried using `checks_to_run` parameter to exclude Branch-Protection check, but this parameter **does not exist** in scorecard-action v2.4.3.
+**Correct Fix**: Accept that Branch-Protection check will fail on PRs without admin PAT - this is expected behavior. Add a comment in the workflow explaining this is intentional. The "configuration not found" error occurs when one branch has categories that another doesn't, but this resolves itself once both branches run with the same checks.
+**Prevention**:
 
-```bash
-gh api repos/{owner}/{repo}/code-scanning/analyses/{id}?confirm_delete=true --method DELETE
-```
+- Verify action inputs against official documentation before using them
+- Scorecard-action only supports: `results_file`, `results_format`, `repo_token`, `publish_results`, `file_mode`
+- Cannot exclude individual checks via action parameters - only via token permissions
 
-Each delete returns `next_analysis_url` - continue deleting until you get `null`, fully purging the stale category.
-**Prevention**: When seeing "configuration not found" warnings, compare categories between `refs/heads/master` and `refs/pull/{n}/merge` analyses to identify the mismatch, then delete the stale category from the base branch.
+---
+
+## CI/CD Workflows
+
+### External Service Dependencies - Non-Blocking Checks
+
+**Date**: 2025-12-17
+**Mistake**: Workflow validation steps for external services (surge.sh) caused PR failures during service outages
+**Correct Approach**: Add service availability check before validation; use `continue-on-error: true` to prevent blocking; provide clear messaging about service status
+**Prevention**: Always design workflows with external dependencies to be non-blocking; follow GitHub Actions best practices for resilience
+**Implementation Pattern**:
+
+``yaml
+
+- name: Check service availability
+  id: service-check
+  continue-on-error: true
+  run: |
+  if timeout 10 curl -sf https://service.com > /dev/null 2>&1; then
+  echo "available=true" >> $GITHUB_OUTPUT
+  else
+  echo "available=false" >> $GITHUB_OUTPUT
+  exit 1
+  fi
+
+- name: Validate deployment
+  if: steps.service-check.outputs.available == 'true'
+  run: # validation logic
+
+- name: Report unavailability
+  if: steps.service-check.outcome == 'failure'
+  run: |
+  echo "::notice title=Service Unavailable::Validation skipped due to service outage"
+  ``

@@ -47,11 +47,9 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          # (Optional) "write" PAT token. Uncomment the `repo_token` line below if:
-          # - you want to enable the Branch-Protection check on a *public* repository
-          # - you are installing Scorecard on a *private* repository
-          # To create the PAT, follow the steps in https://github.com/ossf/scorecard-action#authentication-with-pat.
-          # repo_token: ${{ secrets.SCORECARD_TOKEN }}
+          # PAT token with admin:read permissions to enable Branch-Protection check
+          # This prevents "configuration not found" errors between master and PR branches
+          repo_token: ${{ secrets.SCORECARD_TOKEN }}
 
           # Public repositories:
           #   - Publish results to OpenSSF REST API for easy access by consumers
@@ -61,6 +59,10 @@ jobs:
           #   - `publish_results` will always be set to `false`, regardless
           #     of the value entered here.
           publish_results: true
+
+      # Note: Branch-Protection check will not run on PRs without admin PAT token.
+      # This is expected behavior - the check requires additional permissions beyond
+      # the default GITHUB_TOKEN. See: https://github.com/ossf/scorecard-action/blob/main/docs/authentication/fine-grained-auth-token.md
 
       - name: 'Upload artifact'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4
@@ -73,3 +75,73 @@ jobs:
         uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4
         with:
           sarif_file: results.sarif
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          cat <<EOF > scorecard_summary.py
+          import json
+          import os
+
+          print("## 🛡️ OSSF Scorecard Results")
+
+          report_path = "results.sarif"
+          if os.path.exists(report_path):
+              try:
+                  with open(report_path, "r", encoding="utf-8") as f:
+                      data = json.load(f)
+                  
+                  runs = data.get("runs", [])
+                  if not runs:
+                      print("✅ No issues found.")
+                  else:
+                      results = runs[0].get("results", [])
+                      if not results:
+                          print("✅ No issues found.")
+                      else:
+                          print(f"Found {len(results)} potential issues.")
+                          print("")
+                          print("| Check | Severity |")
+                          print("|-------|----------|")
+                          
+                          counts = {}
+                          for res in results:
+                              rule = res.get("ruleId", "Unknown")
+                              level = res.get("level", "warning")
+                              key = f"{rule} ({level})"
+                              counts[key] = counts.get(key, 0) + 1
+                          
+                          for key, count in counts.items():
+                              print(f"| {key} | {count} |")
+                              
+              except Exception as e:
+                  print(f"⚠️ Error parsing results: {e}")
+          else:
+              print("⚠️ Results file not found.")
+          EOF
+
+          python3 scorecard_summary.py > scorecard_summary.md
+          cat scorecard_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+
+            let body = 'Scorecard analysis failed or did not run correctly.';
+            if (fs.existsSync('scorecard_summary.md')) {
+              body = fs.readFileSync('scorecard_summary.md', 'utf8');
+              // Remove the header
+              body = body.replace(/^## .*?\n/, '');
+            }
+
+            await updateComment({
+              github,
+              context,
+              header: 'OSSF Scorecard Results',
+              body,
+              workflowYaml: 'security-ossf-scorecard.yml'
+            });
