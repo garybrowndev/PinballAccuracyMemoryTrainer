@@ -2,7 +2,12 @@ module.exports = {
   ci: {
     collect: {
       // Serve the standalone build directory using npx serve
-      startServerCommand: 'npx serve dist-standalone -p 9222',
+      // --no-clipboard: disable clipboard URL copying
+      // --no-compression: disable gzip to match GitHub Pages behavior
+      // --no-port-switching: fail if port 9222 is busy instead of switching
+      // --no-clean-urls: disable .html extension removal (prevents 600ms redirect penalty)
+      startServerCommand:
+        'npx serve dist-standalone -p 9222 --no-clipboard --no-compression --no-port-switching --no-clean-urls',
       url: ['http://localhost:9222/pinball-trainer-standalone.html'],
       numberOfRuns: 3, // Run 3 times and average for consistency
       // Explicitly set output directory for CI artifacts
