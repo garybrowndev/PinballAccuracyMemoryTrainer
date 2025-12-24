@@ -160,13 +160,9 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   <meta name="author" content="Gary Brown">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   
-  <!-- Security Headers via Meta Tags -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <!-- Security Headers (compatible with inline scripts for standalone build) -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
   
   <!-- Open Graph / Social Media -->
   <meta property="og:type" content="website">
