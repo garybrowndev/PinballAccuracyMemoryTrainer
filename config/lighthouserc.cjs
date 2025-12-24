@@ -3,7 +3,8 @@ module.exports = {
     collect: {
       // Serve the standalone build directory (contains single HTML file)
       staticDistDir: './lighthouse-test',
-      url: ['http://localhost/'],
+      // When using staticDistDir, only specify the path (not full URL)
+      url: ['/index.html'],
       numberOfRuns: 3, // Run 3 times and average for consistency
       settings: {
         // Add a longer timeout for server startup
