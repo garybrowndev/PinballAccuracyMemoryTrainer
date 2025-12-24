@@ -10,8 +10,6 @@ on:
     - cron: '20 7 * * 1'
   push:
     branches: ['master']
-  pull_request:
-    branches: ['master']
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -47,8 +45,6 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          # PAT token with Administration:read-only permissions to detect Branch-Protection rules
-          repo_token: ${{ secrets.SCORECARD_TOKEN }}
 
           # Public repositories:
           #   - Publish results to OpenSSF REST API for easy access by consumers
@@ -62,16 +58,6 @@ jobs:
           # See: https://github.com/ossf/scorecard-action#workflow-restrictions
           publish_results: false
 
-      # Branch-Protection check only runs on default branch (per OSSF docs).
-      # On PRs, inject a synthetic passing result to ensure SARIF consistency
-      # and avoid "configuration not found" errors in GitHub Code Scanning.
-      - name: 'Inject Branch-Protection for PR consistency'
-        if: github.event_name == 'pull_request'
-        run: |
-          node .github/scripts/inject-branch-protection.cjs results.sarif
-          rm results.sarif
-          mv results.sarif.tmp results.sarif
-
       - name: 'Upload artifact'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4
         with:
@@ -80,6 +66,7 @@ jobs:
           retention-days: 5
 
       - name: 'Upload to code-scanning'
+        if: github.event_name != 'pull_request'
         uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4
         with:
           sarif_file: results.sarif
