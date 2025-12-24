@@ -1,11 +1,12 @@
 module.exports = {
   ci: {
     collect: {
-      // Serve the standalone build directory (contains single HTML file)
-      startServerCommand:
-        'mkdir -p lighthouse-test && cp dist-standalone/pinball-trainer-standalone.html lighthouse-test/index.html && npx serve lighthouse-test -p 9222',
-      url: ['http://localhost:9222'],
+      // Serve the standalone build directory using npx serve
+      startServerCommand: 'npx serve dist-standalone -p 9222',
+      url: ['http://localhost:9222/pinball-trainer-standalone.html'],
       numberOfRuns: 3, // Run 3 times and average for consistency
+      // Explicitly set output directory for CI artifacts
+      outputDir: './.lighthouseci',
       settings: {
         // Add a longer timeout for server startup
         chromeFlags: '--no-sandbox --disable-gpu',
@@ -34,7 +35,9 @@ module.exports = {
     },
     upload: {
       target: 'temporary-public-storage', // Free, 7-day retention
-      githubAppToken: process.env.LHCI_GITHUB_APP_TOKEN, // Optional: for status checks
+      // GitHub status check configuration
+      githubToken: process.env.LHCI_GITHUB_APP_TOKEN,
+      githubStatusContextSuffix: '/CI',
     },
   },
 };
