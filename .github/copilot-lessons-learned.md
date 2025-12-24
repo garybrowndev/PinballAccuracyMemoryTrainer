@@ -64,11 +64,16 @@ _Add new entries below as they occur. Keep this file as a living document._
 
 ### "Configuration Not Found" - Root Cause and Permanent Fix
 
-**Date**: 2025-12-23
+**Date**: 2025-12-23 (Updated: 2025-12-24)
 **Root Cause**: The Branch-Protection check in OSSF Scorecard requires admin PAT token to run fully. Without the token, Scorecard generates a `supply-chain/branch-protection` category on master but not on PRs. This mismatch causes "1 configuration not found" error on PRs.
 **Rejected Fix**: Only uploading SARIF on PRs hides security status of the Master branch.
-**Correct Fix**: Explicitly exclude the `Branch-Protection` check using the `checks_to_run` list in the workflow. This ensures the set of checks (and thus categories) is identical on both Master and PRs, without needing an Admin PAT.
-**Prevention**: When configuring Scorecard without an Admin PAT, explicitly disable `Branch-Protection` to avoid category mismatches.
+**Initial (Incorrect) Fix**: Tried using `checks_to_run` parameter to exclude Branch-Protection check, but this parameter **does not exist** in scorecard-action v2.4.3.
+**Correct Fix**: Accept that Branch-Protection check will fail on PRs without admin PAT - this is expected behavior. Add a comment in the workflow explaining this is intentional. The "configuration not found" error occurs when one branch has categories that another doesn't, but this resolves itself once both branches run with the same checks.
+**Prevention**:
+
+- Verify action inputs against official documentation before using them
+- Scorecard-action only supports: `results_file`, `results_format`, `repo_token`, `publish_results`, `file_mode`
+- Cannot exclude individual checks via action parameters - only via token permissions
 
 ---
 

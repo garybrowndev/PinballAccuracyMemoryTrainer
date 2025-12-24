@@ -61,12 +61,10 @@ jobs:
           #   - `publish_results` will always be set to `false`, regardless
           #     of the value entered here.
           publish_results: true
-          # Disable Branch-Protection check to avoid category mismatch between master and PRs
-          checks_to_run: >-
-            Binary-Artifacts,CI-Tests,CII-Best-Practices,Code-Review,Contributors,
-            Dangerous-Workflow,Dependency-Update-Tool,Fuzzing,License,Maintained,
-            Packaging,Pinned-Dependencies,SAST,SBOM,Security-Policy,Signed-Releases,
-            Token-Permissions,Vulnerabilities,Webhooks
+
+      # Note: Branch-Protection check will not run on PRs without admin PAT token.
+      # This is expected behavior - the check requires additional permissions beyond
+      # the default GITHUB_TOKEN. See: https://github.com/ossf/scorecard-action/blob/main/docs/authentication/fine-grained-auth-token.md
 
       - name: 'Upload artifact'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4
