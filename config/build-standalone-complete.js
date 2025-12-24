@@ -151,8 +151,30 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pinball Accuracy Memory Trainer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  
+  <!-- SEO Meta Tags -->
+  <title>Pinball Accuracy Memory Trainer - Master Shot Recall for Competitive Play</title>
+  <meta name="description" content="Practice and improve your pinball shot accuracy memory. Train flipper recall, track progress, and master 39 preset tables. Free interactive tool for competitive players.">
+  <meta name="keywords" content="pinball, memory trainer, accuracy training, competitive pinball, flipper mechanics, muscle memory, game training, progressive web app">
+  <meta name="author" content="Gary Brown">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  
+  <!-- Security Headers via Meta Tags -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
+  
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/">
+  <meta property="og:title" content="Pinball Accuracy Memory Trainer">
+  <meta property="og:description" content="Train your pinball accuracy and memory with dynamic flipper position tracking. Free, offline-capable tool for competitive players.">
+  
+  <!-- Embedded Styles -->
   <style>${css}</style>
 </head>
 <body>
