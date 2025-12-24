@@ -1,10 +1,9 @@
 module.exports = {
   ci: {
     collect: {
-      // Serve the standalone build directory (contains single HTML file)
-      staticDistDir: './lighthouse-test',
-      // When using staticDistDir, only specify the path (not full URL)
-      url: ['/index.html'],
+      // Serve the standalone build directory using npx serve
+      startServerCommand: 'npx serve dist-standalone -p 9222',
+      url: ['http://localhost:9222/pinball-trainer-standalone.html'],
       numberOfRuns: 3, // Run 3 times and average for consistency
       settings: {
         // Add a longer timeout for server startup
