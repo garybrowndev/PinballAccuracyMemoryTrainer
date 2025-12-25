@@ -34,7 +34,7 @@ export default defineConfig({
     // Note: Standalone build must exist before running tests (run npm run build:standalone first)
     // Note: index.html must exist (copy from pinball-trainer-standalone.html)
     // -s flag serves index.html at root and enables SPA mode
-    command: 'npx serve dist-standalone -p 9223 -s',
+    command: 'serve dist-standalone -p 9223 -s',
     url: 'http://localhost:9223',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
