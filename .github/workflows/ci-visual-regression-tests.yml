@@ -105,6 +105,7 @@ jobs:
           print("|-------|--------|-------|--------|--------|------|")
           print(parse_json_report("results-visual.json", "Visual Comparison"))
           ' > visual_regression_summary.md
+          npx prettier --write visual_regression_summary.md
           cat visual_regression_summary.md >> $GITHUB_STEP_SUMMARY
 
       - name: Update PR Comment
