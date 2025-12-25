@@ -42,9 +42,6 @@ jobs:
           npm run build:standalone
           cp dist-standalone/pinball-trainer-standalone.html dist-standalone/index.html
 
-      - name: Install serve package
-        run: npm install -g serve@14.2.5
-
       - name: Install Playwright Firefox
         run: npx playwright install --with-deps firefox
 
