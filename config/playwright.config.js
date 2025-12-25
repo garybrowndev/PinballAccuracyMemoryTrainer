@@ -34,7 +34,7 @@ export default defineConfig({
     // Note: Standalone build must exist before running tests (run npm run build:standalone first)
     // Note: index.html must exist (copy from pinball-trainer-standalone.html)
     // serve will use serve.json config which already has cleanUrls:false (SPA mode)
-    command: 'npx serve dist-standalone -p 9223',
+    command: 'npx serve -p 9223 dist-standalone',
     url: 'http://localhost:9223',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
