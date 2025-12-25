@@ -37,6 +37,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build standalone for E2E testing
+        run: |
+          npm run build:standalone
+          cp dist-standalone/pinball-trainer-standalone.html dist-standalone/index.html
+
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
