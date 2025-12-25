@@ -41,6 +41,12 @@ jobs:
         run: |
           npm run build:standalone
           cp dist-standalone/pinball-trainer-standalone.html dist-standalone/index.html
+          echo "--- Verifying build output ---"
+          ls -la dist-standalone/
+          echo "--- Checking index.html ---"
+          ls -lh dist-standalone/index.html
+          echo "--- Testing npx serve command ---"
+          npx --yes serve@14.2.5 --version
 
       - name: Install Playwright WebKit
         run: npx playwright install --with-deps webkit
