@@ -199,8 +199,11 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   fs.writeFileSync(outputPath, standaloneHtml, 'utf8');
 
   // Create serve.json config for SPA routing (serve index.html for all routes)
+  // cleanUrls: false - prevent 301 redirects from .html to non-.html paths
+  // This is critical for Lighthouse which requests pinball-trainer-standalone.html directly
   const serveConfig = {
     public: '.',
+    cleanUrls: false,
     rewrites: [{ source: '**', destination: '/index.html' }],
   };
   const serveConfigPath = path.join(outputDir, 'serve.json');
