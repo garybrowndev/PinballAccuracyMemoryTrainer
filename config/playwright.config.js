@@ -35,6 +35,7 @@ export default defineConfig({
     // Note: index.html must exist (copy from pinball-trainer-standalone.html)
     // serve will use serve.json config which already has cleanUrls:false (SPA mode)
     command: 'npx serve -p 9223 dist-standalone',
+    cwd: '..',  // Run from project root since config is in config/ subdirectory
     url: 'http://localhost:9223',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
