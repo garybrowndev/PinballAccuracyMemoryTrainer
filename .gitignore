@@ -9,6 +9,7 @@ dist/stats.html
 # Lighthouse CI
 .lighthouseci/
 lighthouse-test/
+lighthouse-report*
 
 # Test results and reports
 test-results/

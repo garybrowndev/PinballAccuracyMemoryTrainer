@@ -8,7 +8,7 @@ export default defineConfig({
   workers: undefined,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:9223',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure', // Only take screenshots on failure for speed
     video: 'retain-on-failure', // Only record video on failure for speed
@@ -30,8 +30,13 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    // Test against standalone build (what users actually get)
+    // Note: Standalone build must exist before running tests (run npm run build:standalone first)
+    // Note: index.html must exist (copy from pinball-trainer-standalone.html)
+    // serve will use serve.json config which already has cleanUrls:false (SPA mode)
+    command: 'npx serve -p 9223 dist-standalone',
+    cwd: '..', // Run from project root since config is in config/ subdirectory
+    url: 'http://localhost:9223',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

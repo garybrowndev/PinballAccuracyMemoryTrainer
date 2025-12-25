@@ -1,8 +1,8 @@
-# Visual regression changes approved
+# Visual Regression Review
 
 This file tracks visual regression test changes that require review.
 
-**Last Updated:** 2025-12-11T19:06:40.995Z
+**Last Updated:** 2025-12-25T20:03:46.823Z
 
 ## Purpose
 
