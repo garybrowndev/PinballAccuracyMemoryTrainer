@@ -2,6 +2,7 @@ module.exports = {
   ci: {
     collect: {
       // Serve the standalone build directory using npx serve
+      // cleanUrls is disabled via serve.json config file to prevent 600ms redirect penalty
       startServerCommand: 'npx serve dist-standalone -p 9222',
       url: ['http://localhost:9222/pinball-trainer-standalone.html'],
       numberOfRuns: 3, // Run 3 times and average for consistency

@@ -146,13 +146,40 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 
   js = js.replaceAll(/let\s+IMAGE_BASE_URL\s*=\s*["'][^"']*["']/g, 'let IMAGE_BASE_URL = ""');
 
+  // Remove sourceMappingURL comments to prevent 404 errors for missing .map files
+  js = js.replaceAll(/\/\/# sourceMappingURL=.*/g, '');
+
+  // Read and embed the favicon
+  const faviconPath = path.join(rootDir, 'public', 'vite.svg');
+  const faviconContent = fs.readFileSync(faviconPath, 'utf8');
+  const faviconDataUri = `data:image/svg+xml,${encodeURIComponent(faviconContent)}`;
+
   // Create standalone HTML
   const standaloneHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pinball Accuracy Memory Trainer</title>
+  <link rel="icon" type="image/svg+xml" href="${faviconDataUri}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  
+  <!-- SEO Meta Tags -->
+  <title>Pinball Accuracy Memory Trainer - Master Shot Recall for Competitive Play</title>
+  <meta name="description" content="Practice and improve your pinball shot accuracy memory. Train flipper recall, track progress, and master 39 preset tables. Free interactive tool for competitive players.">
+  <meta name="keywords" content="pinball, memory trainer, accuracy training, competitive pinball, flipper mechanics, muscle memory, game training, progressive web app">
+  <meta name="author" content="Gary Brown">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  
+  <!-- Security Headers (compatible with inline scripts for standalone build) -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/">
+  <meta property="og:title" content="Pinball Accuracy Memory Trainer">
+  <meta property="og:description" content="Train your pinball accuracy and memory with dynamic flipper position tracking. Free, offline-capable tool for competitive players.">
+  
+  <!-- Embedded Styles -->
   <style>${css}</style>
 </head>
 <body>
@@ -170,6 +197,13 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   // Write output
   const outputPath = path.join(outputDir, 'pinball-trainer-standalone.html');
   fs.writeFileSync(outputPath, standaloneHtml, 'utf8');
+
+  // Create serve.json config to disable cleanUrls (prevents 600ms redirect penalty)
+  const serveConfig = {
+    cleanUrls: false,
+  };
+  const serveConfigPath = path.join(outputDir, 'serve.json');
+  fs.writeFileSync(serveConfigPath, JSON.stringify(serveConfig, null, 2), 'utf8');
 
   // Note: We're using the regular dist build, so no temp directory to clean up
 

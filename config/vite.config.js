@@ -14,6 +14,7 @@ const __dirname = dirname(__filename);
 const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 
 export default defineConfig({
+  base: '/PinballAccuracyMemoryTrainer/',
   plugins: [
     react(),
     tailwind(),
