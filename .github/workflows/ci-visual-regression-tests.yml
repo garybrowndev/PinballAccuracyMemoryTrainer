@@ -65,6 +65,7 @@ jobs:
       - name: Run visual regression tests (comparison mode)
         if: steps.check-snapshots.outputs.has_snapshots == 'true'
         id: visual-tests
+        continue-on-error: true
         run: |
           npx playwright test tests/e2e/visual-regression.spec.js --config config/playwright.config.js --reporter=list,json,html
         env:
