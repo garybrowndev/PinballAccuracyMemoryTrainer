@@ -8,10 +8,43 @@ module.exports = {
       numberOfRuns: 3, // Run 3 times and average for consistency
       // Explicitly set output directory for CI artifacts
       outputDir: './.lighthouseci',
-      settings: {
-        // Add a longer timeout for server startup
-        chromeFlags: '--no-sandbox --disable-gpu',
-      },
+      // Enable HTML reports
+      settings: [
+        // Mobile emulation (default Lighthouse mobile settings)
+        {
+          chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
+          emulatedFormFactor: 'mobile',
+          throttling: {
+            rttMs: 150,
+            throughputKbps: 1638.4,
+            cpuSlowdownMultiplier: 4,
+          },
+          screenEmulation: {
+            mobile: true,
+            width: 412,
+            height: 823,
+            deviceScaleFactor: 2.625,
+            disabled: false,
+          },
+        },
+        // Desktop emulation
+        {
+          chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
+          emulatedFormFactor: 'desktop',
+          throttling: {
+            rttMs: 40,
+            throughputKbps: 10240,
+            cpuSlowdownMultiplier: 1,
+          },
+          screenEmulation: {
+            mobile: false,
+            width: 1350,
+            height: 940,
+            deviceScaleFactor: 1,
+            disabled: false,
+          },
+        },
+      ],
     },
     assert: {
       // Use a custom preset instead of lighthouse:recommended which is too strict

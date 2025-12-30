@@ -8,6 +8,9 @@ dist/stats.html
 
 # Lighthouse CI
 .lighthouseci/
+.lighthouseci-production/
+.lighthouseci-production-backup/
+.lighthouse-chrome-data/
 lighthouse-test/
 lighthouse-report*
 

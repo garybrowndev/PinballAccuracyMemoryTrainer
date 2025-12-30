@@ -149,6 +149,9 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   // Remove sourceMappingURL comments to prevent 404 errors for missing .map files
   js = js.replaceAll(/\/\/# sourceMappingURL=.*/g, '');
 
+  // Service worker registration is kept in standalone build for PWA functionality
+  // The sw.js file will be copied alongside the standalone HTML
+
   // Read and embed the favicon
   const faviconPath = path.join(rootDir, 'public', 'vite.svg');
   const faviconContent = fs.readFileSync(faviconPath, 'utf8');
@@ -197,6 +200,45 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   // Write output
   const outputPath = path.join(outputDir, 'pinball-trainer-standalone.html');
   fs.writeFileSync(outputPath, standaloneHtml, 'utf8');
+
+  // Copy PWA files to standalone directory for full PWA functionality
+  const pwaFiles = [
+    'sw.js',
+    'sw.js.map',
+    'workbox-1d305bb8.js',
+    'workbox-1d305bb8.js.map',
+    'registerSW.js',
+    'manifest.json',
+    'offline.html',
+    'vite.svg',
+    'robots.txt',
+    'sitemap.xml',
+  ];
+
+  // eslint-disable-next-line no-console
+  console.log('\nCopying PWA files to standalone directory...');
+  for (const file of pwaFiles) {
+    const srcPath = path.join(distDir, file);
+    const destPath = path.join(outputDir, file);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      // eslint-disable-next-line no-console
+      console.log(`  ✓ Copied ${file}`);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(`  ⚠ Skipped ${file} (not found)`);
+    }
+  }
+
+  // Copy public images directory for PWA icons
+  const publicImagesDir = path.join(rootDir, 'public', 'images');
+  const destImagesDir = path.join(outputDir, 'images');
+  if (fs.existsSync(publicImagesDir)) {
+    fs.cpSync(publicImagesDir, destImagesDir, { recursive: true });
+    // eslint-disable-next-line no-console
+    console.log('  ✓ Copied images directory');
+  }
 
   // Create serve.json config for SPA routing (serve index.html for all routes)
   // cleanUrls: false - prevent 301 redirects from .html to non-.html paths

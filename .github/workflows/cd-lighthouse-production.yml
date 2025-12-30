@@ -1,0 +1,254 @@
+name: 'CD: Lighthouse Production Audit'
+
+on:
+  workflow_run:
+    workflows: ['CD: Release']
+    types:
+      - completed
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to test (defaults to production)'
+        required: false
+        default: 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/'
+
+permissions:
+  contents: read
+
+# Only one production audit at a time
+concurrency:
+  group: cd-lighthouse-production
+  cancel-in-progress: false
+
+jobs:
+  lighthouse-production-audit:
+    name: 'Lighthouse Production Audit'
+    runs-on: ubuntu-latest
+    # Only run if the deployment workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: read
+      issues: write # For posting results as comments if needed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Wait for GitHub Pages to stabilize
+        run: |
+          echo "⏳ Waiting 90 seconds for GitHub Pages to fully propagate the latest deployment..."
+          sleep 90
+
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.14.0
+
+      - name: Create production Lighthouse config
+        run: |
+          cat > lighthouserc-production.cjs << 'EOF'
+          module.exports = {
+            ci: {
+              collect: {
+                url: ['${{ github.event.inputs.url || 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/' }}'],
+                numberOfRuns: 3,
+                outputDir: './.lighthouseci-production',
+                settings: [
+                  // Mobile emulation
+                  {
+                    chromeFlags: '--no-sandbox --disable-gpu',
+                    emulatedFormFactor: 'mobile',
+                    throttling: {
+                      rttMs: 150,
+                      throughputKbps: 1638.4,
+                      cpuSlowdownMultiplier: 4,
+                    },
+                    screenEmulation: {
+                      mobile: true,
+                      width: 412,
+                      height: 823,
+                      deviceScaleFactor: 2.625,
+                      disabled: false,
+                    },
+                  },
+                  // Desktop emulation
+                  {
+                    chromeFlags: '--no-sandbox --disable-gpu',
+                    emulatedFormFactor: 'desktop',
+                    throttling: {
+                      rttMs: 40,
+                      throughputKbps: 10240,
+                      cpuSlowdownMultiplier: 1,
+                    },
+                    screenEmulation: {
+                      mobile: false,
+                      width: 1350,
+                      height: 940,
+                      deviceScaleFactor: 1,
+                      disabled: false,
+                    },
+                  },
+                ],
+              },
+              assert: {
+                assertions: {
+                  // Category scores - Production should meet higher standards
+                  'categories:performance': ['warn', { minScore: 0.85 }],
+                  'categories:accessibility': ['error', { minScore: 0.95 }],
+                  'categories:best-practices': ['warn', { minScore: 0.90 }],
+                  'categories:seo': ['warn', { minScore: 0.90 }],
+
+                  // Specific metrics
+                  'dom-size': ['warn', { maxNumericValue: 3000 }],
+                  'largest-contentful-paint': ['warn', { maxNumericValue: 3500 }],
+                  'cumulative-layout-shift': ['warn', { maxNumericValue: 0.1 }],
+                  'total-blocking-time': ['warn', { maxNumericValue: 500 }],
+                },
+              },
+              upload: {
+                target: 'temporary-public-storage',
+                githubToken: process.env.LHCI_GITHUB_APP_TOKEN,
+                githubStatusContextSuffix: '/production',
+              },
+            },
+          };
+          EOF
+
+      - name: Run Lighthouse CI on Production
+        id: lighthouse
+        env:
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Collect performance data
+          lhci collect --config=lighthouserc-production.cjs
+
+          # Run assertions (but don't fail the workflow)
+          lhci assert --config=lighthouserc-production.cjs || echo "⚠️ Assertions failed but continuing..."
+
+          # Copy before upload
+          cp -r .lighthouseci-production .lighthouseci-production-backup
+
+          # Upload and capture URL
+          UPLOAD_OUTPUT=$(lhci upload --config=lighthouserc-production.cjs 2>&1)
+          echo "$UPLOAD_OUTPUT"
+
+          # Extract viewer URL
+          VIEWER_URL=$(echo "$UPLOAD_OUTPUT" | grep -oE 'https://googlechrome\.github\.io/lighthouse-ci/viewer/\?[^[:space:]]+' | head -n 1)
+
+          if [ -n "$VIEWER_URL" ]; then
+            echo "report_url=$VIEWER_URL" >> $GITHUB_OUTPUT
+            echo "✅ Report URL: $VIEWER_URL"
+          else
+            echo "⚠️ Could not extract report URL"
+          fi
+
+      - name: Analyze Results
+        run: |
+          cat > analyze-production.cjs << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          const dir = '.lighthouseci-production-backup';
+          if (!fs.existsSync(dir)) {
+            console.log('No reports found');
+            process.exit(0);
+          }
+
+          const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && f.startsWith('lhr-'));
+
+          console.log('\n📊 Production Lighthouse Results\n');
+          console.log('='.repeat(80));
+
+          const results = { mobile: [], desktop: [] };
+
+          files.forEach(f => {
+            const data = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+            const form = data.configSettings.formFactor || 'unknown';
+            const cats = data.categories;
+            
+            const scores = {};
+            Object.entries(cats).forEach(([k, v]) => {
+              scores[k] = Math.round(v.score * 100);
+            });
+            
+            if (form === 'mobile') results.mobile.push(scores);
+            else if (form === 'desktop') results.desktop.push(scores);
+          });
+
+          // Average scores
+          ['mobile', 'desktop'].forEach(form => {
+            if (results[form].length === 0) return;
+            
+            console.log(`\n${form.toUpperCase()} (averaged across ${results[form].length} runs):`);
+            console.log('-'.repeat(60));
+            
+            const avg = {};
+            const keys = Object.keys(results[form][0]);
+            keys.forEach(k => {
+              avg[k] = Math.round(results[form].reduce((sum, r) => sum + r[k], 0) / results[form].length);
+            });
+            
+            Object.entries(avg).forEach(([k, v]) => {
+              const emoji = v >= 90 ? '✅' : v >= 50 ? '⚠️' : '❌';
+              console.log(`  ${emoji} ${k.padEnd(20)}: ${v.toString().padStart(3)}%`);
+            });
+          });
+
+          console.log('\n' + '='.repeat(80) + '\n');
+          EOF
+
+          node analyze-production.cjs
+
+      - name: Upload Lighthouse Reports
+        uses: actions/upload-artifact@85b0f7198a6135e3d842cb32c019dc9a2c78a783 # v4.6.0
+        if: always()
+        with:
+          name: lighthouse-production-reports
+          path: .lighthouseci-production-backup/
+          retention-days: 30
+
+      - name: Comment on latest commit (if from workflow_run)
+        if: github.event_name == 'workflow_run' && steps.lighthouse.outputs.report_url
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const reportUrl = '${{ steps.lighthouse.outputs.report_url }}';
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+
+            const body = `## 🚦 Production Lighthouse Audit Complete
+
+            **Tested URL:** \`${{ github.event.inputs.url || 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/' }}\`
+
+            📊 [View Full Lighthouse Report](${reportUrl})
+
+            Reports are available in workflow artifacts for detailed analysis.
+            `;
+
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+              body: body
+            });
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## 🚦 Production Lighthouse Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tested URL:** \`${{ github.event.inputs.url || 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "${{ steps.lighthouse.outputs.report_url }}" ]; then
+            echo "📊 [View Full Report](${{ steps.lighthouse.outputs.report_url }})" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Reports are available as workflow artifacts." >> $GITHUB_STEP_SUMMARY
