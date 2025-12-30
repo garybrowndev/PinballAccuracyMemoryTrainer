@@ -201,6 +201,12 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
   const outputPath = path.join(outputDir, 'pinball-trainer-standalone.html');
   fs.writeFileSync(outputPath, standaloneHtml, 'utf8');
 
+  // Also create index.html for E2E tests (Playwright expects index.html)
+  const indexPath = path.join(outputDir, 'index.html');
+  fs.writeFileSync(indexPath, standaloneHtml, 'utf8');
+  // eslint-disable-next-line no-console
+  console.log(`Created index.html for E2E tests: ${indexPath}`);
+
   // Copy PWA files to standalone directory for full PWA functionality
   const pwaFiles = [
     'sw.js',
