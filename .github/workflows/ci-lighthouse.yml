@@ -182,7 +182,9 @@ jobs:
                       print(f"🔍 DEBUG: Error processing {f}: {e}")
               
               print(f"🔍 DEBUG: found_mobile={found_mobile}, found_desktop={found_desktop}")
-              print(f"🔍 DEBUG: mobile_performance={mobile_scores.get(\"performance\")}, desktop_performance={desktop_scores.get(\"performance\")}")
+              mobile_perf = mobile_scores.get("performance")
+              desktop_perf = desktop_scores.get("performance")
+              print(f"🔍 DEBUG: mobile_performance={mobile_perf}, desktop_performance={desktop_perf}")
               
               # Print mobile results
               if mobile_scores["performance"]:
