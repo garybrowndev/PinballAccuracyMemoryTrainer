@@ -86,6 +86,15 @@ jobs:
           MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' || echo "")
           echo "MOBILE_REPORT_URL=$MOBILE_URL" >> $GITHUB_ENV
 
+      - name: Upload Mobile Lighthouse Reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43e8af90d # v4.5.0
+        with:
+          name: lighthouse-mobile-reports
+          path: .lighthouseci/
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Run Lighthouse CI - Desktop
         id: lighthouse-desktop
         env:
@@ -94,8 +103,8 @@ jobs:
           echo "🖥️  Running Lighthouse for Desktop..."
           # Save mobile reports to temp location before desktop collect
           mkdir -p .lighthouseci-mobile
-          mv .lighthouseci/*.json .lighthouseci-mobile/ 2>/dev/null || true
-          # Clear remaining files to prevent upload mixing
+          cp -r .lighthouseci/* .lighthouseci-mobile/ 2>/dev/null || true
+          # Clear all files to prevent upload mixing
           rm -rf .lighthouseci
           xvfb-run --auto-servernum npx @lhci/cli@0.14.0 collect \
             --config=config/lighthouserc.cjs \
@@ -107,8 +116,22 @@ jobs:
           # Extract the direct report URL (not the comparison viewer)
           DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' || echo "")
           echo "DESKTOP_REPORT_URL=$DESKTOP_URL" >> $GITHUB_ENV
+
+      - name: Upload Desktop Lighthouse Reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43e8af90d # v4.5.0
+        with:
+          name: lighthouse-desktop-reports
+          path: .lighthouseci/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Restore mobile reports for summary
+        if: always()
+        run: |
           # Restore mobile reports for summary generation
-          mv .lighthouseci-mobile/*.json .lighthouseci/ 2>/dev/null || true
+          cp -r .lighthouseci-mobile/* .lighthouseci/ 2>/dev/null || true
+
       - name: Generate job summary
         if: always()
         env:
