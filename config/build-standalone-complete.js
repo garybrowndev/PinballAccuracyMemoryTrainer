@@ -197,9 +197,15 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  // Write output
+  // Write output - create both mobile and desktop variants for separate Lighthouse histories
   const outputPath = path.join(outputDir, 'pinball-trainer-standalone.html');
   fs.writeFileSync(outputPath, standaloneHtml, 'utf8');
+
+  // Create desktop variant with same content (temporary-public-storage uses URL for grouping)
+  const desktopOutputPath = path.join(outputDir, 'pinball-trainer-standalone-desktop.html');
+  fs.writeFileSync(desktopOutputPath, standaloneHtml, 'utf8');
+  // eslint-disable-next-line no-console
+  console.log(`Created desktop variant: ${desktopOutputPath}`);
 
   // Also create index.html for E2E tests (Playwright expects index.html)
   const indexPath = path.join(outputDir, 'index.html');
@@ -261,7 +267,11 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 
   const stats = fs.statSync(outputPath);
   // eslint-disable-next-line no-console
-  console.log(`\nStandalone HTML with embedded assets created: ${outputPath}`);
+  console.log(`\nStandalone HTML with embedded assets created:`);
+  // eslint-disable-next-line no-console
+  console.log(`  Mobile: ${outputPath}`);
+  // eslint-disable-next-line no-console
+  console.log(`  Desktop: ${desktopOutputPath}`);
   // eslint-disable-next-line no-console
   console.log(`File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
   // eslint-disable-next-line no-console

@@ -4,47 +4,15 @@ module.exports = {
       // Serve the standalone build directory using npx serve
       // cleanUrls is disabled via serve.json config file to prevent 600ms redirect penalty
       startServerCommand: 'npx serve dist-standalone -p 9222',
-      url: ['http://localhost:9222/pinball-trainer-standalone.html'],
-      numberOfRuns: 1, // Single run for each form factor (mobile and desktop)
+      // URLs specified via CLI flags in workflow to pair with appropriate device settings
+      // This ensures temporary-public-storage maintains separate histories for mobile vs desktop
+      numberOfRuns: 1,
       // Explicitly set output directory for CI artifacts
       outputDir: './.lighthouseci',
-      // Enable HTML reports
-      settings: [
-        // Mobile emulation (default Lighthouse mobile settings)
-        {
-          chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
-          emulatedFormFactor: 'mobile',
-          throttling: {
-            rttMs: 150,
-            throughputKbps: 1638.4,
-            cpuSlowdownMultiplier: 4,
-          },
-          screenEmulation: {
-            mobile: true,
-            width: 412,
-            height: 823,
-            deviceScaleFactor: 2.625,
-            disabled: false,
-          },
-        },
-        // Desktop emulation
-        {
-          chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
-          emulatedFormFactor: 'desktop',
-          throttling: {
-            rttMs: 40,
-            throughputKbps: 10240,
-            cpuSlowdownMultiplier: 1,
-          },
-          screenEmulation: {
-            mobile: false,
-            width: 1350,
-            height: 940,
-            deviceScaleFactor: 1,
-            disabled: false,
-          },
-        },
-      ],
+      // Base settings - CLI will override with --settings.preset=mobile or --settings.preset=desktop
+      settings: {
+        chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
+      },
     },
     assert: {
       // Use a custom preset instead of lighthouse:recommended which is too strict

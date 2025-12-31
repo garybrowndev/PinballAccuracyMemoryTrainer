@@ -71,35 +71,59 @@ jobs:
           RELEASE_URL: 'https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
 
       - name: Run Lighthouse CI - Mobile
+        id: lighthouse-mobile
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "📱 Running Lighthouse for Mobile..."
           xvfb-run --auto-servernum npx @lhci/cli@0.14.0 collect \
             --config=config/lighthouserc.cjs \
-            --settings.formFactor=mobile
+            --url=http://localhost:9222/pinball-trainer-standalone.html \
+            --settings.preset=mobile
           xvfb-run --auto-servernum npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
-          npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs
+          UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
+          echo "$UPLOAD_OUTPUT"
+          # Extract the direct report URL (not the comparison viewer)
+          MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' || echo "")
+          echo "MOBILE_REPORT_URL=$MOBILE_URL" >> $GITHUB_ENV
 
       - name: Run Lighthouse CI - Desktop
+        id: lighthouse-desktop
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🖥️  Running Lighthouse for Desktop..."
           xvfb-run --auto-servernum npx @lhci/cli@0.14.0 collect \
             --config=config/lighthouserc.cjs \
+            --url=http://localhost:9222/pinball-trainer-standalone-desktop.html \
             --settings.preset=desktop \
             --additive
           xvfb-run --auto-servernum npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
-          npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs
+          UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
+          echo "$UPLOAD_OUTPUT"
+          # Extract the direct report URL (not the comparison viewer)
+          DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' || echo "")
+          echo "DESKTOP_REPORT_URL=$DESKTOP_URL" >> $GITHUB_ENV
       - name: Generate job summary
         if: always()
+        env:
+          MOBILE_URL: ${{ env.MOBILE_REPORT_URL }}
+          DESKTOP_URL: ${{ env.DESKTOP_REPORT_URL }}
         run: |
           python3 -c '
           import json
           import glob
+          import os
 
           print("## Lighthouse CI Results\n")
+
+          mobile_url = os.environ.get("MOBILE_URL", "")
+          desktop_url = os.environ.get("DESKTOP_URL", "")
+
+          if mobile_url:
+              print(f"📱 **[View Mobile Report]({mobile_url})**\n")
+          if desktop_url:
+              print(f"🖥️  **[View Desktop Report]({desktop_url})**\n")
 
           files = glob.glob(".lighthouseci/lhr-*.json")
           if not files:
