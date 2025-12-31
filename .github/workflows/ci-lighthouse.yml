@@ -153,9 +153,12 @@ jobs:
           if not files:
               print("\nNo Lighthouse reports found.")
           else:
+              print(f"\n🔍 DEBUG: Found {len(files)} report(s)")
               # Separate mobile and desktop scores
               mobile_scores = {"performance": [], "accessibility": [], "best-practices": [], "seo": []}
               desktop_scores = {"performance": [], "accessibility": [], "best-practices": [], "seo": []}
+              found_mobile = False
+              found_desktop = False
               
               for f in files:
                   try:
@@ -163,14 +166,23 @@ jobs:
                           data = json.load(json_file)
                           form_factor = data.get("configSettings", {}).get("formFactor", "unknown")
                           categories = data.get("categories", {})
+                          print(f"🔍 DEBUG: Processing {f} - formFactor: {form_factor}")
                           
-                          target = mobile_scores if form_factor == "mobile" else desktop_scores
+                          if form_factor == "mobile":
+                              found_mobile = True
+                              target = mobile_scores
+                          else:
+                              found_desktop = True
+                              target = desktop_scores
                           
                           for key in target.keys():
                               if key in categories:
                                   target[key].append(categories[key].get("score", 0))
                   except Exception as e:
-                      pass
+                      print(f"🔍 DEBUG: Error processing {f}: {e}")
+              
+              print(f"🔍 DEBUG: found_mobile={found_mobile}, found_desktop={found_desktop}")
+              print(f"🔍 DEBUG: mobile_performance={mobile_scores.get(\"performance\")}, desktop_performance={desktop_scores.get(\"performance\")}")
               
               # Print mobile results
               if mobile_scores["performance"]:

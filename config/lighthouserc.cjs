@@ -5,7 +5,7 @@ module.exports = {
       // cleanUrls is disabled via serve.json config file to prevent 600ms redirect penalty
       startServerCommand: 'npx serve dist-standalone -p 9222',
       url: ['http://localhost:9222/pinball-trainer-standalone.html'],
-      numberOfRuns: 3, // Run 3 times and average for consistency
+      numberOfRuns: 1, // Single run for each form factor (mobile and desktop)
       // Explicitly set output directory for CI artifacts
       outputDir: './.lighthouseci',
       // Enable HTML reports
