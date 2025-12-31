@@ -135,6 +135,7 @@ jobs:
           path: ${{ github.workspace }}/.lighthouseci-mobile-archive
           retention-days: 30
           if-no-files-found: warn
+          include-hidden-files: true
 
       - name: Run Lighthouse CI - Desktop
         id: lighthouse-desktop
@@ -208,6 +209,7 @@ jobs:
           path: ${{ github.workspace }}/.lighthouseci-desktop-archive
           retention-days: 30
           if-no-files-found: warn
+          include-hidden-files: true
 
       - name: Restore reports for summary
         if: always()
