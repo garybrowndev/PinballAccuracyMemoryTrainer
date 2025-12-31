@@ -114,12 +114,25 @@ jobs:
           fi
           echo "MOBILE_REPORT_URL=$MOBILE_URL" >> $GITHUB_ENV
 
+      - name: Verify mobile archive before upload
+        if: always()
+        run: |
+          echo "=== Current working directory ==="
+          pwd
+          echo "=== Listing all lighthouse directories ==="
+          ls -la | grep lighthouse || echo "No lighthouse directories found"
+          echo "=== Contents of mobile archive (if exists) ==="
+          ls -laR .lighthouseci-mobile-archive/ || echo "Mobile archive not found"
+          echo "=== Using absolute path ==="
+          ARCHIVE_PATH="${GITHUB_WORKSPACE}/.lighthouseci-mobile-archive"
+          ls -laR "$ARCHIVE_PATH" || echo "Absolute path not found: $ARCHIVE_PATH"
+
       - name: Upload Mobile Lighthouse Reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: lighthouse-mobile-reports
-          path: .lighthouseci-mobile-archive/
+          path: ${{ github.workspace }}/.lighthouseci-mobile-archive/
           retention-days: 30
           if-no-files-found: warn
 
@@ -174,12 +187,25 @@ jobs:
           fi
           echo "DESKTOP_REPORT_URL=$DESKTOP_URL" >> $GITHUB_ENV
 
+      - name: Verify desktop archive before upload
+        if: always()
+        run: |
+          echo "=== Current working directory ==="
+          pwd
+          echo "=== Listing all lighthouse directories ==="
+          ls -la | grep lighthouse || echo "No lighthouse directories found"
+          echo "=== Contents of desktop archive (if exists) ==="
+          ls -laR .lighthouseci-desktop-archive/ || echo "Desktop archive not found"
+          echo "=== Using absolute path ==="
+          ARCHIVE_PATH="${GITHUB_WORKSPACE}/.lighthouseci-desktop-archive"
+          ls -laR "$ARCHIVE_PATH" || echo "Absolute path not found: $ARCHIVE_PATH"
+
       - name: Upload Desktop Lighthouse Reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: lighthouse-desktop-reports
-          path: .lighthouseci-desktop-archive/
+          path: ${{ github.workspace }}/.lighthouseci-desktop-archive/
           retention-days: 30
           if-no-files-found: warn
 
