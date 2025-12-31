@@ -80,6 +80,9 @@ jobs:
             --config=config/lighthouserc.cjs \
             --url=http://localhost:9222/pinball-trainer-standalone.html
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
+          # Copy files for archival BEFORE upload (which deletes them)
+          mkdir -p .lighthouseci-mobile-archive
+          cp -r .lighthouseci/. .lighthouseci-mobile-archive/
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
           # Extract the direct report URL (not the comparison viewer)
@@ -89,19 +92,12 @@ jobs:
           fi
           echo "MOBILE_REPORT_URL=$MOBILE_URL" >> $GITHUB_ENV
 
-      - name: Save Mobile Reports for artifact upload
-        if: always()
-        run: |
-          # Save mobile reports before desktop run clears .lighthouseci
-          mkdir -p .lighthouseci-mobile-artifact
-          cp -r .lighthouseci/* .lighthouseci-mobile-artifact/ 2>/dev/null || true
-
       - name: Upload Mobile Lighthouse Reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: lighthouse-mobile-reports
-          path: .lighthouseci-mobile-artifact/
+          path: .lighthouseci-mobile-archive/
           retention-days: 30
           if-no-files-found: warn
 
@@ -113,7 +109,7 @@ jobs:
           echo "🖥️  Running Lighthouse for Desktop..."
           # Save mobile reports to temp location before desktop collect
           mkdir -p .lighthouseci-mobile
-          cp -r .lighthouseci/* .lighthouseci-mobile/ 2>/dev/null || true
+          cp -r .lighthouseci-mobile-archive/. .lighthouseci-mobile/ 2>/dev/null || true
           # Clear all files to prevent upload mixing
           rm -rf .lighthouseci
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 collect \
@@ -121,6 +117,9 @@ jobs:
             --url=http://localhost:9222/pinball-trainer-standalone-desktop.html \
             --settings.preset=desktop
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
+          # Copy files for archival BEFORE upload (which deletes them)
+          mkdir -p .lighthouseci-desktop-archive
+          cp -r .lighthouseci/. .lighthouseci-desktop-archive/
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
           # Extract the direct report URL (not the comparison viewer)
@@ -130,27 +129,23 @@ jobs:
           fi
           echo "DESKTOP_REPORT_URL=$DESKTOP_URL" >> $GITHUB_ENV
 
-      - name: Save Desktop Reports for artifact upload
-        if: always()
-        run: |
-          # Save desktop reports before summary generation
-          mkdir -p .lighthouseci-desktop-artifact
-          cp -r .lighthouseci/* .lighthouseci-desktop-artifact/ 2>/dev/null || true
-
       - name: Upload Desktop Lighthouse Reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: lighthouse-desktop-reports
-          path: .lighthouseci-desktop-artifact/
+          path: .lighthouseci-desktop-archive/
           retention-days: 30
           if-no-files-found: warn
 
-      - name: Restore mobile reports for summary
+      - name: Restore reports for summary
         if: always()
         run: |
-          # Restore mobile reports for summary generation
-          cp -r .lighthouseci-mobile/* .lighthouseci/ 2>/dev/null || true
+          # Restore both mobile and desktop reports for summary generation
+          # Summary script reads formFactor from JSON to separate them
+          mkdir -p .lighthouseci
+          cp -r .lighthouseci-mobile/. .lighthouseci/ 2>/dev/null || true
+          cp -r .lighthouseci-desktop-archive/. .lighthouseci/ 2>/dev/null || true
 
       - name: Generate job summary
         if: always()
