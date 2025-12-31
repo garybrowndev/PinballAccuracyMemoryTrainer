@@ -77,11 +77,11 @@ jobs:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Use separate commands instead of autorun to preserve .lighthouseci/ for artifacts
-          # Collect performance data
-          npx @lhci/cli@0.14.0 collect --config=config/lighthouserc.cjs
+          # Collect performance data (wrapped with xvfb-run for headless Chrome)
+          xvfb-run --auto-servernum npx @lhci/cli@0.14.0 collect --config=config/lighthouserc.cjs
 
           # Run assertions
-          npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
+          xvfb-run --auto-servernum npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
 
           # Copy .lighthouseci/ before upload (upload command deletes files after uploading to GCS)
           cp -r .lighthouseci .lighthouseci-backup
@@ -181,7 +181,8 @@ jobs:
                       if scores:
                           avg_score = (sum(scores) / len(scores)) * 100
                           emoji = "🟢" if avg_score >= 90 else "🟠" if avg_score >= 50 else "🔴"
-                          print(f"| {key.replace(\"-\", \" \").title()} | {emoji} {avg_score:.0f} |")
+                          category_name = key.replace("-", " ").title()
+                          print(f"| {category_name} | {emoji} {avg_score:.0f} |")
               
               # Print desktop results
               if desktop_scores["performance"]:
@@ -192,7 +193,8 @@ jobs:
                       if scores:
                           avg_score = (sum(scores) / len(scores)) * 100
                           emoji = "🟢" if avg_score >= 90 else "🟠" if avg_score >= 50 else "🔴"
-                          print(f"| {key.replace(\"-\", \" \").title()} | {emoji} {avg_score:.0f} |")
+                          category_name = key.replace("-", " ").title()
+                          print(f"| {category_name} | {emoji} {avg_score:.0f} |")
               
               if not mobile_scores["performance"] and not desktop_scores["performance"]:
                   print("\nNo valid data found in reports.")
