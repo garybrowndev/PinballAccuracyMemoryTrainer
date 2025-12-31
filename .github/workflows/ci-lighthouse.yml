@@ -89,12 +89,19 @@ jobs:
           fi
           echo "MOBILE_REPORT_URL=$MOBILE_URL" >> $GITHUB_ENV
 
+      - name: Save Mobile Reports for artifact upload
+        if: always()
+        run: |
+          # Save mobile reports before desktop run clears .lighthouseci
+          mkdir -p .lighthouseci-mobile-artifact
+          cp -r .lighthouseci/* .lighthouseci-mobile-artifact/ 2>/dev/null || true
+
       - name: Upload Mobile Lighthouse Reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: lighthouse-mobile-reports
-          path: .lighthouseci/
+          path: .lighthouseci-mobile-artifact/
           retention-days: 30
           if-no-files-found: warn
 
@@ -123,12 +130,19 @@ jobs:
           fi
           echo "DESKTOP_REPORT_URL=$DESKTOP_URL" >> $GITHUB_ENV
 
+      - name: Save Desktop Reports for artifact upload
+        if: always()
+        run: |
+          # Save desktop reports before summary generation
+          mkdir -p .lighthouseci-desktop-artifact
+          cp -r .lighthouseci/* .lighthouseci-desktop-artifact/ 2>/dev/null || true
+
       - name: Upload Desktop Lighthouse Reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: lighthouse-desktop-reports
-          path: .lighthouseci/
+          path: .lighthouseci-desktop-artifact/
           retention-days: 30
           if-no-files-found: warn
 
