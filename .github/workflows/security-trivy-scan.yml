@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@22438a435773de8c97dc0958cc0b823c45b064ac # master
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -44,7 +44,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Upload Trivy artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: trivy-results
           path: trivy-results.sarif
@@ -68,7 +68,7 @@ jobs:
 
       - name: Update PR Comment
         if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const fs = require('fs');

@@ -79,12 +79,34 @@ jobs:
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 collect \
             --config=config/lighthouserc.cjs \
             --url=http://localhost:9222/pinball-trainer-standalone.html
+
+          echo "=== After collect: Files in .lighthouseci ==="
+          ls -laR .lighthouseci/ || echo "Directory does not exist"
+
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
+
+          echo "=== After assert: Files in .lighthouseci ==="
+          ls -laR .lighthouseci/ || echo "Directory does not exist"
+
           # Copy files for archival BEFORE upload (which deletes them)
+          echo "=== Creating archive directory ==="
           mkdir -p .lighthouseci-mobile-archive
-          cp -r .lighthouseci/. .lighthouseci-mobile-archive/
+
+          echo "=== Copying .lighthouseci/ to archive ==="
+          cp -rv .lighthouseci/. .lighthouseci-mobile-archive/
+
+          echo "=== Contents of archive directory ==="
+          ls -laR .lighthouseci-mobile-archive/
+
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
+
+          echo "=== After upload: Files in .lighthouseci ==="
+          ls -laR .lighthouseci/ || echo "Directory does not exist or empty"
+
+          echo "=== After upload: Files in archive ==="
+          ls -laR .lighthouseci-mobile-archive/
+
           # Extract the direct report URL (not the comparison viewer)
           MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
           if [ -z "$MOBILE_URL" ]; then
@@ -112,16 +134,39 @@ jobs:
           cp -r .lighthouseci-mobile-archive/. .lighthouseci-mobile/ 2>/dev/null || true
           # Clear all files to prevent upload mixing
           rm -rf .lighthouseci
+
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 collect \
             --config=config/lighthouserc.cjs \
             --url=http://localhost:9222/pinball-trainer-standalone-desktop.html \
             --settings.preset=desktop
+
+          echo "=== After desktop collect: Files in .lighthouseci ==="
+          ls -laR .lighthouseci/ || echo "Directory does not exist"
+
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
+
+          echo "=== After desktop assert: Files in .lighthouseci ==="
+          ls -laR .lighthouseci/ || echo "Directory does not exist"
+
           # Copy files for archival BEFORE upload (which deletes them)
+          echo "=== Creating desktop archive directory ==="
           mkdir -p .lighthouseci-desktop-archive
-          cp -r .lighthouseci/. .lighthouseci-desktop-archive/
+
+          echo "=== Copying .lighthouseci/ to desktop archive ==="
+          cp -rv .lighthouseci/. .lighthouseci-desktop-archive/
+
+          echo "=== Contents of desktop archive directory ==="
+          ls -laR .lighthouseci-desktop-archive/
+
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
+
+          echo "=== After desktop upload: Files in .lighthouseci ==="
+          ls -laR .lighthouseci/ || echo "Directory does not exist or empty"
+
+          echo "=== After desktop upload: Files in desktop archive ==="
+          ls -laR .lighthouseci-desktop-archive/
+
           # Extract the direct report URL (not the comparison viewer)
           DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
           if [ -z "$DESKTOP_URL" ]; then
