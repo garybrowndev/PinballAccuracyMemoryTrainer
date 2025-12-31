@@ -92,7 +92,10 @@ jobs:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🖥️  Running Lighthouse for Desktop..."
-          # Clear mobile reports before desktop collect to prevent upload mixing
+          # Save mobile reports to temp location before desktop collect
+          mkdir -p .lighthouseci-mobile
+          mv .lighthouseci/*.json .lighthouseci-mobile/ 2>/dev/null || true
+          # Clear remaining files to prevent upload mixing
           rm -rf .lighthouseci
           xvfb-run --auto-servernum npx @lhci/cli@0.14.0 collect \
             --config=config/lighthouserc.cjs \
@@ -104,6 +107,8 @@ jobs:
           # Extract the direct report URL (not the comparison viewer)
           DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' || echo "")
           echo "DESKTOP_REPORT_URL=$DESKTOP_URL" >> $GITHUB_ENV
+          # Restore mobile reports for summary generation
+          mv .lighthouseci-mobile/*.json .lighthouseci/ 2>/dev/null || true
       - name: Generate job summary
         if: always()
         env:
