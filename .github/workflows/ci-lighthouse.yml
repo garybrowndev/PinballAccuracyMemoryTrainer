@@ -76,11 +76,11 @@ jobs:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "📱 Running Lighthouse for Mobile..."
-          xvfb-run --auto-servernum npx @lhci/cli@0.14.0 collect \
+          xvfb-run --auto-servernum npx @lhci/cli@0.15.1 collect \
             --config=config/lighthouserc.cjs \
             --url=http://localhost:9222/pinball-trainer-standalone.html
-          xvfb-run --auto-servernum npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
-          UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
+          xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
+          UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
           # Extract the direct report URL (not the comparison viewer)
           MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
@@ -109,12 +109,12 @@ jobs:
           cp -r .lighthouseci/* .lighthouseci-mobile/ 2>/dev/null || true
           # Clear all files to prevent upload mixing
           rm -rf .lighthouseci
-          xvfb-run --auto-servernum npx @lhci/cli@0.14.0 collect \
+          xvfb-run --auto-servernum npx @lhci/cli@0.15.1 collect \
             --config=config/lighthouserc.cjs \
             --url=http://localhost:9222/pinball-trainer-standalone-desktop.html \
             --settings.preset=desktop
-          xvfb-run --auto-servernum npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
-          UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
+          xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
+          UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
           # Extract the direct report URL (not the comparison viewer)
           DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")

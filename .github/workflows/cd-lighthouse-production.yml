@@ -48,7 +48,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli@0.14.0
+        run: npm install -g @lhci/cli@0.15.1
 
       - name: Create production Lighthouse config
         run: |
@@ -207,7 +207,7 @@ jobs:
           node analyze-production.cjs
 
       - name: Upload Lighthouse Reports
-        uses: actions/upload-artifact@85b0f7198a6135e3d842cb32c019dc9a2c78a783 # v4.6.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: lighthouse-production-reports
