@@ -77,7 +77,7 @@ jobs:
           echo "📱 Running Lighthouse for Mobile..."
           xvfb-run --auto-servernum npx @lhci/cli@0.14.0 collect \
             --config=config/lighthouserc.cjs \
-            --settings.preset=mobile
+            --settings.formFactor=mobile
           xvfb-run --auto-servernum npx @lhci/cli@0.14.0 assert --config=config/lighthouserc.cjs
           npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs
 
