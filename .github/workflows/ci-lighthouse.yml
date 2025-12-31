@@ -83,12 +83,15 @@ jobs:
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
           # Extract the direct report URL (not the comparison viewer)
-          MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' || echo "")
+          MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+          if [ -z "$MOBILE_URL" ]; then
+            MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' | head -n 1 || echo "")
+          fi
           echo "MOBILE_REPORT_URL=$MOBILE_URL" >> $GITHUB_ENV
 
       - name: Upload Mobile Lighthouse Reports
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43e8af90d # v4.5.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: lighthouse-mobile-reports
           path: .lighthouseci/
@@ -114,12 +117,15 @@ jobs:
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.14.0 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
           # Extract the direct report URL (not the comparison viewer)
-          DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' || echo "")
+          DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+          if [ -z "$DESKTOP_URL" ]; then
+            DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' | head -n 1 || echo "")
+          fi
           echo "DESKTOP_REPORT_URL=$DESKTOP_URL" >> $GITHUB_ENV
 
       - name: Upload Desktop Lighthouse Reports
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43e8af90d # v4.5.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: lighthouse-desktop-reports
           path: .lighthouseci/
