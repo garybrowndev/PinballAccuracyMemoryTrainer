@@ -81,6 +81,11 @@ jobs:
           mkdir -p lighthouseci-mobile-reports
           cp -r .lighthouseci/. lighthouseci-mobile-reports/
 
+          echo "=== Mobile Upload Debug Info ==="
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "PR: ${{ github.event.pull_request.number }}"
+
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
@@ -206,6 +211,11 @@ jobs:
 
           mkdir -p lighthouseci-desktop-reports
           cp -r .lighthouseci/. lighthouseci-desktop-reports/
+
+          echo "=== Desktop Upload Debug Info ==="
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "PR: ${{ github.event.pull_request.number }}"
 
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
