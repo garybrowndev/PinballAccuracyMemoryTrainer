@@ -89,11 +89,13 @@ jobs:
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
-          MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
-          if [ -z "$MOBILE_URL" ]; then
-            MOBILE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' | head -n 1 || echo "")
+          MOBILE_DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+          MOBILE_COMPARE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://googlechrome\.github\.io/lighthouse-ci/viewer/\?[^"]*' | head -n 1 || echo "")
+          if [ -z "$MOBILE_COMPARE_URL" ] && [ -n "$MOBILE_DIRECT_URL" ]; then
+            MOBILE_COMPARE_URL="$MOBILE_DIRECT_URL"
           fi
-          echo "MOBILE_REPORT_URL=$MOBILE_URL" >> $GITHUB_ENV
+          echo "MOBILE_REPORT_URL=$MOBILE_COMPARE_URL" >> $GITHUB_ENV
+          echo "MOBILE_DIRECT_URL=$MOBILE_DIRECT_URL" >> $GITHUB_ENV
 
       - name: Upload Mobile Lighthouse Reports
         if: always()
@@ -108,6 +110,7 @@ jobs:
         if: always()
         env:
           MOBILE_URL: ${{ env.MOBILE_REPORT_URL }}
+          MOBILE_DIRECT_URL: ${{ env.MOBILE_DIRECT_URL }}
         run: |
           python3 -c '
           import json
@@ -117,7 +120,11 @@ jobs:
           print("## 📱 Lighthouse Mobile Results\n")
 
           mobile_url = os.environ.get("MOBILE_URL", "")
-          if mobile_url:
+          mobile_direct_url = os.environ.get("MOBILE_DIRECT_URL", "")
+
+          if mobile_url and mobile_direct_url and mobile_url != mobile_direct_url:
+              print(f"**[View Comparison Report]({mobile_url})** | **[View Direct Report]({mobile_direct_url})**\n")
+          elif mobile_url:
               print(f"**[View Report]({mobile_url})**\n")
 
           files = glob.glob("lighthouseci-mobile-reports/lhr-*.json")
@@ -220,11 +227,13 @@ jobs:
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
-          DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
-          if [ -z "$DESKTOP_URL" ]; then
-            DESKTOP_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'compareReport=\K[^&]*' | sed 's/%3A/:/g;s/%2F/\//g' | head -n 1 || echo "")
+          DESKTOP_DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+          DESKTOP_COMPARE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://googlechrome\.github\.io/lighthouse-ci/viewer/\?[^"]*' | head -n 1 || echo "")
+          if [ -z "$DESKTOP_COMPARE_URL" ] && [ -n "$DESKTOP_DIRECT_URL" ]; then
+            DESKTOP_COMPARE_URL="$DESKTOP_DIRECT_URL"
           fi
-          echo "DESKTOP_REPORT_URL=$DESKTOP_URL" >> $GITHUB_ENV
+          echo "DESKTOP_REPORT_URL=$DESKTOP_COMPARE_URL" >> $GITHUB_ENV
+          echo "DESKTOP_DIRECT_URL=$DESKTOP_DIRECT_URL" >> $GITHUB_ENV
 
       - name: Upload Desktop Lighthouse Reports
         if: always()
@@ -239,6 +248,7 @@ jobs:
         if: always()
         env:
           DESKTOP_URL: ${{ env.DESKTOP_REPORT_URL }}
+          DESKTOP_DIRECT_URL: ${{ env.DESKTOP_DIRECT_URL }}
         run: |
           python3 -c '
           import json
@@ -248,7 +258,11 @@ jobs:
           print("## 🖥️ Lighthouse Desktop Results\n")
 
           desktop_url = os.environ.get("DESKTOP_URL", "")
-          if desktop_url:
+          desktop_direct_url = os.environ.get("DESKTOP_DIRECT_URL", "")
+
+          if desktop_url and desktop_direct_url and desktop_url != desktop_direct_url:
+              print(f"**[View Comparison Report]({desktop_url})** | **[View Direct Report]({desktop_direct_url})**\n")
+          elif desktop_url:
               print(f"**[View Report]({desktop_url})**\n")
 
           files = glob.glob("lighthouseci-desktop-reports/lhr-*.json")
