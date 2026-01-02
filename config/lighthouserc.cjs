@@ -49,6 +49,8 @@ module.exports = {
       // GitHub status check configuration
       githubToken: process.env.LHCI_GITHUB_APP_TOKEN,
       githubStatusContextSuffix: '/CI',
+      // Force baseline creation for PR branches
+      uploadUrlMap: true,
     },
   },
   // Define desktop preset for CLI usage (mobile is the default)
