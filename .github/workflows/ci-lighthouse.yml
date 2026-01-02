@@ -73,19 +73,9 @@ jobs:
         run: |
           echo "📱 Running Lighthouse for Mobile..."
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 collect \
-            --config=config/lighthouserc.cjs \
-            --url=http://localhost:9222/pinball-trainer-standalone.html \
-            --settings.emulatedFormFactor=mobile \
-            --settings.throttling.rttMs=150 \
-            --settings.throttling.throughputKbps=1638.4 \
-            --settings.throttling.cpuSlowdownMultiplier=4 \
-            --settings.screenEmulation.mobile=true \
-            --settings.screenEmulation.width=412 \
-            --settings.screenEmulation.height=823 \
-            --settings.screenEmulation.deviceScaleFactor=2.625 \
-            --settings.screenEmulation.disabled=false
+            --config=config/lighthouserc-mobile.cjs
 
-          xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
+          xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc-mobile.cjs
 
           mkdir -p lighthouseci-mobile-reports
           cp -r .lighthouseci/. lighthouseci-mobile-reports/
@@ -95,7 +85,7 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "PR: ${{ github.event.pull_request.number }}"
 
-          UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
+          UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc-mobile.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
           # Extract URLs - comparison URL takes precedence, then direct URL
@@ -231,19 +221,9 @@ jobs:
         run: |
           echo "🖥️  Running Lighthouse for Desktop..."
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 collect \
-            --config=config/lighthouserc.cjs \
-            --url=http://localhost:9222/pinball-trainer-standalone-desktop.html \
-            --settings.emulatedFormFactor=desktop \
-            --settings.throttling.rttMs=40 \
-            --settings.throttling.throughputKbps=10240 \
-            --settings.throttling.cpuSlowdownMultiplier=1 \
-            --settings.screenEmulation.mobile=false \
-            --settings.screenEmulation.width=1350 \
-            --settings.screenEmulation.height=940 \
-            --settings.screenEmulation.deviceScaleFactor=1 \
-            --settings.screenEmulation.disabled=false
+            --config=config/lighthouserc-desktop.cjs
 
-          xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
+          xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc-desktop.cjs
 
           mkdir -p lighthouseci-desktop-reports
           cp -r .lighthouseci/. lighthouseci-desktop-reports/
@@ -253,7 +233,7 @@ jobs:
           echo "Commit: ${{ github.sha }}"
           echo "PR: ${{ github.event.pull_request.number }}"
 
-          UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
+          UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc-desktop.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
           # Extract URLs - comparison URL takes precedence, then direct URL
