@@ -99,12 +99,14 @@ jobs:
             MOBILE_COMPARE_DIRECT_URL=$(echo "$MOBILE_COMPARE_URL" | sed 's/.*compareReport=\([^&]*\).*/\1/' | sed 's/%3A/:/g; s/%2F/\//g' || echo "")
             # Use the compare report as the primary direct URL
             MOBILE_DIRECT_URL="$MOBILE_COMPARE_DIRECT_URL"
+            MOBILE_REPORT_URL="$MOBILE_COMPARE_URL"
           else
-            # Fallback: look for direct URL in output
+            # No comparison URL available, use direct URL for both
             MOBILE_DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+            MOBILE_REPORT_URL="$MOBILE_DIRECT_URL"
           fi
 
-          echo "MOBILE_REPORT_URL=$MOBILE_COMPARE_URL" >> $GITHUB_ENV
+          echo "MOBILE_REPORT_URL=$MOBILE_REPORT_URL" >> $GITHUB_ENV
           echo "MOBILE_DIRECT_URL=$MOBILE_DIRECT_URL" >> $GITHUB_ENV
 
       - name: Upload Mobile Lighthouse Reports
@@ -247,12 +249,14 @@ jobs:
             DESKTOP_COMPARE_DIRECT_URL=$(echo "$DESKTOP_COMPARE_URL" | sed 's/.*compareReport=\([^&]*\).*/\1/' | sed 's/%3A/:/g; s/%2F/\//g' || echo "")
             # Use the compare report as the primary direct URL
             DESKTOP_DIRECT_URL="$DESKTOP_COMPARE_DIRECT_URL"
+            DESKTOP_REPORT_URL="$DESKTOP_COMPARE_URL"
           else
-            # Fallback: look for direct URL in output
+            # No comparison URL available, use direct URL for both
             DESKTOP_DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+            DESKTOP_REPORT_URL="$DESKTOP_DIRECT_URL"
           fi
 
-          echo "DESKTOP_REPORT_URL=$DESKTOP_COMPARE_URL" >> $GITHUB_ENV
+          echo "DESKTOP_REPORT_URL=$DESKTOP_REPORT_URL" >> $GITHUB_ENV
           echo "DESKTOP_DIRECT_URL=$DESKTOP_DIRECT_URL" >> $GITHUB_ENV
 
       - name: Upload Desktop Lighthouse Reports
