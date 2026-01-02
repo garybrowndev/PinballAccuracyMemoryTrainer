@@ -53,7 +53,15 @@ module.exports = {
       uploadUrlMap: true,
     },
   },
-  // Define desktop preset for CLI usage (mobile is the default)
+  // Define mobile preset for CLI usage (explicit mobile settings)
+  mobile: {
+    extends: 'lighthouse:default',
+    settings: {
+      chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
+      disableStorageReset: true,
+    },
+  },
+  // Define desktop preset for CLI usage
   desktop: {
     extends: 'lighthouse:default',
     settings: {

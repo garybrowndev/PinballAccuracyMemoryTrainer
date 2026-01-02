@@ -74,7 +74,8 @@ jobs:
           echo "📱 Running Lighthouse for Mobile..."
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 collect \
             --config=config/lighthouserc.cjs \
-            --url=http://localhost:9222/pinball-trainer-standalone.html
+            --url=http://localhost:9222/pinball-trainer-standalone.html \
+            --settings.preset=mobile
 
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
 
