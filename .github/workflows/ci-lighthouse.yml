@@ -89,11 +89,21 @@ jobs:
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
-          MOBILE_DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+          # Extract URLs - comparison URL takes precedence, then direct URL
           MOBILE_COMPARE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://googlechrome\.github\.io/lighthouse-ci/viewer/\?[^"]*' | head -n 1 || echo "")
-          if [ -z "$MOBILE_COMPARE_URL" ] && [ -n "$MOBILE_DIRECT_URL" ]; then
-            MOBILE_COMPARE_URL="$MOBILE_DIRECT_URL"
+
+          # If we have a comparison URL, extract the direct URLs from its parameters
+          if [ -n "$MOBILE_COMPARE_URL" ]; then
+            # URL decode and extract baseReport and compareReport URLs
+            MOBILE_BASE_URL=$(echo "$MOBILE_COMPARE_URL" | sed 's/.*baseReport=\([^&]*\).*/\1/' | sed 's/%3A/:/g; s/%2F/\//g' || echo "")
+            MOBILE_COMPARE_DIRECT_URL=$(echo "$MOBILE_COMPARE_URL" | sed 's/.*compareReport=\([^&]*\).*/\1/' | sed 's/%3A/:/g; s/%2F/\//g' || echo "")
+            # Use the compare report as the primary direct URL
+            MOBILE_DIRECT_URL="$MOBILE_COMPARE_DIRECT_URL"
+          else
+            # Fallback: look for direct URL in output
+            MOBILE_DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
           fi
+
           echo "MOBILE_REPORT_URL=$MOBILE_COMPARE_URL" >> $GITHUB_ENV
           echo "MOBILE_DIRECT_URL=$MOBILE_DIRECT_URL" >> $GITHUB_ENV
 
@@ -227,11 +237,21 @@ jobs:
           UPLOAD_OUTPUT=$(npx @lhci/cli@0.15.1 upload --config=config/lighthouserc.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
-          DESKTOP_DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+          # Extract URLs - comparison URL takes precedence, then direct URL
           DESKTOP_COMPARE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://googlechrome\.github\.io/lighthouse-ci/viewer/\?[^"]*' | head -n 1 || echo "")
-          if [ -z "$DESKTOP_COMPARE_URL" ] && [ -n "$DESKTOP_DIRECT_URL" ]; then
-            DESKTOP_COMPARE_URL="$DESKTOP_DIRECT_URL"
+
+          # If we have a comparison URL, extract the direct URLs from its parameters
+          if [ -n "$DESKTOP_COMPARE_URL" ]; then
+            # URL decode and extract baseReport and compareReport URLs
+            DESKTOP_BASE_URL=$(echo "$DESKTOP_COMPARE_URL" | sed 's/.*baseReport=\([^&]*\).*/\1/' | sed 's/%3A/:/g; s/%2F/\//g' || echo "")
+            DESKTOP_COMPARE_DIRECT_URL=$(echo "$DESKTOP_COMPARE_URL" | sed 's/.*compareReport=\([^&]*\).*/\1/' | sed 's/%3A/:/g; s/%2F/\//g' || echo "")
+            # Use the compare report as the primary direct URL
+            DESKTOP_DIRECT_URL="$DESKTOP_COMPARE_DIRECT_URL"
+          else
+            # Fallback: look for direct URL in output
+            DESKTOP_DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
           fi
+
           echo "DESKTOP_REPORT_URL=$DESKTOP_COMPARE_URL" >> $GITHUB_ENV
           echo "DESKTOP_DIRECT_URL=$DESKTOP_DIRECT_URL" >> $GITHUB_ENV
 

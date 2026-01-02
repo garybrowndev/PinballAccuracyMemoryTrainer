@@ -56,7 +56,10 @@ jobs:
           module.exports = {
             ci: {
               collect: {
-                url: ['${{ github.event.inputs.url || 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/' }}'],
+                url: [
+                  '${{ github.event.inputs.url || 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/' }}?config=mobile',
+                  '${{ github.event.inputs.url || 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/' }}?config=desktop'
+                ],
                 numberOfRuns: 3,
                 outputDir: './.lighthouseci-production',
                 settings: [
@@ -115,6 +118,8 @@ jobs:
                 target: 'temporary-public-storage',
                 githubToken: process.env.LHCI_GITHUB_APP_TOKEN,
                 githubStatusContextSuffix: '/production',
+                // Force baseline creation for production audits
+                uploadUrlMap: true,
               },
             },
           };
@@ -135,16 +140,31 @@ jobs:
           # Copy before upload
           cp -r .lighthouseci-production .lighthouseci-production-backup
 
-          # Upload and capture URL
+          # Upload and capture URLs
           UPLOAD_OUTPUT=$(lhci upload --config=lighthouserc-production.cjs 2>&1)
           echo "$UPLOAD_OUTPUT"
 
-          # Extract viewer URL
-          VIEWER_URL=$(echo "$UPLOAD_OUTPUT" | grep -oE 'https://googlechrome\.github\.io/lighthouse-ci/viewer/\?[^[:space:]]+' | head -n 1)
+          # Extract both comparison and direct URLs
+          DIRECT_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://storage\.googleapis\.com/[^\s]+\.report\.html' | head -n 1 || echo "")
+          COMPARE_URL=$(echo "$UPLOAD_OUTPUT" | grep -oP 'https://googlechrome\.github\.io/lighthouse-ci/viewer/\?[^"]*' | head -n 1 || echo "")
+          if [ -z "$COMPARE_URL" ] && [ -n "$DIRECT_URL" ]; then
+            COMPARE_URL="$DIRECT_URL"
+          fi
 
-          if [ -n "$VIEWER_URL" ]; then
-            echo "report_url=$VIEWER_URL" >> $GITHUB_OUTPUT
-            echo "✅ Report URL: $VIEWER_URL"
+          # Strip config query parameters from URLs for cleaner display
+          BASE_URL='${{ github.event.inputs.url || '\''https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/'\'' }}'
+          if [ -n "$COMPARE_URL" ]; then
+            COMPARE_URL=$(echo "$COMPARE_URL" | sed "s|${BASE_URL}?config=[^&]*&|${BASE_URL}?|g" | sed "s|${BASE_URL}?config=[^&]*|${BASE_URL}|g")
+          fi
+          if [ -n "$DIRECT_URL" ]; then
+            DIRECT_URL=$(echo "$DIRECT_URL" | sed "s|${BASE_URL}?config=[^&]*&|${BASE_URL}?|g" | sed "s|${BASE_URL}?config=[^&]*|${BASE_URL}|g")
+          fi
+
+          echo "report_url=$COMPARE_URL" >> $GITHUB_OUTPUT
+          echo "direct_url=$DIRECT_URL" >> $GITHUB_OUTPUT
+
+          if [ -n "$COMPARE_URL" ]; then
+            echo "✅ Report URL: $COMPARE_URL"
           else
             echo "⚠️ Could not extract report URL"
           fi
@@ -246,7 +266,9 @@ jobs:
           echo "**Tested URL:** \`${{ github.event.inputs.url || 'https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ -n "${{ steps.lighthouse.outputs.report_url }}" ]; then
+          if [ -n "${{ steps.lighthouse.outputs.report_url }}" ] && [ -n "${{ steps.lighthouse.outputs.direct_url }}" ] && [ "${{ steps.lighthouse.outputs.report_url }}" != "${{ steps.lighthouse.outputs.direct_url }}" ]; then
+            echo "📊 **[View Comparison Report](${{ steps.lighthouse.outputs.report_url }})** | **[View Direct Report](${{ steps.lighthouse.outputs.direct_url }})**" >> $GITHUB_STEP_SUMMARY
+          elif [ -n "${{ steps.lighthouse.outputs.report_url }}" ]; then
             echo "📊 [View Full Report](${{ steps.lighthouse.outputs.report_url }})" >> $GITHUB_STEP_SUMMARY
           fi
 
