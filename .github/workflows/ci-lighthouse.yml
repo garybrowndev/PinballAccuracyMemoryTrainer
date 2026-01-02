@@ -78,7 +78,7 @@ jobs:
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc-mobile.cjs
 
           mkdir -p lighthouseci-mobile-reports
-          cp -r .lighthouseci/. lighthouseci-mobile-reports/
+          cp -r .lighthouseci-mobile/. lighthouseci-mobile-reports/
 
           echo "=== Mobile Upload Debug Info ==="
           echo "Branch: ${{ github.ref }}"
@@ -226,7 +226,7 @@ jobs:
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc-desktop.cjs
 
           mkdir -p lighthouseci-desktop-reports
-          cp -r .lighthouseci/. lighthouseci-desktop-reports/
+          cp -r .lighthouseci-desktop/. lighthouseci-desktop-reports/
 
           echo "=== Desktop Upload Debug Info ==="
           echo "Branch: ${{ github.ref }}"

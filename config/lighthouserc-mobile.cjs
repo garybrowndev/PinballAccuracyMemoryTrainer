@@ -8,7 +8,7 @@ module.exports = {
       // numberOfRuns set to 2 to test both cold cache (first load) and warm cache (repeat visitor)
       numberOfRuns: 2,
       // Explicitly set output directory for CI artifacts
-      outputDir: './.lighthouseci',
+      outputDir: './.lighthouseci-mobile',
       // Mobile-specific settings
       settings: {
         chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
