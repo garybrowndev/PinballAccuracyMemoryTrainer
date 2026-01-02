@@ -10,12 +10,11 @@ module.exports = {
       numberOfRuns: 2,
       // Explicitly set output directory for CI artifacts
       outputDir: './.lighthouseci',
-      // Base settings - CLI will override with --settings.preset=mobile or --settings.preset=desktop
+      // Base settings - chromeFlags applied to all runs
       settings: {
         chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
-        // Simulate warm cache behavior by disabling storage reset between runs
-        // This allows the 2nd+ runs to benefit from cached resources (Service Worker, localStorage, etc.)
-        // Comment out 'disableStorageReset' to force cold cache on every run
+        // Disable storage reset to preserve warm cache behavior (Service Worker, localStorage, etc.)
+        // This matches repeat visitor scenarios and maintains consistency with baselines
         disableStorageReset: true,
       },
     },
@@ -51,35 +50,6 @@ module.exports = {
       githubStatusContextSuffix: '/CI',
       // Force baseline creation for PR branches
       uploadUrlMap: true,
-    },
-  },
-  // Define mobile preset for CLI usage (explicit mobile settings)
-  mobile: {
-    extends: 'lighthouse:default',
-    settings: {
-      chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
-      disableStorageReset: true,
-    },
-  },
-  // Define desktop preset for CLI usage
-  desktop: {
-    extends: 'lighthouse:default',
-    settings: {
-      emulatedFormFactor: 'desktop',
-      screenEmulation: {
-        mobile: false,
-        width: 1350,
-        height: 940,
-        deviceScaleFactor: 1,
-        disabled: false,
-      },
-      throttling: {
-        rttMs: 40,
-        throughputKbps: 10240,
-        cpuSlowdownMultiplier: 1,
-      },
-      chromeFlags: '--no-sandbox --disable-gpu --user-data-dir=./.lighthouse-chrome-data',
-      disableStorageReset: true,
     },
   },
 };

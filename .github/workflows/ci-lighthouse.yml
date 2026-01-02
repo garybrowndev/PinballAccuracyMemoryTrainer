@@ -239,7 +239,8 @@ jobs:
             --settings.screenEmulation.mobile=false \
             --settings.screenEmulation.width=1350 \
             --settings.screenEmulation.height=940 \
-            --settings.screenEmulation.deviceScaleFactor=1
+            --settings.screenEmulation.deviceScaleFactor=1 \
+            --settings.screenEmulation.disabled=false
 
           xvfb-run --auto-servernum npx @lhci/cli@0.15.1 assert --config=config/lighthouserc.cjs
 
