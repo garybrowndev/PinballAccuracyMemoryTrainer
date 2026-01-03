@@ -4,10 +4,11 @@ module.exports = {
       // Serve the standalone build directory using npx serve
       // cleanUrls is disabled via serve.json config file to prevent 600ms redirect penalty
       startServerCommand: 'npx serve dist-standalone -p 9222',
+      startServerReadyPattern: 'accepting connections|listening',
+      startServerReadyTimeout: 30000,
       // Use different URL path for desktop to enable distinct comparisons in temp storage
       url: ['http://localhost:9222/pinball-trainer-standalone-desktop.html'],
       numberOfRuns: 1,
-      outputDir: './.lighthouseci',
       settings: {
         // Desktop emulation settings
         preset: 'desktop',
