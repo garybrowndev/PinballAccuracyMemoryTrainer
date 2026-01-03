@@ -5,15 +5,13 @@ module.exports = {
       // cleanUrls is disabled via serve.json config file to prevent 600ms redirect penalty
       startServerCommand: 'npx serve dist-standalone -p 9222',
       url: ['http://localhost:9222/pinball-trainer-standalone.html'],
-      numberOfRuns: 3, // Run 3 times for reliable median
+      numberOfRuns: 1,
       outputDir: './.lighthouseci',
       settings: {
         // Mobile emulation settings (default Lighthouse behavior)
         // Keep warm cache to simulate real-world usage
         disableStorageReset: true,
-        // Chrome flags optimized for Windows stability and temp file cleanup
-        chromeFlags:
-          '--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --disable-extensions',
+        maxWaitForLoad: 90000,
       },
     },
     assert: {

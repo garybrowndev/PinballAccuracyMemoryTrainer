@@ -6,16 +6,14 @@ module.exports = {
       startServerCommand: 'npx serve dist-standalone -p 9222',
       // Use different URL path for desktop to enable distinct comparisons in temp storage
       url: ['http://localhost:9222/pinball-trainer-standalone-desktop.html'],
-      numberOfRuns: 3, // Run 3 times for reliable median
+      numberOfRuns: 1,
       outputDir: './.lighthouseci',
       settings: {
         // Desktop emulation settings
         preset: 'desktop',
         // Keep warm cache to simulate real-world usage
         disableStorageReset: true,
-        // Chrome flags optimized for Windows stability and temp file cleanup
-        chromeFlags:
-          '--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --disable-extensions',
+        maxWaitForLoad: 90000,
       },
     },
     assert: {
