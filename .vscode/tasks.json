@@ -149,6 +149,32 @@
         "panel": "dedicated",
         "focus": false
       }
+    },
+    {
+      "label": "Lighthouse: Mobile",
+      "detail": "Runs Lighthouse audit on mobile view of standalone build and opens report",
+      "type": "shell",
+      "command": "npm run build:standalone && npx lhci collect --config=config/lighthouse/mobile.config.cjs && npx lhci assert --config=config/lighthouse/mobile.config.cjs && npx lhci open",
+      "dependsOn": ["Install Dependencies"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "Lighthouse: Desktop",
+      "detail": "Runs Lighthouse audit on desktop view of standalone build and opens report",
+      "type": "shell",
+      "command": "npm run build:standalone && npx lhci collect --config=config/lighthouse/desktop.config.cjs && npx lhci assert --config=config/lighthouse/desktop.config.cjs && npx lhci open",
+      "dependsOn": ["Install Dependencies"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      }
     }
   ]
 }
