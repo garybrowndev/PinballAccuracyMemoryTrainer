@@ -2,7 +2,10 @@ name: 'CD: Deploy PR Preview'
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types:
+      - opened
+      - synchronize
+      - reopened
     branches:
       - master
 

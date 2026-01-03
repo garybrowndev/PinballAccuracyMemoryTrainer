@@ -2,12 +2,10 @@ name: Lighthouse CI - Desktop
 on:
   push:
     branches:
-      - main
-      - develop
+      - master
   pull_request:
     branches:
-      - main
-      - develop
+      - master
 concurrency:
   group: lighthouse-desktop-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
