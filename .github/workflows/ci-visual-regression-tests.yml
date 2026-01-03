@@ -2,7 +2,11 @@ name: 'CI: Visual Regression Tests'
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
     branches:
       - master
   push:
