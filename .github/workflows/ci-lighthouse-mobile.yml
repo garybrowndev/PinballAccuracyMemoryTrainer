@@ -1,0 +1,72 @@
+name: Lighthouse CI - Mobile
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+concurrency:
+  group: lighthouse-mobile-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lighthouse-mobile:
+    name: Lighthouse Mobile Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build standalone
+        run: npm run build:standalone
+      - name: Run Lighthouse audit (mobile)
+        run: npx lhci collect --config=config/lighthouse/mobile.config.cjs --numberOfRuns=3
+      - name: Assert Lighthouse thresholds
+        run: npx lhci assert --config=config/lighthouse/mobile.config.cjs
+      - name: Upload Lighthouse results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-mobile-results
+          path: .lighthouseci/
+          retention-days: 30
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const resultsPath = '.lighthouseci/assertion-results.json';
+            if (!fs.existsSync(resultsPath)) {
+              console.log('No assertion results found');
+              return;
+            }
+            const results = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+            const assertionResults = results.assertionResults || [];
+            let passed = 0;
+            let failed = 0;
+            let details = '';
+            assertionResults.forEach(result => {
+              if (result.passed) {
+                passed++;
+              } else {
+                failed++;
+                details += `\n- ❌ ${result.name || result.url}: ${result.message || 'Assertion failed'}`;
+              }
+            });
+            const comment = `## 📱 Lighthouse Mobile Audit Results\n\n**Status**: ${failed === 0 ? '✅ PASSED' : '❌ FAILED'}\n- ✅ Passed: ${passed}\n- ❌ Failed: ${failed}${details ? `\n\n### Failed Assertions${details}` : ''}\n\n**View detailed results**: [Lighthouse Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
