@@ -11,7 +11,9 @@ module.exports = {
         // Mobile emulation settings (default Lighthouse behavior)
         // Keep warm cache to simulate real-world usage
         disableStorageReset: true,
-        chromeFlags: '--no-sandbox --disable-gpu',
+        // Chrome flags optimized for Windows stability and temp file cleanup
+        chromeFlags:
+          '--no-sandbox --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --disable-extensions',
       },
     },
     assert: {
