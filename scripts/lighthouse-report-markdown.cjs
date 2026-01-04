@@ -45,18 +45,13 @@ function generateReport() {
   // Read metadata
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path from CLI arg
   const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-  const { device, url, scores } = metadata;
-
-  // Try to read manifest for additional report info
-  // Note: The temporary-public-storage URL is not in manifest.json,
-  // it's printed to stdout by 'lhci upload' command. Workflows should capture it.
-  // For now, skip trying to get report URL from manifest since it's not there
+  const { device, url, scores, reportUrl, compareUrl } = metadata;
 
   // Generate markdown report
   const lines = [];
   lines.push(`## 🔦 Lighthouse Report - ${device.charAt(0).toUpperCase() + device.slice(1)}`);
   lines.push('');
-  lines.push(`**URL:** ${url}`);
+  lines.push(`**Tested URL:** ${url}`);
   lines.push('');
   lines.push('| Category | Score |');
   lines.push('|----------|-------|');
@@ -71,6 +66,18 @@ function generateReport() {
   );
   lines.push(`| ${getScoreEmoji(scores.seo)} SEO | ${formatScore(scores.seo)} |`);
   lines.push('');
+
+  // Add report links if available
+  if (reportUrl || compareUrl) {
+    lines.push('**Links:**');
+    if (reportUrl) {
+      lines.push(`- [📊 View Full Report](${reportUrl})`);
+    }
+    if (compareUrl) {
+      lines.push(`- [🔄 Compare Results](${compareUrl})`);
+    }
+    lines.push('');
+  }
 
   // Output markdown
   // eslint-disable-next-line no-console -- CLI script needs console output

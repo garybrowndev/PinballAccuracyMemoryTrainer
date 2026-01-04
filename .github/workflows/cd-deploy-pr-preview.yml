@@ -145,7 +145,7 @@ jobs:
 
       - name: Upload mobile results to temporary public storage
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
-        run: npx lhci upload --config=config/lighthouse/mobile.config.cjs
+        run: npx lhci upload --config=config/lighthouse/mobile.config.cjs | tee lhci-upload-surge-mobile.log
 
       - name: Save mobile results to filesystem (artifacts)
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
@@ -153,7 +153,7 @@ jobs:
 
       - name: Extract mobile metadata
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
-        run: node scripts/lighthouse-metadata.cjs mobile > lighthouse-surge-mobile-metadata.json
+        run: node scripts/lighthouse-metadata.cjs mobile lhci-upload-surge-mobile.log > lighthouse-surge-mobile-metadata.json
 
       - name: Debug - Display mobile metadata JSON
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
@@ -184,7 +184,7 @@ jobs:
 
       - name: Upload desktop results to temporary public storage
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
-        run: npx lhci upload --config=config/lighthouse/desktop.config.cjs
+        run: npx lhci upload --config=config/lighthouse/desktop.config.cjs | tee lhci-upload-surge-desktop.log
 
       - name: Save desktop results to filesystem (artifacts)
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
@@ -192,7 +192,7 @@ jobs:
 
       - name: Extract desktop metadata
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
-        run: node scripts/lighthouse-metadata.cjs desktop > lighthouse-surge-desktop-metadata.json
+        run: node scripts/lighthouse-metadata.cjs desktop lhci-upload-surge-desktop.log > lighthouse-surge-desktop-metadata.json
 
       - name: Debug - Display desktop metadata JSON
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'

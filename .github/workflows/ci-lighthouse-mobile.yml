@@ -36,13 +36,15 @@ jobs:
         run: npx lhci assert --config=config/lighthouse/mobile.config.cjs
       - name: Upload to temporary public storage
         if: always()
-        run: npx lhci upload --config=config/lighthouse/mobile.config.cjs
+        run: npx lhci upload --config=config/lighthouse/mobile.config.cjs | tee lhci-upload-mobile.log
+
       - name: Save results to filesystem (artifacts)
         if: always()
         run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/mobile
+
       - name: Extract metadata
         if: always()
-        run: node scripts/lighthouse-metadata.cjs mobile > lighthouse-mobile-metadata.json
+        run: node scripts/lighthouse-metadata.cjs mobile lhci-upload-mobile.log > lighthouse-mobile-metadata.json
 
       - name: Debug - Display metadata JSON
         if: always()
