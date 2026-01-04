@@ -6,8 +6,7 @@ module.exports = {
       startServerCommand: 'npx serve dist-standalone -p 9222',
       startServerReadyPattern: 'accepting connections|listening',
       startServerReadyTimeout: 30000,
-      // Use different URL path for desktop to enable distinct comparisons in temp storage
-      url: ['http://localhost:9222/pinball-trainer-standalone-desktop.html'],
+      url: ['http://localhost:9222/pinball-trainer-standalone.html'],
       numberOfRuns: 1,
       settings: {
         // Desktop emulation settings
