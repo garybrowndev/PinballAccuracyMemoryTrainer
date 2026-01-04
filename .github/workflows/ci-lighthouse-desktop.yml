@@ -14,6 +14,8 @@ jobs:
     name: Lighthouse Desktop Audit
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      statuses: write
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
