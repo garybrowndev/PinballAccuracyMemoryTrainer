@@ -1,35 +1,59 @@
 #!/usr/bin/env node
 /**
- * Lighthouse Metadata Extractor
+ * Lighthouse Metadata Extractor - extracts scores and URLs from Lighthouse CI results.
  *
- * Extracts Lighthouse results from .lighthouseci directory and outputs
- * structured metadata for use in workflow summaries and PR comments.
- *
- * Usage:
- * node scripts/lighthouse-metadata.cjs <device> [outputDir]
- *
- * Arguments:
- * device - Device type: 'mobile' or 'desktop'
- * outputDir - Optional: Custom .lighthouseci subdirectory (e.g., 'surge-mobile')
- *
- * Output: JSON to stdout with structure:
- * { device: "mobile", url: "http://localhost:9222/...", scores: { ... } }
+ * Usage: node scripts/lighthouse-metadata.cjs <device> [uploadLogFile] [outputDir]
  */
 
 const fs = require('fs');
 const path = require('path');
 
 const device = process.argv[2];
-const outputDir = process.argv[3] || device;
+const uploadLogFile = process.argv[3];
+const outputDir = process.argv[4] || device;
 
 if (!device || !['mobile', 'desktop'].includes(device)) {
   // eslint-disable-next-line no-console -- CLI script needs console output
-  console.error('Usage: node scripts/lighthouse-metadata.cjs <device> [outputDir]');
+  console.error('Usage: node scripts/lighthouse-metadata.cjs <device> [uploadLogFile] [outputDir]');
   // eslint-disable-next-line no-console -- CLI script needs console output
   console.error('  device: "mobile" or "desktop"');
   // eslint-disable-next-line no-console -- CLI script needs console output
-  console.error('  outputDir: optional custom directory (defaults to device name)');
+  console.error('  uploadLogFile: optional log file from lhci upload');
+  // eslint-disable-next-line no-console -- CLI script needs console output
+  console.error('  outputDir: optional directory name (defaults to device name)');
   process.exit(1);
+}
+
+// Parse report URLs from upload log if provided
+let reportUrl = null;
+let compareUrl = null;
+
+if (uploadLogFile) {
+  try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path from CLI arg
+    const logContent = fs.readFileSync(uploadLogFile, 'utf8');
+
+    // Extract report URL - match URL after "Open the report at:" or "Report URL:"
+    // eslint-disable-next-line security/detect-unsafe-regex -- Simple pattern for log parsing
+    const reportMatch = /(?:report|open the report at:)\s*(?:url:\s*)?(https?:\/\/\S+)/i.exec(
+      logContent
+    );
+    if (reportMatch) {
+      reportUrl = reportMatch[1];
+    }
+
+    // Extract compare URL - match URL after "View the comparison at:" or "Compare URL:"
+    // eslint-disable-next-line security/detect-unsafe-regex -- Simple pattern for log parsing
+    const compareMatch = /(?:compare|view the comparison at:)\s*(?:url:\s*)?(https?:\/\/\S+)/i.exec(
+      logContent
+    );
+    if (compareMatch) {
+      compareUrl = compareMatch[1];
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console -- CLI script needs console output
+    console.error(`Warning: Could not read upload log file: ${error.message}`);
+  }
 }
 
 const manifestPath = path.join(process.cwd(), '.lighthouseci', outputDir, 'manifest.json');
@@ -70,6 +94,14 @@ try {
     reportPath: htmlPath,
     jsonPath,
   };
+
+  // Add report URLs if available
+  if (reportUrl) {
+    metadata.reportUrl = reportUrl;
+  }
+  if (compareUrl) {
+    metadata.compareUrl = compareUrl;
+  }
 
   // Output as JSON
   // eslint-disable-next-line no-console -- CLI script needs console output

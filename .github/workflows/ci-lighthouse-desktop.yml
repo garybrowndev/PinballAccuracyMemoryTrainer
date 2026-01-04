@@ -36,13 +36,15 @@ jobs:
         run: npx lhci assert --config=config/lighthouse/desktop.config.cjs
       - name: Upload to temporary public storage
         if: always()
-        run: npx lhci upload --config=config/lighthouse/desktop.config.cjs
+        run: npx lhci upload --config=config/lighthouse/desktop.config.cjs | tee lhci-upload-desktop.log
+
       - name: Save results to filesystem (artifacts)
         if: always()
         run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/desktop
+
       - name: Extract metadata
         if: always()
-        run: node scripts/lighthouse-metadata.cjs desktop > lighthouse-desktop-metadata.json
+        run: node scripts/lighthouse-metadata.cjs desktop lhci-upload-desktop.log > lighthouse-desktop-metadata.json
 
       - name: Debug - Display metadata JSON
         if: always()
