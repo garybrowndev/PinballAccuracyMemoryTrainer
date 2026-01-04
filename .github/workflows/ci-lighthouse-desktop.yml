@@ -14,6 +14,8 @@ jobs:
     name: Lighthouse Desktop Audit
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -30,7 +32,13 @@ jobs:
         run: npm run lhci:desktop
       - name: Assert Lighthouse thresholds
         run: npx lhci assert --config=config/lighthouse/desktop.config.cjs
-      - name: Upload Lighthouse results
+      - name: Upload to temporary public storage
+        if: always()
+        run: npx lhci upload --config=config/lighthouse/desktop.config.cjs
+      - name: Save results to filesystem (artifacts)
+        if: always()
+        run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/desktop
+      - name: Save artifacts
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:

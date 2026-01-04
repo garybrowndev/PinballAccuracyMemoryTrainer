@@ -42,7 +42,6 @@ module.exports = {
     },
     upload: {
       target: 'temporary-public-storage',
-      outputDir: '.lighthouseci/mobile',
       githubToken: process.env.GITHUB_TOKEN,
       githubStatusContextSuffix: '/Mobile',
     },

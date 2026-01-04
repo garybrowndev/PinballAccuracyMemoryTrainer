@@ -43,7 +43,6 @@ module.exports = {
     },
     upload: {
       target: 'temporary-public-storage',
-      outputDir: '.lighthouseci/desktop',
       githubToken: process.env.GITHUB_TOKEN,
       githubStatusContextSuffix: '/Desktop',
     },
