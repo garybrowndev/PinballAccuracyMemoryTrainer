@@ -1,21 +1,31 @@
+// URL priority: CLI arg (npm run lhci:desktop -- https://...) > env var > localhost default
+const urlArg = process.argv.find((arg) => arg.startsWith('http'));
+const url =
+  urlArg || process.env.LIGHTHOUSE_URL || 'http://localhost:9222/pinball-trainer-standalone.html';
+const isExternalUrl = urlArg || process.env.LIGHTHOUSE_URL;
+
+const collectConfig = {
+  url: [url],
+  numberOfRuns: 3,
+  settings: {
+    // Desktop emulation settings
+    preset: 'desktop',
+    // Keep warm cache to simulate real-world usage
+    disableStorageReset: true,
+    maxWaitForLoad: 90000,
+  },
+};
+
+// Only add startServerCommand for localhost testing
+if (!isExternalUrl) {
+  collectConfig.startServerCommand = 'npx serve dist-standalone -p 9222';
+  collectConfig.startServerReadyPattern = 'accepting connections|listening';
+  collectConfig.startServerReadyTimeout = 30000;
+}
+
 module.exports = {
   ci: {
-    collect: {
-      // Serve the standalone build directory using npx serve
-      // cleanUrls is disabled via serve.json config file to prevent 600ms redirect penalty
-      startServerCommand: 'npx serve dist-standalone -p 9222',
-      startServerReadyPattern: 'accepting connections|listening',
-      startServerReadyTimeout: 30000,
-      url: ['http://localhost:9222/pinball-trainer-standalone.html'],
-      numberOfRuns: 3,
-      settings: {
-        // Desktop emulation settings
-        preset: 'desktop',
-        // Keep warm cache to simulate real-world usage
-        disableStorageReset: true,
-        maxWaitForLoad: 90000,
-      },
-    },
+    collect: collectConfig,
     assert: {
       assertions: {
         // Performance category - 80% threshold

@@ -135,6 +135,54 @@ jobs:
           echo "✅ No external script/CSS references found"
           echo "✅ Surge deployment validated successfully!"
 
+      - name: Run Lighthouse audit on Surge preview (mobile)
+        if: steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: npm run lhci:mobile -- ${{ steps.deploy.outputs.preview_url }}
+
+      - name: Assert Lighthouse thresholds (mobile)
+        if: steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: npx lhci assert --config=config/lighthouse/mobile.config.cjs
+
+      - name: Upload mobile results to temporary public storage
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: npx lhci upload --config=config/lighthouse/mobile.config.cjs
+
+      - name: Save mobile results to filesystem (artifacts)
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/surge-mobile
+
+      - name: Upload Lighthouse mobile artifacts
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: lighthouse-surge-mobile-results
+          path: .lighthouseci/surge-mobile/
+          retention-days: 30
+
+      - name: Run Lighthouse audit on Surge preview (desktop)
+        if: steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: npm run lhci:desktop -- ${{ steps.deploy.outputs.preview_url }}
+
+      - name: Assert Lighthouse thresholds (desktop)
+        if: steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: npx lhci assert --config=config/lighthouse/desktop.config.cjs
+
+      - name: Upload desktop results to temporary public storage
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: npx lhci upload --config=config/lighthouse/desktop.config.cjs
+
+      - name: Save desktop results to filesystem (artifacts)
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/surge-desktop
+
+      - name: Upload Lighthouse desktop artifacts
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: lighthouse-surge-desktop-results
+          path: .lighthouseci/surge-desktop/
+          retention-days: 30
+
       - name: Report service unavailability
         if: steps.deploy.outcome == 'success' && steps.surge-status.outcome == 'failure'
         run: |
