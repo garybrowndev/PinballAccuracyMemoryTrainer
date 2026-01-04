@@ -7,7 +7,7 @@ module.exports = {
       startServerReadyPattern: 'accepting connections|listening',
       startServerReadyTimeout: 30000,
       url: ['http://localhost:9222/pinball-trainer-standalone.html'],
-      numberOfRuns: 1,
+      numberOfRuns: 3,
       settings: {
         // Mobile emulation settings (default Lighthouse behavior)
         // Keep warm cache to simulate real-world usage
