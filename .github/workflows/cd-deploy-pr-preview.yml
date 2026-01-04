@@ -151,6 +151,21 @@ jobs:
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
         run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/surge-mobile
 
+      - name: Extract mobile metadata
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: node scripts/lighthouse-metadata.cjs mobile > lighthouse-surge-mobile-metadata.json
+
+      - name: Debug - Display mobile metadata JSON
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: |
+          echo "=== Lighthouse Surge Mobile Metadata ==="
+          cat lighthouse-surge-mobile-metadata.json
+          echo "========================================="
+
+      - name: Generate mobile job summary
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: node scripts/lighthouse-report-markdown.cjs lighthouse-surge-mobile-metadata.json >> $GITHUB_STEP_SUMMARY
+
       - name: Upload Lighthouse mobile artifacts
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -174,6 +189,21 @@ jobs:
       - name: Save desktop results to filesystem (artifacts)
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
         run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/surge-desktop
+
+      - name: Extract desktop metadata
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: node scripts/lighthouse-metadata.cjs desktop > lighthouse-surge-desktop-metadata.json
+
+      - name: Debug - Display desktop metadata JSON
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: |
+          echo "=== Lighthouse Surge Desktop Metadata ==="
+          cat lighthouse-surge-desktop-metadata.json
+          echo "=========================================="
+
+      - name: Generate desktop job summary
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        run: node scripts/lighthouse-report-markdown.cjs lighthouse-surge-desktop-metadata.json >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Lighthouse desktop artifacts
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'

@@ -40,6 +40,21 @@ jobs:
       - name: Save results to filesystem (artifacts)
         if: always()
         run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/mobile
+      - name: Extract metadata
+        if: always()
+        run: node scripts/lighthouse-metadata.cjs mobile > lighthouse-mobile-metadata.json
+
+      - name: Debug - Display metadata JSON
+        if: always()
+        run: |
+          echo "=== Lighthouse Mobile Metadata ==="
+          cat lighthouse-mobile-metadata.json
+          echo "==================================="
+
+      - name: Generate job summary
+        if: always()
+        run: node scripts/lighthouse-report-markdown.cjs lighthouse-mobile-metadata.json >> $GITHUB_STEP_SUMMARY
+
       - name: Save artifacts
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
