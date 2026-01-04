@@ -50,7 +50,6 @@
     "test:e2e:debug": "playwright test --debug --config config/playwright.config.js",
     "lhci:mobile": "npx lhci collect --config=config/lighthouse/mobile.config.cjs",
     "lhci:desktop": "npx lhci collect --config=config/lighthouse/desktop.config.cjs",
-    "lhci:collect": "npm run lhci:mobile && npm run lhci:desktop",
     "prepare": "husky"
   },
   "dependencies": {

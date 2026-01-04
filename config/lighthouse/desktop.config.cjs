@@ -27,18 +27,18 @@ module.exports = {
         // SEO category
         'categories:seo': ['error', { minScore: 0.8 }],
 
-        // Disable flaky audits that vary in CI environment
-        'bootup-time': 'off',
-        'mainthread-work-breakdown': 'off',
-        'server-response-time': 'off',
+        // Strict audit requirements
+        'bootup-time': ['error', { maxNumericValue: 3500 }],
+        'mainthread-work-breakdown': ['error', { maxNumericValue: 3500 }],
+        'server-response-time': ['error', { maxNumericValue: 600 }],
         'uses-long-cache-ttl': 'off',
 
-        // Relax specific audits with reasonable bounds
-        'dom-size': ['warn', { maxNumericValue: 3000 }],
-        'render-blocking-resources': ['warn', { maxLength: 5 }],
-        'largest-contentful-paint': ['warn', { maxNumericValue: 4000 }],
-        'cumulative-layout-shift': ['warn', { maxNumericValue: 0.25 }],
-        'total-blocking-time': ['warn', { maxNumericValue: 600 }],
+        // Strict performance and quality bounds
+        'dom-size': 'off',
+        'render-blocking-resources': 'off',
+        'largest-contentful-paint': ['error', { maxNumericValue: 3500 }],
+        'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
+        'total-blocking-time': ['error', { maxNumericValue: 300 }],
       },
     },
     upload: {
