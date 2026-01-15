@@ -33,11 +33,8 @@ if (uploadLogFile) {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path from CLI arg
     const logContent = fs.readFileSync(uploadLogFile, 'utf8');
 
-    // Extract report URL - match URL after "Open the report at:" or "Report URL:"
-    // eslint-disable-next-line security/detect-unsafe-regex -- Simple pattern for log parsing
-    const reportMatch = /(?:report|open the report at:)\s*(?:url:\s*)?(https?:\/\/\S+)/i.exec(
-      logContent
-    );
+    // Extract report URL - match URL after "Open the report at" (from lhci upload)
+    const reportMatch = /open the report at\s+(https?:\/\/\S+)/i.exec(logContent);
     if (reportMatch) {
       reportUrl = reportMatch[1];
     }
