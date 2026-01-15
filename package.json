@@ -12,7 +12,10 @@
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.4.15",
     "workbox-build": {
       "source-map": "0.7.4"
-    }
+    },
+    "chrome-launcher": "^1.2.1",
+    "tmp": "^0.2.4",
+    "lighthouse": "^13.0.1"
   },
   "browserslist": [
     ">0.2%",
@@ -22,7 +25,7 @@
     "Firefox ESR"
   ],
   "scripts": {
-    "postinstall": "npx --yes playwright install --with-deps",
+    "postinstall": "node scripts/patch-chrome-launcher.cjs && npx --yes playwright install --with-deps",
     "dev": "vite --config config/vite.config.js",
     "prebuild": "node config/generate-sitemap.js",
     "build": "vite build --config config/vite.config.js",
@@ -45,6 +48,8 @@
     "test:e2e:ui": "playwright test --ui --config config/playwright.config.js",
     "test:e2e:headed": "playwright test --headed --config config/playwright.config.js",
     "test:e2e:debug": "playwright test --debug --config config/playwright.config.js",
+    "lhci:mobile": "npx lhci collect --config=config/lighthouse/mobile.config.cjs",
+    "lhci:desktop": "npx lhci collect --config=config/lighthouse/desktop.config.cjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -54,6 +59,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
+    "@lhci/cli": "^0.15.1",
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@eslint/js": "^9.39.2",
