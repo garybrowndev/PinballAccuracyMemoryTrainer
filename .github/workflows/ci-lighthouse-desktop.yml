@@ -1,0 +1,101 @@
+name: Lighthouse CI - Desktop
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+concurrency:
+  group: lighthouse-desktop-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lighthouse-desktop:
+    name: Lighthouse Desktop Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      statuses: write
+      pull-requests: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build standalone
+        run: npm run build:standalone
+      - name: Run Lighthouse audit (desktop)
+        run: npm run lhci:desktop
+      - name: Assert Lighthouse thresholds
+        run: npx lhci assert --config=config/lighthouse/desktop.config.cjs
+      - name: Upload to temporary public storage
+        if: always()
+        run: npx lhci upload --config=config/lighthouse/desktop.config.cjs | tee lhci-upload-desktop.log
+
+      - name: Save results to filesystem (artifacts)
+        if: always()
+        run: npx lhci upload --target=filesystem --outputDir=.lighthouseci/desktop
+
+      - name: Extract metadata
+        if: always()
+        run: node scripts/lighthouse-metadata.cjs desktop lhci-upload-desktop.log > lighthouse-desktop-metadata.json
+
+      - name: Debug - Display metadata JSON
+        if: always()
+        run: |
+          echo "=== Lighthouse Desktop Metadata ==="
+          cat lighthouse-desktop-metadata.json
+          echo "===================================="
+
+      - name: Generate job summary
+        if: always()
+        run: node scripts/lighthouse-report-markdown.cjs lighthouse-desktop-metadata.json >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR with results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const metadataJson = fs.readFileSync('lighthouse-desktop-metadata.json', 'utf8');
+            const metadata = JSON.parse(metadataJson);
+            const { scores, reportUrl } = metadata;
+
+            let reportLink = reportUrl
+              ? `[📊 View Full Report](${reportUrl})`
+              : 'Report URL not available';
+
+            const comment = `### 📊 Desktop Lighthouse Results
+
+            | Metric | Score |
+            |--------|-------|
+            | Performance | ${(scores.performance * 100).toFixed(0)}% |
+            | Accessibility | ${(scores.accessibility * 100).toFixed(0)}% |
+            | Best Practices | ${(scores.bestPractices * 100).toFixed(0)}% |
+            | SEO | ${(scores.seo * 100).toFixed(0)}% |
+
+            ${reportLink}`;
+
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            await updateComment({
+              github,
+              context,
+              header: 'Lighthouse Audit - Desktop',
+              body: comment,
+              workflowYaml: 'ci-lighthouse-desktop.yml'
+            });
+
+      - name: Save artifacts
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: lighthouse-desktop-results
+          path: .lighthouseci/desktop/
+          retention-days: 30

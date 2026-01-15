@@ -7,9 +7,7 @@ dev-dist
 dist/stats.html
 
 # Lighthouse CI
-.lighthouseci/
-lighthouse-test/
-lighthouse-report*
+.lighthouse*
 
 # Test results and reports
 test-results/
@@ -23,6 +21,10 @@ coverage/
 # CodeQL
 codeql-db/
 *.sarif
+
+# Debug and log files
+*.log
+*debug*
 
 # Editor directories and files
 .vscode/*
