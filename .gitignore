@@ -22,5 +22,9 @@ coverage/
 codeql-db/
 *.sarif
 
+# Debug and log files
+*.log
+*debug*
+
 # Editor directories and files
 .vscode/*
