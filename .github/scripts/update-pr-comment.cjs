@@ -1,16 +1,11 @@
 /* eslint-disable no-console */
 /* eslint-disable security/detect-non-literal-regexp */
 module.exports = async ({ github, context, header, body, workflowYaml }) => {
-  console.log(`[update-pr-comment] Starting with header: "${header}"`);
-  console.log(`[update-pr-comment] context.issue: ${JSON.stringify(context.issue)}`);
-
   const sha = context.payload.pull_request ? context.payload.pull_request.head.sha : context.sha;
   const shortSha = sha.slice(0, 7);
   const marker = `<!-- report-for-commit-${sha} -->`;
   const { owner, repo } = context.repo;
   const issue_number = context.issue.number;
-
-  console.log(`[update-pr-comment] issue_number: ${issue_number}`);
 
   if (!issue_number) {
     console.log('No issue number found (not a PR?), skipping comment.');
