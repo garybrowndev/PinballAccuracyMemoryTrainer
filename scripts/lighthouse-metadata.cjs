@@ -25,27 +25,29 @@ if (!device || !['mobile', 'desktop'].includes(device)) {
 }
 
 // Parse report URLs from upload log if provided
-let reportUrl = null;
-let compareUrl = null;
+let comparisonReportUrl = null;
+let directReportUrl = null;
 
 if (uploadLogFile) {
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path from CLI arg
-    const logContent = fs.readFileSync(uploadLogFile, 'utf8');
+    let logContent = fs.readFileSync(uploadLogFile, 'utf8');
+
+    // Remove BOM if present (can happen with some file encodings)
+    logContent = logContent.replace(/^\uFEFF/, '');
 
     // Extract report URL - match URL after "Open the report at" (from lhci upload)
     const reportMatch = /open the report at\s+(https?:\/\/\S+)/i.exec(logContent);
     if (reportMatch) {
-      reportUrl = reportMatch[1];
-    }
+      comparisonReportUrl = reportMatch[1];
 
-    // Extract compare URL - match URL after "View the comparison at:" or "Compare URL:"
-    // eslint-disable-next-line security/detect-unsafe-regex -- Simple pattern for log parsing
-    const compareMatch = /(?:compare|view the comparison at:)\s*(?:url:\s*)?(https?:\/\/\S+)/i.exec(
-      logContent
-    );
-    if (compareMatch) {
-      compareUrl = compareMatch[1];
+      // Extract the direct report URL from the comparison link
+      // The compareReport parameter is URL-encoded, so we decode it
+      // eslint-disable-next-line unicorn/better-regex -- Case-insensitive needed for parameter name
+      const compareReportMatch = /compareReport=(https?%3A%2F%2F[^&]+)/i.exec(comparisonReportUrl);
+      if (compareReportMatch) {
+        directReportUrl = decodeURIComponent(compareReportMatch[1]);
+      }
     }
   } catch (error) {
     // eslint-disable-next-line no-console -- CLI script needs console output
@@ -93,11 +95,11 @@ try {
   };
 
   // Add report URLs if available
-  if (reportUrl) {
-    metadata.reportUrl = reportUrl;
+  if (comparisonReportUrl) {
+    metadata.comparisonReportUrl = comparisonReportUrl;
   }
-  if (compareUrl) {
-    metadata.compareUrl = compareUrl;
+  if (directReportUrl) {
+    metadata.directReportUrl = directReportUrl;
   }
 
   // Output as JSON

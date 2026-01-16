@@ -12,9 +12,9 @@ const fs = require('fs');
 // Get score emoji based on threshold
 function getScoreEmoji(score) {
   const percentage = score * 100;
-  if (percentage >= 90) return '🟢';
-  if (percentage >= 80) return '🟡';
-  return '🔴';
+  if (percentage >= 90) return '≡ƒƒó';
+  if (percentage >= 80) return '≡ƒƒí';
+  return '≡ƒö┤';
 }
 
 // Format score as percentage string
@@ -45,11 +45,11 @@ function generateReport() {
   // Read metadata
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path from CLI arg
   const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-  const { device, url, scores, reportUrl, compareUrl } = metadata;
+  const { device, url, scores, directReportUrl, comparisonReportUrl } = metadata;
 
   // Generate markdown report
   const lines = [];
-  lines.push(`## 🔦 Lighthouse Report - ${device.charAt(0).toUpperCase() + device.slice(1)}`);
+  lines.push(`## ≡ƒöª Lighthouse Report - ${device.charAt(0).toUpperCase() + device.slice(1)}`);
   lines.push('');
   lines.push(`**Tested URL:** ${url}`);
   lines.push('');
@@ -68,13 +68,13 @@ function generateReport() {
   lines.push('');
 
   // Add report links if available
-  if (reportUrl || compareUrl) {
+  if (directReportUrl || comparisonReportUrl) {
     lines.push('**Links:**');
-    if (reportUrl) {
-      lines.push(`- [📊 View Full Report](${reportUrl})`);
+    if (directReportUrl) {
+      lines.push(`- [≡ƒôè Direct Report](${directReportUrl})`);
     }
-    if (compareUrl) {
-      lines.push(`- [🔄 Compare Results](${compareUrl})`);
+    if (comparisonReportUrl) {
+      lines.push(`- [≡ƒöä Comparison Report](${comparisonReportUrl})`);
     }
     lines.push('');
   }
