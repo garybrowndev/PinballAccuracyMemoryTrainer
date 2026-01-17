@@ -12,9 +12,9 @@ const fs = require('fs');
 // Get score emoji based on threshold
 function getScoreEmoji(score) {
   const percentage = score * 100;
-  if (percentage >= 90) return '≡ƒƒó';
-  if (percentage >= 80) return '≡ƒƒí';
-  return '≡ƒö┤';
+  if (percentage >= 90) return '✅';
+  if (percentage >= 80) return '⚠️';
+  return '❌';
 }
 
 // Format score as percentage string
@@ -49,7 +49,7 @@ function generateReport() {
 
   // Generate markdown report
   const lines = [];
-  lines.push(`## ≡ƒöª Lighthouse Report - ${device.charAt(0).toUpperCase() + device.slice(1)}`);
+  lines.push(`## 🔦 Lighthouse Report - ${device.charAt(0).toUpperCase() + device.slice(1)}`);
   lines.push('');
   lines.push(`**Tested URL:** ${url}`);
   lines.push('');
@@ -71,10 +71,10 @@ function generateReport() {
   if (directReportUrl || comparisonReportUrl) {
     lines.push('**Links:**');
     if (directReportUrl) {
-      lines.push(`- [≡ƒôè Direct Report](${directReportUrl})`);
+      lines.push(`- [📊 Direct Report](${directReportUrl})`);
     }
     if (comparisonReportUrl) {
-      lines.push(`- [≡ƒöä Comparison Report](${comparisonReportUrl})`);
+      lines.push(`- [🔄 Comparison Report](${comparisonReportUrl})`);
     }
     lines.push('');
   }
