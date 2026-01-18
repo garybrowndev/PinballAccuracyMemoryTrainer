@@ -21,6 +21,7 @@ jobs:
       contents: write
       security-events: write
       statuses: write
+      actions: read
 
     steps:
       - name: Checkout code
