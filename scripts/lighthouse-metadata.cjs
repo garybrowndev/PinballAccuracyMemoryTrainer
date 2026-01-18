@@ -44,7 +44,7 @@ if (uploadLogFile) {
       // Check if this is a comparison viewer URL or a direct report URL
       // Comparison URL format: https://googlechrome.github.io/lighthouse-ci/viewer/?...&compareReport=...
       // Direct URL format: https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/...
-      const compareReportMatch = /comparereport=(https?%3a%2f%2f[^&]+)/i.exec(reportUrl);
+      const compareReportMatch = /[&?]comparereport=(https?%3a%2f%2f[^&]+)/i.exec(reportUrl);
       if (compareReportMatch) {
         // It's a comparison viewer URL - extract both URLs
         comparisonReportUrl = reportUrl;
