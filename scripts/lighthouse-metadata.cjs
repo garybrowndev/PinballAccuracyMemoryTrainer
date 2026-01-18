@@ -49,7 +49,7 @@ if (uploadLogFile) {
         // It's a comparison viewer URL - extract both URLs
         comparisonReportUrl = reportUrl;
         directReportUrl = decodeURIComponent(compareReportMatch[1]);
-      } else if (/storage\.googleapis\.com.*\/reports\//i.test(reportUrl)) {
+      } else if (/^https:\/\/storage\.googleapis\.com\/.*\/reports\//i.test(reportUrl)) {
         // It's a direct report URL - use it as the direct report
         directReportUrl = reportUrl;
         // No comparison URL available for this case
