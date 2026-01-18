@@ -39,14 +39,21 @@ if (uploadLogFile) {
     // Extract report URL - match URL after "Open the report at" (from lhci upload)
     const reportMatch = /open the report at\s+(https?:\/\/\S+)/i.exec(logContent);
     if (reportMatch) {
-      comparisonReportUrl = reportMatch[1];
+      const reportUrl = reportMatch[1];
 
-      // Extract the direct report URL from the comparison link
-      // The compareReport parameter is URL-encoded, so we decode it
-      // eslint-disable-next-line unicorn/better-regex -- Case-insensitive needed for parameter name
-      const compareReportMatch = /compareReport=(https?%3A%2F%2F[^&]+)/i.exec(comparisonReportUrl);
+      // Check if this is a comparison viewer URL or a direct report URL
+      // Comparison URL format: https://googlechrome.github.io/lighthouse-ci/viewer/?...&compareReport=...
+      // Direct URL format: https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/...
+      const compareReportMatch = /comparereport=(https?%3a%2f%2f[^&]+)/i.exec(reportUrl);
       if (compareReportMatch) {
+        // It's a comparison viewer URL - extract both URLs
+        comparisonReportUrl = reportUrl;
         directReportUrl = decodeURIComponent(compareReportMatch[1]);
+      } else if (/storage\.googleapis\.com.*\/reports\//i.test(reportUrl)) {
+        // It's a direct report URL - use it as the direct report
+        directReportUrl = reportUrl;
+        // No comparison URL available for this case
+        comparisonReportUrl = null;
       }
     }
   } catch (error) {
