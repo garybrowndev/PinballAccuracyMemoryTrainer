@@ -37,7 +37,7 @@ module.exports = async ({ github, context, header, body, workflowYaml }) => {
     // Regex to find existing section for this header
     // We assume sections start with "## Header" and end with "## " or end of string
     // We escape the header for regex safety just in case
-    const escapedHeader = header.replaceAll(/[$()*+.?[\\\]^{|}]/g, '\\$&');
+    const escapedHeader = headerContent.replaceAll(/[$()*+.?[\\\]^{|}]/g, '\\$&');
     const sectionRegex = new RegExp(`## ${escapedHeader}[\\s\\S]*?(?=(## |$))`, 'g');
 
     if (content.match(sectionRegex)) {
