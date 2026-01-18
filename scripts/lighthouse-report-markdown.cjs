@@ -12,9 +12,9 @@ const fs = require('fs');
 // Get score emoji based on threshold
 function getScoreEmoji(score) {
   const percentage = score * 100;
-  if (percentage >= 90) return '🟢';
-  if (percentage >= 80) return '🟡';
-  return '🔴';
+  if (percentage >= 90) return '✅';
+  if (percentage >= 80) return '⚠️';
+  return '❌';
 }
 
 // Format score as percentage string
@@ -45,7 +45,7 @@ function generateReport() {
   // Read metadata
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path from CLI arg
   const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-  const { device, url, scores, reportUrl, compareUrl } = metadata;
+  const { device, url, scores, directReportUrl, comparisonReportUrl } = metadata;
 
   // Generate markdown report
   const lines = [];
@@ -68,13 +68,13 @@ function generateReport() {
   lines.push('');
 
   // Add report links if available
-  if (reportUrl || compareUrl) {
+  if (directReportUrl || comparisonReportUrl) {
     lines.push('**Links:**');
-    if (reportUrl) {
-      lines.push(`- [📊 View Full Report](${reportUrl})`);
+    if (directReportUrl) {
+      lines.push(`- [📊 Direct Report](${directReportUrl})`);
     }
-    if (compareUrl) {
-      lines.push(`- [🔄 Compare Results](${compareUrl})`);
+    if (comparisonReportUrl) {
+      lines.push(`- [🔄 Comparison Report](${comparisonReportUrl})`);
     }
     lines.push('');
   }

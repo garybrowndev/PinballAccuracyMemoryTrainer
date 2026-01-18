@@ -66,13 +66,22 @@ jobs:
             const fs = require('fs');
             const metadataJson = fs.readFileSync('lighthouse-desktop-metadata.json', 'utf8');
             const metadata = JSON.parse(metadataJson);
-            const { scores, reportUrl } = metadata;
+            const { url, scores, directReportUrl, comparisonReportUrl } = metadata;
 
-            let reportLink = reportUrl
-              ? `[📊 View Full Report](${reportUrl})`
-              : 'Report URL not available';
+            let reportLinks = '';
+            if (directReportUrl) {
+              reportLinks += `- [📊 Direct Report](${directReportUrl})\n`;
+            }
+            if (comparisonReportUrl) {
+              reportLinks += `- [🔄 Comparison Report](${comparisonReportUrl})`;
+            }
+            if (!directReportUrl && !comparisonReportUrl) {
+              reportLinks = 'Report URLs not available';
+            }
 
             const comment = `### 📊 Desktop Lighthouse Results
+
+            **Tested URL:** ${url}
 
             | Metric | Score |
             |--------|-------|
@@ -81,7 +90,8 @@ jobs:
             | Best Practices | ${(scores.bestPractices * 100).toFixed(0)}% |
             | SEO | ${(scores.seo * 100).toFixed(0)}% |
 
-            ${reportLink}`;
+            **Reports:**
+            ${reportLinks}`;
 
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
             await updateComment({

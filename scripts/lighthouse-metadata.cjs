@@ -25,27 +25,36 @@ if (!device || !['mobile', 'desktop'].includes(device)) {
 }
 
 // Parse report URLs from upload log if provided
-let reportUrl = null;
-let compareUrl = null;
+let comparisonReportUrl = null;
+let directReportUrl = null;
 
 if (uploadLogFile) {
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path from CLI arg
-    const logContent = fs.readFileSync(uploadLogFile, 'utf8');
+    let logContent = fs.readFileSync(uploadLogFile, 'utf8');
+
+    // Remove BOM if present (can happen with some file encodings)
+    logContent = logContent.replace(/^\uFEFF/, '');
 
     // Extract report URL - match URL after "Open the report at" (from lhci upload)
     const reportMatch = /open the report at\s+(https?:\/\/\S+)/i.exec(logContent);
     if (reportMatch) {
-      reportUrl = reportMatch[1];
-    }
+      const reportUrl = reportMatch[1];
 
-    // Extract compare URL - match URL after "View the comparison at:" or "Compare URL:"
-    // eslint-disable-next-line security/detect-unsafe-regex -- Simple pattern for log parsing
-    const compareMatch = /(?:compare|view the comparison at:)\s*(?:url:\s*)?(https?:\/\/\S+)/i.exec(
-      logContent
-    );
-    if (compareMatch) {
-      compareUrl = compareMatch[1];
+      // Check if this is a comparison viewer URL or a direct report URL
+      // Comparison URL format: https://googlechrome.github.io/lighthouse-ci/viewer/?...&compareReport=...
+      // Direct URL format: https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/...
+      const compareReportMatch = /[&?]comparereport=(https?%3a%2f%2f[^&]+)/i.exec(reportUrl);
+      if (compareReportMatch) {
+        // It's a comparison viewer URL - extract both URLs
+        comparisonReportUrl = reportUrl;
+        directReportUrl = decodeURIComponent(compareReportMatch[1]);
+      } else if (/^https:\/\/storage\.googleapis\.com\/.*\/reports\//i.test(reportUrl)) {
+        // It's a direct report URL - use it as the direct report
+        directReportUrl = reportUrl;
+        // No comparison URL available for this case
+        comparisonReportUrl = null;
+      }
     }
   } catch (error) {
     // eslint-disable-next-line no-console -- CLI script needs console output
@@ -93,11 +102,11 @@ try {
   };
 
   // Add report URLs if available
-  if (reportUrl) {
-    metadata.reportUrl = reportUrl;
+  if (comparisonReportUrl) {
+    metadata.comparisonReportUrl = comparisonReportUrl;
   }
-  if (compareUrl) {
-    metadata.compareUrl = compareUrl;
+  if (directReportUrl) {
+    metadata.directReportUrl = directReportUrl;
   }
 
   // Output as JSON
