@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-/* eslint-disable security/detect-non-literal-regexp */
 module.exports = async ({ github, context, header, body, workflowYaml }) => {
   const sha = context.payload.pull_request ? context.payload.pull_request.head.sha : context.sha;
   const shortSha = sha.slice(0, 7);
@@ -34,19 +33,31 @@ module.exports = async ({ github, context, header, body, workflowYaml }) => {
   if (existingComment) {
     let content = existingComment.body;
 
-    // Regex to find existing section for this header
-    // We assume sections start with "## Header" and end with "## " or end of string
-    // We escape the header for regex safety just in case
-    const escapedHeader = headerContent.replaceAll(/[$()*+.?[\\\]^{|}]/g, '\\$&');
-    const sectionRegex = new RegExp(`## ${escapedHeader}[\\s\\S]*?(?=(## |$))`, 'g');
+    // Extract the marker and main title
+    const markerMatch = content.match(/^<!--.*?-->\n# .+?\n\n/s);
+    const preamble = markerMatch ? markerMatch[0] : '';
 
-    if (content.match(sectionRegex)) {
-      // Replace existing section
-      content = content.replace(sectionRegex, `${newSection}\n\n`);
-    } else {
-      // Append new section
-      content += `\n\n${newSection}`;
+    // Extract all sections (## headers and their content)
+    const sectionRegex = /## (.+?)\n([\S\s]*?)(?=\n## |$)/g;
+    const sections = new Map();
+    let match;
+
+    while ((match = sectionRegex.exec(content)) !== null) {
+      const sectionHeader = match[1].trim();
+      const sectionBody = match[2].trim();
+      sections.set(sectionHeader, `## ${match[1]}\n\n${sectionBody}`);
     }
+
+    // Update or add the new section
+    sections.set(headerContent, newSection);
+
+    // Sort sections alphabetically by header (case-insensitive)
+    const sortedSections = [...sections.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      .map(([, sectionContent]) => sectionContent);
+
+    // Reconstruct the comment with sorted sections
+    content = preamble + sortedSections.join('\n\n');
 
     await github.rest.issues.updateComment({
       owner,

@@ -6,6 +6,10 @@ on:
   pull_request:
     branches:
       - master
+
+permissions:
+  contents: read
+
 concurrency:
   group: lighthouse-mobile-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
@@ -15,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
+      contents: read
       statuses: write
       pull-requests: write
     env:

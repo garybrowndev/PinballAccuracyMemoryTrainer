@@ -1,0 +1,7 @@
+# Map all author identities to canonical identity
+# Format: Canonical Name <canonical@email.com> <old@email.com>
+
+Gary Brown <garybrowndev@gmail.com> <gary.brown@bplogix.com>
+Gary Brown <garybrowndev@gmail.com> <GaryBrownDev@gmail.com>
+Gary Brown <garybrowndev@gmail.com> <garybrowndev@users.noreply.github.com>
+Gary Brown <garybrowndev@gmail.com> Gary Brown <>
