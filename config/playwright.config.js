@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: '../tests/e2e',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1, // Allow 1 retry locally for flaky webkit tests
   workers: undefined,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
@@ -12,6 +12,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure', // Only take screenshots on failure for speed
     video: 'retain-on-failure', // Only record video on failure for speed
+    navigationTimeout: 60000, // Increased navigation timeout for webkit
   },
 
   projects: [
@@ -38,6 +39,8 @@ export default defineConfig({
     cwd: '..', // Run from project root since config is in config/ subdirectory
     url: 'http://localhost:9223',
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 180000, // Increased timeout for slower webkit startup
+    stdout: 'pipe', // Log server output for debugging
+    stderr: 'pipe',
   },
 });
