@@ -195,7 +195,7 @@ function isBrowserFullscreen() {
 // Convention: filename derived from element slug (lowercase, spaces -> dashes): e.g. "Left Ramp" -> "left-ramp.webp".
 // If an image 404s the browser will show the fallback text layer (we keep text absolutely positioned).
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
-const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
+const IMAGE_BASE_URL = `${import.meta.env.BASE_URL}images/elements`.replaceAll('//', '/'); // Vite base path aware
 function elementSlug(name) {
   return name
     .toLowerCase()
