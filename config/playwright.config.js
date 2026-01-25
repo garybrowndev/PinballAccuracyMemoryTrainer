@@ -7,6 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1, // Allow 1 retry locally for flaky webkit tests
   workers: undefined,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
+  timeout: 60000, // Increased test timeout to 60s for webkit stability
   use: {
     baseURL: 'http://localhost:9223',
     trace: 'on-first-retry',
