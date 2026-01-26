@@ -16,6 +16,10 @@ async function setupAppWithShots(user) {
   const exampleButton = screen.getByRole('button', { name: /load example shots/i });
   await user.click(exampleButton);
 
+  // Click again to confirm
+  const confirmButton = await screen.findByRole('button', { name: /confirm load example shots/i });
+  await user.click(confirmButton);
+
   await waitFor(
     () => {
       const table = screen.getByRole('table');
@@ -602,8 +606,26 @@ describe('App - Targeted Line Coverage', () => {
       localStorage.setItem(
         'pinball_rows_v1',
         JSON.stringify([
-          { id: 1, type: 'Test Shot', initL: 23, initR: 77, x: 0.5, y: 0.3, base: 'Ramp' },
-          { id: 2, type: 'Test Shot 2', initL: 41, initR: 58, x: 0.6, y: 0.3, base: 'Orbit' },
+          {
+            id: 1,
+            type: 'Test Shot',
+            initL: 23,
+            initR: 77,
+            x: 0.5,
+            y: 0.3,
+            base: 'Ramp',
+            location: 'Center',
+          },
+          {
+            id: 2,
+            type: 'Test Shot 2',
+            initL: 41,
+            initR: 58,
+            x: 0.6,
+            y: 0.3,
+            base: 'Orbit',
+            location: 'Right',
+          },
         ])
       );
 
@@ -627,8 +649,26 @@ describe('App - Targeted Line Coverage', () => {
       localStorage.setItem(
         'pinball_rows_v1',
         JSON.stringify([
-          { id: 100, type: 'Test Shot 100', initL: 50, initR: 50, x: 0.5, y: 0.3, base: 'Ramp' },
-          { id: 200, type: 'Test Shot 200', initL: 60, initR: 40, x: 0.6, y: 0.3, base: 'Orbit' },
+          {
+            id: 100,
+            type: 'Test Shot 100',
+            initL: 50,
+            initR: 50,
+            x: 0.5,
+            y: 0.3,
+            base: 'Ramp',
+            location: 'Center',
+          },
+          {
+            id: 200,
+            type: 'Test Shot 200',
+            initL: 60,
+            initR: 40,
+            x: 0.6,
+            y: 0.3,
+            base: 'Orbit',
+            location: 'Right',
+          },
         ])
       );
 
