@@ -195,7 +195,7 @@ function isBrowserFullscreen() {
 // Convention: filename derived from element slug (lowercase, spaces -> dashes): e.g. "Left Ramp" -> "left-ramp.webp".
 // If an image 404s the browser will show the fallback text layer (we keep text absolutely positioned).
 // You can later move IMAGE_BASE_URL to an environment variable if desired.
-const IMAGE_BASE_URL = '/images/elements'; // adjust when backend path known
+const IMAGE_BASE_URL = `${import.meta.env.BASE_URL}images/elements`.replaceAll('//', '/'); // Vite base path aware
 function elementSlug(name) {
   return name
     .toLowerCase()
@@ -743,6 +743,10 @@ const PlayfieldEditor = ({
   const canvasRef = React.useRef(null);
   // Track advanced options popover visibility
   const [showAdvancedPopover, setShowAdvancedPopover] = useState(false);
+  // Track clear confirmation state
+  const [clearConfirm, setClearConfirm] = useState(false);
+  // Track example confirmation state
+  const [exampleConfirm, setExampleConfirm] = useState(false);
   // Track which shot images have successfully loaded (id -> true). Avoid per-item hooks inside map.
   const [imageLoadedMap, setImageLoadedMap] = useState({});
   // Track computed scale for rendering
@@ -920,28 +924,57 @@ const PlayfieldEditor = ({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onClear();
+              if (clearConfirm) {
+                onClear();
+                setClearConfirm(false);
+              } else {
+                setClearConfirm(true);
+              }
             }}
-            className={`absolute left-3 bottom-3 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2 ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300'}`}
-            title="Clear all shots"
-            aria-label="Clear all shots"
+            onBlur={() => setClearConfirm(false)}
+            className={`absolute left-3 bottom-3 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2 ${(() => {
+              if (clearConfirm) {
+                return darkMode
+                  ? 'bg-red-700 hover:bg-red-600 text-white border-red-600'
+                  : 'bg-red-600 hover:bg-red-500 text-white border-red-500';
+              }
+              return darkMode
+                ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600'
+                : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300';
+            })()}`}
+            title={clearConfirm ? 'Confirm clear all shots' : 'Clear all shots'}
+            aria-label={clearConfirm ? 'Confirm clear all shots' : 'Clear all shots'}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              className="w-4 h-4"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 6h18" />
-              <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
-              <path d="M10 11v6" />
-              <path d="M14 11v6" />
-              <path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14" />
-            </svg>
-            <span className="hidden md:inline">Clear</span>
+            {clearConfirm ? (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                className="w-4 h-4"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                className="w-4 h-4"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 6h18" />
+                <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14" />
+              </svg>
+            )}
+            <span className="hidden md:inline">{clearConfirm ? 'Confirm?' : 'Clear'}</span>
           </button>
         )}
         {/* Example button placed inside playfield (bottom-right) when provided */}
@@ -950,25 +983,54 @@ const PlayfieldEditor = ({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onExample();
+              if (exampleConfirm) {
+                onExample();
+                setExampleConfirm(false);
+              } else {
+                setExampleConfirm(true);
+              }
             }}
-            className={`absolute right-3 bottom-3 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2 ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300'}`}
-            title="Load example shots"
-            aria-label="Load example shots"
+            onBlur={() => setExampleConfirm(false)}
+            className={`absolute right-3 bottom-3 z-40 border shadow px-2 py-1 rounded-md text-xs flex items-center gap-2 ${(() => {
+              if (exampleConfirm) {
+                return darkMode
+                  ? 'bg-blue-700 hover:bg-blue-600 text-white border-blue-600'
+                  : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-500';
+              }
+              return darkMode
+                ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border-slate-600'
+                : 'bg-white/90 hover:bg-white text-slate-700 border-slate-300';
+            })()}`}
+            title={exampleConfirm ? 'Confirm load example shots' : 'Load example shots'}
+            aria-label={exampleConfirm ? 'Confirm load example shots' : 'Load example shots'}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              className="w-4 h-4"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
-              <path d="M12 6v6l4 2" />
-            </svg>
-            <span className="hidden md:inline">Example</span>
+            {exampleConfirm ? (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                className="w-4 h-4"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                className="w-4 h-4"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            )}
+            <span className="hidden md:inline">{exampleConfirm ? 'Confirm?' : 'Example'}</span>
           </button>
         )}
         {/* Advanced options button with popover in top-right */}
@@ -1118,7 +1180,7 @@ const PlayfieldEditor = ({
             })()}
           </svg>
         }
-        {rows.map((r) => {
+        {rows.map((r, i) => {
           const sel = r.id === selectedId;
           const misordered = misorderedIds?.has(r.id);
           const basePart = r.base || '';
@@ -1264,6 +1326,20 @@ const PlayfieldEditor = ({
                   <path d="M15 9l-6 6" stroke="#000" />
                 </svg>
               </button>
+              {/* Shot number label below the box, under the delete button */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: '-24px',
+                  transform: 'translateX(-50%)',
+                }}
+                className={`select-none pointer-events-none font-semibold text-xs ${
+                  darkMode ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                {i + 1}
+              </div>
             </div>
           );
         })}
@@ -3148,7 +3224,7 @@ const App = () => {
     return attempts.reduce((s, a) => s + Math.abs(a.delta), 0) / attempts.length;
   }, [attempts]);
 
-  // Session can start only if every row has a shot type (base chosen) and both flipper values
+  // Session can start only if every row has a shot type (base chosen), location, and both flipper values
   const canStart = useMemo(() => {
     if (rows.length === 0) {
       return false;
@@ -3157,6 +3233,8 @@ const App = () => {
       (r) =>
         r.base &&
         r.base.length > 0 &&
+        r.location &&
+        r.location.length > 0 &&
         r.initL !== null &&
         r.initL !== undefined &&
         r.initR !== null &&
@@ -4544,33 +4622,51 @@ const App = () => {
                       </svg>
                       Setup
                     </button>
-                    <button
-                      onClick={() => {
-                        if (canStart) {
-                          startSession();
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          if (canStart) {
+                            startSession();
+                          }
+                        }}
+                        disabled={!canStart}
+                        className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${canStart ? BTN_SUCCESS : 'bg-yellow-600'} ${canStart ? '' : DISABLED_CLASS}`}
+                        title={
+                          canStart
+                            ? 'Start the practice session'
+                            : 'Complete Shot Type, Location, Left & Right values for every shot'
                         }
-                      }}
-                      disabled={!canStart}
-                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : DISABLED_CLASS}`}
-                      title={
-                        canStart
-                          ? 'Start the practice session'
-                          : 'Complete Shot Type, Left & Right values for every shot'
-                      }
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        className="w-4 h-4"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
                       >
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
-                      Practice
-                    </button>
+                        {canStart ? (
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            className="w-4 h-4"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                        ) : (
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            className="w-4 h-4"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                          </svg>
+                        )}
+                        Practice
+                      </button>
+                    </div>
                     <button
                       onClick={() => {
                         if (canStart) {
@@ -4579,25 +4675,41 @@ const App = () => {
                         }
                       }}
                       disabled={!canStart}
-                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${BTN_SUCCESS} ${canStart ? '' : DISABLED_CLASS}`}
+                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${canStart ? BTN_SUCCESS : 'bg-yellow-600'} ${canStart ? '' : DISABLED_CLASS}`}
                       title={
                         canStart
                           ? 'Go directly to final recall'
                           : 'Complete Shot Type, Left & Right values for every shot'
                       }
                     >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        className="w-4 h-4"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                        <line x1="4" y1="22" x2="4" y2="15" />
-                      </svg>
+                      {canStart ? (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          className="w-4 h-4"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                          <line x1="4" y1="22" x2="4" y2="15" />
+                        </svg>
+                      ) : (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          className="w-4 h-4"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                          <line x1="12" y1="9" x2="12" y2="13" />
+                          <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                      )}
                       Recall
                     </button>
                   </div>
@@ -4758,6 +4870,7 @@ const App = () => {
                 <div className="overflow-auto">
                   <table className="w-full text-sm table-fixed">
                     <colgroup>
+                      <col className="w-6" />
                       <col className="w-[25%]" />
                       <col className="w-[35%]" />
                       <col className="w-[35%]" />
@@ -4768,6 +4881,9 @@ const App = () => {
                       <tr
                         className={`text-left align-bottom ${GetTextClass(darkMode, 'secondary')}`}
                       >
+                        <th className="p-1 text-center align-bottom w-6">
+                          <span className="text-xs">#</span>
+                        </th>
                         <th
                           className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? GetBgClass(darkMode, 'primary') : ''}`}
                         >
@@ -5011,7 +5127,7 @@ const App = () => {
                       {rows.length === 0 && (
                         <tr>
                           <td
-                            colSpan={4}
+                            colSpan={5}
                             className={`p-8 text-center text-sm ${GetTextClass(darkMode, 'secondary')}`}
                           >
                             <button
@@ -5043,7 +5159,7 @@ const App = () => {
                           {/* Insertion marker BEFORE row i (visible when dragging and target is i) */}
                           {dragRowIdx !== null && dragOverIdx === i && (
                             <tr aria-hidden className="pointer-events-none">
-                              <td colSpan={4} className="p-0">
+                              <td colSpan={5} className="p-0">
                                 <div className="h-2 relative">
                                   <div className="absolute inset-0 flex items-center">
                                     <div className="w-full h-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.25)] animate-pulse" />
@@ -5090,6 +5206,13 @@ const App = () => {
                               setDragOverIdx(null);
                             }}
                           >
+                            <td className="pt-2 pr-1 pl-1 pb-2 align-middle text-center w-6">
+                              <span
+                                className={`text-xs font-medium ${GetTextClass(darkMode, 'secondary')}`}
+                              >
+                                {i + 1}
+                              </span>
+                            </td>
                             <td className="pt-2 pr-2 pl-2 pb-2 align-top relative">
                               {(() => {
                                 const base = r.base || '';
@@ -5149,10 +5272,24 @@ const App = () => {
                                             setOpenLocMenuId(null);
                                           }
                                         }}
-                                        className={`relative rounded-md shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex items-center justify-center ${darkMode ? 'bg-slate-800' : 'bg-white'}`}
+                                        className={`relative rounded-md shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800' : 'bg-white'}`}
                                         style={{ width: 80, height: 98 }}
                                         aria-label="Select Shot"
                                       >
+                                        <svg
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          className="w-4 h-4 text-yellow-500"
+                                          style={{ marginBottom: '11px', marginTop: '-5px' }}
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                          <line x1="12" y1="9" x2="12" y2="13" />
+                                          <line x1="12" y1="17" x2="12.01" y2="17" />
+                                        </svg>
                                         <span
                                           className={`text-[13px] font-semibold select-none ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
                                         >
@@ -5160,32 +5297,49 @@ const App = () => {
                                         </span>
                                       </button>
                                     )}
-                                    <Chip
-                                      active={Boolean(location)}
-                                      data-loc-chip={r.id}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedIdx(i);
-                                        setSelectedBlockId(r.id);
-                                        // Always open menu, don't clear location on click
-                                        if (locMenuOpen) {
-                                          closeMenus();
-                                        } else {
-                                          const rect = e.currentTarget.getBoundingClientRect();
-                                          const anchor = calcDropdownAnchor(rect, 200);
-                                          setLocMenuAnchor({
-                                            id: r.id,
-                                            x: anchor.x,
-                                            y: anchor.y,
-                                            openUp: anchor.openUp,
-                                          });
-                                          setOpenLocMenuId(r.id);
-                                          setOpenShotMenuId(null);
-                                        }
-                                      }}
-                                    >
-                                      {location || 'Location'}
-                                    </Chip>
+                                    <div className="relative flex flex-col items-center">
+                                      {!location && (
+                                        <svg
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          className="w-4 h-4 text-yellow-500 mb-1"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                          <line x1="12" y1="9" x2="12" y2="13" />
+                                          <line x1="12" y1="17" x2="12.01" y2="17" />
+                                        </svg>
+                                      )}
+                                      <Chip
+                                        active={Boolean(location)}
+                                        data-loc-chip={r.id}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedIdx(i);
+                                          setSelectedBlockId(r.id);
+                                          // Always open menu, don't clear location on click
+                                          if (locMenuOpen) {
+                                            closeMenus();
+                                          } else {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const anchor = calcDropdownAnchor(rect, 200);
+                                            setLocMenuAnchor({
+                                              id: r.id,
+                                              x: anchor.x,
+                                              y: anchor.y,
+                                              openUp: anchor.openUp,
+                                            });
+                                            setOpenLocMenuId(r.id);
+                                            setOpenShotMenuId(null);
+                                          }
+                                        }}
+                                      >
+                                        {location || 'Location'}
+                                      </Chip>
+                                    </div>
                                     {/* Popup menus rendered outside table to avoid layout shift */}
                                   </div>
                                 );

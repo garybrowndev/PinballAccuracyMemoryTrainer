@@ -92,11 +92,7 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
 test.describe('Full Practice Workflow with Example Shots', () => {
   test('should reset to example, configure random mode, and validate guess results', async ({
     page,
-    browserName,
   }) => {
-    // Mark as flaky in WebKit due to timing issues when running in parallel
-    test.fixme(browserName === 'webkit', 'Flaky in WebKit when run in parallel');
-
     // Navigate and clear state
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());

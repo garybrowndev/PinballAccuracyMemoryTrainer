@@ -16,6 +16,10 @@ async function setupAppWithShots(user) {
   const exampleButton = screen.getByRole('button', { name: /load example shots/i });
   await user.click(exampleButton);
 
+  // Click again to confirm
+  const confirmButton = await screen.findByRole('button', { name: /confirm load example shots/i });
+  await user.click(confirmButton);
+
   await waitFor(
     () => {
       const table = screen.getByRole('table');
