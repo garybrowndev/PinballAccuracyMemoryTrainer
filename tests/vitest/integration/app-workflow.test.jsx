@@ -20,9 +20,15 @@ describe('App - Comprehensive Integration Tests', () => {
       expect(screen.getByText(/setup shots/i)).toBeInTheDocument();
     });
 
-    // Load example shots
+    // Load example shots (two-step confirmation)
     const exampleButton = screen.getByRole('button', { name: /load example shots/i });
     await user.click(exampleButton);
+
+    // Click again to confirm
+    const confirmButton = await screen.findByRole('button', {
+      name: /confirm load example shots/i,
+    });
+    await user.click(confirmButton);
 
     // Wait for shots to appear
     await waitFor(() => {
@@ -96,9 +102,15 @@ describe('App - Comprehensive Integration Tests', () => {
       expect(screen.getByText(/setup shots/i)).toBeInTheDocument();
     });
 
-    // Load example shots
+    // Load example shots (two-step confirmation)
     const exampleButton = screen.getByRole('button', { name: /load example shots/i });
     await user.click(exampleButton);
+
+    // Click again to confirm
+    const confirmButton = await screen.findByRole('button', {
+      name: /confirm load example shots/i,
+    });
+    await user.click(confirmButton);
 
     await waitFor(() => {
       expect(screen.getByRole('table')).toBeInTheDocument();
@@ -182,9 +194,15 @@ describe('App - Comprehensive Integration Tests', () => {
       expect(screen.getByText(/setup shots/i)).toBeInTheDocument();
     });
 
-    // Load example shots
+    // Load example shots (two-step confirmation)
     const exampleButton = screen.getByRole('button', { name: /load example shots/i });
     await user.click(exampleButton);
+
+    // Click again to confirm
+    const confirmButton = await screen.findByRole('button', {
+      name: /confirm load example shots/i,
+    });
+    await user.click(confirmButton);
 
     await waitFor(() => {
       expect(screen.getByRole('table')).toBeInTheDocument();
@@ -193,6 +211,12 @@ describe('App - Comprehensive Integration Tests', () => {
     // Click clear button
     const clearButton = screen.getByRole('button', { name: /clear all shots/i });
     await user.click(clearButton);
+
+    // Click again to confirm
+    const confirmClearButton = await screen.findByRole('button', {
+      name: /confirm clear all shots/i,
+    });
+    await user.click(confirmClearButton);
 
     // Verify table shows empty state
     await waitFor(() => {
@@ -277,9 +301,15 @@ describe('App - Comprehensive Integration Tests', () => {
       expect(screen.getByText(/setup shots/i)).toBeInTheDocument();
     });
 
-    // Load example shots first
+    // Load example shots first (two-step confirmation)
     const exampleButton = screen.getByRole('button', { name: /load example shots/i });
     await user.click(exampleButton);
+
+    // Click again to confirm
+    const confirmButton = await screen.findByRole('button', {
+      name: /confirm load example shots/i,
+    });
+    await user.click(confirmButton);
 
     await waitFor(() => {
       expect(screen.getByRole('table')).toBeInTheDocument();
@@ -326,6 +356,15 @@ describe('App - Comprehensive Integration Tests', () => {
     });
 
     const exampleButton = screen.getByRole('button', { name: /load example shots/i });
+
+    // First click to trigger confirm
+    await user.click(exampleButton);
+
+    // Wait for confirm button and click it
+    const confirmButton = await screen.findByRole('button', {
+      name: /confirm load example shots/i,
+    });
+    await user.click(confirmButton);
 
     // Rapid clicks
     await user.click(exampleButton);
