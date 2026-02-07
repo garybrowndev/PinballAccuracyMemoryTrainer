@@ -37,8 +37,10 @@ test.describe('Visual Regression Tests', () => {
   // test.skip('preset dropdown matches snapshot'...
 
   test('practice mode matches snapshot', async ({ page }) => {
-    // Load example shots first
-    const exampleButton = page.getByRole('button', { name: 'Load example shots' });
+    // Load example shots first (two-step confirmation: click, wait, click again)
+    const exampleButton = page.getByRole('button', { name: /example shots/i });
+    await exampleButton.click();
+    await page.waitForTimeout(300);
     await exampleButton.click();
     await page.waitForTimeout(300);
 
@@ -77,8 +79,10 @@ test.describe('Visual Regression Tests', () => {
   });
 
   test('recall mode matches snapshot', async ({ page }) => {
-    // Load example shots first
-    const exampleButton = page.getByRole('button', { name: 'Load example shots' });
+    // Load example shots first (two-step confirmation: click, wait, click again)
+    const exampleButton = page.getByRole('button', { name: /example shots/i });
+    await exampleButton.click();
+    await page.waitForTimeout(300);
     await exampleButton.click();
     await page.waitForTimeout(300);
 

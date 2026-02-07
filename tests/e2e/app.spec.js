@@ -2,8 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Setup Page - Clear Shots Workflow', () => {
   test('should navigate, add shots, clear, and verify empty state', async ({ page }) => {
-    // Navigate to the app
+    // Navigate to the app and clear state
     await page.goto('/');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
 
     // Take screenshot of initial state
     await page.screenshot({ path: 'test-results/01-initial-load.png', fullPage: true });
@@ -14,8 +16,10 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
     // Take screenshot after load
     await page.screenshot({ path: 'test-results/02-app-loaded.png', fullPage: true });
 
-    // Click Add Shot button
+    // Click Add Shot button and select 1 from the picker dialog
     await page.getByRole('button', { name: /add shot/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: '1', exact: true }).click();
+    await page.waitForTimeout(300);
 
     // Take screenshot after adding shot
     await page.screenshot({ path: 'test-results/03-shot-added.png', fullPage: true });
@@ -27,11 +31,13 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
     // Take screenshot before clearing
     await page.screenshot({ path: 'test-results/04-before-clear.png', fullPage: true });
 
-    // Click Clear button
+    // Click Clear button (two-step confirmation: click, wait for confirm state, click again)
+    await clearButton.click();
+    await page.waitForTimeout(300);
     await clearButton.click();
 
     // Wait for toast message
-    await expect(page.getByText(/cleared all shots/i)).toBeVisible();
+    await expect(page.getByText(/cleared all shots/i).first()).toBeVisible();
 
     // Take screenshot of toast message
     await page.screenshot({ path: 'test-results/05-clear-toast.png', fullPage: true });
@@ -65,23 +71,21 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
 
-    // Add multiple shots
+    // Add 3 shots at once via the picker dialog (button only appears when no shots exist)
     const addButton = page.getByRole('button', { name: /add shot/i });
-
     await addButton.click();
-    await page.screenshot({ path: 'test-results/multi-01-first-shot.png', fullPage: true });
+    await page.getByRole('dialog').getByRole('button', { name: '3', exact: true }).click();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: 'test-results/multi-01-shots-added.png', fullPage: true });
 
-    await addButton.click();
-    await page.screenshot({ path: 'test-results/multi-02-second-shot.png', fullPage: true });
-
-    await addButton.click();
-    await page.screenshot({ path: 'test-results/multi-03-third-shot.png', fullPage: true });
-
-    // Clear all
-    await page.getByRole('button', { name: /clear all shots/i }).click();
+    // Clear all (two-step confirmation: click, wait for confirm state, click again)
+    const clearButton = page.getByRole('button', { name: /clear all shots/i });
+    await clearButton.click();
+    await page.waitForTimeout(300);
+    await clearButton.click();
 
     // Wait for toast
-    await expect(page.getByText(/cleared all shots/i)).toBeVisible();
+    await expect(page.getByText(/cleared all shots/i).first()).toBeVisible();
     await page.screenshot({ path: 'test-results/multi-04-all-cleared.png', fullPage: true });
 
     // Verify empty state
@@ -92,11 +96,7 @@ test.describe('Setup Page - Clear Shots Workflow', () => {
 test.describe('Full Practice Workflow with Example Shots', () => {
   test('should reset to example, configure random mode, and validate guess results', async ({
     page,
-    browserName,
   }) => {
-    // Mark as flaky in WebKit due to timing issues when running in parallel
-    test.fixme(browserName === 'webkit', 'Flaky in WebKit when run in parallel');
-
     // Navigate and clear state
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
@@ -106,13 +106,19 @@ test.describe('Full Practice Workflow with Example Shots', () => {
     await expect(page.getByText(/setup shots/i)).toBeVisible();
     await page.screenshot({ path: 'test-results/workflow-01-setup-screen.png', fullPage: true });
 
-    // Step 2: Clear any existing shots
-    await page.getByRole('button', { name: /clear all shots/i }).click();
+    // Step 2: Clear any existing shots (two-step confirmation: click, wait, click again)
+    const clearButton = page.getByRole('button', { name: /clear all shots/i });
+    await clearButton.click();
+    await page.waitForTimeout(300);
+    await clearButton.click();
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'test-results/workflow-02-cleared.png', fullPage: true });
 
-    // Step 3: Click Example button to load example shots
-    await page.getByRole('button', { name: 'Load example shots' }).click();
+    // Step 3: Click Example button to load example shots (two-step confirmation)
+    const exampleButton = page.getByRole('button', { name: /example shots/i });
+    await exampleButton.click();
+    await page.waitForTimeout(300);
+    await exampleButton.click();
     await page.waitForTimeout(500);
     await page.screenshot({ path: 'test-results/workflow-03-example-loaded.png', fullPage: true });
 

@@ -21,8 +21,11 @@ test.describe('Accessibility Tests - WCAG 2.1 AAA', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Load example shots and start practice
-    await page.getByRole('button', { name: 'Load example shots' }).click();
+    // Load example shots (two-step confirmation: click, wait for confirm state, click again)
+    const exampleButton = page.getByRole('button', { name: /example shots/i });
+    await exampleButton.click();
+    await page.waitForTimeout(300);
+    await exampleButton.click();
     await page.waitForTimeout(500);
     await page.getByRole('button', { name: 'Practice', exact: true }).click();
     await page.waitForTimeout(500);
