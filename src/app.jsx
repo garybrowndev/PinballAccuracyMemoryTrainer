@@ -4748,9 +4748,39 @@ const App = () => {
                       }}
                       onExample={() => {
                         setRows([
-                          newRow({ base: 'Orbit', location: 'Left', initL: 25, initR: 75 }, 0),
-                          newRow({ base: 'Ramp', location: 'Center', initL: 50, initR: 50 }, 1),
-                          newRow({ base: 'Orbit', location: 'Right', initL: 75, initR: 25 }, 2),
+                          newRow(
+                            {
+                              base: 'Orbit',
+                              location: 'Left',
+                              initL: 25,
+                              initR: 75,
+                              x: 0.08,
+                              y: 0.274,
+                            },
+                            0
+                          ),
+                          newRow(
+                            {
+                              base: 'Ramp',
+                              location: 'Center',
+                              initL: 50,
+                              initR: 50,
+                              x: 0.5,
+                              y: 0.047,
+                            },
+                            1
+                          ),
+                          newRow(
+                            {
+                              base: 'Orbit',
+                              location: 'Right',
+                              initL: 75,
+                              initR: 25,
+                              x: 0.92,
+                              y: 0.274,
+                            },
+                            2
+                          ),
                         ]);
                         _pushToast('Loaded example shots');
                       }}
@@ -7048,7 +7078,7 @@ const App = () => {
                                     className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
                                     style={{
                                       width: boxSize,
-                                      height: boxSize,
+                                      minHeight: boxSize,
                                       padding,
                                       borderRadius,
                                     }}
@@ -7073,7 +7103,7 @@ const App = () => {
                                     className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
                                     style={{
                                       width: boxSize,
-                                      height: boxSize,
+                                      minHeight: boxSize,
                                       padding,
                                       borderRadius,
                                     }}
@@ -7103,7 +7133,7 @@ const App = () => {
                                     className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
                                     style={{
                                       width: boxSize,
-                                      height: boxSize,
+                                      minHeight: boxSize,
                                       padding,
                                       borderRadius,
                                     }}
@@ -7128,7 +7158,7 @@ const App = () => {
                                     className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
                                     style={{
                                       width: boxSize,
-                                      height: boxSize,
+                                      minHeight: boxSize,
                                       padding,
                                       borderRadius,
                                     }}
@@ -7165,75 +7195,34 @@ const App = () => {
                             onAdvanceToNextShot={advanceToNextShot}
                           />
                         </div>
-                        <div className="w-full px-4">
-                          {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
+                        <div className="w-full px-1">
+                          {/* Quick recall chips duplicated for fullscreen - uses CSS grid to guarantee fit */}
                           {(() => {
-                            // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
-                            // Strategy:
-                            // 1. Measure available container width (window.innerWidth minus side padding ~32px).
-                            // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
-                            //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
-                            // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
                             const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
                             const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                            const totalChips = 19; // numeric chips only (NP below)
-                            // Use tracked windowWidth state for responsive sizing
-                            // Account for padding (px-4 = 32px) plus extra buffer for potential scrollbar space
-                            const horizontalPadding = 48; // 16 left + 16 right + 16 buffer for scrollbar reservation
-                            const avail = Math.max(300, windowWidth - horizontalPadding); // safeguard
-                            // Increase overall size (~25%) and tighten spacing.
-                            const maxDiameter = 112; // was 90
-                            const minDiameter = 26;
-                            const baseGap = 3 * fullscreenScale; // target very tight spacing (~2-3px final)
-                            // First pass assume gap = baseGap => candidate diameter
-                            let gap = baseGap;
-                            let d = (avail - (totalChips - 1) * gap) / totalChips;
-                            if (d > maxDiameter) {
-                              // Grow gap to consume extra space while keeping diameter at cap
-                              d = maxDiameter;
-                            }
-                            if (d < minDiameter) {
-                              // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
-                              gap = 4; // minimal aesthetic gap
-                              d = (avail - (totalChips - 1) * gap) / totalChips;
-                              if (d < 20) {
-                                d = 20;
-                              } // absolute floor
-                            }
-                            // Final safety clamp
-                            d = Math.max(20, Math.min(maxDiameter, d));
-                            // Recompute gap precisely to fill width (avoid leftover). Bound gap min/max after recompute.
-                            gap = (avail - totalChips * d) / (totalChips - 1);
-                            const minGap = 2,
-                              maxGap = 24; // allow tighter minimum
-                            if (gap < minGap) {
-                              // Reduce diameter slightly so gap hits minGap.
-                              const targetD = (avail - (totalChips - 1) * minGap) / totalChips;
-                              d = Math.max(20, Math.min(maxDiameter, targetD));
-                              gap = minGap;
-                            } else if (gap > maxGap) {
-                              // Increase diameter so gap hits maxGap.
-                              const targetD = (avail - (totalChips - 1) * maxGap) / totalChips;
-                              d = Math.max(20, Math.min(maxDiameter, targetD));
-                              gap = maxGap;
-                            }
-                            const diameter = Math.round(d);
-                            const chipFont = Math.round(diameter * 0.65); // enlarge ~25% more from 0.52
-                            // Container style: use exact width so chips line up flush without overflow/underflow.
-                            const containerStyle = { width: avail, margin: '0 auto' };
+                            const totalChips = 19;
+                            // Reference diameter for font sizing only (actual size determined by CSS grid)
+                            const refDiameter = Math.max(
+                              20,
+                              Math.min(112, (windowWidth - 8) / totalChips)
+                            );
+                            const chipFont = Math.round(refDiameter * 0.65);
                             return (
-                              <div className="w-full select-none" style={containerStyle}>
-                                <div className="flex items-center" style={{ gap: Math.round(gap) }}>
+                              <div className="w-full select-none">
+                                <div
+                                  className="grid w-full gap-[2px]"
+                                  style={{
+                                    gridTemplateColumns: `repeat(${totalChips}, minmax(0, 1fr))`,
+                                  }}
+                                >
                                   {ordered.map((v) => (
                                     <button
                                       key={v}
                                       type="button"
                                       onClick={() => submitAttempt(v)}
                                       disabled={awaitingNextShot}
-                                      className={`rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0 ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                                      className={`aspect-square rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                                       style={{
-                                        width: diameter,
-                                        height: diameter,
                                         fontSize: chipFont,
                                         lineHeight: 1,
                                         fontWeight: 600,
@@ -7252,7 +7241,9 @@ const App = () => {
                                     onClick={() => submitAttempt(0)}
                                     disabled={awaitingNextShot}
                                     className={`px-1 rounded-xl border shadow active:scale-[0.97] transition-transform text-sm font-medium ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
-                                    style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
+                                    style={{
+                                      fontSize: Math.max(12, Math.round(chipFont * 0.75)),
+                                    }}
                                   >
                                     <span className="relative" style={{ top: '-1px' }}>
                                       Not Possible
