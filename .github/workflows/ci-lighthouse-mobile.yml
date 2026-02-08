@@ -6,6 +6,10 @@ on:
   pull_request:
     branches:
       - master
+
+permissions:
+  contents: read
+
 concurrency:
   group: lighthouse-mobile-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
@@ -15,15 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
+      contents: read
       statuses: write
       pull-requests: write
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Setup Node.js
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '24'
           cache: npm
@@ -66,13 +71,22 @@ jobs:
             const fs = require('fs');
             const metadataJson = fs.readFileSync('lighthouse-mobile-metadata.json', 'utf8');
             const metadata = JSON.parse(metadataJson);
-            const { scores, reportUrl } = metadata;
+            const { url, scores, directReportUrl, comparisonReportUrl } = metadata;
 
-            let reportLink = reportUrl
-              ? `[📊 View Full Report](${reportUrl})`
-              : 'Report URL not available';
+            let reportLinks = '';
+            if (directReportUrl) {
+              reportLinks += `- [📊 Direct Report](${directReportUrl})\n`;
+            }
+            if (comparisonReportUrl) {
+              reportLinks += `- [🔄 Comparison Report](${comparisonReportUrl})`;
+            }
+            if (!directReportUrl && !comparisonReportUrl) {
+              reportLinks = 'Report URLs not available';
+            }
 
             const comment = `### 📊 Mobile Lighthouse Results
+
+            **Tested URL:** ${url}
 
             | Metric | Score |
             |--------|-------|
@@ -81,7 +95,8 @@ jobs:
             | Best Practices | ${(scores.bestPractices * 100).toFixed(0)}% |
             | SEO | ${(scores.seo * 100).toFixed(0)}% |
 
-            ${reportLink}`;
+            **Reports:**
+            ${reportLinks}`;
 
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
             await updateComment({

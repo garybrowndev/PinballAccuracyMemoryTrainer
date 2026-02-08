@@ -27,10 +27,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -216,6 +216,94 @@ jobs:
           name: lighthouse-surge-desktop-results
           path: .lighthouseci/surge-desktop/
           retention-days: 30
+
+      - name: Comment on PR with mobile Lighthouse results
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const metadataJson = fs.readFileSync('lighthouse-surge-mobile-metadata.json', 'utf8');
+            const metadata = JSON.parse(metadataJson);
+            const { url, scores, directReportUrl, comparisonReportUrl } = metadata;
+
+            let reportLinks = '';
+            if (directReportUrl) {
+              reportLinks += `- [📊 Direct Report](${directReportUrl})\n`;
+            }
+            if (comparisonReportUrl) {
+              reportLinks += `- [🔄 Comparison Report](${comparisonReportUrl})`;
+            }
+            if (!directReportUrl && !comparisonReportUrl) {
+              reportLinks = 'Report URLs not available';
+            }
+
+            const comment = `### 📱 Mobile Lighthouse Results
+
+            **Tested URL:** ${url}
+
+            | Metric | Score |
+            |--------|-------|
+            | Performance | ${(scores.performance * 100).toFixed(0)}% |
+            | Accessibility | ${(scores.accessibility * 100).toFixed(0)}% |
+            | Best Practices | ${(scores.bestPractices * 100).toFixed(0)}% |
+            | SEO | ${(scores.seo * 100).toFixed(0)}% |
+
+            **Reports:**
+            ${reportLinks}`;
+
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            await updateComment({
+              github,
+              context,
+              header: 'Lighthouse Audit - Surge Mobile',
+              body: comment,
+              workflowYaml: 'cd-deploy-pr-preview.yml'
+            });
+
+      - name: Comment on PR with desktop Lighthouse results
+        if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const metadataJson = fs.readFileSync('lighthouse-surge-desktop-metadata.json', 'utf8');
+            const metadata = JSON.parse(metadataJson);
+            const { url, scores, directReportUrl, comparisonReportUrl } = metadata;
+
+            let reportLinks = '';
+            if (directReportUrl) {
+              reportLinks += `- [📊 Direct Report](${directReportUrl})\n`;
+            }
+            if (comparisonReportUrl) {
+              reportLinks += `- [🔄 Comparison Report](${comparisonReportUrl})`;
+            }
+            if (!directReportUrl && !comparisonReportUrl) {
+              reportLinks = 'Report URLs not available';
+            }
+
+            const comment = `### 🖥️ Desktop Lighthouse Results
+
+            **Tested URL:** ${url}
+
+            | Metric | Score |
+            |--------|-------|
+            | Performance | ${(scores.performance * 100).toFixed(0)}% |
+            | Accessibility | ${(scores.accessibility * 100).toFixed(0)}% |
+            | Best Practices | ${(scores.bestPractices * 100).toFixed(0)}% |
+            | SEO | ${(scores.seo * 100).toFixed(0)}% |
+
+            **Reports:**
+            ${reportLinks}`;
+
+            const updateComment = require('./.github/scripts/update-pr-comment.cjs');
+            await updateComment({
+              github,
+              context,
+              header: 'Lighthouse Audit - Surge Desktop',
+              body: comment,
+              workflowYaml: 'cd-deploy-pr-preview.yml'
+            });
 
       - name: Report service unavailability
         if: steps.deploy.outcome == 'success' && steps.surge-status.outcome == 'failure'
