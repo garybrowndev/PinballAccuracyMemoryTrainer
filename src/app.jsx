@@ -280,7 +280,15 @@ ElementTile.propTypes = {
 };
 
 // Inline thumbnail used inside table cell (smaller API: no selection ring offset, but clickable area opens menu / toggles)
-const InlineElementThumb = ({ name, selected, onClick, darkMode = false, location, onLocationClick, size = 80 }) => {
+const InlineElementThumb = ({
+  name,
+  selected,
+  onClick,
+  darkMode = false,
+  location,
+  onLocationClick,
+  size = 80,
+}) => {
   const imgSrc = name ? getImageSrc(name) : null;
   const [imgVisible, setImgVisible] = React.useState(false);
   if (!name) {
@@ -326,24 +334,34 @@ const InlineElementThumb = ({ name, selected, onClick, darkMode = false, locatio
         )}
       </div>
       {/* Location overlay at top of image */}
-      {onLocationClick && (
+      {onLocationClick ? (
         <div
           className="absolute left-0 z-10"
           style={{ top: 0, width: size }}
+          role="button"
+          tabIndex={0}
           onClick={(e) => {
             e.stopPropagation();
             onLocationClick(e);
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+              onLocationClick(e);
+            }
+          }}
         >
-          <div className={`text-[10px] font-semibold px-1 py-[2px] leading-tight text-center rounded-t-md select-none truncate cursor-pointer ${
-            location
-              ? 'bg-blue-800/80 backdrop-blur-[1px] text-white'
-              : 'bg-yellow-600/80 backdrop-blur-[1px] text-white'
-          }`}>
+          <div
+            className={`text-[10px] font-semibold px-1 py-[2px] leading-tight text-center rounded-t-md select-none truncate cursor-pointer ${
+              location
+                ? 'bg-blue-800/80 backdrop-blur-[1px] text-white'
+                : 'bg-yellow-600/80 backdrop-blur-[1px] text-white'
+            }`}
+          >
             {location || 'Location'}
           </div>
         </div>
-      )}
+      ) : null}
       {/* Hanging label below the square image (no longer overlapping). Use same style but positioned outside. */}
       <div className="absolute left-0" style={{ top: size, width: size }}>
         <div className="bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center rounded-b-md select-none truncate">
@@ -2052,7 +2070,11 @@ const PracticePlayfield = ({
       factor = 1.65;
     }
     const endX = boxCX + shiftSign * (factor * (boxW / 2));
-    const endY = boxCY + boxH / 2;
+    // Compute ball radius so ball stops with its bottom at the shot box bottom edge
+    const flipperDeltaX = (130 / 1000) * w;
+    const flipperDeltaY = (135 / 1000) * h;
+    const ballRadius = Math.hypot(flipperDeltaX, flipperDeltaY) / 8;
+    const endY = boxCY + boxH / 2 - ballRadius;
 
     // Animation durations
     const travelDuration = 500; // 0.5 second to travel
@@ -3194,16 +3216,16 @@ const App = () => {
   const [darkMode, setDarkMode] = useLocalStorage('pinball_darkMode_v1', true);
   // Track viewport width for responsive layout (header abbreviations + gradual thumb sizing)
   const [setupWidth, setSetupWidth] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth : 800
+    typeof window === 'undefined' ? 800 : window.innerWidth
   );
   useEffect(() => {
     const onResize = () => setSetupWidth(window.innerWidth);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-  const isCompact = setupWidth < 500;
   // Gradual thumb size: 80px at >=500px, linearly down to 56px at 320px
-  const thumbSize = setupWidth >= 500 ? 80 : Math.round(56 + (setupWidth - 320) * ((80 - 56) / (500 - 320)));
+  const thumbSize =
+    setupWidth >= 500 ? 80 : Math.round(56 + (setupWidth - 320) * ((80 - 56) / (500 - 320)));
   // One-time auto-collapse so pre-selected values (from persisted state or defaults) show as single chips, not full option lists on first load.
   const didInitCollapse = useRef(false);
   useEffect(() => {
@@ -4972,7 +4994,8 @@ const App = () => {
                               className={`rounded px-1 cursor-pointer select-none ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}
                               title="Select Both Flippers"
                             >
-                              <span className="min-[500px]:hidden">ST</span><span className="hidden min-[500px]:inline">Shot Type</span>
+                              <span className="min-[500px]:hidden">ST</span>
+                              <span className="hidden min-[500px]:inline">Shot Type</span>
                             </span>
                             {rows.length > 0 && (
                               <button
@@ -5035,7 +5058,8 @@ const App = () => {
                               className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
                               title="Select Left Flipper"
                             >
-                              <span className="min-[500px]:hidden">LF</span><span className="hidden min-[500px]:inline">Left Flipper</span>
+                              <span className="min-[500px]:hidden">LF</span>
+                              <span className="hidden min-[500px]:inline">Left Flipper</span>
                             </span>
                             {rows.length > 0 && (
                               <button
@@ -5107,7 +5131,8 @@ const App = () => {
                               className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
                               title="Select Right Flipper"
                             >
-                              <span className="min-[500px]:hidden">RF</span><span className="hidden min-[500px]:inline">Right Flipper</span>
+                              <span className="min-[500px]:hidden">RF</span>
+                              <span className="hidden min-[500px]:inline">Right Flipper</span>
                             </span>
                             {rows.length > 0 && (
                               <button
@@ -5541,7 +5566,8 @@ const App = () => {
                                       }
                                     }}
                                   >
-                                    <span className="min-[500px]:hidden">NP</span><span className="hidden min-[500px]:inline">Not Possible</span>
+                                    <span className="min-[500px]:hidden">NP</span>
+                                    <span className="hidden min-[500px]:inline">Not Possible</span>
                                   </Chip>
                                 </div>
                               </div>
@@ -5703,7 +5729,8 @@ const App = () => {
                                       }
                                     }}
                                   >
-                                    <span className="min-[500px]:hidden">NP</span><span className="hidden min-[500px]:inline">Not Possible</span>
+                                    <span className="min-[500px]:hidden">NP</span>
+                                    <span className="hidden min-[500px]:inline">Not Possible</span>
                                   </Chip>
                                 </div>
                               </div>
@@ -6904,7 +6931,8 @@ const App = () => {
                               className={`px-2 py-0.5 rounded-xl border shadow active:scale-[0.95] transition-transform font-semibold text-[clamp(10px,2.2vw,24px)] ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
                             >
                               <span className="relative" style={{ top: '-1px' }}>
-                                <span className="min-[500px]:hidden">NP</span><span className="hidden min-[500px]:inline">Not Possible</span>
+                                <span className="min-[500px]:hidden">NP</span>
+                                <span className="hidden min-[500px]:inline">Not Possible</span>
                               </span>
                             </button>
                           </div>
@@ -7256,7 +7284,10 @@ const App = () => {
                                     }}
                                   >
                                     <span className="relative" style={{ top: '-1px' }}>
-                                      <span className="min-[500px]:hidden">NP</span><span className="hidden min-[500px]:inline">Not Possible</span>
+                                      <span className="min-[500px]:hidden">NP</span>
+                                      <span className="hidden min-[500px]:inline">
+                                        Not Possible
+                                      </span>
                                     </span>
                                   </button>
                                 </div>
