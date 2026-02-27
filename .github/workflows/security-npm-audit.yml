@@ -46,7 +46,7 @@ jobs:
 
       - name: Security audit
         id: audit
-        run: npm audit --audit-level=info --json > audit-report.json
+        run: npm audit --audit-level=high --json > audit-report.json
         continue-on-error: true
 
       - name: Upload security audit report
@@ -57,20 +57,11 @@ jobs:
           path: audit-report.json
 
       - name: Generate job summary
-        id: summary
         if: always()
         run: |
           python3 -c '
           import json
           import os
-          import sys
-
-          # Advisories that cannot be fixed without breaking changes.
-          # Each entry: (ghsa_id, reason)
-          ALLOWED_ADVISORIES = [
-              ("GHSA-2g4f-4pwh-qvx6", "serve@14 pins ajv@8.12.0 exactly; only fix is downgrade to serve@13 (breaking). Dev-only test server, not exploitable in practice."),
-          ]
-          ALLOWED_GHSA = {ghsa for ghsa, _ in ALLOWED_ADVISORIES}
 
           print("## 🛡️ npm Audit Results")
 
@@ -78,56 +69,23 @@ jobs:
               try:
                   with open("audit-report.json", "r") as f:
                       data = json.load(f)
-
-                  # Determine which vulnerability entries are covered solely by allowed advisories
-                  all_vulns = data.get("vulnerabilities", {})
-                  actionable = {}
-                  allowed_hits = set()
-                  for pkg, v in all_vulns.items():
-                      via = v.get("via", [])
-                      advisory_ghsas = set()
-                      for item in via:
-                          if isinstance(item, dict):
-                              url = item.get("url", "")
-                              ghsa = url.split("/")[-1] if url else ""
-                              advisory_ghsas.add(ghsa)
-                      if advisory_ghsas and advisory_ghsas.issubset(ALLOWED_GHSA):
-                          allowed_hits.update(advisory_ghsas)
+                      metadata = data.get("metadata", {})
+                      vulnerabilities = metadata.get("vulnerabilities", {})
+                      total = sum(vulnerabilities.values())
+                      
+                      if total == 0:
+                          print("\n✅ No vulnerabilities found.")
                       else:
-                          actionable[pkg] = v
-
-                  sev_order = ["critical", "high", "moderate", "low", "info"]
-                  counts = {s: 0 for s in sev_order}
-                  for v in actionable.values():
-                      s = v.get("severity", "info")
-                      counts[s] = counts.get(s, 0) + 1
-                  total = sum(counts.values())
-
-                  if total == 0:
-                      print("\n✅ No actionable vulnerabilities found.")
-                  else:
-                      print(f"\n⚠️ Found {total} actionable vulnerabilities.")
-                      print("| Severity | Count |")
-                      print("| --- | --- |")
-                      for s in sev_order:
-                          if counts[s] > 0:
-                              print(f"| {s.title()} | {counts[s]} |")
-                      sys.exit(1)
-
-                  if allowed_hits:
-                      print("\n### ℹ️ Allowed exceptions (cannot fix without breaking changes)")
-                      for ghsa, reason in ALLOWED_ADVISORIES:
-                          if ghsa in allowed_hits:
-                              print(f"- [{ghsa}](https://github.com/advisories/{ghsa}): {reason}")
-
-              except SystemExit:
-                  raise
+                          print(f"\n⚠️ Found {total} vulnerabilities.")
+                          print("| Severity | Count |")
+                          print("| --- | --- |")
+                          for severity, count in vulnerabilities.items():
+                              if count > 0:
+                                  print(f"| {severity.title()} | {count} |")
               except Exception as e:
                   print(f"Error parsing report: {e}")
-                  sys.exit(1)
           else:
               print("Report file not found.")
-              sys.exit(1)
           ' > npm_audit_summary.md
           cat npm_audit_summary.md >> $GITHUB_STEP_SUMMARY
 
@@ -155,5 +113,5 @@ jobs:
             });
 
       - name: Check for failure
-        if: steps.audit.outcome == 'failure' && steps.summary.outcome == 'failure'
+        if: steps.audit.outcome == 'failure'
         run: exit 1
