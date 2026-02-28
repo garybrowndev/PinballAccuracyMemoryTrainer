@@ -54,7 +54,7 @@ const COLORS = {
 
 // Button style constants
 const BTN_SUCCESS = 'bg-emerald-800 hover:bg-emerald-900';
-const BTN_ICON = 'px-4 py-2 rounded-2xl text-white flex items-center gap-2';
+const BTN_ICON = 'px-2 py-2 sm:px-4 rounded-2xl text-white flex items-center gap-2';
 const DISABLED_CLASS = 'opacity-50 cursor-not-allowed';
 /* eslint-disable sonarjs/no-duplicate-string */
 const ICON_BTN_DARK = 'bg-slate-700 border-slate-600 text-slate-300 hover:text-slate-100';
@@ -280,10 +280,17 @@ ElementTile.propTypes = {
 };
 
 // Inline thumbnail used inside table cell (smaller API: no selection ring offset, but clickable area opens menu / toggles)
-const InlineElementThumb = ({ name, selected, onClick, darkMode = false }) => {
+const InlineElementThumb = ({
+  name,
+  selected,
+  onClick,
+  darkMode = false,
+  location,
+  onLocationClick,
+  size = 80,
+}) => {
   const imgSrc = name ? getImageSrc(name) : null;
   const [imgVisible, setImgVisible] = React.useState(false);
-  const size = 80; // square image area
   if (!name) {
     return null;
   }
@@ -326,6 +333,35 @@ const InlineElementThumb = ({ name, selected, onClick, darkMode = false }) => {
           />
         )}
       </div>
+      {/* Location overlay at top of image */}
+      {onLocationClick ? (
+        <div
+          className="absolute left-0 z-10"
+          style={{ top: 0, width: size }}
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onLocationClick(e);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+              onLocationClick(e);
+            }
+          }}
+        >
+          <div
+            className={`text-[10px] font-semibold px-1 py-[2px] leading-tight text-center rounded-t-md select-none truncate cursor-pointer ${
+              location
+                ? 'bg-blue-800/80 backdrop-blur-[1px] text-white'
+                : 'bg-yellow-600/80 backdrop-blur-[1px] text-white'
+            }`}
+          >
+            {location || 'Location'}
+          </div>
+        </div>
+      ) : null}
       {/* Hanging label below the square image (no longer overlapping). Use same style but positioned outside. */}
       <div className="absolute left-0" style={{ top: size, width: size }}>
         <div className="bg-black/55 backdrop-blur-[1px] text-[10px] text-white font-semibold px-1 py-[2px] leading-tight text-center rounded-b-md select-none truncate">
@@ -341,6 +377,9 @@ InlineElementThumb.propTypes = {
   selected: PropTypes.bool.isRequired,
   onClick: PropTypes.func.isRequired,
   darkMode: PropTypes.bool,
+  location: PropTypes.string,
+  onLocationClick: PropTypes.func,
+  size: PropTypes.number,
 };
 
 // New taxonomy: separate base element from location. All bases share the same location set.
@@ -620,7 +659,7 @@ const Section = ({ title, children, right, darkMode = false }) => {
   const textClass = GetTextClass(darkMode, 'primary');
   return (
     <div className={`rounded-2xl shadow p-4 md:p-6 mb-6 ${bgClass}`}>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h2 className={`text-lg md:text-xl font-semibold ${textClass}`}>{title}</h2>
         {right}
       </div>
@@ -2031,7 +2070,11 @@ const PracticePlayfield = ({
       factor = 1.65;
     }
     const endX = boxCX + shiftSign * (factor * (boxW / 2));
-    const endY = boxCY + boxH / 2;
+    // Compute ball radius so ball stops with its bottom at the shot box bottom edge
+    const flipperDeltaX = (130 / 1000) * w;
+    const flipperDeltaY = (135 / 1000) * h;
+    const ballRadius = Math.hypot(flipperDeltaX, flipperDeltaY) / 8;
+    const endY = boxCY + boxH / 2 - ballRadius;
 
     // Animation durations
     const travelDuration = 500; // 0.5 second to travel
@@ -3171,6 +3214,18 @@ const App = () => {
   const [showInfoModal, setShowInfoModal] = useState(false);
   // Dark mode toggle (default: true for dark mode)
   const [darkMode, setDarkMode] = useLocalStorage('pinball_darkMode_v1', true);
+  // Track viewport width for responsive layout (header abbreviations + gradual thumb sizing)
+  const [setupWidth, setSetupWidth] = useState(() =>
+    typeof window === 'undefined' ? 800 : window.innerWidth
+  );
+  useEffect(() => {
+    const onResize = () => setSetupWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  // Gradual thumb size: 80px at >=500px, linearly down to 56px at 320px
+  const thumbSize =
+    setupWidth >= 500 ? 80 : Math.round(56 + (setupWidth - 320) * ((80 - 56) / (500 - 320)));
   // One-time auto-collapse so pre-selected values (from persisted state or defaults) show as single chips, not full option lists on first load.
   const didInitCollapse = useRef(false);
   useEffect(() => {
@@ -4525,7 +4580,7 @@ const App = () => {
                 title="Setup Shots"
                 darkMode={darkMode}
                 right={
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -4620,7 +4675,7 @@ const App = () => {
                         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
-                      Setup
+                      <span className="hidden sm:inline">Setup</span>
                     </button>
                     <div className="relative">
                       <button
@@ -4630,7 +4685,7 @@ const App = () => {
                           }
                         }}
                         disabled={!canStart}
-                        className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${canStart ? BTN_SUCCESS : 'bg-yellow-600'} ${canStart ? '' : DISABLED_CLASS}`}
+                        className={`px-2 py-2 sm:px-4 rounded-2xl text-white flex items-center gap-2 ${canStart ? BTN_SUCCESS : 'bg-yellow-600'} ${canStart ? '' : DISABLED_CLASS}`}
                         title={
                           canStart
                             ? 'Start the practice session'
@@ -4664,7 +4719,7 @@ const App = () => {
                             <line x1="12" y1="17" x2="12.01" y2="17" />
                           </svg>
                         )}
-                        Practice
+                        <span className="hidden sm:inline">Practice</span>
                       </button>
                     </div>
                     <button
@@ -4675,7 +4730,7 @@ const App = () => {
                         }
                       }}
                       disabled={!canStart}
-                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${canStart ? BTN_SUCCESS : 'bg-yellow-600'} ${canStart ? '' : DISABLED_CLASS}`}
+                      className={`px-2 py-2 sm:px-4 rounded-2xl text-white flex items-center gap-2 ${canStart ? BTN_SUCCESS : 'bg-yellow-600'} ${canStart ? '' : DISABLED_CLASS}`}
                       title={
                         canStart
                           ? 'Go directly to final recall'
@@ -4710,7 +4765,7 @@ const App = () => {
                           <line x1="12" y1="17" x2="12.01" y2="17" />
                         </svg>
                       )}
-                      Recall
+                      <span className="hidden sm:inline">Recall</span>
                     </button>
                   </div>
                 }
@@ -4748,9 +4803,39 @@ const App = () => {
                       }}
                       onExample={() => {
                         setRows([
-                          newRow({ base: 'Orbit', location: 'Left', initL: 25, initR: 75 }, 0),
-                          newRow({ base: 'Ramp', location: 'Center', initL: 50, initR: 50 }, 1),
-                          newRow({ base: 'Orbit', location: 'Right', initL: 75, initR: 25 }, 2),
+                          newRow(
+                            {
+                              base: 'Orbit',
+                              location: 'Left',
+                              initL: 25,
+                              initR: 75,
+                              x: 0.08,
+                              y: 0.274,
+                            },
+                            0
+                          ),
+                          newRow(
+                            {
+                              base: 'Ramp',
+                              location: 'Center',
+                              initL: 50,
+                              initR: 50,
+                              x: 0.5,
+                              y: 0.047,
+                            },
+                            1
+                          ),
+                          newRow(
+                            {
+                              base: 'Orbit',
+                              location: 'Right',
+                              initL: 75,
+                              initR: 25,
+                              x: 0.92,
+                              y: 0.274,
+                            },
+                            2
+                          ),
                         ]);
                         _pushToast('Loaded example shots');
                       }}
@@ -4879,15 +4964,15 @@ const App = () => {
                     </colgroup>
                     <thead>
                       <tr
-                        className={`text-left align-bottom ${GetTextClass(darkMode, 'secondary')}`}
+                        className={`text-left align-bottom text-xs sm:text-sm ${GetTextClass(darkMode, 'secondary')}`}
                       >
                         <th className="p-1 text-center align-bottom w-6">
                           <span className="text-xs">#</span>
                         </th>
                         <th
-                          className={`p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? GetBgClass(darkMode, 'primary') : ''}`}
+                          className={`p-1 sm:p-2 ${selectedBlockId === 'FLIPPER_BOTH' ? GetBgClass(darkMode, 'primary') : ''}`}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <span
                               role="button"
                               tabIndex={0}
@@ -4909,7 +4994,8 @@ const App = () => {
                               className={`rounded px-1 cursor-pointer select-none ${darkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}
                               title="Select Both Flippers"
                             >
-                              Shot Type
+                              <span className="min-[500px]:hidden">ST</span>
+                              <span className="hidden min-[500px]:inline">Shot Type</span>
                             </span>
                             {rows.length > 0 && (
                               <button
@@ -4927,7 +5013,7 @@ const App = () => {
                                   );
                                   setCollapsedTypes([]);
                                 }}
-                                className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
+                                className={`text-[9px] sm:text-[11px] px-1 sm:px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
                                 title="Clear all shot type selections"
                               >
                                 Clear
@@ -4936,7 +5022,7 @@ const App = () => {
                           </div>
                         </th>
                         <th
-                          className={`p-2 ${
+                          className={`p-1 sm:p-2 ${
                             /* eslint-disable-next-line no-nested-ternary */
                             selectedBlockId === 'FLIPPER_L' ||
                             selectedBlockId === 'FLIPPER_BOTH' ||
@@ -4948,7 +5034,7 @@ const App = () => {
                               : ''
                           }`}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <span
                               role="button"
                               tabIndex={0}
@@ -4972,7 +5058,8 @@ const App = () => {
                               className="hover:bg-emerald-50 rounded px-1 cursor-pointer select-none"
                               title="Select Left Flipper"
                             >
-                              Left Flipper
+                              <span className="min-[500px]:hidden">LF</span>
+                              <span className="hidden min-[500px]:inline">Left Flipper</span>
                             </span>
                             {rows.length > 0 && (
                               <button
@@ -4999,7 +5086,7 @@ const App = () => {
                                     return prev.map((rw, idx) => ({ ...rw, initL: asc[idx] }));
                                   });
                                 }}
-                                className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
+                                className={`text-[9px] sm:text-[11px] px-1 sm:px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
                                 title="Auto-fill evenly spaced ascending values starting near center for left flipper"
                               >
                                 Reset
@@ -5008,7 +5095,7 @@ const App = () => {
                           </div>
                         </th>
                         <th
-                          className={`p-2 ${
+                          className={`p-1 sm:p-2 ${
                             /* eslint-disable-next-line no-nested-ternary */
                             selectedBlockId === 'FLIPPER_R' ||
                             selectedBlockId === 'FLIPPER_BOTH' ||
@@ -5020,7 +5107,7 @@ const App = () => {
                               : ''
                           }`}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <span
                               role="button"
                               tabIndex={0}
@@ -5044,7 +5131,8 @@ const App = () => {
                               className="hover:bg-rose-50 rounded px-1 cursor-pointer select-none"
                               title="Select Right Flipper"
                             >
-                              Right Flipper
+                              <span className="min-[500px]:hidden">RF</span>
+                              <span className="hidden min-[500px]:inline">Right Flipper</span>
                             </span>
                             {rows.length > 0 && (
                               <button
@@ -5072,7 +5160,7 @@ const App = () => {
                                     return prev.map((rw, idx) => ({ ...rw, initR: desc[idx] }));
                                   });
                                 }}
-                                className={`text-[11px] px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
+                                className={`text-[9px] sm:text-[11px] px-1 sm:px-2 py-0.5 rounded-md ${darkMode ? 'bg-slate-700/90 hover:bg-slate-700 text-slate-200 border border-slate-600' : 'bg-white/90 hover:bg-white text-slate-700 border border-slate-300'}`}
                                 title="Auto-fill evenly spaced descending values (high→low) for right flipper"
                               >
                                 Reset
@@ -5226,12 +5314,33 @@ const App = () => {
                                   setLocMenuAnchor(null);
                                 };
                                 return (
-                                  <div className="flex items-center gap-2 relative">
+                                  <div className="relative">
                                     {base ? (
                                       <InlineElementThumb
                                         name={base}
                                         selected
                                         darkMode={darkMode}
+                                        size={thumbSize}
+                                        location={location}
+                                        onLocationClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedIdx(i);
+                                          setSelectedBlockId(r.id);
+                                          if (locMenuOpen) {
+                                            closeMenus();
+                                          } else {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const anchor = calcDropdownAnchor(rect, 200);
+                                            setLocMenuAnchor({
+                                              id: r.id,
+                                              x: anchor.x,
+                                              y: anchor.y,
+                                              openUp: anchor.openUp,
+                                            });
+                                            setOpenLocMenuId(r.id);
+                                            setOpenShotMenuId(null);
+                                          }
+                                        }}
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setSelectedIdx(i);
@@ -5273,7 +5382,7 @@ const App = () => {
                                           }
                                         }}
                                         className={`relative rounded-md shadow-sm ring-1 ring-slate-300 hover:ring-slate-500 transition ring-offset-1 focus:outline-none focus:ring-2 focus:ring-slate-900 overflow-visible flex flex-col items-center justify-center ${darkMode ? 'bg-slate-800' : 'bg-white'}`}
-                                        style={{ width: 80, height: 98 }}
+                                        style={{ width: thumbSize, height: thumbSize + 18 }}
                                         aria-label="Select Shot"
                                       >
                                         <svg
@@ -5297,50 +5406,6 @@ const App = () => {
                                         </span>
                                       </button>
                                     )}
-                                    <div className="relative flex flex-col items-center">
-                                      {!location && (
-                                        <svg
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          className="w-4 h-4 text-yellow-500 mb-1"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                        >
-                                          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                          <line x1="12" y1="9" x2="12" y2="13" />
-                                          <line x1="12" y1="17" x2="12.01" y2="17" />
-                                        </svg>
-                                      )}
-                                      <Chip
-                                        active={Boolean(location)}
-                                        data-loc-chip={r.id}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedIdx(i);
-                                          setSelectedBlockId(r.id);
-                                          // Always open menu, don't clear location on click
-                                          if (locMenuOpen) {
-                                            closeMenus();
-                                          } else {
-                                            const rect = e.currentTarget.getBoundingClientRect();
-                                            const anchor = calcDropdownAnchor(rect, 200);
-                                            setLocMenuAnchor({
-                                              id: r.id,
-                                              x: anchor.x,
-                                              y: anchor.y,
-                                              openUp: anchor.openUp,
-                                            });
-                                            setOpenLocMenuId(r.id);
-                                            setOpenShotMenuId(null);
-                                          }
-                                        }}
-                                      >
-                                        {location || 'Location'}
-                                      </Chip>
-                                    </div>
-                                    {/* Popup menus rendered outside table to avoid layout shift */}
                                   </div>
                                 );
                               })()}
@@ -5501,7 +5566,8 @@ const App = () => {
                                       }
                                     }}
                                   >
-                                    Not Possible
+                                    <span className="min-[500px]:hidden">NP</span>
+                                    <span className="hidden min-[500px]:inline">Not Possible</span>
                                   </Chip>
                                 </div>
                               </div>
@@ -5663,7 +5729,8 @@ const App = () => {
                                       }
                                     }}
                                   >
-                                    Not Possible
+                                    <span className="min-[500px]:hidden">NP</span>
+                                    <span className="hidden min-[500px]:inline">Not Possible</span>
                                   </Chip>
                                 </div>
                               </div>
@@ -6022,7 +6089,7 @@ const App = () => {
                 title="Practice Shots"
                 darkMode={darkMode}
                 right={
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -6101,7 +6168,7 @@ const App = () => {
                     </button>
                     <button
                       onClick={resetAll}
-                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                      className={`px-2 py-2 sm:px-4 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
                       title="Return to setup and reset session"
                     >
                       <svg
@@ -6116,7 +6183,7 @@ const App = () => {
                         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
-                      Setup
+                      <span className="hidden sm:inline">Setup</span>
                     </button>
                     <button
                       type="button"
@@ -6135,11 +6202,11 @@ const App = () => {
                       >
                         <polygon points="5 3 19 12 5 21 5 3" />
                       </svg>
-                      Practice
+                      <span className="hidden sm:inline">Practice</span>
                     </button>
                     <button
                       onClick={endSession}
-                      className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                      className={`px-2 py-2 sm:px-4 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
                       title="Go to final recall"
                     >
                       <svg
@@ -6154,7 +6221,7 @@ const App = () => {
                         <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                         <line x1="4" y1="22" x2="4" y2="15" />
                       </svg>
-                      Recall
+                      <span className="hidden sm:inline">Recall</span>
                     </button>
                   </div>
                 }
@@ -6864,7 +6931,8 @@ const App = () => {
                               className={`px-2 py-0.5 rounded-xl border shadow active:scale-[0.95] transition-transform font-semibold text-[clamp(10px,2.2vw,24px)] ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
                             >
                               <span className="relative" style={{ top: '-1px' }}>
-                                Not Possible
+                                <span className="min-[500px]:hidden">NP</span>
+                                <span className="hidden min-[500px]:inline">Not Possible</span>
                               </span>
                             </button>
                           </div>
@@ -7048,7 +7116,7 @@ const App = () => {
                                     className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
                                     style={{
                                       width: boxSize,
-                                      height: boxSize,
+                                      minHeight: boxSize,
                                       padding,
                                       borderRadius,
                                     }}
@@ -7073,7 +7141,7 @@ const App = () => {
                                     className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
                                     style={{
                                       width: boxSize,
-                                      height: boxSize,
+                                      minHeight: boxSize,
                                       padding,
                                       borderRadius,
                                     }}
@@ -7103,7 +7171,7 @@ const App = () => {
                                     className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
                                     style={{
                                       width: boxSize,
-                                      height: boxSize,
+                                      minHeight: boxSize,
                                       padding,
                                       borderRadius,
                                     }}
@@ -7128,7 +7196,7 @@ const App = () => {
                                     className={`backdrop-blur-sm border shadow-lg flex flex-col items-center justify-center ${GetMetricBoxClass(darkMode)}`}
                                     style={{
                                       width: boxSize,
-                                      height: boxSize,
+                                      minHeight: boxSize,
                                       padding,
                                       borderRadius,
                                     }}
@@ -7165,75 +7233,34 @@ const App = () => {
                             onAdvanceToNextShot={advanceToNextShot}
                           />
                         </div>
-                        <div className="w-full px-4">
-                          {/* Quick recall chips duplicated for fullscreen (non-stretch circular layout) */}
+                        <div className="w-full px-1">
+                          {/* Quick recall chips duplicated for fullscreen - uses CSS grid to guarantee fit */}
                           {(() => {
-                            // 19 numeric chips (5..95) + 1 Not Possible = 20 circles that must always fit single row.
-                            // Strategy:
-                            // 1. Measure available container width (window.innerWidth minus side padding ~32px).
-                            // 2. Solve for diameter d and gap g such that 20*d + 19*g = availableWidth.
-                            //    Constrain g within [minGap,maxGap]; if d exceeds maxDiameter clamp; if below minDiameter clamp and recompute gap (may cause negative -> then reduce diameter further).
-                            // Simplify: choose a target gap proportionally (baseGap=12) scaled by fullscreenScale then adjust to fill leftover exactly.
                             const values = Array.from({ length: 19 }, (_, k) => (k + 1) * 5); // 5..95
                             const ordered = selectedSide === 'L' ? values : [...values].reverse();
-                            const totalChips = 19; // numeric chips only (NP below)
-                            // Use tracked windowWidth state for responsive sizing
-                            // Account for padding (px-4 = 32px) plus extra buffer for potential scrollbar space
-                            const horizontalPadding = 48; // 16 left + 16 right + 16 buffer for scrollbar reservation
-                            const avail = Math.max(300, windowWidth - horizontalPadding); // safeguard
-                            // Increase overall size (~25%) and tighten spacing.
-                            const maxDiameter = 112; // was 90
-                            const minDiameter = 26;
-                            const baseGap = 3 * fullscreenScale; // target very tight spacing (~2-3px final)
-                            // First pass assume gap = baseGap => candidate diameter
-                            let gap = baseGap;
-                            let d = (avail - (totalChips - 1) * gap) / totalChips;
-                            if (d > maxDiameter) {
-                              // Grow gap to consume extra space while keeping diameter at cap
-                              d = maxDiameter;
-                            }
-                            if (d < minDiameter) {
-                              // Need to shrink gap down to min (2px) and recompute diameter; if still < minDiameter, accept smaller diameter
-                              gap = 4; // minimal aesthetic gap
-                              d = (avail - (totalChips - 1) * gap) / totalChips;
-                              if (d < 20) {
-                                d = 20;
-                              } // absolute floor
-                            }
-                            // Final safety clamp
-                            d = Math.max(20, Math.min(maxDiameter, d));
-                            // Recompute gap precisely to fill width (avoid leftover). Bound gap min/max after recompute.
-                            gap = (avail - totalChips * d) / (totalChips - 1);
-                            const minGap = 2,
-                              maxGap = 24; // allow tighter minimum
-                            if (gap < minGap) {
-                              // Reduce diameter slightly so gap hits minGap.
-                              const targetD = (avail - (totalChips - 1) * minGap) / totalChips;
-                              d = Math.max(20, Math.min(maxDiameter, targetD));
-                              gap = minGap;
-                            } else if (gap > maxGap) {
-                              // Increase diameter so gap hits maxGap.
-                              const targetD = (avail - (totalChips - 1) * maxGap) / totalChips;
-                              d = Math.max(20, Math.min(maxDiameter, targetD));
-                              gap = maxGap;
-                            }
-                            const diameter = Math.round(d);
-                            const chipFont = Math.round(diameter * 0.65); // enlarge ~25% more from 0.52
-                            // Container style: use exact width so chips line up flush without overflow/underflow.
-                            const containerStyle = { width: avail, margin: '0 auto' };
+                            const totalChips = 19;
+                            // Reference diameter for font sizing only (actual size determined by CSS grid)
+                            const refDiameter = Math.max(
+                              20,
+                              Math.min(112, (windowWidth - 8) / totalChips)
+                            );
+                            const chipFont = Math.round(refDiameter * 0.65);
                             return (
-                              <div className="w-full select-none" style={containerStyle}>
-                                <div className="flex items-center" style={{ gap: Math.round(gap) }}>
+                              <div className="w-full select-none">
+                                <div
+                                  className="grid w-full gap-[2px]"
+                                  style={{
+                                    gridTemplateColumns: `repeat(${totalChips}, minmax(0, 1fr))`,
+                                  }}
+                                >
                                   {ordered.map((v) => (
                                     <button
                                       key={v}
                                       type="button"
                                       onClick={() => submitAttempt(v)}
                                       disabled={awaitingNextShot}
-                                      className={`rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center flex-shrink-0 ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                                      className={`aspect-square rounded-full border shadow active:scale-[0.95] transition-transform flex items-center justify-center ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                                       style={{
-                                        width: diameter,
-                                        height: diameter,
                                         fontSize: chipFont,
                                         lineHeight: 1,
                                         fontWeight: 600,
@@ -7252,10 +7279,15 @@ const App = () => {
                                     onClick={() => submitAttempt(0)}
                                     disabled={awaitingNextShot}
                                     className={`px-1 rounded-xl border shadow active:scale-[0.97] transition-transform text-sm font-medium ${awaitingNextShot ? DISABLED_CLASS : ''} ${darkMode ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
-                                    style={{ fontSize: Math.max(12, Math.round(chipFont * 0.75)) }}
+                                    style={{
+                                      fontSize: Math.max(12, Math.round(chipFont * 0.75)),
+                                    }}
                                   >
                                     <span className="relative" style={{ top: '-1px' }}>
-                                      Not Possible
+                                      <span className="min-[500px]:hidden">NP</span>
+                                      <span className="hidden min-[500px]:inline">
+                                        Not Possible
+                                      </span>
                                     </span>
                                   </button>
                                 </div>
@@ -7277,7 +7309,7 @@ const App = () => {
               title="Recall Shots"
               darkMode={darkMode}
               right={
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -7356,7 +7388,7 @@ const App = () => {
                   </button>
                   <button
                     onClick={resetAll}
-                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                    className={`px-2 py-2 sm:px-4 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
                     title="Return to setup and reset session"
                   >
                     <svg
@@ -7371,11 +7403,11 @@ const App = () => {
                       <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
-                    Setup
+                    <span className="hidden sm:inline">Setup</span>
                   </button>
                   <button
                     onClick={() => setFinalPhase(false)}
-                    className={`px-4 py-2 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
+                    className={`px-2 py-2 sm:px-4 rounded-2xl text-white flex items-center gap-2 ${darkMode ? BTN_SUCCESS : BTN_SUCCESS}`}
                     title="Return to practice session"
                   >
                     <svg
@@ -7389,7 +7421,7 @@ const App = () => {
                     >
                       <polygon points="5 3 19 12 5 21 5 3" />
                     </svg>
-                    Practice
+                    <span className="hidden sm:inline">Practice</span>
                   </button>
                   <button
                     type="button"
@@ -7409,7 +7441,7 @@ const App = () => {
                       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                       <line x1="4" y1="22" x2="4" y2="15" />
                     </svg>
-                    Recall
+                    <span className="hidden sm:inline">Recall</span>
                   </button>
                 </div>
               }
