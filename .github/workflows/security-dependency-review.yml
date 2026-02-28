@@ -25,7 +25,7 @@ jobs:
 
       - name: Dependency Review
         id: review
-        uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261 # v4.8.2
+        uses: actions/dependency-review-action@05fe4576374b728f0c523d6a13d64c25081e0803 # v4.8.3
         with:
           # Fail on low and above severity vulnerabilities
           fail-on-severity: low
@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload Dependency Review Report
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: dependency-review-report
           path: dependency-review-report.json
