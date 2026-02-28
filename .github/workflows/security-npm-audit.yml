@@ -46,7 +46,7 @@ jobs:
 
       - name: Security audit
         id: audit
-        run: npm audit --audit-level=info --json > audit-report.json
+        run: npm audit --audit-level=high --json > audit-report.json
         continue-on-error: true
 
       - name: Upload security audit report
