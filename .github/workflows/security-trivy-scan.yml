@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@22438a435773de8c97dc0958cc0b823c45b064ac # master
+        uses: aquasecurity/trivy-action@1bd062560b422f5944df1de50abd05162bea079e # master
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -41,12 +41,12 @@ jobs:
           scanners: 'vuln,secret,config'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@19b2f06db2b6f5108140aeb04014ef02b648f789 # v4
+        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4
         with:
           sarif_file: 'trivy-results.sarif'
 
       - name: Upload Trivy artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v4
         with:
           name: trivy-results
           path: trivy-results.sarif
