@@ -2070,11 +2070,11 @@ const PracticePlayfield = ({
       factor = 1.65;
     }
     const endX = boxCX + shiftSign * (factor * (boxW / 2));
-    // Compute ball radius so ball stops with its bottom at the shot box bottom edge
+    // Compute ball radius so ball stops with its top touching the shot box bottom edge
     const flipperDeltaX = (130 / 1000) * w;
     const flipperDeltaY = (135 / 1000) * h;
     const ballRadius = Math.hypot(flipperDeltaX, flipperDeltaY) / 8;
-    const endY = boxCY + boxH / 2 - ballRadius;
+    const endY = boxCY + boxH / 2 + ballRadius;
 
     // Animation durations
     const travelDuration = 500; // 0.5 second to travel
