@@ -26,5 +26,8 @@ codeql-db/
 *.log
 *debug*
 
+# gh-context (per-repo GitHub account binding)
+.ghcontext
+
 # Editor directories and files
 .vscode/*

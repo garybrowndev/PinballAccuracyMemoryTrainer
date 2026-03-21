@@ -2418,7 +2418,7 @@ const PracticePlayfield = ({
             </div>
           );
         })}
-        {/* eslint-disable sonarjs/cognitive-complexity, complexity, react-hooks/refs */}
+        {/* eslint-disable sonarjs/cognitive-complexity, react-hooks/refs */}
         {mounted && activeGuideRow && activeGuideSide
           ? (() => {
               // Draw two guide lines from the shot box to the extremes (0 and 100) of the selected flipper.
@@ -2499,47 +2499,7 @@ const PracticePlayfield = ({
                   // Shot box center (percent coords already represent center due to translate(-50%, -50%))
                   const boxCX = prevRow.x * w;
                   const boxCY = prevRow.y * h;
-                  // Measure actual shot box width (after scaling) for proportional offsets
-                  let boxW = 120;
-                  const shotEl = canvasRef.current?.querySelector(
-                    `[data-shot-box="${prevRow.id}"]`
-                  );
-                  if (shotEl) {
-                    try {
-                      const br = shotEl.getBoundingClientRect();
-                      if (br?.width) {
-                        boxW = br.width;
-                      }
-                    } catch {
-                      /* swallow measurement errors (layout shifts) intentionally */
-                    }
-                  }
                   const boxH = 30; // heuristic height only for vertical anchor reference
-                  // Direction: Right flipper early-> +x, late-> -x; Left flipper mirrored
-                  let dirLate = 0;
-                  if (lastRecall.delta > 0) {
-                    dirLate = 1;
-                  } else if (lastRecall.delta < 0) {
-                    dirLate = -1;
-                  }
-                  let shiftSign = 0;
-                  if (dirLate !== 0) {
-                    if (lastRecall.side === 'R') {
-                      shiftSign = dirLate === -1 ? 1 : -1;
-                    } else {
-                      shiftSign = dirLate === -1 ? -1 : 1;
-                    }
-                  }
-                  // Proportional factor (of half shot box width): perfect 0, slight 0.50, fairly 1.00, very 1.65
-                  let factor = 0;
-                  if (lastRecall.severity === 'slight') {
-                    factor = 0.5;
-                  } else if (lastRecall.severity === 'fairly') {
-                    factor = 1;
-                  } else if (lastRecall.severity === 'very') {
-                    factor = 1.65;
-                  }
-                  const endX = boxCX + shiftSign * (factor * (boxW / 2));
                   const endY = boxCY + boxH / 2;
                   // Feedback text content
                   let word1,
@@ -2565,22 +2525,13 @@ const PracticePlayfield = ({
                   const contentHeight = lineCount === 1 ? lineHeight : lineHeight * 2 + lineGap;
                   const boxHeight = contentHeight + fbPadY * 2;
                   const boxWidth = textW + fbPadX * 2;
-                  const boxCenterX = endX; // center box at computed endX
+                  const boxCenterX = boxCX; // always center text box over shot box
                   const boxX = boxCenterX - boxWidth / 2;
                   const downwardOffset = 0.8 * boxHeight;
                   const boxY = endY + downwardOffset - boxHeight;
                   // Update: pill fill now matches severity color; border same color; text remains black for contrast
                   lineEl = (
                     <g>
-                      <line
-                        x1={anchor.x}
-                        y1={anchor.y}
-                        x2={endX}
-                        y2={endY}
-                        stroke={SEVERITY_COLORS[lastRecall.severity] || '#eab308'}
-                        strokeWidth={8 * tScale}
-                        strokeLinecap="round"
-                      />
                       <rect
                         x={boxX}
                         y={boxY}
@@ -2948,7 +2899,7 @@ const PracticePlayfield = ({
               );
             })()
           : null}
-        {/* eslint-enable sonarjs/cognitive-complexity, complexity, react-hooks/refs */}
+        {/* eslint-enable sonarjs/cognitive-complexity, react-hooks/refs */}
       </div>
     </div>
   );
