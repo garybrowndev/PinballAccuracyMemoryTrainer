@@ -83,11 +83,14 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Separate React and React-DOM into their own chunk
-          'react-vendor': ['react', 'react-dom'],
-          // Separate react/jsx-runtime to reduce duplication
-          'react-jsx-runtime': ['react/jsx-runtime'],
+        // eslint-disable-next-line consistent-return
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+            return 'react-vendor';
+          }
+          if (id.includes('react/jsx-runtime')) {
+            return 'react-jsx-runtime';
+          }
         },
       },
     },
