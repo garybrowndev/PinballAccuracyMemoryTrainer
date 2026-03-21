@@ -2442,7 +2442,7 @@ const PracticePlayfield = ({
               let recallNode = null;
               if (awaitingNextShot && lastRecall && Number.isFinite(lastRecall.input)) {
                 // Placeholder for feedback line/group before recall value label box; restored after refactor
-                let lineEl = null;
+                let lineEl;
                 const prevRow = rows[lastRecall.idx];
                 if (prevRow) {
                   // Precise flipper edge anchor at recall %
@@ -3274,7 +3274,7 @@ const App = () => {
         const newRows = presetData.map((shot, idx) => {
           // Parse shot type to extract base and location
           const typeStr = shot.shotType || '';
-          let base = '';
+          let base;
           let location = '';
 
           // Try to match against known locations
