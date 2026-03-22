@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import tailwind from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
+// eslint-disable-next-line import/no-deprecated
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -83,14 +84,11 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        // eslint-disable-next-line consistent-return
-        manualChunks(id) {
-          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
-            return 'react-vendor';
-          }
-          if (id.includes('react/jsx-runtime')) {
-            return 'react-jsx-runtime';
-          }
+        manualChunks: {
+          // Separate React and React-DOM into their own chunk
+          'react-vendor': ['react', 'react-dom'],
+          // Separate react/jsx-runtime to reduce duplication
+          'react-jsx-runtime': ['react/jsx-runtime'],
         },
       },
     },
