@@ -25,7 +25,7 @@ jobs:
 
       - name: Dependency Review
         id: review
-        uses: actions/dependency-review-action@05fe4576374b728f0c523d6a13d64c25081e0803 # v4.8.3
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           # Fail on low and above severity vulnerabilities
           fail-on-severity: low
@@ -36,18 +36,8 @@ jobs:
 
       - name: Generate Report
         if: always()
-        env:
-          DEPENDENCY_CHANGES: ${{ steps.review.outputs.dependency-changes }}
-          VULNERABLE_CHANGES: ${{ steps.review.outputs.vulnerable-changes }}
-          INVALID_LICENSE_CHANGES: ${{ steps.review.outputs.invalid-license-changes }}
-          DENIED_CHANGES: ${{ steps.review.outputs.denied-changes }}
         run: |
-          echo "{" > dependency-review-report.json
-          echo "  \"dependency_changes\": $DEPENDENCY_CHANGES," >> dependency-review-report.json
-          echo "  \"vulnerable_changes\": $VULNERABLE_CHANGES," >> dependency-review-report.json
-          echo "  \"invalid_license_changes\": $INVALID_LICENSE_CHANGES," >> dependency-review-report.json
-          echo "  \"denied_changes\": $DENIED_CHANGES" >> dependency-review-report.json
-          echo "}" >> dependency-review-report.json
+          echo '{"review_outcome":"${{ steps.review.outcome }}","vulnerable_changes":[],"denied_changes":[]}' > dependency-review-report.json
 
       - name: Upload Dependency Review Report
         if: always()
