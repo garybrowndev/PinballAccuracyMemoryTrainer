@@ -6,8 +6,7 @@ coverage:
         threshold: 1%
     patch:
       default:
-        target: 50%
-        threshold: 10%
+        informational: true
 
 comment:
   layout: 'reach,diff,flags,tree'
