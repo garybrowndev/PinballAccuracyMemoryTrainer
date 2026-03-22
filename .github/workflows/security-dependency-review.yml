@@ -43,10 +43,10 @@ jobs:
           DENIED_CHANGES: ${{ steps.review.outputs.denied-changes }}
         run: |
           echo "{" > dependency-review-report.json
-          echo "  \"dependency_changes\": $DEPENDENCY_CHANGES," >> dependency-review-report.json
-          echo "  \"vulnerable_changes\": $VULNERABLE_CHANGES," >> dependency-review-report.json
-          echo "  \"invalid_license_changes\": $INVALID_LICENSE_CHANGES," >> dependency-review-report.json
-          echo "  \"denied_changes\": $DENIED_CHANGES" >> dependency-review-report.json
+          echo "  \"dependency_changes\": ${DEPENDENCY_CHANGES:-[]}," >> dependency-review-report.json
+          echo "  \"vulnerable_changes\": ${VULNERABLE_CHANGES:-[]}," >> dependency-review-report.json
+          echo "  \"invalid_license_changes\": ${INVALID_LICENSE_CHANGES:-[]}," >> dependency-review-report.json
+          echo "  \"denied_changes\": ${DENIED_CHANGES:-[]}" >> dependency-review-report.json
           echo "}" >> dependency-review-report.json
 
       - name: Upload Dependency Review Report
