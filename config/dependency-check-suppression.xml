@@ -7,15 +7,39 @@
         which is not done in our build process. This is a transitive dependency
         from vite-plugin-pwa -> workbox-build used only at build time for
         service worker generation. No user data is processed through ejs templates.
-        
-        Dependency chain: vite-plugin-pwa@1.2.0 -> workbox-build@7.4.0 -> 
+
+        Dependency chain: vite-plugin-pwa@1.2.0 -> workbox-build@7.4.0 ->
         @surma/rollup-plugin-off-main-thread@2.2.3 -> ejs@3.1.10
-        
+
         Risk Assessment: Build-time only, no runtime exposure, controlled input.
         Reference: https://github.com/mde/ejs/blob/main/SECURITY.md#out-of-scope-vulnerabilities
         Issue: https://github.com/mde/ejs/issues/720
         ]]></notes>
         <packageUrl regex="true">^pkg:npm/ejs@.*$</packageUrl>
         <cve>CVE-2023-29827</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2026-34043 (GHSA-qj8w-gfj5-8c6v) is a moderate-severity CPU
+        exhaustion DoS in serialize-javascript triggered by crafted array-like
+        objects. This is a transitive dev-only dependency used at build time
+        for service worker bundling — never shipped to users or invoked at
+        runtime. The attack requires passing attacker-controlled input to
+        serialize-javascript, which does not happen in our build process
+        (inputs are our own source code).
+
+        Dependency chain: vite-plugin-pwa@1.2.0 -> workbox-build@7.4.0 ->
+        @rollup/plugin-terser@0.4.4 -> serialize-javascript@<7.0.5
+
+        Fix would require downgrading vite-plugin-pwa to 0.19.8 (breaking change
+        going back ~2 years). Waiting for upstream workbox-build to bump its
+        @rollup/plugin-terser dependency.
+
+        Risk Assessment: Build-time only, dev dependency, no runtime or user
+        exposure, controlled input.
+        Reference: https://github.com/advisories/GHSA-qj8w-gfj5-8c6v
+        ]]></notes>
+        <packageUrl regex="true">^pkg:npm/serialize\-javascript@.*$</packageUrl>
+        <cve>CVE-2026-34043</cve>
     </suppress>
 </suppressions>
