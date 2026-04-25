@@ -20,6 +20,12 @@ updates:
       all-npm-dependencies:
         patterns:
           - '*'
+    ignore:
+      # eslint v10 has no compatible eslint-plugin-import release yet.
+      # Re-evaluate when eslint-plugin-import publishes peer support for eslint 10.
+      - dependency-name: 'eslint'
+        update-types:
+          - 'version-update:semver-major'
 
   # GitHub Actions
   - package-ecosystem: 'github-actions'
