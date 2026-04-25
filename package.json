@@ -23,7 +23,8 @@
     "@vitest/ui": {
       "flatted": "3.4.2"
     },
-    "serialize-javascript": "7.0.3"
+    "serialize-javascript": "7.0.3",
+    "basic-ftp": "^5.3.0"
   },
   "browserslist": [
     ">0.2%",
