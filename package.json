@@ -108,7 +108,7 @@
     "serve": "^14.2.6",
     "tailwindcss": "^4.1.13",
     "ts-api-utils": "^2.4.0",
-    "undici": "^7.24.5",
+    "undici": "^8.1.0",
     "vite": "^7.3.2",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.15"
