@@ -924,6 +924,7 @@ const PlayfieldEditor = ({
     }
     // Update scale if changed (compare with small epsilon for float precision)
     if (Math.abs(finalScale - boxScale) > 0.001) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional layout sync; guarded by epsilon check
       setBoxScale(finalScale);
     }
     // Update positions if changed
@@ -1384,7 +1385,8 @@ const PlayfieldEditor = ({
         })}
         {/* Lines visualization: either single-shot selection or flipper-wide selection */}
         {selectedId
-          ? (() => {
+          ? // eslint-disable-next-line react-hooks/refs -- reading canvas rect during render to compute SVG line geometry
+            (() => {
               const rect = canvasRef.current?.getBoundingClientRect();
               if (!rect || !rect.width || !rect.height) {
                 return null;
@@ -1946,12 +1948,14 @@ const PracticePlayfield = ({
   const [finalBallPosition, setFinalBallPosition] = useState(null); // { x, y, radius }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard mount flag pattern
     setMounted(true);
   }, []);
 
   // Clear final ball position when we're no longer awaiting next shot (user clicked to continue)
   useEffect(() => {
     if (!awaitingNextShot) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset derived UI state when sync condition flips
       setFinalBallPosition(null);
     }
   }, [awaitingNextShot]);
@@ -1959,6 +1963,7 @@ const PracticePlayfield = ({
   // Trigger ball animation when a new recall comes in
   useEffect(() => {
     if (!lastRecall || !animationEnabled) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- show feedback immediately when animation disabled
       setShowFeedback(true);
       return;
     }
@@ -2988,6 +2993,7 @@ const App = () => {
     // Check if we have embedded presets (standalone mode)
     if (typeof window !== 'undefined' && window.EMBEDDED_PRESET_INDEX) {
       // Use the embedded preset index
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot load of embedded presets on mount
       setAvailablePresets(window.EMBEDDED_PRESET_INDEX);
     } else if (typeof window !== 'undefined' && window.EMBEDDED_PRESETS) {
       // Fallback: generate index from embedded preset filenames
@@ -3194,6 +3200,7 @@ const App = () => {
     const typeIds = rows.filter((r) => Boolean(r.type)).map((r) => r.id);
     // Flipper collapse removed (left/right arrays no longer tracked)
     if (typeIds.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time initialization guarded by didInitCollapse ref
       setCollapsedTypes(typeIds);
     }
     // (No flipper collapse initialization)
@@ -3675,6 +3682,7 @@ const App = () => {
     }
     const points = Math.max(0, basePoints - adjustPenalty);
     const rec = {
+      // eslint-disable-next-line react-hooks/purity -- timestamp captured inside event-handler invocation, not render
       t: Date.now(),
       idx,
       side: selectedSide,
@@ -3940,6 +3948,7 @@ const App = () => {
     if (playfieldFullscreen) {
       const handleResize = () => setWindowWidth(window.innerWidth);
       // Set initial value
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- initial sync of width when fullscreen toggles on
       setWindowWidth(window.innerWidth);
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
