@@ -20,14 +20,28 @@ updates:
       all-npm-dependencies:
         patterns:
           - '*'
+        # Group only minor + patch updates. Majors come through as
+        # individual PRs so each ecosystem-wide break (eslint v10,
+        # vite v8, etc.) can be evaluated and held independently
+        # rather than blocking the whole batch.
+        update-types:
+          - 'minor'
+          - 'patch'
     ignore:
-      # Hold the entire eslint ecosystem at v9.x until eslint-plugin-import
-      # ships a release with eslint v10 peer support. @eslint/js v10 declares
-      # peerOptional eslint@^10.0.0, which would force eslint to v10 too.
+      # eslint v10 has no compatible eslint-plugin-import release.
+      # @eslint/js v10 declares peerOptional eslint@^10.0.0, which
+      # would force eslint to v10 too. Hold the whole eslint
+      # ecosystem at v9.x until eslint-plugin-import ships eslint 10
+      # peer support, then drop these.
       - dependency-name: 'eslint'
         update-types:
           - 'version-update:semver-major'
       - dependency-name: '@eslint/*'
+        update-types:
+          - 'version-update:semver-major'
+      # vite-plugin-pwa@1.2.0 (latest) caps peer at vite ^7.
+      # Hold vite at v7 until vite-plugin-pwa ships vite 8 support.
+      - dependency-name: 'vite'
         update-types:
           - 'version-update:semver-major'
 
