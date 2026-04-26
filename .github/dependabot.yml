@@ -41,7 +41,12 @@ updates:
           - 'version-update:semver-major'
       # vite-plugin-pwa@1.2.0 (latest) caps peer at vite ^7.
       # Hold vite at v7 until vite-plugin-pwa ships vite 8 support.
+      # @vitejs/plugin-react v6 declares peer vite@^8 and is also
+      # blocked by the same ceiling — drop both holds together.
       - dependency-name: 'vite'
+        update-types:
+          - 'version-update:semver-major'
+      - dependency-name: '@vitejs/plugin-react'
         update-types:
           - 'version-update:semver-major'
 
