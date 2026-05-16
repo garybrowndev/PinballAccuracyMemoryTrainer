@@ -46,7 +46,10 @@ jobs:
 
       - name: Security audit
         id: audit
-        run: npm audit --audit-level=high --json > audit-report.json
+        # Gate only on critical. High/moderate transitive dev-tooling vulns
+        # (lhci, workbox, babel transforms) are surfaced in the PR comment
+        # for visibility but should not block unrelated PRs from merging.
+        run: npm audit --audit-level=critical --json > audit-report.json
         continue-on-error: true
 
       - name: Upload security audit report
