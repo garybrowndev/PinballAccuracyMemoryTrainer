@@ -2,7 +2,7 @@
 
 This file tracks visual regression test changes that require review.
 
-**Last Updated:** 2026-05-16T18:32:21.868Z
+**Last Updated:** 2026-06-15T13:14:19.204Z
 
 ## Purpose
 
@@ -17,4 +17,9 @@ This file enables the "Resolve conversation" workflow for visual regression appr
 
 Visual changes detected in the following snapshots:
 
-- `homepage-dark-firefox-linux.png`
+- `desktop-view-webkit-linux.png`
+- `homepage-dark-webkit-linux.png`
+- `homepage-webkit-linux.png`
+- `mobile-view-webkit-linux.png`
+- `setup-screen-webkit-linux.png`
+- `tablet-view-webkit-linux.png`
