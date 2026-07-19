@@ -83,17 +83,24 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('/react/jsx-runtime')) {
-            return 'react-jsx-runtime';
-          }
+        ...(process.env.STANDALONE_BUILD === 'true'
+          ? {}
+          : {
+              manualChunks(id) {
+                if (id.includes('/react/jsx-runtime')) {
+                  return 'react-jsx-runtime';
+                }
 
-          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
-            return 'react-vendor';
-          }
+                if (
+                  id.includes('/node_modules/react/') ||
+                  id.includes('/node_modules/react-dom/')
+                ) {
+                  return 'react-vendor';
+                }
 
-          return null;
-        },
+                return null;
+              },
+            }),
       },
     },
     // Increase chunk size warning limit (our main bundle is large but intentional)
