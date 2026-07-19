@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import process from 'process';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,41 +21,19 @@ async function buildStandaloneWithAssets() {
     fs.rmSync(distDir, { recursive: true, force: true });
   }
 
-  // Create a temporary vite config that disables code splitting for standalone builds
-  const viteConfigPath = path.join(rootDir, 'config', 'vite.config.js');
-  const viteConfig = fs.readFileSync(viteConfigPath, 'utf8');
-  const tempViteConfigPath = path.join(rootDir, 'config', 'vite.config.standalone.js');
-
-  // Modify the config to disable code splitting
-  const modifiedConfig = viteConfig.replace(
-    /manualChunks:\s*{[^}]*}/s,
-    '// Code splitting disabled for standalone build'
-  );
-
-  fs.writeFileSync(tempViteConfigPath, modifiedConfig, 'utf8');
-
-  // Use execSync to run vite directly with the modified config
+  // Disable code splitting so the generated JavaScript can be embedded in one HTML file.
   try {
-    execSync('npx vite build --config config/vite.config.standalone.js', {
+    execSync('npx vite build --config config/vite.config.js', {
       stdio: 'inherit',
       cwd: rootDir,
+      env: { ...process.env, STANDALONE_BUILD: 'true' },
     });
     // eslint-disable-next-line no-console
     console.log('Build completed!\n');
   } catch {
     // eslint-disable-next-line no-console
     console.error('Build failed.');
-    // Clean up temp config
-    if (fs.existsSync(tempViteConfigPath)) {
-      fs.unlinkSync(tempViteConfigPath);
-    }
-    // eslint-disable-next-line no-undef
     process.exit(1);
-  } finally {
-    // Clean up temp config
-    if (fs.existsSync(tempViteConfigPath)) {
-      fs.unlinkSync(tempViteConfigPath);
-    }
   }
 
   // Read built files from the standard dist directory
@@ -224,6 +203,5 @@ window.EMBEDDED_PRESET_INDEX = ${JSON.stringify(presetIndex)};
 buildStandaloneWithAssets().catch((error) => {
   // eslint-disable-next-line no-console
   console.error('Build failed:', error);
-  // eslint-disable-next-line no-undef
   process.exit(1);
 });
