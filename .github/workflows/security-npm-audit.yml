@@ -46,10 +46,10 @@ jobs:
 
       - name: Security audit
         id: audit
-        # Gate only on critical. High/moderate transitive dev-tooling vulns
-        # (lhci, workbox, babel transforms) are surfaced in the PR comment
-        # for visibility but should not block unrelated PRs from merging.
-        run: npm audit --audit-level=critical --json > audit-report.json
+        # Gate on high and critical vulnerabilities. Moderate findings in the
+        # Lighthouse development-tooling tree remain visible in the PR report
+        # without blocking unrelated changes.
+        run: npm audit --audit-level=high --json > audit-report.json
         continue-on-error: true
 
       - name: Upload security audit report
