@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload OWASP results to GitHub Security
         if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
-        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        uses: github/codeql-action/upload-sarif@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
         with:
           sarif_file: reports/dependency-check-report.sarif
           category: dependency-check
@@ -146,6 +146,7 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 3
           script: |
             const fs = require('fs');
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');

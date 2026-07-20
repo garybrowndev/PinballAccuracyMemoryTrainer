@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-module.exports = async ({ github, context, header, body, workflowYaml }) => {
+const updateComment = async ({ github, context, header, body, workflowYaml }) => {
   const sha = context.payload.pull_request ? context.payload.pull_request.head.sha : context.sha;
   const shortSha = sha.slice(0, 7);
   const marker = `<!-- report-for-commit-${sha} -->`;
@@ -73,5 +73,18 @@ module.exports = async ({ github, context, header, body, workflowYaml }) => {
       issue_number,
       body: initialBody,
     });
+  }
+};
+
+module.exports = async (args) => {
+  try {
+    await updateComment(args);
+  } catch (error) {
+    if (error.status >= 500) {
+      console.warn(`GitHub API unavailable; skipping optional PR report: ${error.message}`);
+      return;
+    }
+
+    throw error;
   }
 };
