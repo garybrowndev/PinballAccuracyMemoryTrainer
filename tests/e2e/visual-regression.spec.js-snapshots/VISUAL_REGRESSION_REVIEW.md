@@ -2,7 +2,7 @@
 
 This file tracks visual regression test changes that require review.
 
-**Last Updated:** 2026-07-19T19:30:56.897Z
+**Last Updated:** 2026-07-20T00:13:22.589Z
 
 ## Purpose
 
@@ -20,18 +20,25 @@ Visual changes detected in the following snapshots:
 - `desktop-view-chromium-linux.png`
 - `desktop-view-firefox-linux.png`
 - `desktop-view-webkit-linux.png`
+- `desktop-view-webkit-win32.png`
 - `homepage-chromium-linux.png`
 - `homepage-dark-chromium-linux.png`
 - `homepage-dark-firefox-linux.png`
 - `homepage-dark-webkit-linux.png`
+- `homepage-dark-webkit-win32.png`
 - `homepage-firefox-linux.png`
 - `homepage-webkit-linux.png`
+- `homepage-webkit-win32.png`
 - `mobile-view-chromium-linux.png`
 - `mobile-view-firefox-linux.png`
 - `mobile-view-webkit-linux.png`
+- `mobile-view-webkit-win32.png`
+- `practice-mode-webkit-win32.png`
 - `setup-screen-chromium-linux.png`
 - `setup-screen-firefox-linux.png`
 - `setup-screen-webkit-linux.png`
+- `setup-screen-webkit-win32.png`
 - `tablet-view-chromium-linux.png`
 - `tablet-view-firefox-linux.png`
 - `tablet-view-webkit-linux.png`
+- `tablet-view-webkit-win32.png`
