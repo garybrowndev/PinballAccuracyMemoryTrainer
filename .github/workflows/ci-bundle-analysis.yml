@@ -80,6 +80,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 3
           script: |
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
             const distSize = '${{ steps.analyze.outputs.dist_size_mb }}';

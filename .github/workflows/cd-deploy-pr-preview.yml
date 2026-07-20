@@ -221,6 +221,7 @@ jobs:
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 3
           script: |
             const fs = require('fs');
             const metadataJson = fs.readFileSync('lighthouse-surge-mobile-metadata.json', 'utf8');
@@ -265,6 +266,7 @@ jobs:
         if: always() && steps.deploy.outcome == 'success' && steps.surge-status.outputs.available == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 3
           script: |
             const fs = require('fs');
             const metadataJson = fs.readFileSync('lighthouse-surge-desktop-metadata.json', 'utf8');
@@ -321,6 +323,7 @@ jobs:
         if: steps.deploy.outcome == 'success' && steps.surge-status.outcome == 'failure'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 3
           script: |
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -333,6 +336,7 @@ jobs:
         if: steps.deploy.outcome == 'success' && steps.surge-status.outcome == 'failure'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 3
           script: |
             try {
               await github.rest.issues.addLabels({
@@ -349,6 +353,7 @@ jobs:
         if: steps.deploy.outcome == 'success'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 3
           script: |
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
             const previewUrl = '${{ steps.deploy.outputs.preview_url }}';
@@ -414,6 +419,7 @@ jobs:
         if: steps.deploy.outcome == 'failure'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          retries: 3
           script: |
             const updateComment = require('./.github/scripts/update-pr-comment.cjs');
             const comment = `The preview deployment could not be completed. This might be due to:
