@@ -40,8 +40,9 @@ jobs:
           # Get commit count on master branch
           COMMIT_COUNT=$(git rev-list --count HEAD)
 
-          # Get timestamp (YYYYMMDD.HHMM format)
-          TIMESTAMP=$(date -u +"%Y%m%d.%H%M")
+          # Use the commit timestamp so reruns calculate the same release/tag.
+          COMMIT_EPOCH=$(git show -s --format=%ct HEAD)
+          TIMESTAMP=$(date -u -d "@$COMMIT_EPOCH" +"%Y%m%d.%H%M")
 
           # Get short commit hash (7 chars) for reference
           SHORT_HASH=$(git rev-parse --short=7 HEAD)
@@ -79,7 +80,6 @@ jobs:
           echo "🏷️  Created and pushed tag v$NEW_VERSION"
 
       - name: Wait for all other workflows to complete
-        if: steps.check_tag.outputs.exists == 'false'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           retries: 3
@@ -153,18 +153,15 @@ jobs:
             }
 
       - name: Setup Node.js for build
-        if: steps.check_tag.outputs.exists == 'false'
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
-        if: steps.check_tag.outputs.exists == 'false'
         run: npm ci
 
       - name: Build standalone HTML
-        if: steps.check_tag.outputs.exists == 'false'
         run: npm run build:standalone
         env:
           APP_VERSION: ${{ steps.version.outputs.full_version }}
@@ -174,7 +171,6 @@ jobs:
           RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.full_version }}
 
       - name: Prepare GitHub Pages deployment structure
-        if: steps.check_tag.outputs.exists == 'false'
         run: |
           # Create a temporary directory for GitHub Pages
           mkdir -p gh-pages-deploy
@@ -195,7 +191,6 @@ jobs:
           ls -la gh-pages-deploy/releases/${{ steps.version.outputs.full_version }}/
 
       - name: Deploy to GitHub Pages
-        if: steps.check_tag.outputs.exists == 'false'
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -203,13 +198,11 @@ jobs:
           keep_files: true
 
       - name: Wait for GitHub Pages deployment to propagate
-        if: steps.check_tag.outputs.exists == 'false'
         run: |
           echo "⏳ Waiting 60 seconds for GitHub Pages to update..."
           sleep 60
 
       - name: Validate GitHub Pages deployment
-        if: steps.check_tag.outputs.exists == 'false'
         run: |
           SITE_URL="https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/"
           echo "🔍 Validating deployment at $SITE_URL"
@@ -262,7 +255,6 @@ jobs:
           echo "✅ GitHub Pages deployment validated successfully!"
 
       - name: Get previous release tag
-        if: steps.check_tag.outputs.exists == 'false'
         id: previous_release
         run: |
           # Get the most recent tag before the current one
@@ -271,18 +263,10 @@ jobs:
           echo "📋 Previous release tag: $PREVIOUS_TAG"
 
       - name: Create Release
-        if: steps.check_tag.outputs.exists == 'false'
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
-        with:
-          tag_name: v${{ steps.version.outputs.full_version }}
-          name: Release ${{ steps.version.outputs.full_version }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          make_latest: true
-          files: |
-            dist-standalone/pinball-trainer-standalone.html
-          body: |
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat > /tmp/release-notes.md <<'RELEASE_NOTES'
             ## Pinball Accuracy Memory Trainer v${{ steps.version.outputs.full_version }}
 
             A specialized memory training tool for pinball players to practice and improve flipper shot accuracy recall.
@@ -312,8 +296,34 @@ jobs:
             3. Download `pinball-trainer-standalone.html` below
             4. Open the downloaded file in any modern browser
             5. Start training!
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NOTES
+
+          for attempt in 1 2 3 4 5; do
+            if gh release view "v${{ steps.version.outputs.full_version }}" >/dev/null 2>&1; then
+              gh release upload "v${{ steps.version.outputs.full_version }}" \
+                dist-standalone/pinball-trainer-standalone.html \
+                --clobber
+              exit 0
+            fi
+
+            if gh release create "v${{ steps.version.outputs.full_version }}" \
+              dist-standalone/pinball-trainer-standalone.html \
+              --title "Release ${{ steps.version.outputs.full_version }}" \
+              --notes-file /tmp/release-notes.md \
+              --generate-notes \
+              --latest; then
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 5 ]; then
+              echo "Release creation failed after $attempt attempts"
+              exit 1
+            fi
+
+            delay=$((attempt * 15))
+            echo "GitHub release API unavailable; retrying in ${delay}s"
+            sleep "$delay"
+          done
 
       - name: Generate job summary
         if: always()
@@ -324,10 +334,6 @@ jobs:
           VERSION="${{ steps.version.outputs.full_version }}"
           TAG_EXISTS="${{ steps.check_tag.outputs.exists }}"
 
-          if [ "$TAG_EXISTS" == "true" ]; then
-            echo "ℹ️ **Release Skipped**: Tag v$VERSION already exists." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ **Release Created**: v$VERSION" >> $GITHUB_STEP_SUMMARY
-            echo "🔗 [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
-            echo "🔗 [Open App](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "✅ **Release Created or Confirmed**: v$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Open App](https://garybrowndev.github.io/PinballAccuracyMemoryTrainer/)" >> $GITHUB_STEP_SUMMARY
