@@ -21,7 +21,13 @@ const localStorageMock = (() => {
   };
 })();
 
-global.localStorage = localStorageMock;
+// jsdom defines localStorage as a getter-only property on Window, so it has to
+// be replaced with defineProperty rather than plain assignment.
+Object.defineProperty(globalThis, 'localStorage', {
+  writable: true,
+  configurable: true,
+  value: localStorageMock,
+});
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {

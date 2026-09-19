@@ -39,6 +39,12 @@ updates:
       - dependency-name: '@eslint/*'
         update-types:
           - 'version-update:semver-major'
+      # eslint-plugin-unicorn v66+ peers eslint >=10.4, so it cannot be
+      # merged while the hold above keeps eslint at 9.x. v65 is the last
+      # release supporting eslint 9. Drop this with the two entries above.
+      - dependency-name: 'eslint-plugin-unicorn'
+        update-types:
+          - 'version-update:semver-major'
 
   # GitHub Actions
   - package-ecosystem: 'github-actions'
