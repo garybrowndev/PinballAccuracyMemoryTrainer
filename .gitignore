@@ -31,3 +31,7 @@ codeql-db/
 
 # Editor directories and files
 .vscode/*
+
+# Claude Code personal settings (machine-specific, not for the repo)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
