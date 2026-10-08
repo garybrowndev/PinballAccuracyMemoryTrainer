@@ -39,6 +39,10 @@ A consolidation commit/PR body listing `Closes #209, #210, ...` will not auto-cl
 
 `git fetch origin <branch-1> <branch-2>` followed by `git merge FETCH_HEAD --no-edit` merges _both_ branches in a single commit if they don't conflict with each other — useful when consolidating several Dependabot branches, but confirm with `git log --oneline -1` afterward that it actually merged what you expected, not just the last ref listed.
 
+## Untracked files in the main checkout break the pre-commit hook
+
+The pre-commit hook runs `prettier --check .`, which also checks untracked files. The user keeps scratch files in the main checkout (e.g. `scratch/shot-row-mockup.html`), and those fail Prettier, so the hook rejects your commit with `husky - pre-commit script failed` even though your change is clean. Don't edit, delete, or format the user's files, and don't `--no-verify` the commit. Work in a git worktree created from `origin/master` instead (SKILL.md Step 4); it contains only tracked files.
+
 ## A `git commit` that triggers the pre-commit hook can take a while
 
 The hook runs `npm run lint` + `prettier --check .`; on a cold cache or right after a large `npm ci`, this can run past the tool's default foreground timeout and get moved to the background. That's normal — check `git log --oneline -1` afterward to confirm it actually landed rather than assuming the backgrounded call's buffered output tells the full story.
