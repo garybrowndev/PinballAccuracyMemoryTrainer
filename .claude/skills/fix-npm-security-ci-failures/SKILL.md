@@ -156,7 +156,7 @@ gh pr checks <N> --watch --interval 60; gh pr checks <N>
 When it completes, act on the result immediately:
 
 - **All green** → merge (below). Don't ask first.
-- **`Lighthouse Mobile Audit` / `Lighthouse CI - Mobile` shows `fail` after ~15 min** → check the run with `gh run view <run-id> --json conclusion,jobs`. If the run's conclusion is `cancelled` with `Install dependencies` cancelled, it's the known cold-cache timeout, not a real failure: `gh run rerun <run-id>`, start the watch again, keep going.
+- **`Lighthouse Mobile Audit` / `Lighthouse CI - Mobile` shows `fail` after ~15 min** → check the run with `gh run view <run-id> --json conclusion,jobs`. If the run's conclusion is `cancelled` with `Install dependencies` cancelled, it's the known cold-cache timeout, not a real failure: `gh run rerun <run-id>`, start the watch again, keep going. The same goes for a `failure` in `Install dependencies` whose log (`gh run view <run-id> --log-failed`) shows `Failed to download Chrome for Testing` during `playwright install` — a transient download error, not the code (2026-10-08, on master). The `Extract metadata` / `Generate job summary` failures that follow it are knock-on noise.
 - **Anything else red** → read `gh run view <run-id> --log-failed`, fix it on the branch, push, watch again.
 
 In the Claude desktop app, also bind the PR to the session (`mcp__ccd_pr__get_status`, then `bind_pr` if unbound) so the PR bar shows it — but the background watch is what drives the next step.
@@ -186,7 +186,9 @@ do { Start-Sleep 60
 $runs | ForEach-Object { "$($_.conclusion ?? $_.status)  $($_.workflowName)" } | Sort-Object
 ```
 
-Specifically check `CD: Release` — it doesn't run on PRs at all, so a green PR never proves it. Anything red here gets the same treatment as Step 7 (Lighthouse Mobile cancel → rerun; real failure → fix).
+Specifically check `CD: Release` — it doesn't run on PRs at all, so a green PR never proves it. Anything red here gets the same treatment as Step 7 (Lighthouse Mobile flake → rerun; real failure → fix).
+
+**`CD: Release` fails whenever any other workflow on the SHA fails.** Its first step waits for the others and aborts with `Workflow <name> failed with conclusion: failure. Aborting deployment.` So a red release is usually a symptom: rerun the failed workflow first, and only once it's green rerun the release (`gh run rerun <release-run-id>`), then watch it to completion. Do both in one background task so the release rerun fires without another prompt.
 
 **While that runs, check Dependabot alerts — they can go up after the merge.** Dependabot rescans the new lockfile on master, and advisories published in the meantime show up as fresh alerts minutes after the merge (2026-10-07: 0 alerts before, 7 medium alerts after). The gate only fails on high/critical, but the end state is zero open alerts, so medium ones count too:
 
