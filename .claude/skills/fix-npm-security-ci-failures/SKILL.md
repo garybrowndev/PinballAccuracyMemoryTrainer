@@ -13,7 +13,7 @@ Invoking this skill is the user's authorization for the whole loop: fix, push, o
 
 The failure this section exists to prevent (2026-10-07): the fix was pushed and the PR opened, and then the session told the user "say 'merge it' once checks are green" and went idle. The user had to prompt three times. Meanwhile a check had been cancelled (needed a rerun nobody triggered) and the merge surfaced 7 new Dependabot alerts nobody would have looked at. Concretely:
 
-- **Never hand a wait back to the user.** Every wait — PR checks, master runs after merge — runs as a harness-tracked background task (`run_in_background: true`) that exits when the thing finishes. Its completion notification wakes the session, which then takes the next step itself. See the wait commands in Steps 7 and 8.
+- **Never hand a wait back to the user.** Every wait — PR checks, master runs after merge — runs as a time-capped, harness-tracked background task (`run_in_background: true`) that exits when the thing finishes. Its completion notification wakes the session, which then takes the next step itself. See the wait commands in Steps 7 and 8.
 - **Don't ask permission for steps this skill already prescribes.** Merging a green PR, closing superseded PRs, rerunning a known flake, deleting merged branches and the worktree are all part of the loop. Ask only for things the skill does _not_ cover (e.g. dismissing an alert, a risky major bump).
 - **Tell the user what's live while waiting**, in one line: which task is watching what, and roughly how long the last run took. Then keep working on anything that doesn't depend on it.
 
@@ -146,17 +146,24 @@ All must exit 0. `npm run test:run` should show all suites passing (253/253 as o
 
 Push with `git push --no-verify` — the local `pre-push` hook is known-broken for unrelated reasons (see `references/repo-gotchas.md`) and Step 6 already proved the checks CI cares about. Open the PR with a body that states the real root cause(s) from Step 3 (GHSA IDs, publish dates, why each override needed to move) and lists `Supersedes: #N, #N` for every PR folded in.
 
-Wait for every check, not just the audit one — and wait **yourself**, as a background task, right after `gh pr create`:
+Wait for every check, not just the audit one — and wait **yourself**, as a background task, right after `gh pr create`. **Every wait needs a time cap.** `gh pr checks --watch` and `gh run watch` wait forever, and on 2026-10-08 a GitHub job sat "in progress" with no runner for 66 minutes while two uncapped watchers waited on it silently. Use a capped loop instead, so a stuck job turns into a report rather than a hang:
 
+```powershell
+# run_in_background: true — exits when every check has finished, or after 60 min; the notification wakes the session
+$cap=(Get-Date).AddMinutes(60)
+do { Start-Sleep 60; $c = gh pr checks <N> --json state,name | ConvertFrom-Json
+     $pend = @($c | Where-Object { $_.state -in 'PENDING','QUEUED','IN_PROGRESS' })
+} while ($pend.Count -gt 0 -and (Get-Date) -lt $cap)
+$c | Where-Object { $_.state -notin 'SUCCESS','SKIPPED' } | ForEach-Object { "$($_.state) $($_.name)" }
 ```
-# run_in_background: true — exits when every check has finished; the notification wakes the session
-gh pr checks <N> --watch --interval 60; gh pr checks <N>
-```
+
+Also start the CLAUDE.md 10-minute status check-in (`CronCreate`) at the beginning of the loop, with the Step 9 end state as its goal, so stalls get caught between waits too.
 
 When it completes, act on the result immediately:
 
 - **All green** → merge (below). Don't ask first.
 - **`Lighthouse Mobile Audit` / `Lighthouse CI - Mobile` shows `fail` after ~15 min** → check the run with `gh run view <run-id> --json conclusion,jobs`. If the run's conclusion is `cancelled` with `Install dependencies` cancelled, it's the known cold-cache timeout, not a real failure: `gh run rerun <run-id>`, start the watch again, keep going. The same goes for a `failure` in `Install dependencies` whose log (`gh run view <run-id> --log-failed`) shows `Failed to download Chrome for Testing` during `playwright install` — a transient download error, not the code (2026-10-08, on master). The `Extract metadata` / `Generate job summary` failures that follow it are knock-on noise.
+- **A check still pending when the cap hits, or "in progress" with no completed steps for 20+ min** → the job is stuck on GitHub's side (`gh run view <run-id> --json jobs` shows `runnerName: null` and no step progress). `gh run cancel` may not stop it; use `gh api -X POST repos/garybrowndev/PinballAccuracyMemoryTrainer/actions/runs/<run-id>/force-cancel`, then `gh run rerun <run-id>`, and confirm steps start completing before you start the next capped wait. `runnerName` can stay null briefly even on a healthy run, so judge by step progress.
 - **Anything else red** → read `gh run view <run-id> --log-failed`, fix it on the branch, push, watch again.
 
 In the Claude desktop app, also bind the PR to the session (`mcp__ccd_pr__get_status`, then `bind_pr` if unbound) so the PR bar shows it — but the background watch is what drives the next step.
