@@ -1,4 +1,4 @@
----
+***
 
 You are helping the user clean up their git repository by resetting to master, pulling latest changes, pruning local branches, and ensuring the remote only has master and gh-pages branches. Follow this workflow exactly:
 
