@@ -10,15 +10,12 @@
   },
   "overrides": {
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.4.15",
-    "workbox-build": {
-      "source-map": "0.7.4"
-    },
     "chrome-launcher": "^1.2.1",
     "tmp": "^0.2.4",
     "lighthouse": "^13.0.1",
     "minimatch": "3.1.5",
     "eslint-plugin-sonarjs": {
-      "minimatch": "10.2.4"
+      "minimatch": "11.0.1"
     },
     "@vitest/ui": {
       "flatted": "3.4.2"
@@ -38,7 +35,9 @@
     "zod": "^4.6.7",
     "compression@<1.8.2": "1.8.2",
     "proxy-addr@>=1.1.0 <2.0.8": "2.0.8",
-    "source-map-js@>=1.0.0 <1.2.2": "1.2.2"
+    "source-map-js@>=1.0.0 <1.2.2": "1.2.2",
+    "qs@<6.16.1": "6.16.1",
+    "glob@>=9.0.0 <14.0.2": "14.0.2"
   },
   "browserslist": [
     ">0.2%",
@@ -96,7 +95,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.3",
-    "@vitest/ui": "^5.0.0",
+    "@vitest/ui": "^5.0.5",
     "axe-core": "^4.13.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
